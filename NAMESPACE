@@ -2,3 +2,4 @@
 
 export(StatPointless)
 export(geom_pointless)
+import(ggplot2)
