@@ -47,6 +47,23 @@
 #'
 #' # Change parameters
 #' p + geom_pointless(location = c("first", "last"), colour = "red", size = 2)
+#'
+#' \dontrun{
+#' # Example using facets
+#' # https://stackoverflow.com/q/29375169
+#' library(reshape2)
+#' library(ggplot2)
+#'
+#' me <- melt(economics, id = c("date"))
+#' ggplot(data = me, aes(x = date, y = value)) +
+#'   geom_line() +
+#'   geom_pointless(
+#'     aes(colour = after_stat(location)),
+#'     location = c("minimum", "maximum"),
+#'     size = 2
+#'   ) +
+#'  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
+#'  }
 #' @export
 geom_pointless <- function(mapping = NULL,
                            data = NULL,
@@ -81,8 +98,15 @@ NULL
 #' @usage NULL
 #' @export
 StatPointless <- ggproto("StatPointless", Stat,
+
+                         setup_params = function(data, params) {
+                           GeomLine$setup_params(data, params)
+                         },
+
+                         extra_params = c("na.rm", "orientation"),
+
                          setup_data = function(data, params) {
-                           GeomPoint$setup_data(data, params)
+                           GeomLine$setup_data(data, params)
                          },
 
                          compute_group = function(data, scales, location) {
