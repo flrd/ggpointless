@@ -16,5 +16,7 @@ A logical vector of length one
 Helper to find any capitalized string.
 }
 \examples{
+\dontrun{
 is_any_capitalized(c("Foo", "bar"))
+}
 }

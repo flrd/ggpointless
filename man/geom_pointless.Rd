@@ -14,6 +14,7 @@ geom_pointless(
   ...,
   location = "last",
   na.rm = FALSE,
+  orientation = NA,
   show.legend = NA,
   inherit.aes = TRUE
 )
@@ -55,6 +56,10 @@ to the paired geom/stat.}
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
 
+\item{orientation}{The orientation of the layer. The default (\code{NA}) automatically determines
+the orientation from the aesthetic mapping. In the rare event that this fails it can be given
+explicitly by setting \code{orientation} to either \code{"x"} or \code{"y"}. See the Orientation section for more detail.}
+
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
@@ -67,33 +72,16 @@ that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
-This geom is a wrapper around \code{geom_point()} with 1 additional argument, \code{location}, used to either
-show points only at the first observation, last observation, or both, first and last.
+This is a wrapper around \code{geom_point()} with 1 additional argument: \code{location}. It allows to highlight
+some observations, currently these are the first observation, the last one,
+and observations with minimum or maximum value. This geom is not particularly useful on its own (hence the name),
+but hopefully in conjunction with \code{geom_path()} and friends, see examples.
 }
 \section{Details}{
 
-The argument \code{location} allows to control which observations shall be highlighted with a point.
+The argument \code{location} allows you to control which observations to highlight - with a point.
 When \code{location} is \code{"last"}, the default, a single point will be plotted at the last observations.
 Setting \code{location} to \code{"first"} adds a point at the first position.
-}
-
-\section{Aesthetics}{
-
-geom_pointless understands the following aesthetics
-(required aesthetics are in bold):
-\itemize{
-\item \strong{x}
-\item \strong{y}
-\item alpha
-\item colour
-\item fill
-\item group
-\item shape
-\item size
-\item stroke
-}
-
-Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }
 
 \section{Computed variables}{
@@ -103,15 +91,71 @@ Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }
 }
 
-\examples{
-df1 <- data.frame(
-         x = 1:10,
-         y = log(1:10)
-         )
-p <- ggplot(df1, aes(x, y)) + geom_line()
-p + geom_pointless()
+\section{Orientation}{
 
-# Change parameters
-p + geom_pointless(location = c("first", "last"), colour = "red", size = 2)
+This geom treats each axis differently and, thus, can thus have two orientations. Often the orientation is easy to deduce from a combination of the given mappings and the types of positional scales in use. Thus, ggplot2 will by default try to guess which orientation the layer should have. Under rare circumstances, the orientation is ambiguous and guessing may fail. In that case the orientation can be specified directly using the \code{orientation} parameter, which can be either \code{"x"} or \code{"y"}. The value gives the axis that the geom should run along, \code{"x"} being the default orientation you would expect for the geom.
+}
+
+\section{Aesthetics}{
+
+\code{geom_pointless()} understands the following aesthetics (required aesthetics are in bold):
+\itemize{
+\item \strong{\code{x}}
+\item \strong{\code{y}}
+\item \code{alpha}
+\item \code{colour}
+\item \code{fill}
+\item \code{group}
+\item \code{shape}
+\item \code{size}
+\item \code{stroke}
+}
+Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
+}
+
+\examples{
+# example data
+x <- seq(-2 * pi, 2 * pi, length.out = 400)
+y <- sin(1/4 * x) + sin(1/2 * x) + sin(x)
+
+df1 <- data.frame(
+ var1 = x,
+ var2 = y
+)
+
+# not terribly useful on its own ...
+p <- ggplot(df1, aes(x = var1, y = var2))
+p + geom_pointless()
+p + geom_pointless(location = "all")
+p <- p + geom_line()
+
+# ... but in conjunction with geom_line(), hopefully
+p + geom_pointless()
+p + geom_pointless(location = c("first", "last"))
+p + geom_pointless(location = c("minimum", "maximum"))
+p + geom_pointless(location = c("all"))
+
+# The layer computes one additional variable, `location`, you can map e.g. to the colour aesthetic
+p + geom_pointless(
+ aes(colour = after_stat(location)),
+ location = c("all"),
+ size = 3
+ )
+
+\dontrun{
+# Example using facets, see https://stackoverflow.com/q/29375169
+library(reshape2)
+library(ggplot2)
+
+me <- melt(economics, id = c("date"))
+ggplot(data = me, aes(x = date, y = value)) +
+  geom_line() +
+  geom_pointless(
+    aes(colour = after_stat(location)),
+    location = c("minimum", "maximum"),
+    size = 2
+  ) +
+ facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
+ }
 }
 \keyword{datasets}

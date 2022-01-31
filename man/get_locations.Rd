@@ -4,7 +4,10 @@
 \alias{get_locations}
 \title{Subset input data based on locations}
 \usage{
-get_locations(data, location = c("first", "last", "minimum", "maximum", "all"))
+get_locations(
+  data = NULL,
+  location = c("first", "last", "minimum", "maximum", "all")
+)
 }
 \arguments{
 \item{data}{A \code{data.frame}}
@@ -20,5 +23,7 @@ Given a data frame, this functions returns a subset of the input. It returns a d
 with either "first" row, "last" row(s) and/or the row(s) that contain mimima or maxima
 }
 \examples{
+\dontrun{
 get_locations(iris, c("first", "last"))
+}
 }

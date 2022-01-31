@@ -16,5 +16,7 @@ A character vector of the same length as x
 Helper to get from "here" to "Here"
 }
 \examples{
+\dontrun{
 to_title_simple(c("foo", "bar"))
+}
 }
