@@ -1,37 +1,59 @@
-#' A simple point layer to highlight first and/or last observation only
+#' Points to highlight some observations
 #'
-#' This geom is a wrapper around `geom_point()` with 1 additional argument, `point.position`, used to either
+#' This geom is a wrapper around `geom_point()` with 1 additional argument, `location`, used to either
 #' show points only at the first observation, last observation, or both, first and last.
 #'
-#' @rdname ggplot2-ggproto
-#' @format NULL
-#' @usage NULL
-#' @export
-StatPointless <- ggproto("StatPointless", Stat,
-                         setup_data = function(data, params) {
-                           GeomPoint$setup_data(data, params)
-                         },
+#' @param location A character vector specifying which observations to highlight, defaults to `"last"`.
+#'
+#' @section Details:
+#' The argument `location` allows to control which observations shall be highlighted with a point.
+#' When `location` is `"last"`, the default, a single point will be plotted at the last observations.
+#' Setting `location` to `"first"` adds a point at the first position.
+#'
+#'
+#' @section Aesthetics:
+#' geom_pointless understands the following aesthetics
+#' (required aesthetics are in bold):
+#'
+#' - **x**
+#' - **y**
+#' - alpha
+#' - colour
+#' - fill
+#' - group
+#' - shape
+#' - size
+#' - stroke
+#'
+#' Learn more about setting these aesthetics in `vignette("ggplot2-specs")`.
+#'
+#' @section Computed variables:
+#' \describe{
+#'   \item{location}{The locations for each row of returned data as characters}
+#' }
+#'
 
-                         compute_group = function(data, scales, point.position) {
-                           rng(data, point.position = point.position)
-                         },
-
-                         required_aes = c("x", "y")
-
-)
-#' @export
+#'
+#' @inheritParams ggplot2::geom_point
+#' @inheritParams ggplot2::layer
+#'
 #' @examples
-#' p <- ggplot(economics, aes(date, unemploy)) + geom_line()
+#' df1 <- data.frame(
+#'          x = 1:10,
+#'          y = log(1:10)
+#'          )
+#' p <- ggplot(df1, aes(x, y)) + geom_line()
 #' p + geom_pointless()
 #'
 #' # Change parameters
-#' p + geom_pointless(point.position = "both", colour = "red", size = 2)
+#' p + geom_pointless(location = c("first", "last"), colour = "red", size = 2)
+#' @export
 geom_pointless <- function(mapping = NULL,
                            data = NULL,
                            stat = "pointless",
                            position = "identity",
                            ...,
-                           point.position = "last",
+                           location = "last",
                            na.rm = FALSE,
                            show.legend = NA,
                            inherit.aes = TRUE
@@ -45,9 +67,28 @@ geom_pointless <- function(mapping = NULL,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
     params = list(
-      point.position = point.position,
+      location = location,
       na.rm = na.rm,
       ...
     )
   )
 }
+
+NULL
+
+#' @rdname geom_pointless
+#' @format NULL
+#' @usage NULL
+#' @export
+StatPointless <- ggproto("StatPointless", Stat,
+                         setup_data = function(data, params) {
+                           GeomPoint$setup_data(data, params)
+                         },
+
+                         compute_group = function(data, scales, location) {
+                           get_locations(data, location = location)
+                         },
+
+                         required_aes = c("x", "y")
+
+)
