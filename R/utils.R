@@ -10,8 +10,10 @@
 #' @return A data.frame as subset of the input data
 #'
 #' @examples
+#' \dontrun{
 #' get_locations(iris, c("first", "last"))
-get_locations <- function(data, location = c("first", "last", "minimum", "maximum", "all")) {
+#' }
+get_locations <- function(data = NULL, location = c("first", "last", "minimum", "maximum", "all")) {
 
   location <- match.arg(location, several.ok = TRUE)
 
@@ -19,6 +21,7 @@ get_locations <- function(data, location = c("first", "last", "minimum", "maximu
     stop("Please provide a valid data frame.")
   }
 
+  # might move this to compute_panel
   if(nrow(data) == 1) {
     message("Data contains a single row only. Returning data.")
     return(
@@ -33,15 +36,22 @@ get_locations <- function(data, location = c("first", "last", "minimum", "maximu
     location <- c("first", "last", "minimum", "maximum")
   }
 
-  # do I need to filter missing values or is this done somewhere else maybe
-  # y_complete <- na.omit(data$y)
+  # get row indices of first, last
+  first_row <- 1
+  n_rows <- nrow(data)
 
   lst <- list(
-    first = 1L,
-    last = nrow(data),
-    minimum = which(data$y == min(data$y)),
-    maximum = which(data$y == max(data$y))
+    first = first_row,
+    last = n_rows
   )
+
+  if("minimum" %in% location) {
+    lst[["minimum"]] <- setdiff(which(data$y == min(data$y)), c(first_row, n_rows))
+  }
+
+  if("maxima" %in% location) {
+    lst[["maxima"]] <- setdiff(which(data$y == max(data$y)), c(first_row, n_rows))
+  }
 
   # filter for desired locations
   lst <- lst[location]
@@ -77,7 +87,9 @@ get_locations <- function(data, location = c("first", "last", "minimum", "maximu
 #' @return A character vector of the same length as x
 #'
 #' @examples
+#' \dontrun{
 #' to_title_simple(c("foo", "bar"))
+#' }
 to_title_simple <- function(x) {
   paste0(
     toupper(substring(x, first = 1, last = 1)),
@@ -96,10 +108,45 @@ to_title_simple <- function(x) {
 #' @return A logical vector of length one
 #'
 #' @examples
+#' \dontrun{
 #' is_any_capitalized(c("Foo", "bar"))
+#' }
 is_any_capitalized <- function(string) {
   any(grepl("^[A-Z]", substring(string, 1, 1)))
 }
 
 
 
+# wrap aesthetic description from geom_point() ----------------------------
+
+wrap_rd_aesthetics <-
+  function(type = "geom",
+           name = "pointless",
+           output_name = NULL) {
+
+    if(is.null(output_name)) {
+      output_name <- name
+    }
+
+    obj <- switch(
+      type,
+      geom = ggplot2:::check_subclass(name, "Geom", env = globalenv()),
+      stat = ggplot2:::check_subclass(name, "Stat", env = globalenv())
+    )
+    aes <- ggplot2:::rd_aesthetics_item(obj)
+    c(
+      "@section Aesthetics:",
+      paste0(
+        "\\code{",
+        type,
+        "_",
+        output_name,
+        "()} ",
+        "understands the following aesthetics (required aesthetics are in bold):"
+      ),
+      "\\itemize{",
+      paste0("  \\item ", aes),
+      "}",
+      "Learn more about setting these aesthetics in \\code{vignette(\"ggplot2-specs\")}."
+    )
+  }
