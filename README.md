@@ -23,7 +23,7 @@ You can install the development version of ggpointless from
 devtools::install_github("flrd/ggpointless")
 ```
 
-## First examples
+## Examples
 
 The one `geom` in this package is `geom_pointless`. It behaves like
 `geom_point()` but, by default, `geom_pointless()` adds only a single
@@ -51,8 +51,8 @@ p +
 <img src="man/figures/README-default-1.png" width="90%" style="display: block; margin: auto;" />
 
 You can set the argument `location` to `"first"`, `"last"`, `"minimum"`,
-`"maximum"`, and `"all"`, where `"all"` is just a shorthand to select
-“first”, “last”, “minimum” and “maximum”.
+`"maximum"`, and `"all"`, where `"all"` is just shorthand to select
+`"first"`, `"last"`, `"minimum"` and `"maximum"`.
 
 ``` r
 p +
@@ -62,12 +62,12 @@ p +
 <img src="man/figures/README-all-1.png" width="90%" style="display: block; margin: auto;" />
 
 As you can see, `geom_pointless()` is not very useful on its own (this
-is when I stopped thinking about a better package name) but hopefully it
-is when it teams up with `geom_line()`.
+is when I stopped thinking about a better package name) but it is when
+it teams up with `geom_line()`, hopefully.
 
-`geom_pointless()` creates one additional variable – `location` – that
-you can map to an aesthetic, e.g. `colour`.  
-It understands the same arguments as `geom_point()`.
+`geom_pointless()` understands the same arguments as `geom_point()` and
+it computes one additional variable – `location` – that you can map to
+an aesthetic, e.g. `colour`.
 
 ``` r
 p +
@@ -80,6 +80,55 @@ p +
 ```
 
 <img src="man/figures/README-line-1.png" width="90%" style="display: block; margin: auto;" />
+
+`geom_pointless()` treats the observations in the order in which they
+appear in your data (like `geom_path()` does.) Example data taken from
+the
+[`geomtextpath`](https://github.com/AllanCameron/geomtextpath/#using-geomtextpath)
+package:
+
+``` r
+x <- seq(5, -1, length.out = 1000) * pi
+spiral <- data.frame(var1 = sin(x) * 1:1000, 
+                     var2 = cos(x) * 1:1000)
+
+ggplot(spiral, aes(var1, var2)) +
+  geom_path() +
+  geom_pointless(
+    aes(colour = after_stat(location)),
+    location = "all") +
+  coord_equal()
+```
+
+<img src="man/figures/README-spiral-1.png" width="90%" style="display: block; margin: auto;" />
+
+As you see from the last example, `"first"` and `"minimum"` overlap, and
+`"first"` wins over `"minimum"`. The order in which points are plotted
+(if specified together) from top to bottom is `"first"`, `"last"`,
+`"minimum"`, `"maximum"`.
+
+### Facets
+
+Since we use the magic of “ggplot2”, the geom can also be used for
+facets, as you are used to. The following example is taken from [Stack
+Overflow](https://stackoverflow.com/q/29375169/8583393)
+
+``` r
+# https://stackoverflow.com/q/29375169/8583393
+# library(reshape2)
+library(ggplot2)
+
+# me <- melt(economics, id = c("date"))
+ggplot(data = economics_long,
+       aes(x = date, y = value)) + 
+  geom_line() +
+  facet_wrap(~variable, ncol = 1, scales = 'free_y') +
+  geom_pointless(
+    aes(colour = after_stat(location)),
+    location = c("minimum", "maximum"))
+```
+
+<img src="man/figures/README-stackoverflow-1.png" width="90%" style="display: block; margin: auto;" />
 
 ## Why ggpointless?
 
