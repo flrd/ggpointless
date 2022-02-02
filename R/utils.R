@@ -15,13 +15,17 @@
 #' }
 get_locations <- function(data = NULL, location = c("first", "last", "minimum", "maximum", "all")) {
 
-  location <- match.arg(location, several.ok = TRUE)
-
   if (is.null(data) || !is.data.frame(data) || nrow(data) == 0) {
     stop("Please provide a valid data frame.")
   }
 
-  # might move this to compute_panel
+  location <- match.arg(location, several.ok = TRUE)
+
+  if("all" %in% location) {
+    location <- c("first", "last", "minimum", "maximum")
+  }
+
+  # might move this to compute_panel ?
   if(nrow(data) == 1) {
     message("Data contains a single row only. Returning data.")
     return(
@@ -32,33 +36,26 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
     )
   }
 
-  if("all" %in% location) {
-    location <- c("first", "last", "minimum", "maximum")
-  }
-
-  # get row indices of first, last
+  # get row indices
   first_row <- 1
   n_rows <- nrow(data)
 
   lst <- list(
     first = first_row,
-    last = n_rows
+    last = n_rows,
+    minimum = which(data$y == min(data$y)),
+    maximum = which(data$y == max(data$y))
   )
 
-  if("minimum" %in% location) {
-    lst[["minimum"]] <- setdiff(which(data$y == min(data$y)), c(first_row, n_rows))
-  }
 
-  if("maxima" %in% location) {
-    lst[["maxima"]] <- setdiff(which(data$y == max(data$y)), c(first_row, n_rows))
-  }
+  # filter for desired locations and make sure minimum and maximum come first so they are
+  # plotted below first and last, if they overlap
 
-  # filter for desired locations
-  lst <- lst[location]
+  lst <- lst[get_location_order(location)]
 
-  # create a two column data frame which contains row indices and respective location type
+  # create a two column data frame which contains row indices and location
   tmp <- utils::stack(lst)
-  tmp <- tmp[order(tmp[["values"]]), ]
+  tmp <- tmp[order(tmp[["values"]]),, drop = FALSE]
 
   # subset data and return it
   return(
@@ -67,12 +64,30 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
       location = to_title_simple(tmp[["ind"]])
     )
   )
+}
 
-  # handle edge cases
-  # 1 row
-  # 2 rows
-  # max = min = start = end
-  # etc.
+
+# helper to get output in desired order -----------------------------------
+
+#' Reorder location input
+#'
+#' Helper to ensure  "first" and "last" are plotted on top of
+#' "maximum" and "minimum", if they overlap
+#'
+#' @param location A character vector
+#' @return A character vector of the same length as `location`
+#' @importFrom stats na.omit
+#'
+#' @examples
+#' \dontrun{
+#' get_location_order(c("last", "minimum", "maximum"))
+#' }
+get_location_order <- function(location) {
+  desired_order <- c("maximum", "minimum", "last", "first")
+  out <- stats::na.omit(location[match(desired_order, location)])
+
+  # return our without attributes
+  `attributes<-`(out, NULL)
 }
 
 
