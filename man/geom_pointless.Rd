@@ -114,7 +114,7 @@ Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }
 
 \examples{
-# example data
+# dummy data
 x <- seq(-2 * pi, 2 * pi, length.out = 400)
 y <- sin(1/4 * x) + sin(1/2 * x) + sin(x)
 
@@ -124,6 +124,7 @@ df1 <- data.frame(
 )
 
 # not terribly useful on its own ...
+library(ggplot2)
 p <- ggplot(df1, aes(x = var1, y = var2))
 p + geom_pointless()
 p + geom_pointless(location = "all")
