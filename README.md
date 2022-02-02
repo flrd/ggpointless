@@ -109,17 +109,18 @@ As you see from the last example, `"first"` and `"minimum"` overlap, and
 
 ### Facets
 
-Since we use the magic of “ggplot2”, the geom can also be used for
-facets, as you are used to. The following example is taken from [Stack
+Since we make use the magic of `ggplot2`, the geom can of course be used
+for faceting. The following example is taken from [Stack
 Overflow](https://stackoverflow.com/q/29375169/8583393)
 
 ``` r
 # https://stackoverflow.com/q/29375169/8583393
-# library(reshape2)
-library(ggplot2)
 
+# library(reshape2)
+# library(ggplot2)
 # me <- melt(economics, id = c("date"))
-ggplot(data = economics_long,
+
+ggplot(economics_long,
        aes(x = date, y = value)) + 
   geom_line() +
   facet_wrap(~variable, ncol = 1, scales = 'free_y') +
@@ -133,3 +134,11 @@ ggplot(data = economics_long,
 ## Why ggpointless?
 
 Fair question.
+
+## Related work
+
+The package [`ggpmisc`](https://exts.ggplot2.tidyverse.org/ggpmisc.html)
+provides the stat `stat_peaks`, which calls the `peaks()` function from
+the [`splus2r`](https://github.com/spkaluzny/splus2r) package. With
+these functions / stats you are able to highlight local minima and
+maxima too.
