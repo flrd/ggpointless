@@ -32,7 +32,7 @@
 #'
 #' @export
 #' @examples
-#'# example data
+#'# dummy data
 #'x <- seq(-2 * pi, 2 * pi, length.out = 400)
 #'y <- sin(1/4 * x) + sin(1/2 * x) + sin(x)
 #'
@@ -42,6 +42,7 @@
 #')
 #'
 #'# not terribly useful on its own ...
+#'library(ggplot2)
 #'p <- ggplot(df1, aes(x = var1, y = var2))
 #'p + geom_pointless()
 #'p + geom_pointless(location = "all")
@@ -90,7 +91,7 @@ geom_pointless <- function(mapping = NULL,
     data = data,
     mapping = mapping,
     stat = stat,
-    geom = ggplot2::GeomPoint,
+    geom = GeomPoint,
     position = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
@@ -112,20 +113,20 @@ NULL
 StatPointless <- ggproto("StatPointless", Stat,
 
                          setup_params = function(data, params) {
-                           GeomLine$setup_params(data, params)
+                           GeomPath$setup_params(data, params)
                          },
 
                          extra_params = c("na.rm", "orientation"),
 
                          setup_data = function(data, params) {
-                           GeomLine$setup_data(data, params)
+                           GeomPath$setup_data(data, params)
                          },
 
                          compute_group = function(data, scales, location) {
 
                            # minimum and maximum don't make much sense when data has zero variance
                            if((var(data$y) == 0) & (any(data$location) %in% c("minimum", "maximum", "all"))) {
-                             message("There is no variation in your data.")
+                             message("There is no variation in your data. Hence, minimum and maximum are the same.")
                            }
 
                            get_locations(data, location = location)
