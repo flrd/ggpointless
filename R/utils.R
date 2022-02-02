@@ -28,12 +28,7 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
   # might move this to compute_panel ?
   if(nrow(data) == 1) {
     message("Data contains a single row only. Returning data.")
-    return(
-      cbind(
-        data,
-        location = "First & Last"
-      )
-    )
+    return(data)
   }
 
   # get row indices
@@ -43,8 +38,8 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
   lst <- list(
     first = first_row,
     last = n_rows,
-    minimum = which(data$y == min(data$y)),
-    maximum = which(data$y == max(data$y))
+    minimum = which(data$y == min(data$y, na.rm = TRUE)),
+    maximum = which(data$y == max(data$y, na.rm = TRUE))
   )
 
 
