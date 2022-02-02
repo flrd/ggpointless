@@ -67,12 +67,17 @@ As you can see, `geom_pointless()` is not very useful on its own (this
 is when I stopped thinking about a better package name) but hopefully it
 is when it teams up with `geom_line()`.
 
+`geom_pointless()` creates one additional variable – `location` – that
+you can map to an aesthetic, e.g. `colour`.  
+It understands the same arguments as `geom_point()`.
+
 ``` r
 p +
   geom_line() +
   geom_pointless(
     aes(colour = after_stat(location)),
-    location = "all"
+    location = "all",
+    size = 3
     )
 ```
 
