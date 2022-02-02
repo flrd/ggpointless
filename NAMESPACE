@@ -3,3 +3,4 @@
 export(StatPointless)
 export(geom_pointless)
 import(ggplot2)
+importFrom(stats,na.omit)
