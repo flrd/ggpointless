@@ -9,8 +9,12 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "90%",
+  fig.align = "center",
+  dpi = 132
 )
+
+library(ggpointless)
 ```
 
 # ggpointless
@@ -30,7 +34,7 @@ You can install the development version of ggpointless from [GitHub](https://git
 devtools::install_github("flrd/ggpointless")
 ```
 
-## Example
+## First examples
 
 The one `geom` in this package is `geom_pointless`. It behaves like `geom_point()` but, by default, `geom_pointless()` adds only a single point at the last observation. 
 
@@ -53,7 +57,7 @@ p +
   geom_pointless()
 ```
 
-You can set the argument `location` to `"first"`, `"last"`, `"minimum"`, `"maximum"`, and `"all"`, where "all" is just a shorthand to select "first", "last", "minimum" and "maximum".
+You can set the argument `location` to `"first"`, `"last"`, `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just a shorthand to select "first", "last", "minimum" and "maximum".
 
 ```{r all}
 p +
@@ -75,3 +79,7 @@ p +
     size = 3
     )
 ```
+
+## Why ggpointless?
+
+Fair question. 

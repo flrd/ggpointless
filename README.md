@@ -23,7 +23,7 @@ You can install the development version of ggpointless from
 devtools::install_github("flrd/ggpointless")
 ```
 
-## Example
+## First examples
 
 The one `geom` in this package is `geom_pointless`. It behaves like
 `geom_point()` but, by default, `geom_pointless()` adds only a single
@@ -31,8 +31,6 @@ point at the last observation.
 
 ``` r
 library(ggpointless)
-#> Lade nötiges Paket: ggplot2
-#> Warning: Paket 'ggplot2' wurde unter R Version 4.1.1 erstellt
 # set theme
 theme_set(theme_minimal())
 
@@ -50,10 +48,10 @@ p +
   geom_pointless()
 ```
 
-<img src="man/figures/README-default-1.png" width="100%" />
+<img src="man/figures/README-default-1.png" width="90%" style="display: block; margin: auto;" />
 
 You can set the argument `location` to `"first"`, `"last"`, `"minimum"`,
-`"maximum"`, and `"all"`, where “all” is just a shorthand to select
+`"maximum"`, and `"all"`, where `"all"` is just a shorthand to select
 “first”, “last”, “minimum” and “maximum”.
 
 ``` r
@@ -61,7 +59,7 @@ p +
   geom_pointless(location = "all")
 ```
 
-<img src="man/figures/README-all-1.png" width="100%" />
+<img src="man/figures/README-all-1.png" width="90%" style="display: block; margin: auto;" />
 
 As you can see, `geom_pointless()` is not very useful on its own (this
 is when I stopped thinking about a better package name) but hopefully it
@@ -81,4 +79,8 @@ p +
     )
 ```
 
-<img src="man/figures/README-line-1.png" width="100%" />
+<img src="man/figures/README-line-1.png" width="90%" style="display: block; margin: auto;" />
+
+## Why ggpointless?
+
+Fair question.
