@@ -15,7 +15,7 @@
 #' }
 get_locations <- function(data = NULL, location = c("first", "last", "minimum", "maximum", "all")) {
 
-  if (is.null(data) || !is.data.frame(data) || nrow(data) == 0) {
+  if (is.null(data) | !is.data.frame(data) | nrow(data) == 0) {
     stop("Please provide a valid data frame.")
   }
 
@@ -140,19 +140,20 @@ is_any_capitalized <- function(string) {
 #'}
 
 decades <- function(year) {
-  stopifnot(is.numeric(year))
+  stopifnot(is.numeric(year) | !is.null(year))
 
-  if (any(year < 0)) {
-    message("Year must be larger than 0, returning 0.")
-    year <- replace(year, year < 0, 0)
+  years_AD <- pmax(0, year)
+
+  if(!identical(year, years_AD)) {
+    message("Year must be larger than 0, returning \"00's\".")
   }
 
-  tmp <- year %% 100 %/% 10 * 10
-  century <- year %/% 100
+  decade <- years_AD %/% 10 * 10
 
-  ifelse(century == 0,
-         sprintf("%02.0f's", tmp),
-         sprintf("%d%02.0f's", century, tmp))
+  # don't format NA values, as they'd turn into "NA's"
+  idx <- is.na(decade)
+  out <- replace(decade, !idx, sprintf("%02.0f's", decade[!idx]))
+  out
 }
 
 
