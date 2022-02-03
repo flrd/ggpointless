@@ -3,6 +3,6 @@
     Code
       spiral[1, , drop = FALSE]
     Output
-                   x  y
-      1 6.123032e-16 -1
+        x  y X4
+      1 0 -1  4
 
