@@ -96,22 +96,6 @@ ggplot(spiral, aes(var1, var2)) +
 As you see from the last example, `"first"` and `"minimum"` overlap, and `"first"` wins over `"minimum"`. The order in which points are plotted (if specified together) from top to bottom is `"first"`, `"last"`, `"minimum"`, then `"maximum"`. 
 
 
-
-
-```{r spiral_flipped}
-x <- seq(5, -1, length.out = 1000) * pi
-spiral <- data.frame(var1 = sin(x) * 1:1000, 
-                     var2 = cos(x) * 1:1000)
-
-ggplot(spiral, aes(var2, var1)) +
-  geom_path() +
-  geom_pointless(
-    aes(colour = after_stat(location)),
-    location = "all") +
-  coord_equal()
-```
-
-
 ### Facets
 Since we make use the magic of [`ggplot2`](https://ggplot2.tidyverse.org/), the geom can of course be used for faceting. The following example is taken from [Stack Overflow](https://stackoverflow.com/q/29375169/8583393)
 

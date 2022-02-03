@@ -107,21 +107,6 @@ As you see from the last example, `"first"` and `"minimum"` overlap, and
 (if specified together) from top to bottom is `"first"`, `"last"`,
 `"minimum"`, then `"maximum"`.
 
-``` r
-x <- seq(5, -1, length.out = 1000) * pi
-spiral <- data.frame(var1 = sin(x) * 1:1000, 
-                     var2 = cos(x) * 1:1000)
-
-ggplot(spiral, aes(var2, var1)) +
-  geom_path() +
-  geom_pointless(
-    aes(colour = after_stat(location)),
-    location = "all") +
-  coord_equal()
-```
-
-<img src="man/figures/README-spiral_flipped-1.png" width="90%" style="display: block; margin: auto;" />
-
 ### Facets
 
 Since we make use the magic of
