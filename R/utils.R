@@ -56,7 +56,7 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
   return(
     cbind(
       data[tmp[["values"]],, drop = FALSE],
-      location = to_title_simple(tmp[["ind"]])
+      location = tmp[["ind"]]
     )
   )
 }
@@ -124,6 +124,37 @@ to_title_simple <- function(x) {
 is_any_capitalized <- function(string) {
   any(grepl("^[A-Z]", substring(string, 1, 1)))
 }
+
+
+
+# create adecade from number ----------------------------------------------
+
+#'Given a year (A.D.), get the decade
+#'
+#'@param year A numeric vector
+#'@return A string of the same length as year
+#'
+#'@examples
+#'\dontrun{
+#'decades(c(2019:2021))
+#'}
+
+decades <- function(year) {
+  stopifnot(is.numeric(year))
+
+  if (any(year < 0)) {
+    message("Year must be larger than 0, returning 0.")
+    year <- replace(year, year < 0, 0)
+  }
+
+  tmp <- year %% 100 %/% 10 * 10
+  century <- year %/% 100
+
+  ifelse(century == 0,
+         sprintf("%02.0f's", tmp),
+         sprintf("%d%02.0f's", century, tmp))
+}
+
 
 
 

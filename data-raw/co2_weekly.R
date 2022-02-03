@@ -31,17 +31,7 @@ idx <- which(is.na(co2_weekly$co2_ppm))
 co2_weekly$co2_ppm[idx] <- spline(co2_weekly$co2_ppm, xout = idx)$y
 
 
-# add decade --------------------------------------------------------------
-decades <- function(year) {
-
-  stopifnot(is.numeric(year))
-
-  tmp <- year %% 100 %/% 10 * 10
-  century <- as.character(year %/% 100)
-  sprintf("%s%02.0f's", century, tmp)
-}
-
-co2_weekly[["decade"]] <- decades(co2_weekly$year)
+co2_weekly[["decade"]] <- ggpointless::decades(co2_weekly$year)
 # unique(co2[["decade"]])
 
 

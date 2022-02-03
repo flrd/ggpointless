@@ -27,13 +27,7 @@ co2_monthly <- co2_full[, c("date", "year", "month", "co2_ppm", "trend")]
 
 
 # add decade --------------------------------------------------------------
-decades <- function(x) {
-  tmp <- x %% 100 %/% 10 * 10
-  century <- as.character(x %/% 100)
-  sprintf("%s%02.0f's", century, tmp)
-}
-
-co2_monthly[["decade"]] <- decades(co2_monthly$year)
+co2_monthly[["decade"]] <- ggpointless::decades(co2_monthly$year)
 # unique(co2_monthly[["decade"]])
 
 
