@@ -6,6 +6,5 @@ test_that("returns correct decade", {
 test_that("only numeric vectors are allowed", {
   expect_error(decades("2022"))
   expect_error(decades(list(a = 1)))
-  expect_error(decades(NA))
   expect_error(decades(NULL))
 })
