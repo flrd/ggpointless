@@ -1,0 +1,147 @@
+"outcome","month","year_week","status","value","date"
+"case","04 - APR",202114,"fully vaccinated",21.02451063,2021-04-04
+"case","04 - APR",202115,"fully vaccinated",18.52872443,2021-04-11
+"case","04 - APR",202116,"fully vaccinated",16.66126192,2021-04-18
+"case","04 - APR",202117,"fully vaccinated",15.98967457,2021-04-25
+"case","05 - MAY",202118,"fully vaccinated",11.46537228,2021-05-02
+"case","05 - MAY",202119,"fully vaccinated",8.574761325,2021-05-09
+"case","05 - MAY",202120,"fully vaccinated",7.292606748,2021-05-16
+"case","05 - MAY",202121,"fully vaccinated",5.736668205,2021-05-23
+"case","06 - JUN",202122,"fully vaccinated",5.141028089,2021-05-30
+"case","06 - JUN",202123,"fully vaccinated",5.19057167,2021-06-06
+"case","06 - JUN",202124,"fully vaccinated",5.438432335,2021-06-13
+"case","06 - JUN",202125,"fully vaccinated",7.220768436,2021-06-20
+"case","06 - JUN",202126,"fully vaccinated",11.04556018,2021-06-27
+"case","07 - JUL",202127,"fully vaccinated",18.48788738,2021-07-04
+"case","07 - JUL",202128,"fully vaccinated",33.63993835,2021-07-11
+"case","07 - JUL",202129,"fully vaccinated",58.39782885,2021-07-18
+"case","07 - JUL",202130,"fully vaccinated",88.29428495,2021-07-25
+"case","08 - AUG",202131,"fully vaccinated",112.1479814,2021-08-01
+"case","08 - AUG",202132,"fully vaccinated",122.7498664,2021-08-08
+"case","08 - AUG",202133,"fully vaccinated",128.3088508,2021-08-15
+"case","08 - AUG",202134,"fully vaccinated",132.0615953,2021-08-22
+"case","09 - SEP",202135,"fully vaccinated",125.4784082,2021-08-29
+"case","09 - SEP",202136,"fully vaccinated",113.1012979,2021-09-05
+"case","09 - SEP",202137,"fully vaccinated",102.4493681,2021-09-12
+"case","09 - SEP",202138,"fully vaccinated",87.84098312,2021-09-19
+"case","09 - SEP",202139,"fully vaccinated",82.97084161,2021-09-26
+"case","10 - OCT",202140,"fully vaccinated",77.66425169,2021-10-03
+"case","10 - OCT",202141,"fully vaccinated",69.32257568,2021-10-10
+"case","10 - OCT",202142,"fully vaccinated",65.30913674,2021-10-17
+"case","10 - OCT",202143,"fully vaccinated",68.7723518,2021-10-24
+"case","11 - NOV",202144,"fully vaccinated",78.34089861,2021-10-31
+"case","11 - NOV",202145,"fully vaccinated",85.36868555,2021-11-07
+"case","11 - NOV",202146,"fully vaccinated",92.34663458,2021-11-14
+"case","11 - NOV",202147,"fully vaccinated",82.89861928,2021-11-21
+"case","12 - DEC",202148,"fully vaccinated",123.852306,2021-11-28
+"case","12 - DEC",202149,"fully vaccinated",113.359997,2021-12-05
+"case","12 - DEC",202150,"fully vaccinated",207.1574417,2021-12-12
+"case","12 - DEC",202151,"fully vaccinated",443.6895645,2021-12-19
+"death","04 - APR",202114,"fully vaccinated",0.14802466,2021-04-04
+"death","04 - APR",202115,"fully vaccinated",0.159363074,2021-04-11
+"death","04 - APR",202116,"fully vaccinated",0.132634061,2021-04-18
+"death","04 - APR",202117,"fully vaccinated",0.135112389,2021-04-25
+"death","05 - MAY",202118,"fully vaccinated",0.121080928,2021-05-02
+"death","05 - MAY",202119,"fully vaccinated",0.089706092,2021-05-09
+"death","05 - MAY",202120,"fully vaccinated",0.087131345,2021-05-16
+"death","05 - MAY",202121,"fully vaccinated",0.070741957,2021-05-23
+"death","06 - JUN",202122,"fully vaccinated",0.070511,2021-05-30
+"death","06 - JUN",202123,"fully vaccinated",0.06595192,2021-06-06
+"death","06 - JUN",202124,"fully vaccinated",0.075719921,2021-06-13
+"death","06 - JUN",202125,"fully vaccinated",0.09677206,2021-06-20
+"death","06 - JUN",202126,"fully vaccinated",0.101019844,2021-06-27
+"death","07 - JUL",202127,"fully vaccinated",0.170868479,2021-07-04
+"death","07 - JUL",202128,"fully vaccinated",0.295105522,2021-07-11
+"death","07 - JUL",202129,"fully vaccinated",0.473397441,2021-07-18
+"death","07 - JUL",202130,"fully vaccinated",0.755289571,2021-07-25
+"death","08 - AUG",202131,"fully vaccinated",0.934321269,2021-08-01
+"death","08 - AUG",202132,"fully vaccinated",1.124302436,2021-08-08
+"death","08 - AUG",202133,"fully vaccinated",1.119929796,2021-08-15
+"death","08 - AUG",202134,"fully vaccinated",1.055002165,2021-08-22
+"death","09 - SEP",202135,"fully vaccinated",0.987623263,2021-08-29
+"death","09 - SEP",202136,"fully vaccinated",0.939754274,2021-09-05
+"death","09 - SEP",202137,"fully vaccinated",0.809496229,2021-09-12
+"death","09 - SEP",202138,"fully vaccinated",0.710131159,2021-09-19
+"death","09 - SEP",202139,"fully vaccinated",0.591209942,2021-09-26
+"death","10 - OCT",202140,"fully vaccinated",0.533698312,2021-10-03
+"death","10 - OCT",202141,"fully vaccinated",0.50222873,2021-10-10
+"death","10 - OCT",202142,"fully vaccinated",0.467174931,2021-10-17
+"death","10 - OCT",202143,"fully vaccinated",0.455656623,2021-10-24
+"death","11 - NOV",202144,"fully vaccinated",0.461489254,2021-10-31
+"death","11 - NOV",202145,"fully vaccinated",0.484333139,2021-11-07
+"death","11 - NOV",202146,"fully vaccinated",0.509388337,2021-11-14
+"death","11 - NOV",202147,"fully vaccinated",0.510981089,2021-11-21
+"death","12 - DEC",202148,"fully vaccinated",0.465690889,2021-11-28
+"case","04 - APR",202114,"unvaccinated",203.9323319,2021-04-04
+"case","04 - APR",202115,"unvaccinated",203.3859786,2021-04-11
+"case","04 - APR",202116,"unvaccinated",175.4118045,2021-04-18
+"case","04 - APR",202117,"unvaccinated",159.6048127,2021-04-25
+"case","05 - MAY",202118,"unvaccinated",136.1643299,2021-05-02
+"case","05 - MAY",202119,"unvaccinated",116.5863226,2021-05-09
+"case","05 - MAY",202120,"unvaccinated",90.22434023,2021-05-16
+"case","05 - MAY",202121,"unvaccinated",68.46282246,2021-05-23
+"case","06 - JUN",202122,"unvaccinated",55.5179887,2021-05-30
+"case","06 - JUN",202123,"unvaccinated",50.72798976,2021-06-06
+"case","06 - JUN",202124,"unvaccinated",49.18168573,2021-06-13
+"case","06 - JUN",202125,"unvaccinated",54.56028842,2021-06-20
+"case","06 - JUN",202126,"unvaccinated",72.5216213,2021-06-27
+"case","07 - JUL",202127,"unvaccinated",109.0548874,2021-07-04
+"case","07 - JUL",202128,"unvaccinated",172.8768935,2021-07-11
+"case","07 - JUL",202129,"unvaccinated",283.7455799,2021-07-18
+"case","07 - JUL",202130,"unvaccinated",424.1256506,2021-07-25
+"case","08 - AUG",202131,"unvaccinated",530.772165,2021-08-01
+"case","08 - AUG",202132,"unvaccinated",607.8844795,2021-08-08
+"case","08 - AUG",202133,"unvaccinated",657.1131485,2021-08-15
+"case","08 - AUG",202134,"unvaccinated",682.8966736,2021-08-22
+"case","09 - SEP",202135,"unvaccinated",658.8965665,2021-08-29
+"case","09 - SEP",202136,"unvaccinated",595.1731908,2021-09-05
+"case","09 - SEP",202137,"unvaccinated",533.0887034,2021-09-12
+"case","09 - SEP",202138,"unvaccinated",454.9216632,2021-09-19
+"case","09 - SEP",202139,"unvaccinated",408.3782701,2021-09-26
+"case","10 - OCT",202140,"unvaccinated",373.4160667,2021-10-03
+"case","10 - OCT",202141,"unvaccinated",329.4917907,2021-10-10
+"case","10 - OCT",202142,"unvaccinated",305.4796871,2021-10-17
+"case","10 - OCT",202143,"unvaccinated",318.0736112,2021-10-24
+"case","11 - NOV",202144,"unvaccinated",337.1566391,2021-10-31
+"case","11 - NOV",202145,"unvaccinated",377.6721347,2021-11-07
+"case","11 - NOV",202146,"unvaccinated",418.2837514,2021-11-14
+"case","11 - NOV",202147,"unvaccinated",375.3168955,2021-11-21
+"case","12 - DEC",202148,"unvaccinated",559.0325355,2021-11-28
+"case","12 - DEC",202149,"unvaccinated",528.5697208,2021-12-05
+"case","12 - DEC",202150,"unvaccinated",639.8792063,2021-12-12
+"case","12 - DEC",202151,"unvaccinated",1006.387219,2021-12-19
+"death","04 - APR",202114,"unvaccinated",2.842742135,2021-04-04
+"death","04 - APR",202115,"unvaccinated",2.993971489,2021-04-11
+"death","04 - APR",202116,"unvaccinated",2.943645475,2021-04-18
+"death","04 - APR",202117,"unvaccinated",2.588312523,2021-04-25
+"death","05 - MAY",202118,"unvaccinated",2.467597783,2021-05-02
+"death","05 - MAY",202119,"unvaccinated",2.003318512,2021-05-09
+"death","05 - MAY",202120,"unvaccinated",1.673362986,2021-05-16
+"death","05 - MAY",202121,"unvaccinated",1.43467003,2021-05-23
+"death","06 - JUN",202122,"unvaccinated",1.227541079,2021-05-30
+"death","06 - JUN",202123,"unvaccinated",1.175770354,2021-06-06
+"death","06 - JUN",202124,"unvaccinated",1.16947474,2021-06-13
+"death","06 - JUN",202125,"unvaccinated",1.362497124,2021-06-20
+"death","06 - JUN",202126,"unvaccinated",1.738044504,2021-06-27
+"death","07 - JUL",202127,"unvaccinated",2.738782493,2021-07-04
+"death","07 - JUL",202128,"unvaccinated",4.075500579,2021-07-11
+"death","07 - JUL",202129,"unvaccinated",7.225968495,2021-07-18
+"death","07 - JUL",202130,"unvaccinated",11.02238333,2021-07-25
+"death","08 - AUG",202131,"unvaccinated",14.59533223,2021-08-01
+"death","08 - AUG",202132,"unvaccinated",17.04765669,2021-08-08
+"death","08 - AUG",202133,"unvaccinated",18.16471288,2021-08-15
+"death","08 - AUG",202134,"unvaccinated",17.35325648,2021-08-22
+"death","09 - SEP",202135,"unvaccinated",16.64901073,2021-08-29
+"death","09 - SEP",202136,"unvaccinated",14.43491032,2021-09-05
+"death","09 - SEP",202137,"unvaccinated",12.39061186,2021-09-12
+"death","09 - SEP",202138,"unvaccinated",10.2544866,2021-09-19
+"death","09 - SEP",202139,"unvaccinated",8.676893667,2021-09-26
+"death","10 - OCT",202140,"unvaccinated",7.709436743,2021-10-03
+"death","10 - OCT",202141,"unvaccinated",7.116481256,2021-10-10
+"death","10 - OCT",202142,"unvaccinated",6.431453612,2021-10-17
+"death","10 - OCT",202143,"unvaccinated",6.301405512,2021-10-24
+"death","11 - NOV",202144,"unvaccinated",6.882448207,2021-10-31
+"death","11 - NOV",202145,"unvaccinated",7.471984836,2021-11-07
+"death","11 - NOV",202146,"unvaccinated",8.39450078,2021-11-14
+"death","11 - NOV",202147,"unvaccinated",7.770561558,2021-11-21
+"death","12 - DEC",202148,"unvaccinated",9.197037038,2021-11-28
