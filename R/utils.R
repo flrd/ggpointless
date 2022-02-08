@@ -19,10 +19,10 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
     stop("Please provide a valid data frame.")
   }
 
-  location <- match.arg(location, several.ok = TRUE)
+  locations <- match.arg(location, several.ok = TRUE)
 
   if("all" %in% location) {
-    location <- c("first", "last", "minimum", "maximum")
+    locations <- c("first", "last", "minimum", "maximum")
   }
 
   # might move this to compute_panel ?
@@ -42,17 +42,16 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
     maximum = which(data$y == max(data$y, na.rm = TRUE))
   )
 
+  # filter only desired locations
+  lst <- lst[locations]
 
-  # filter for desired locations and make sure minimum and maximum come first so they are
-  # plotted below first and last, if they overlap
-
-  lst <- lst[get_location_order(location)]
-
-  # create a two column data frame which contains row indices and location
+  # create 2 cols data frame of row indices and locations
   tmp <- utils::stack(lst)
+
+  # order by values, i.e. row index
   tmp <- tmp[order(tmp[["values"]]),, drop = FALSE]
 
-  # subset data and return it
+  # return subset of input data
   return(
     cbind(
       data[tmp[["values"]],, drop = FALSE],
@@ -62,73 +61,7 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 }
 
 
-# helper to get output in desired order -----------------------------------
-
-#' Reorder location input
-#'
-#' Helper to ensure  "first" and "last" are plotted on top of
-#' "maximum" and "minimum", if they overlap
-#'
-#' @param location A character vector
-#' @return A character vector of the same length as `location`
-#' @importFrom stats na.omit
-#'
-#' @examples
-#' \dontrun{
-#' get_location_order(c("last", "minimum", "maximum"))
-#' }
-get_location_order <- function(location) {
-  desired_order <- c("maximum", "minimum", "last", "first")
-  out <- stats::na.omit(location[match(desired_order, location)])
-
-  # return our without attributes
-  `attributes<-`(out, NULL)
-}
-
-
-
-# helper to capitalize first letter of a string ---------------------------
-
-#' Capitalize a character vector
-#'
-#' Helper to get from "here" to "Here"
-#'
-#' @param x A character vector
-#' @return A character vector of the same length as x
-#'
-#' @examples
-#' \dontrun{
-#' to_title_simple(c("foo", "bar"))
-#' }
-to_title_simple <- function(x) {
-  paste0(
-    toupper(substring(x, first = 1, last = 1)),
-    substring(x, first = 2)
-    )
-}
-
-
-# correct wrongly typed params with warning -------------------------------
-
-#' Is any value capitalized?
-#'
-#' Helper to find any capitalized string.
-#'
-#' @param string A character vector
-#' @return A logical vector of length one
-#'
-#' @examples
-#' \dontrun{
-#' is_any_capitalized(c("Foo", "bar"))
-#' }
-is_any_capitalized <- function(string) {
-  any(grepl("^[A-Z]", substring(string, 1, 1)))
-}
-
-
-
 # create adecade from number ----------------------------------------------
-
 #'Given a year (A.D.), get the decade
 #'
 #'@param year A numeric vector
@@ -156,39 +89,3 @@ decades <- function(year) {
   out
 }
 
-
-
-
-# wrap aesthetic description from geom_point() ----------------------------
-
-wrap_rd_aesthetics <-
-  function(type = "geom",
-           name = "pointless",
-           output_name = NULL) {
-
-    if(is.null(output_name)) {
-      output_name <- name
-    }
-
-    obj <- switch(
-      type,
-      geom = ggplot2:::check_subclass(name, "Geom", env = globalenv()),
-      stat = ggplot2:::check_subclass(name, "Stat", env = globalenv())
-    )
-    aes <- ggplot2:::rd_aesthetics_item(obj)
-    c(
-      "@section Aesthetics:",
-      paste0(
-        "\\code{",
-        type,
-        "_",
-        output_name,
-        "()} ",
-        "understands the following aesthetics (required aesthetics are in bold):"
-      ),
-      "\\itemize{",
-      paste0("  \\item ", aes),
-      "}",
-      "Learn more about setting these aesthetics in \\code{vignette(\"ggplot2-specs\")}."
-    )
-  }

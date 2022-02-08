@@ -15,16 +15,33 @@
 #' When `location` is `"last"`, the default, a single point will be plotted at the last observations.
 #' Setting `location` to `"first"` adds a point at the first position.
 #'
-#'
-#'
 #' @section Computed variables:
 #' \describe{
-#'   \item{location}{The locations for each row of returned data as characters}
+#'   \item{location}{locations, returned as factor}
 #' }
 #'
-#' @eval ggplot2:::rd_orientation()
+#' @section Orientation:
+#' This geom treats each axis differently and, can thus have two orientations.
+#' Often the orientation is easy to deduce from a combination of the given mappings
+#' and the types of positional scales in use. Thus, ggplot2 will by default try
+#' to guess which orientation the layer should have. Under rare circumstances,
+#' the orientation is ambiguous and guessing may fail. In that case the orientation
+#' can be specified directly using the orientation parameter, which can be either
+#' "x" or "y". The value gives the axis that the geom should run along, "x"
+#' being the default orientation you would expect for the geom.
 #'
-#' @eval wrap_rd_aesthetics("geom", "point", "pointless")
+#' @section Aesthetics:
+#' geom_pointless() understands the following aesthetics (required aesthetics are in bold):
+#'
+#' - **x**
+#' - **y**
+#' - alpha
+#' - colour
+#' - fill
+#' - group
+#' - shape
+#' - size
+#' - stroke
 #'
 #' @import ggplot2
 #' @inheritParams ggplot2::geom_point
@@ -135,3 +152,35 @@ StatPointless <- ggproto("StatPointless", Stat,
                          required_aes = c("x", "y")
 
 )
+NULL
+
+#' @rdname geom_pointless
+#' @export
+stat_pointless <- function(mapping = NULL,
+                           data = NULL,
+                           geom = "point",
+                           position = "identity",
+                           ...,
+                           location = "last",
+                           na.rm = FALSE,
+                           orientation = NA,
+                           show.legend = NA,
+                           inherit.aes = TRUE
+) {
+  ggplot2::layer(
+    data = data,
+    mapping = mapping,
+    stat = StatPointless,
+    geom = geom,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      location = location,
+      na.rm = na.rm,
+      orientation = orientation,
+      ...
+    )
+  )
+}
+NULL
