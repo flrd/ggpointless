@@ -25,11 +25,12 @@
 
 #' Rates of COVID-19 Cases and Deaths by Vaccination Status
 #'
-#' Data contains overall weekly rates of COVID-19 cases and deaths among
-#' fully vaccinated and unvaccinated people ages 12 years and older,
-#' according to COVID-19 positive specimen collection date.
+#' Data on overall weekly rates of COVID-19 cases and deaths among
+#' fully vaccinated and unvaccinated people aged 12 years and older,
+#' according to COVID-19 positive specimen collection date. Data covers
+#' the periods from April 4, to December 25, 2021.
 #'
-#' @format A data frame with 766 rows and 8 variables:
+#' @format A data frame with 146 rows and 4 variables:
 #' \describe{
 #'   \item{date}{Week of data collection}
 #'   \item{incidence}{COVID-19 cases and deaths, standardized by age}
