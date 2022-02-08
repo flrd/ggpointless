@@ -20,3 +20,23 @@
 #'
 #' \url{https://gml.noaa.gov/ccgg/trends/data.html}
 "co2_monthly"
+
+
+
+#' Rates of COVID-19 Cases and Deaths by Vaccination Status
+#'
+#' Data contains overall weekly rates of COVID-19 cases and deaths among
+#' fully vaccinated and unvaccinated people ages 12 years and older,
+#' according to COVID-19 positive specimen collection date.
+#'
+#' @format A data frame with 766 rows and 8 variables:
+#' \describe{
+#'   \item{date}{Week of data collection}
+#'   \item{incidence}{COVID-19 cases and deaths, standardized by age}
+#'   \item{status}{vaccination status}
+#'   \item{outcome}{COVID-19 cases and deaths}
+#' }
+#' @source Centers for Disease Control and Prevention Rates of COVID-19 Cases and Deaths by Vaccination Status
+#'
+#' \url{https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status}
+"covid_vac"

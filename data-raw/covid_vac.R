@@ -24,8 +24,8 @@ covid_vac <- reshape(cdc[cols], direction = "long",
 row.names(covid_vac) <- NULL
 
 
-# rename col names --------------------------------------------------------
-names(covid_vac) <- c("outcome", "month", "year_week", "status", "value")
+# rename coloumns ---------------------------------------------------------
+names(covid_vac) <- c("outcome", "month", "year_week", "status", "incidence")
 
 
 # fully.vaccinated --> fully vaccinated -----------------------------------
@@ -33,6 +33,10 @@ covid_vac$status <- replace(covid_vac$status, covid_vac$status == "fully.vaccina
 
 # add a date column -------------------------------------------------------
 covid_vac$date <- as.Date(paste0(covid_vac$year_week, "01"), "%Y%U%w")
+
+
+# remove columns ----------------------------------------------------------
+covid_vac <- covid_vac[, c("date", "incidence", "status", "outcome")]
 
 
 # save as .csv ------------------------------------------------------------
