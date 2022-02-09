@@ -48,8 +48,9 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
   # create 2 cols data frame of row indices and locations
   tmp <- utils::stack(lst)
 
-  # order by values, i.e. row index
-  tmp <- tmp[order(tmp[["values"]]),, drop = FALSE]
+  # make sure that first is plotted on top of last, minimum, maximum, in that order
+  # hence, order by row index, i.e. "values", then by reversed location level
+  tmp <- tmp[order(tmp[["values"]], -as.integer(tmp[["ind"]])),, drop = FALSE]
 
   # return subset of input data
   return(

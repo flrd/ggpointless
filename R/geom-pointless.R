@@ -1,24 +1,24 @@
-#' Points to highlight some observations
+#' Emphasize some observations with points
 #'
-#' This is a wrapper around `geom_point()` with 1 additional argument: `location`. It allows to highlight
-#' some observations, currently these are the first observation, the last one,
-#' and observations with minimum or maximum value. This geom is not particularly useful on its own (hence the name),
-#' but hopefully in conjunction with `geom_path()` and friends, see examples.
+#' @description This is a wrapper around `geom_point()` with the one additional argument: `location`.
+#' It allows to emphazise some observations, namely the first the last, and the minima and maxima, see examples.
+#' This geom is not particularly useful on its own, hence the name, but hopefully in conjunction
+#' with `geom_path()` and friends.
+#'
+#' @import ggplot2
+#' @inheritParams ggplot2::geom_point
+#' @inheritParams ggplot2::layer
 #'
 #' @param location A character vector specifying which observations to highlight, defaults to `"last"`.
 #' @param orientation The orientation of the layer. The default (`NA`) automatically determines
 #' the orientation from the aesthetic mapping. In the rare event that this fails it can be given
 #' explicitly by setting `orientation` to either `"x"` or `"y"`. See the Orientation section for more detail.
+#' @param geom,stat Overwrite the default connection between `geom_pointless()` and `stat_pointless()`.
 #'
 #' @section Details:
 #' The argument `location` allows you to control which observations to highlight - with a point.
 #' When `location` is `"last"`, the default, a single point will be plotted at the last observations.
 #' Setting `location` to `"first"` adds a point at the first position.
-#'
-#' @section Computed variables:
-#' \describe{
-#'   \item{location}{locations, returned as factor}
-#' }
 #'
 #' @section Orientation:
 #' This geom treats each axis differently and, can thus have two orientations.
@@ -43,23 +43,19 @@
 #' - size
 #' - stroke
 #'
-#' @import ggplot2
-#' @inheritParams ggplot2::geom_point
-#' @inheritParams ggplot2::layer
 #'
 #' @export
 #' @examples
 #'# dummy data
-#'x <- seq(-2 * pi, 2 * pi, length.out = 400)
-#'y <- sin(1/4 * x) + sin(1/2 * x) + sin(x)
+#'x <- seq(-pi, pi, length.out = 500)
+#'y_mat <- vapply(seq.int(5), function(i) sin(x * i), numeric(length(x)))
 #'
 #'df1 <- data.frame(
 #'  var1 = x,
-#'  var2 = y
+#'  var2 = rowSums(y_mat)
 #')
 #'
 #'# not terribly useful on its own ...
-#'library(ggplot2)
 #'p <- ggplot(df1, aes(x = var1, y = var2))
 #'p + geom_pointless()
 #'p + geom_pointless(location = "all")
@@ -93,6 +89,7 @@
 #'   ) +
 #'  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
 #'  }
+#'
 geom_pointless <- function(mapping = NULL,
                            data = NULL,
                            stat = "pointless",
@@ -120,67 +117,3 @@ geom_pointless <- function(mapping = NULL,
     )
   )
 }
-
-NULL
-
-#' @rdname geom_pointless
-#' @format NULL
-#' @usage NULL
-#' @export
-StatPointless <- ggproto("StatPointless", Stat,
-
-                         setup_params = function(data, params) {
-                           GeomPath$setup_params(data, params)
-                         },
-
-                         extra_params = c("na.rm", "orientation"),
-
-                         setup_data = function(data, params) {
-                           GeomPath$setup_data(data, params)
-                         },
-
-                         compute_group = function(data, scales, location) {
-
-                           # minimum and maximum don't make much sense when data has zero variance
-                           if((var(data$y) == 0) & (any(data$location) %in% c("minimum", "maximum", "all"))) {
-                             message("There is no variation in your data. Hence, minimum and maximum are the same.")
-                           }
-
-                           get_locations(data, location = location)
-                         },
-
-                         required_aes = c("x", "y")
-
-)
-NULL
-
-#' @rdname geom_pointless
-#' @export
-stat_pointless <- function(mapping = NULL,
-                           data = NULL,
-                           geom = "point",
-                           position = "identity",
-                           ...,
-                           location = "last",
-                           na.rm = FALSE,
-                           orientation = NA,
-                           show.legend = NA,
-                           inherit.aes = TRUE
-) {
-  ggplot2::layer(
-    data = data,
-    mapping = mapping,
-    stat = StatPointless,
-    geom = geom,
-    position = position,
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = list(
-      location = location,
-      na.rm = na.rm,
-      orientation = orientation,
-      ...
-    )
-  )
-}
-NULL

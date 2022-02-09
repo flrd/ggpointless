@@ -1,0 +1,61 @@
+#' @section Computed variables:
+#' \describe{
+#'   \item{location}{locations, returned as factor}
+#' }
+#'
+#' @export
+#' @rdname geom_pointless
+stat_pointless <- function(mapping = NULL,
+                           data = NULL,
+                           geom = "point",
+                           position = "identity",
+                           ...,
+                           location = "last",
+                           na.rm = FALSE,
+                           orientation = NA,
+                           show.legend = NA,
+                           inherit.aes = TRUE
+) {
+  ggplot2::layer(
+    data = data,
+    mapping = mapping,
+    stat = StatPointless,
+    geom = geom,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      location = location,
+      na.rm = na.rm,
+      orientation = orientation,
+      ...
+    )
+  )
+}
+
+#' @rdname geom_pointless
+#' @format NULL
+#' @usage NULL
+#' @export
+StatPointless <- ggproto("StatPointless", Stat,
+    setup_params = function(data, params) {
+      GeomPath$setup_params(data, params)
+      },
+    extra_params = c("na.rm", "orientation"),
+
+    setup_data = function(data, params) {
+      GeomPath$setup_data(data, params)
+      },
+
+    compute_group = function(data, scales, location) {
+      # minimum and maximum don't make much sense when data has zero variance
+      if((var(data$y) == 0) & (any(data$location) %in% c("minimum", "maximum", "all"))) {
+        message("There is no variation in your data. Hence, minimum and maximum are the same.")
+        }
+
+      get_locations(data, location = location)
+      },
+
+    required_aes = c("x", "y")
+
+)
