@@ -18,7 +18,10 @@ Depends:
     ggplot2 (>= 2.2.1),
     R (>= 2.10)
 Suggests: 
+    knitr,
     covr,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    rmarkdown
 Config/testthat/edition: 3
 LazyData: true
+VignetteBuilder: knitr

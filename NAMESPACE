@@ -2,5 +2,5 @@
 
 export(StatPointless)
 export(geom_pointless)
+export(stat_pointless)
 import(ggplot2)
-importFrom(stats,na.omit)
