@@ -27,3 +27,4 @@ with either "first" row, "last" row(s) and/or the row(s) that contain mimima or 
 get_locations(iris, c("first", "last"))
 }
 }
+\keyword{internal}

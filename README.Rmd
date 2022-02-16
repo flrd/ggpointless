@@ -231,7 +231,7 @@ p
 
 ## Data
 
-The `ggpointless` package contains two dataset:
+The `ggpointless` package contains two data sets:
 
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
