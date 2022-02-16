@@ -9,6 +9,7 @@
 #'  "first", "last", "minimum", "maximum" or "all", default is "last"
 #' @return A data.frame as subset of the input data
 #'
+#' @keywords internal
 #' @examples
 #' \dontrun{
 #' get_locations(iris, c("first", "last"))
@@ -65,21 +66,22 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 # create adecade from number ----------------------------------------------
 #'Given a year (A.D.), get the decade
 #'
-#'@param year A numeric vector
+#'@param years A numeric vector
 #'@return A string of the same length as year
 #'
+#'@keywords internal
 #'@examples
 #'\dontrun{
 #'decades(c(2019:2021))
 #'}
 
-decades <- function(year) {
-  stopifnot(is.numeric(year) | !is.null(year))
+get_decades <- function(years) {
+  stopifnot(is.numeric(years) | !is.null(years))
 
-  years_AD <- pmax(0, year)
+  years_AD <- pmax(0, years)
 
-  if(!identical(year, years_AD)) {
-    message("Year must be larger than 0, returning \"00's\".")
+  if(!isTRUE(all.equal(years, years_AD))) {
+    message("All years must be larger than 0, returning 0.")
   }
 
   decade <- years_AD %/% 10 * 10

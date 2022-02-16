@@ -36,7 +36,7 @@
 #' - **x**
 #' - **y**
 #' - alpha
-#' - colour
+#' - color
 #' - fill
 #' - group
 #' - shape
@@ -46,48 +46,45 @@
 #'
 #' @export
 #' @examples
-#'# dummy data
-#'x <- seq(-pi, pi, length.out = 500)
-#'y_mat <- vapply(seq.int(5), function(i) sin(x * i), numeric(length(x)))
+#' x <- seq(-pi, pi, length.out = 100)
+#' y <- outer(x, 1:5, FUN = \(x, y) sin(x*y)) |> rowSums()
 #'
-#'df1 <- data.frame(
-#'  var1 = x,
-#'  var2 = rowSums(y_mat)
-#')
+#' df1 <- data.frame(
+#'   var1 = x,
+#'   var2 = y
+#' )
 #'
 #'# not terribly useful on its own ...
 #'p <- ggplot(df1, aes(x = var1, y = var2))
 #'p + geom_pointless()
 #'p + geom_pointless(location = "all")
-#'p <- p + geom_line()
 #'
 #'# ... but in conjunction with geom_line(), hopefully
+#'p <- p + geom_line()
 #'p + geom_pointless()
 #'p + geom_pointless(location = c("first", "last"))
 #'p + geom_pointless(location = c("minimum", "maximum"))
 #'p + geom_pointless(location = c("all"))
 #'
-#'# The layer computes one additional variable, `location`, you can map e.g. to the colour aesthetic
+#'# The layer computes one additional variable, `location`, you can map e.g. to the color aesthetic
 #'p + geom_pointless(
-#'  aes(colour = after_stat(location)),
+#'  aes(color = after_stat(location)),
 #'  location = c("all"),
 #'  size = 3
 #'  )
 #'
 #' \dontrun{
 #' # Example using facets, see https://stackoverflow.com/q/29375169
-#' library(reshape2)
-#' library(ggplot2)
-#'
-#' me <- melt(economics, id = c("date"))
-#' ggplot(data = me, aes(x = date, y = value)) +
+#' p <- ggplot(economics_long, aes(x = date, y = value)) +
 #'   geom_line() +
+#'  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
+#'
+#' p +
 #'   geom_pointless(
-#'     aes(colour = after_stat(location)),
+#'     aes(color = after_stat(location)),
 #'     location = c("minimum", "maximum"),
 #'     size = 2
-#'   ) +
-#'  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
+#'   )
 #'  }
 #'
 geom_pointless <- function(mapping = NULL,

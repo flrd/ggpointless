@@ -48,11 +48,6 @@ StatPointless <- ggproto("StatPointless", Stat,
       },
 
     compute_group = function(data, scales, location) {
-      # minimum and maximum don't make much sense when data has zero variance
-      if((var(data$y) == 0) & (any(data$location) %in% c("minimum", "maximum", "all"))) {
-        message("There is no variation in your data. Hence, minimum and maximum are the same.")
-        }
-
       get_locations(data, location = location)
       },
 
