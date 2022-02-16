@@ -17,7 +17,7 @@ names(cdc)[vac_idx] <- paste("value", c("fully.vaccinated", "unvaccinated"), sep
 
 
 # reshape to long ---------------------------------------------------------
-covid_vac <- reshape(cdc[cols], direction = "long",
+covid_vac <- reshape(cdc, direction = "long",
                      idvar = c("outcome", "month", "MMWR.week"),
                      varying = c("value_fully.vaccinated", "value_unvaccinated"),
                      sep = "_")
