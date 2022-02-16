@@ -4,17 +4,16 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "man/figures/README-",
-  # fig.width = 3,
-  fig.height = 3, 
-  out.width = "90%",
+  fig.path = "man/figures/README-", 
+  out.width = "100%",
   fig.align = "center",
+  fig.height = 3,
   dev = "ragg_png", # <3
-  dpi = 132
+  dpi = 300
 )
 
 library(ggpointless)
@@ -31,7 +30,7 @@ The package provides a simple point layer to emphazise some observations in your
 
 ## Installation
 
-You can install the development version of ggpointless from [GitHub](https://github.com/) with:
+You can install the development version of `ggpointless` from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
@@ -40,39 +39,200 @@ devtools::install_github("flrd/ggpointless")
 
 ## Usage
 
-There are two functions in the `ggpointless` package: `geom_pointless()`, which is powered by `stat_pointless()`. Both functions add a layer to a `ggplot` object; a point layer by default. 
+There are two functions in the `ggpointless` package: `geom_pointless()`, which is powered by `stat_pointless()`. Both functions add a point layer to a `ggplot` object by default. In addition to `geom_point()` the function have an additional `location` argument. You can set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
+
+See the `vignette("ggpointless")` for more details.
 
 
 ```{r hello_world}
-# dummy data
 x <- seq(-pi, pi, length.out = 100)
-y <- outer(x, 1:5, FUN = \(x, y) sin(x*y)) |> 
-  rowSums()
+y <- outer(x, 1:5, function(x, y) sin(x*y)) |> rowSums()
 
 df1 <- data.frame(
   var1 = x,
   var2 = y
 )
 
-# plot
+theme_set(theme_minimal())
+
 ggplot(df1, aes(x = var1, y = var2)) +
   geom_line() +
-  geom_pointless(
-    aes(colour = after_stat(location)),
-    location = "all",
-    size = 2.5) +
-  theme_void()
+  geom_pointless(aes(colour = after_stat(location)),
+                 location = "all",
+                 size = 3) +
+  scale_color_manual(values = c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc'))
 ```
-
 
 ## Motivation
 
-Laziness. I found myself trying to recreate this fantastic plot from Gregor Aisch on [Carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). 
+The motivation behind this layer is to create a visual effect. Take this recreation of a plot from [Gregor Aisch](https://driven-by-data.net/) about [Carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). 
 
 
-More examples and details can be found in the package's [vignette]().
 
-## Related work
+```{r helper, eval=TRUE, echo=FALSE, results="hide"}
+data(co2_ml, package = "ggpointless")
 
-The package [`ggpmisc`](https://exts.ggplot2.tidyverse.org/ggpmisc.html) provides the stat `stat_peaks`, which calls the `peaks()` function from the [`splus2r`](https://github.com/spkaluzny/splus2r) package. With these functions / stats you are able to find and hence highlight _local_ minima and maxima too, besides global extrema.
+# get year into decade ----------------------------------------------------
+co2_ml[["year_into_decade"]] <- co2_ml$year %% 10
+
+# create x-scale ----------------------------------------------------------
+# 1958 was the first year in the data, using it as "base year" makes
+# sure we won't miss a Feb 29, when we add year_of_decade
+co2_ml[["date_scale"]] <- with(co2_ml, sprintf("%d-%d-01", 1958 + year_into_decade, month)) |> as.Date()
+
+# helper to format the x-axis labels
+axis_labeller <- function(date) {
+  year <- as.integer(format(date, "%Y"))
+  tmp <- year - min(year, na.rm = TRUE)
+  replace(tmp, !tmp, "")
+}[["year_into_decade"]] <- co2_ml$year %% 10
+
+# create x-scale ----------------------------------------------------------
+# 1958 was the first year in the data, using it as "base year" makes
+# sure we won't miss a Feb 29, when we add year_of_decade
+co2_ml[["date_scale"]] <- with(co2_ml, sprintf("%d-%d-01", 1958 + year_into_decade, month)) |> as.Date()
+
+# helper to format the x-axis labels
+axis_labeller <- function(date) {
+  year <- as.integer(format(date, "%Y"))
+  tmp <- year - min(year, na.rm = TRUE)
+  replace(tmp, !tmp, "")
+}
+```
+
+
+```{r co2_plot, echo=FALSE}
+# plot --------------------------------------------------------------------
+# theme_set(hrbrthemes::theme_ipsum_rc(base_size = 8, base_family = "Lato"))
+library(ggpointless)
+library(ggtext)
+# library(hrbrthemes)
+
+text_size <- 3
+text_color <- "#777777"
+
+p <- ggplot(co2_ml, aes(date_scale, co2_ppm, color = decade))
+p <- p + geom_line()
+p <- p + geom_pointless(location = c("first", "last"), size = 2)
+
+# sustainability level
+# p <- p + geom_hline(aes(yintercept = 350))
+# p <- p + stat_pointless(aes(y = 345), geom = "text", label = "sustainable level",
+#                         location = "first", hjust = "left", show.legend = FALSE)
+
+# scales
+p <- p + scale_y_continuous(name = "ppm")
+p <- p + scale_x_date(
+  name = "Years into decade",
+  breaks = as.Date(sprintf("%i-01-01", c(1958:1968))),
+  labels = axis_labeller,
+  # expand = expansion(mult = c(0.01, .1)),
+  limits = as.Date(sprintf("%i-01-01", c(1958, 1969))))
+p <- p + theme(axis.ticks.length.x = unit(0, "mm"))
+p <- p + theme(axis.ticks.length.y = unit(0, "mm"))
+p <- p + theme(axis.title.x = element_text(hjust = 1))
+p <- p + theme(axis.title.y = element_text(hjust = 1, angle = 0))
+p <- p + theme(panel.grid.minor = element_blank())
+# p <- p + theme(text = element_text(size = 6))
+p <- p + theme(plot.caption = element_text(hjust = 0))
+p <- p + theme(plot.caption.position = "plot")
+# hide legend
+p <- p + theme(legend.position = "none")
+
+# title, subtile, caption
+p <- p + labs(title = "Carbon Dioxide Concentration in the Atmosphere",
+         subtitle = "Each line represents one decade, from 1958 to 2022. CO2 concentration is measured in\nparts per million* (ppm).",
+         caption = "*The mole fraction of CO2, expressed as parts per million (ppm) is the number of molecules of CO2 in every million molecules\nof dried air (water vapor removed). The 'sustainable level' of 350ppm, equivalent to the 1990 levels, has been identified by\nUN climate scientists.\nSource: National Oceanic & Atmospheric Adm. (NOAA)")
+
+# move title and subtile to the left
+p <- p + theme(plot.title.position = "plot")
+
+# hide legend
+p <- p + theme(legend.position = "none")
+
+# colors
+# p <- p + scale_colour_viridis_d(option = "plasma", direction = -1)
+p <- p + scale_color_manual(values = c('#f4ae1b', '#e99950', '#dc8471', '#cc708f', '#b85baa', '#9f46c6', '#7a31e1', '#311dfc'))
+
+p <- p + geom_text(
+  data = subset(co2_ml, subset = decade != "2020's"),
+  aes(label = decade), 
+  size = text_size + .5, stat = "pointless", hjust = "left", nudge_x = 30, location = "last"
+)
+
+# label at first year in decade
+p <- p + geom_text(
+  data = subset(co2_ml, subset = decade != "1950's"),
+  aes(label = year, color = NULL, group = decade),
+  size = text_size, color = text_color, location = "first", stat = "pointless", vjust = "top", hjust = "left", nudge_y = -2
+)
+
+# label at last year in decade
+p <- p + geom_text(
+  data = subset(co2_ml, subset = !(decade %in% c("1950's", "2020's"))),
+  aes(label = year, color = NULL, group = decade), 
+  size = text_size, color = text_color, location = "maximum", stat = "pointless", vjust = "bottom", nudge_y = 1
+)
+
+# label the years 2014 to 2018 in the format '%y
+# years <- 2018
+# 
+# p <- p + lapply(years, function(year) {
+#   geom_text(
+#     data = subset(co2_ml, subset = year == year),
+#     aes(
+#       label = sprintf("'%i", year %% 100),
+#       color = NULL,
+#       group = NULL
+#     ),
+#     size = text_size,
+#     color = text_color,
+#     location = "maximum",
+#     stat = "pointless",
+#     vjust = "bottom",
+#     nudge_y = 1
+#   )
+# })
+
+
+
+p <- p + geom_pointless(
+  data = subset(co2_ml, subset = decade == "2020's"),
+  location = "maximum", size = 8, shape = 21, fill = NA, stroke = .9
+)
+# p <- p + stat_pointless(
+#   data = subset(co2_ml, subset = decade == "2020's"),
+#   aes(xintercept = date_scale), location = "first", geom = "vline", size = .25)
+
+# label all-time maximum
+p <- p + geom_richtext(
+  stat = "pointless", location = "maximum",
+  aes(x = date_scale + 500,
+      y = co2_ppm - 3,
+      group = NULL,
+      color = NULL,
+      label = sprintf("**%g ppm**<br>%s %s", round(co2_ppm), month.name[month], year)),
+  size = text_size,
+  family = "Roboto Condensed",
+  colour = "#777777",
+  # remove label background and outline
+  fill = NA, label.color = NA)
+
+# draw curve from all-time maximum to its label
+p <- p + stat_pointless(
+  data = subset(co2_ml, subset = decade == "2020's"),
+  aes(x = date_scale + 90, xend = date_scale + 500, y = co2_ppm + 2, yend = co2_ppm + 2),
+  location = "maximum", geom = "curve", curvature = -.4, size = .35, color = text_color, inherit.aes = FALSE)
+```
+
+```{r co2, echo=FALSE, message=FALSE, warning=FALSE, out.width='100%', fig.height=7}
+p
+```
+
+## Data
+
+The `ggpointless` package contains two dataset:
+
+1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
+2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
 

@@ -1,0 +1,105 @@
+---
+title: "Introduction to ggpointless"
+author: "Markus Döring"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to ggpointless}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  # out.width = "100%",
+  dev = "ragg_png" # <3
+)
+library(ggpointless)
+```
+
+
+## Add some points
+
+```{r lib}
+library(ggplot2)
+library(ggpointless)
+```
+
+
+
+
+
+```{r default, fig.show='hold'}
+library(ggpointless)
+theme_set(theme_minimal())
+
+cols <- c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc')
+
+x <- seq(-pi, pi, length.out = 100)
+y <- outer(x, 1:5, FUN = \(x, y) sin(x*y)) |> 
+  rowSums()
+
+df1 <- data.frame(
+  var1 = x,
+  var2 = y
+)
+
+p <- ggplot(df1, aes(x = var1, y = var2)) + coord_equal()
+p + geom_pointless() + labs(subtitle = "default")
+p + geom_pointless(location = "all") + labs(subtitle = "location = 'all'")
+```
+
+As you can see, `geom_pointless()` is not terribly useful on its own (and here I stuck thinking about a better package name) but it is when it teams up with `geom_line()`, hopefully. `geom_pointless()` understands the same arguments as `geom_point()` and one additional argument `location`. You can set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
+
+The functions compute one additional variable -- `location` -- that you can map to an aesthetic, e.g. `color`.  
+
+```{r location, fig.show='hold'}
+p <- p + geom_line()
+p + geom_pointless(location = "all",
+                        size = 3)
+
+p + geom_pointless(aes(colour = after_stat(location)),
+                   location = "all",
+                   size = 3) +
+  scale_color_manual(values = cols)
+```
+
+### Order and orientation
+
+The order of your data is determined by how the observations appear in the data -- like `geom_path()` does compared to `geom_line()`. This can be seen in the next example, the example data is taken from the [`geomtextpath`](https://github.com/AllanCameron/geomtextpath/#using-geomtextpath) package:
+
+```{r spiral, fig.show='hold'}
+x <- seq(5, -1, length.out = 1000) * pi
+spiral <- data.frame(var1 = sin(x) * 1:1000, 
+                     var2 = cos(x) * 1:1000)
+
+p <- ggplot(spiral) +
+  coord_equal() +
+  scale_color_manual(values = cols) +
+  theme(legend.position = "none")
+
+
+p + aes(x = var1, y = var2) +
+  geom_path() + 
+  geom_pointless(aes(colour = after_stat(location)),
+                 location = "all") +
+  labs(subtitle = "orientation = 'x'")
+
+p + aes(y = var1, x = var2) +
+  geom_path() +
+  geom_pointless(aes(colour = after_stat(location)),
+                   location = "all") +
+  labs(subtitle = "orientation = 'y'")
+```
+
+As you see from the last examples on the left hand side `"first"` and `"minimum"` overlap, and `"first"` wins over `"minimum"`. The order in which points are plotted (if specified together) from top to bottom is: `"first"` > `"last"` > `"minimum"` > `"maximum"`. 
+
+
+## Data
+
+The `ggpointless` package contains two dataset:
+
+1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
+2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
+
