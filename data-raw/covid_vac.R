@@ -31,6 +31,7 @@ names(covid_vac) <- c("outcome", "month", "year_week", "status", "incidence")
 # fully.vaccinated --> fully vaccinated -----------------------------------
 covid_vac$status <- replace(covid_vac$status, covid_vac$status == "fully.vaccinated", "fully vaccinated")
 
+
 # add a date column -------------------------------------------------------
 covid_vac$date <- as.Date(paste0(covid_vac$year_week, "01"), "%Y%U%w")
 

@@ -47,11 +47,11 @@
 #' @export
 #' @examples
 #' x <- seq(-pi, pi, length.out = 100)
-#' y <- outer(x, 1:5, FUN = \(x, y) sin(x*y)) |> rowSums()
+#' y <- outer(x, 1:5, FUN = \(x, y) sin(x*y))
 #'
 #' df1 <- data.frame(
 #'   var1 = x,
-#'   var2 = y
+#'   var2 = rowSums(y)
 #' )
 #'
 #'# not terribly useful on its own ...
