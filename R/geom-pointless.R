@@ -47,7 +47,7 @@
 #' @export
 #' @examples
 #' x <- seq(-pi, pi, length.out = 100)
-#' y <- outer(x, 1:5, FUN = \(x, y) sin(x*y))
+#' y <- outer(x, 1:5, FUN = function(x, y) sin(x*y))
 #'
 #' df1 <- data.frame(
 #'   var1 = x,
