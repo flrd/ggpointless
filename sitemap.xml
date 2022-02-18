@@ -1,45 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://flrd.github.io/ggpointless/404.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>https://flrd.github.io/ggpointless/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/LICENSE.html</loc>
+    <loc>https://flrd.github.io/ggpointless/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/articles/examples.html</loc>
+    <loc>https://flrd.github.io/ggpointless/articles/ggpointless.html</loc>
   </url>
   <url>
-    <loc>/articles/ggpointless.html</loc>
+    <loc>https://flrd.github.io/ggpointless/articles/index.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
+    <loc>https://flrd.github.io/ggpointless/authors.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://flrd.github.io/ggpointless/index.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://flrd.github.io/ggpointless/reference/co2_ml.html</loc>
   </url>
   <url>
-    <loc>/reference/co2_ml.html</loc>
+    <loc>https://flrd.github.io/ggpointless/reference/covid_vac.html</loc>
   </url>
   <url>
-    <loc>/reference/covid_vac.html</loc>
+    <loc>https://flrd.github.io/ggpointless/reference/geom_pointless.html</loc>
   </url>
   <url>
-    <loc>/reference/geom_pointless.html</loc>
+    <loc>https://flrd.github.io/ggpointless/reference/get_decades.html</loc>
   </url>
   <url>
-    <loc>/reference/get_decades.html</loc>
+    <loc>https://flrd.github.io/ggpointless/reference/get_locations.html</loc>
   </url>
   <url>
-    <loc>/reference/get_locations.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://flrd.github.io/ggpointless/reference/index.html</loc>
   </url>
 </urlset>
