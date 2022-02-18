@@ -1,10 +1,10 @@
-#url: https://flrd.github.io/ggpointless
+url: https://flrd.github.io/ggpointless/
 template:
- bootstrap: 5
- bslib:
-  base_font: {google: "Lato"}
-  heading_font: {google: "Lato"}
-  code_font: {google: "Inconsolata"}
+  bootstrap: 5
+  bslib:
+    base_font: {google: "Lato"}
+    heading_font: {google: "Lato"}
+    code_font: {google: "Inconsolata"}
 
 navbar:
   structure:
@@ -24,7 +24,6 @@ reference:
   contents:
   - geom_pointless
   - stat_pointless
-
 
 - title: "Data"
   desc: >

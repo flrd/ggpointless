@@ -3,5 +3,9 @@
 .Rdata
 .httr-oauth
 .DS_Store
-docs
 inst/doc
+/doc/
+/docs
+/Meta/
+tests/testthat/Rplots.pdf
+docs

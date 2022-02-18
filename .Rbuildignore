@@ -9,3 +9,5 @@
 ^docs$
 ^pkgdown$
 ^_pkgdown\.yaml$
+^doc$
+^Meta$
