@@ -1,7 +1,8 @@
-pandoc: 2.7.3
+pandoc: 2.14.0.3
 pkgdown: 2.0.2
 pkgdown_sha: ~
 articles:
+  examples: examples.html
   ggpointless: ggpointless.html
-last_built: 2022-02-18T11:35Z
+last_built: 2022-02-18T19:25Z
 
