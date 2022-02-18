@@ -1,0 +1,34 @@
+#url: https://flrd.github.io/ggpointless
+template:
+ bootstrap: 5
+ bslib:
+  base_font: {google: "Lato"}
+  heading_font: {google: "Lato"}
+  code_font: {google: "Inconsolata"}
+
+navbar:
+  structure:
+    left:  [intro, reference]
+    right: [search, github]
+
+figures:
+  dev: ragg::agg_png
+  dpi: 132
+  dev.args: []
+  fig.ext: png
+
+reference:
+- title: "Geom, Stat"
+  desc: >
+    Functions for creating new geometry layers to emphasize some observations
+  contents:
+  - geom_pointless
+  - stat_pointless
+
+
+- title: "Data"
+  desc: >
+    Data objects included in the `ggpointless` package
+  contents:
+  - co2_ml
+  - covid_vac
