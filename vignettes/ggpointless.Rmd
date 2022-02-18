@@ -53,14 +53,14 @@ p <- p + geom_line()
 
 
 
-```{r location, fig.width = 4.5}
+```{r location, fig.width = 3}
 p + geom_pointless(location = "all",
-                        size = 3)
+                   size = 3)
 ```
 
 You can use the one additionally computed variable `location` and map it to an aesthetic, e.g. `color`.  
 
-```{r color, fig.width = 4.5}
+```{r color, fig.width = 3}
 p + geom_pointless(aes(color = after_stat(location)),
                    location = "all",
                    size = 3) +
@@ -85,12 +85,14 @@ p <- ggplot(spiral) +
 
 p + aes(x = var1, y = var2) +
   geom_pointless(aes(color = after_stat(location)),
-                 location = "all") +
+                 location = "all",
+                 size = 3) +
   labs(subtitle = "orientation = 'x'")
 
 p + aes(y = var1, x = var2) +
   geom_pointless(aes(color = after_stat(location)),
-                   location = "all") +
+                   location = "all",
+                   size = 3) +
   labs(subtitle = "orientation = 'y'")
 ```
 
