@@ -1,0 +1,237 @@
+---
+title: "ggpointless examples"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ggpointless examples}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dpi = 300,
+  fig.width = 6,
+  fig.height = 6,
+  out.width = "95%",
+  dev = "ragg_png" # <3
+)
+
+library(ggplot2)
+library(ggpointless)
+library(ggtext)
+```
+
+```{r libs}
+library(ggplot2)
+library(ggpointless)
+library(ggtext)
+```
+
+This vignette aims to demonstrate use cases for the `ggpointless` package. We will use the two data sets that `ggpointless` contains:
+
+- `co2_ml`
+- `covid_vac`
+
+## Carbon Dioxide Concentration in the Atmosphere
+
+We'll start to recreate Gregor Aisch's plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). `co2_ml` is dataframe of monthly CO~2~ measurements taken at Mauna Loa, Hawaii, see also `?co2` from the [`datasets` package](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/00Index.html). 
+
+```{r co2_ml}
+data(co2_ml)
+```
+
+In order to plot lines for different decades on a common scale, we first need to add one additional variable to `co2_ml` that we'll call `date_scale`
+
+``` {r date_scale}
+co2_ml$date_scale <- as.Date(sprintf("%d-%d-01", 1950 + (co2_ml$year %% 10), co2_ml$month))
+```
+
+Also we create a helper function to change the x-axis labels.
+
+``` {r helper}
+axis_labeller <- function(date) {
+  year <- as.integer(format(date, "%Y"))
+  tmp <- year - min(year, na.rm = TRUE)
+  replace(tmp, !tmp, "")
+}
+```
+
+
+<details><summary><b>See full code</b></summary>
+```{r co2_plot, echo=TRUE, warning=FALSE}
+theme_set(theme_minimal())
+
+text_size <- 2.5
+text_color <- "#333333"
+
+# layers
+p <- ggplot(co2_ml, aes(date_scale, co2_ppm, color = decade))
+# sustainability level
+p <- p + geom_hline(aes(yintercept = 350),
+                    color = "#dbd9db",
+                    size = 1)
+p <- p + geom_text(aes(x = as.Date("1951-01-01"), y = 348), 
+                   label = "sustainable level",
+                   size = text_size + .3,
+                   color = "#dbd9db",
+                   hjust = "left",
+                   inherit.aes = FALSE)
+
+p <- p + geom_line()
+p <- p + geom_pointless(location = c("first", "last"), size = 2)
+# label decade
+p <- p + geom_text(
+  data = subset(co2_ml, subset = decade != "2020's"),
+  aes(label = decade),
+  size = text_size,
+  stat = "pointless",
+  location = "last",
+  hjust = "left",
+  nudge_x = 40
+)
+# label at first year in decade
+p <- p + geom_text(
+  data = subset(co2_ml, subset = decade != "1950's"),
+  aes(
+    label = year,
+    group = decade
+  ),
+  size = text_size,
+  color = text_color,
+  stat = "pointless",
+  location = "first",
+  vjust = "top",
+  hjust = "left",
+  nudge_y = -2
+)
+
+# label at last year in decade
+p <- p + geom_text(
+  data = subset(co2_ml, subset = !(decade %in% c("1950's", "2020's"))),
+  aes(
+    label = year,
+    group = decade
+  ),
+  size = text_size,
+  color = text_color,
+  stat = "pointless",
+  location = "maximum",
+  vjust = "bottom",
+  nudge_y = 1
+)
+
+# label the years 2014 to 2018 in the format '%y
+p <- p + lapply(2014:2018, function(yrs) {
+  geom_text(
+    data = subset(co2_ml, subset = year == yrs),
+    aes(
+      label = sprintf("'%i", year %% 100),
+      group = year
+    ),
+    size = text_size,
+    color = text_color,
+    stat = "pointless",
+    location = "maximum",
+    vjust = "bottom",
+    nudge_y = 1
+  )
+})
+
+#  highlight all-time maximum
+p <- p + geom_pointless(
+  data = subset(co2_ml, subset = decade == "2020's"),
+  location = "maximum",
+  size = 8,
+  shape = 21,
+  fill = NA,
+  stroke = .9
+)
+
+# label all-time maximum
+p <- p + ggtext::geom_richtext(
+  aes(
+    x = date_scale + 500,
+    y = co2_ppm - 3,
+    group = NULL,
+    label = sprintf("**%g ppm**<br>%s %s", round(co2_ppm), month.name[month], year)
+  ),
+  stat = "pointless",
+  location = "maximum",
+  size = text_size,
+  color = text_color,
+  fill = NA,
+  label.color = NA
+)
+
+# draw curve from all-time maximum to its label
+p <- p + geom_curve(
+  data = subset(co2_ml, subset = decade == "2020's"),
+  aes(
+    x = date_scale + 90,
+    xend = date_scale + 500,
+    y = co2_ppm + 2,
+    yend = co2_ppm + 2
+  ),
+  stat = "pointless",
+  location = "maximum",
+  curvature = -.4,
+  size = .35,
+  color = text_color,
+  inherit.aes = FALSE
+)
+
+# scales
+p <- p + scale_x_date(
+  breaks = as.Date(sprintf("%i-01-01", c(1950:1960))),
+  labels = axis_labeller,
+  expand = expansion(mult = c(0.01, -.03)),
+  limits = as.Date(sprintf("%i-01-01", c(1950, 1961))))
+
+# colors
+p <- p + scale_color_manual(
+    values = c(
+      '#f4ae1b',
+      '#e99950',
+      '#dc8471',
+      '#cc708f',
+      '#b85baa',
+      '#9f46c6',
+      '#7a31e1',
+      '#311dfc'
+    )
+  )
+
+# title, subtitle, caption
+p <- p + 
+  labs(title = "Carbon Dioxide Concentration in the Atmosphere",
+       subtitle = "Each line represents one decade, from 1958 to 2022. CO2 concentration is measured in\nparts per million* (ppm).",
+       caption = "*The mole fraction of CO2, expressed as parts per million (ppm) is the number of molecules of CO2 in every million\nmolecules of dried air (water vapor removed). The 'sustainable level' of 350ppm, equivalent to the 1990 levels, has\nbeen identified by UN climate scientists.\nSource: National Oceanic & Atmospheric Adm. (NOAA)",
+       x = "Years into decade",
+       y = "ppm")
+
+# theme
+p <- p + theme(axis.ticks.length.x = unit(0, "mm"))
+p <- p + theme(axis.ticks.length.y = unit(0, "mm"))
+p <- p + theme(axis.title.x = element_text(hjust = 1))
+p <- p + theme(axis.title.y = element_text(hjust = 1, angle = 0))
+p <- p + theme(panel.grid.minor = element_blank())
+p <- p + theme(legend.position = "none")
+p <- p + theme(text = element_text(size = 9, color = text_color))
+p <- p + theme(plot.title.position = "plot")
+p <- p + theme(plot.title = element_text(face = "bold"))
+p <- p + theme(plot.caption = element_text(hjust = 0))
+p <- p + theme(plot.caption.position = "plot")
+# https://stackoverflow.com/a/17312440/8583393
+p <- p + theme(axis.title = element_text(size = text_size * 1/0.352777778))
+
+```
+</details>
+
+```{r, fig.height=6, echo=FALSE}
+p
+```
+
+
+

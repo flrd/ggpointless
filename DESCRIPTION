@@ -23,7 +23,8 @@ Suggests:
     covr,
     testthat (>= 3.0.0),
     rmarkdown,
-    ragg
+    ragg,
+    ggtext
 Config/testthat/edition: 3
 LazyData: true
 VignetteBuilder: knitr

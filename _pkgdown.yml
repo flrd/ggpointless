@@ -8,7 +8,7 @@ template:
 
 navbar:
   structure:
-    left:  [intro, reference]
+    left:  [intro, reference, articles]
     right: [search, github]
 
 figures:
