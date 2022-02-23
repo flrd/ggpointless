@@ -2,8 +2,9 @@ pandoc: 2.7.3
 pkgdown: 2.0.2
 pkgdown_sha: ~
 articles:
+  examples: examples.html
   ggpointless: ggpointless.html
-last_built: 2022-02-18T20:30Z
+last_built: 2022-02-23T14:02Z
 urls:
   reference: https://flrd.github.io/ggpointless/reference
   article: https://flrd.github.io/ggpointless/articles
