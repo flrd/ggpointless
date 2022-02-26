@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ggpointless
+# ggpointless <a href="https://flrd.github.io/ggpointless/"><img src="man/figures/logo.png" align="right" height="138" /></a>
 
 <!-- badges: start -->
 
@@ -28,7 +28,7 @@ devtools::install_github("flrd/ggpointless")
 There are two functions in the `ggpointless` package:
 `geom_pointless()`, which is powered by `stat_pointless()`. Both
 functions add a point layer to a `ggplot` object by default. In addition
-to `geom_point()` the function have an additional `location` argument.
+to `geom_point()` both functions have an additional `location` argument.
 You can set it to `"first"`, `"last"` (default), `"minimum"`,
 `"maximum"`, and `"all"`, where `"all"` is just shorthand to select
 `"first"`, `"last"`, `"minimum"` and `"maximum"`.
@@ -59,8 +59,8 @@ ggplot(df1, aes(x = var1, y = var2)) +
 
 The `ggpointless` package contains two data sets:
 
-1.  `co2_ml` : [CO<sub>2</sub> records taken at Mauna
-    Loa](https://gml.noaa.gov/ccgg/trends/data.html)
+1.  `co2_ml` : [CO<sub>2</sub> records taken at Mauna Loa,
+    Hawaii](https://gml.noaa.gov/ccgg/trends/data.html)
 2.  `covid_vac` : [COVID-19 Cases and Deaths by Vaccination
     Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
 
@@ -69,5 +69,5 @@ See the `vignette("examples")` for possible use cases.
 ## Code of Conduct
 
 Please note that this project is released with a [Contributor Code of
-Conduct](https://github.com/flrd/ggpointless/blob/master/CONDUCT.md). By
+Conduct](https://github.com/flrd/ggpointless/blob/master/conduct.md). By
 participating in this project you agree to abide by its terms.
