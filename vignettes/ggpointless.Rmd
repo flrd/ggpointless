@@ -17,7 +17,7 @@ library(ggpointless)
 ```
 
 
-## Add some points
+## Add some points 
 
 ```{r lib}
 library(ggplot2)
@@ -27,9 +27,6 @@ library(ggpointless)
 The `ggpointless` package an extension of the `ggplot2` plotting library. The goal is to emphasize certain observations with an accent to provide some useful context.
 
 ```{r default, fig.show='hold'}
-library(ggpointless)
-cols <- c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc')
-
 x <- seq(-pi, pi, length.out = 100)
 y <- outer(x, 1:5, function(x, y) sin(x*y))
 
@@ -53,18 +50,17 @@ p <- p + geom_line()
 
 
 
-```{r location, fig.width = 3}
+```{r location}
 p + geom_pointless(location = "all",
                    size = 3)
 ```
 
 You can use the one additionally computed variable `location` and map it to an aesthetic, e.g. `color`.  
 
-```{r color, fig.width = 3}
+```{r color}
 p + geom_pointless(aes(color = after_stat(location)),
                    location = "all",
                    size = 3) +
-  scale_color_manual(values = cols) +
   theme(legend.position = "bottom")
 ```
 
@@ -80,7 +76,6 @@ spiral <- data.frame(var1 = sin(x) * 1:1000,
 p <- ggplot(spiral) +
   geom_path() +
   coord_equal(xlim = c(-1000, 1000), ylim = c(-1000, 1000)) +
-  scale_color_manual(values = cols) +
   theme(legend.position = "none")
 
 p + aes(x = var1, y = var2) +
@@ -96,7 +91,22 @@ p + aes(y = var1, x = var2) +
   labs(subtitle = "orientation = 'y'")
 ```
 
-As you see from the last examples `"first"` and `"minimum"` overlap, and `"first"` wins over `"minimum"`. The order in which points are plotted (if specified together) from top to bottom is: `"first"` > `"last"` > `"minimum"` > `"maximum"`. 
+As you see from the first of the last two examples `"first"` and `"minimum"` overlap, and `"first"` wins over `"minimum"`. The order in which points are plotted (if specified together) from top to bottom is: `"first"` > `"last"` > `"minimum"` > `"maximum"`. 
+
+## Pick another geom
+
+Just like all `stat_*` functions, `stat_pointless` has a default geom, in this case `"point"`. Conversely, this means that we can change it to highlight maximum and minimum, for example, with a horizontal line. 
+```{r stat}
+ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) + 
+  geom_line() + 
+  stat_pointless(
+    aes(yintercept = y, color = after_stat(location)),
+    location = c("min", "max"),
+    geom = "hline"
+    ) + 
+  guides(color = guide_legend(reverse = TRUE))
+```
+
 
 
 ## Data
@@ -106,3 +116,4 @@ The `ggpointless` package contains two data sets:
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
 
+See the `vignette("examples")` for possible use cases.

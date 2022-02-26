@@ -13,14 +13,14 @@ get_locations(
 \item{data}{A \code{data.frame}}
 
 \item{location}{A character string specifying which rows to return:
-"first", "last", "minimum", "maximum" or "all", default is "last"}
+"first", "last" (default), "minimum", "maximum" or "all"}
 }
 \value{
-A data.frame as subset of the input data
+A data.frame
 }
 \description{
 Given a data frame, this functions returns a subset of the input. It returns a data frame
-with either "first" row, "last" row(s) and/or the row(s) that contain mimima or maxima
+with either "first" row, "last" row and/or the row(s) that contain mimima or maxima
 }
 \examples{
 \dontrun{

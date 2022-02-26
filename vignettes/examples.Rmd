@@ -7,6 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -23,20 +24,46 @@ library(ggpointless)
 library(ggtext)
 ```
 
+This vignette aims to demonstrate use cases for the `ggpointless` package. We will use the two data sets that `ggpointless` contains:
+
+1. `co2_ml` : [CO~2~ records taken at Mauna Loa, Hawaii](https://gml.noaa.gov/ccgg/trends/data.html)
+2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
+
+### Setup
+
+
 ```{r libs}
 library(ggplot2)
 library(ggpointless)
 library(ggtext)
 ```
 
-This vignette aims to demonstrate use cases for the `ggpointless` package. We will use the two data sets that `ggpointless` contains:
 
-- `co2_ml`
-- `covid_vac`
+``` {r theme}
+text_size <- 2.5
+text_color <- "#4b4c4d"
+
+theme_set(theme_minimal() + 
+            theme(plot.caption = element_text(hjust = 0)) + 
+            theme(plot.caption.position = "plot") +
+            theme(text = element_text(size = 9, color = text_color)) +
+            theme(axis.ticks.length.x = unit(0, "mm")) + 
+            theme(axis.ticks.length.y = unit(0, "mm")) +
+            # https://stackoverflow.com/a/17312440/8583393
+            theme(axis.title = element_text(size = text_size * 1/0.352777778)) +
+            theme(axis.title.x = element_text(hjust = 1)) + 
+            theme(axis.title.y = element_text(hjust = 1, angle = 0)) +
+            theme(panel.grid.minor = element_blank()) +
+            theme(legend.position = "none") +
+            theme(plot.title = element_text(face = "bold")) +
+            theme(plot.title.position = "plot")
+          )
+```
+
 
 ## Carbon Dioxide Concentration in the Atmosphere
 
-We'll start to recreate Gregor Aisch's plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). `co2_ml` is dataframe of monthly CO~2~ measurements taken at Mauna Loa, Hawaii, see also `?co2` from the [`datasets` package](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/00Index.html). 
+We'll start to recreate Gregor Aisch's plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). `co2_ml` is a data.frame of monthly CO~2~ measurements taken at Mauna Loa, Hawaii (see also `co2` from the `datasets` package). 
 
 ```{r co2_ml}
 data(co2_ml)
@@ -48,9 +75,9 @@ In order to plot lines for different decades on a common scale, we first need to
 co2_ml$date_scale <- as.Date(sprintf("%d-%d-01", 1950 + (co2_ml$year %% 10), co2_ml$month))
 ```
 
-Also we create a helper function to change the x-axis labels.
+Also, we create a helper function to change the x-axis labels.
 
-``` {r helper}
+``` {r labeller_co2}
 axis_labeller <- function(date) {
   year <- as.integer(format(date, "%Y"))
   tmp <- year - min(year, na.rm = TRUE)
@@ -58,14 +85,8 @@ axis_labeller <- function(date) {
 }
 ```
 
-
 <details><summary><b>See full code</b></summary>
-```{r co2_plot, echo=TRUE, warning=FALSE}
-theme_set(theme_minimal())
-
-text_size <- 2.5
-text_color <- "#333333"
-
+```{r co2, echo=TRUE, warning=FALSE}
 # layers
 p <- ggplot(co2_ml, aes(date_scale, co2_ppm, color = decade))
 # sustainability level
@@ -211,27 +232,82 @@ p <- p +
        x = "Years into decade",
        y = "ppm")
 
-# theme
-p <- p + theme(axis.ticks.length.x = unit(0, "mm"))
-p <- p + theme(axis.ticks.length.y = unit(0, "mm"))
-p <- p + theme(axis.title.x = element_text(hjust = 1))
-p <- p + theme(axis.title.y = element_text(hjust = 1, angle = 0))
-p <- p + theme(panel.grid.minor = element_blank())
-p <- p + theme(legend.position = "none")
-p <- p + theme(text = element_text(size = 9, color = text_color))
-p <- p + theme(plot.title.position = "plot")
-p <- p + theme(plot.title = element_text(face = "bold"))
-p <- p + theme(plot.caption = element_text(hjust = 0))
-p <- p + theme(plot.caption.position = "plot")
-# https://stackoverflow.com/a/17312440/8583393
-p <- p + theme(axis.title = element_text(size = text_size * 1/0.352777778))
-
 ```
 </details>
 
-```{r, fig.height=6, echo=FALSE}
+```{r co2_plot, fig.height=6, echo=FALSE, warning=FALSE}
 p
 ```
 
 
+## Rates for vaccinated and unvaccinated
+
+The following two charts show age-adjusted daily cases and death rates for vaccinated and unvaccinated people in 26 states in the USA. This graphic is inspired by the New York Times' [Coronavirus Map and Cases](https://www.nytimes.com/interactive/2021/us/covid-cases.html). The source of the second data set is [Centers for Disease Control and Prevention](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status). 
+
+```{r}
+data(covid_vac)
+```
+
+Again, we first create a helper function to label the facet labels: 
+
+```{r labeller_covid}
+covid_labeller <- function(label) {
+  sprintf("Average daily %ss", label)
+}
+```
+
+<details><summary><b>See full code</b></summary>
+```{r covid, echo=TRUE, include=TRUE}
+# layers
+p <- ggplot(covid_vac,
+            aes(
+              x = date,
+              y = incidence / 7,
+              color = outcome,
+              alpha = status
+            ))
+p <- p + geom_step(size = .65, direction = "vh")
+p <- p + geom_text(
+  aes(label = status),
+  stat = "pointless",
+  location = "last",
+  size = text_size,
+  nudge_x = 5,
+  hjust = "left") +
+  geom_pointless(size = 3)
+
+# facets
+p <- p + facet_wrap(
+  vars(outcome),
+  ncol = 1,
+  scales = "free_y",
+  labeller = as_labeller(covid_labeller)
+  )
+
+# scales
+p <- p + scale_x_date(expand = expansion(mult = c(0, 0.2))) +
+  scale_y_continuous(n.breaks = 4) +
+  scale_alpha_manual(values = c(unvaccinated = 1, 'fully vaccinated' = 0.5)) +
+  scale_color_manual(values = c(case = "#f9491b", death = "#000000"))
+
+# title, subtitle, caption
+p <- p + 
+  labs(
+    title = "Rates for vaccinated and unvaccinated",
+    subtitle = "Per 100,000",
+    x = NULL,
+    y = NULL,
+    caption = "Source: Centers for Disease Control and Prevention\nRates of COVID-19 Cases and Deaths by Vaccination Status, Apr 2021 to Dec 2021."
+  )
+
+# theme
+p <- p + theme(panel.grid.major.x = element_blank())
+p <- p + theme(panel.grid.major.y = element_line(linetype = "12"))
+p <- p + theme(strip.text = element_text(hjust = 0, face = "bold"))
+```
+</details>
+
+```{r covid_plot, fig.height=6, echo=FALSE, warning=FALSE}
+p
+```
 

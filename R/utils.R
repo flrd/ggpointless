@@ -2,12 +2,12 @@
 #'
 #' @description
 #' Given a data frame, this functions returns a subset of the input. It returns a data frame
-#' with either "first" row, "last" row(s) and/or the row(s) that contain mimima or maxima
+#' with either "first" row, "last" row and/or the row(s) that contain mimima or maxima
 #'
 #' @param data A `data.frame`
 #' @param location A character string specifying which rows to return:
-#'  "first", "last", "minimum", "maximum" or "all", default is "last"
-#' @return A data.frame as subset of the input data
+#'  "first", "last" (default), "minimum", "maximum" or "all"
+#' @return A data.frame
 #'
 #' @keywords internal
 #' @examples
@@ -43,10 +43,10 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
     maximum = which(data$y == max(data$y, na.rm = TRUE))
   )
 
-  # filter only desired locations
+  # extract only desired locations
   lst <- lst[locations]
 
-  # create 2 cols data frame of row indices and locations
+  # creates two column data frame of row indices and locations
   tmp <- utils::stack(lst)
 
   # make sure that first is plotted on top of last, minimum, maximum, in that order
@@ -63,28 +63,36 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 }
 
 
-# create adecade from number ----------------------------------------------
-#'Given a year (A.D.), get the decade
+# create a decade from a number -------------------------------------------
+#'Given a year, get the decade
 #'
 #'@param years A numeric vector
+#'@param anno_domini logical; should only "decades of the Lord" be considered?
 #'@return A string of the same length as year
 #'
 #'@keywords internal
 #'@examples
-#'\dontrun{
-#'decades(c(2019:2021))
+#' \dontrun{
+#'get_decades(c(2019:2021))
+#'get_decades(c(-2019:-2021))
+#'get_decades(c(-2019:-2021), anno_domini = FALSE)
 #'}
 
-get_decades <- function(years) {
+get_decades <- function(years, anno_domini = TRUE) {
   stopifnot(is.numeric(years) | !is.null(years))
 
-  years_AD <- pmax(0, years)
+  if(anno_domini) {
 
-  if(!isTRUE(all.equal(years, years_AD))) {
-    message("All years must be larger than 0, returning 0.")
+    tmp <- pmax(0, years)
+
+    if(!isTRUE(all.equal(years, tmp))) {
+      message("All years must be larger than 0, returning 0. Consider to use `anno_domini = FALSE`")
+    }
+    decade <- tmp %/% 10 * 10
+  } else {
+    tmp <- abs(years)
+    decade <- sign(years) * tmp %/% 10 * 10
   }
-
-  decade <- years_AD %/% 10 * 10
 
   # don't format NA values, as they'd turn into "NA's"
   idx <- is.na(decade)

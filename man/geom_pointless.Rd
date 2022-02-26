@@ -86,15 +86,16 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
 This is a wrapper around \code{geom_point()} with the one additional argument: \code{location}.
-It allows to emphazise some observations, namely the first the last, and the minima and maxima, see examples.
+It allows to emphazise some observations, namely the first, the last, the minima and/or maxima, see examples.
 This geom is not particularly useful on its own, hence the name, but hopefully in conjunction
-with \code{geom_path()} and friends.
+with \code{geom_line()} and friends.
 }
 \section{Details}{
 
 The argument \code{location} allows you to control which observations to highlight - with a point.
 When \code{location} is \code{"last"}, the default, a single point will be plotted at the last observations.
-Setting \code{location} to \code{"first"} adds a point at the first position.
+The locations are determined in the order in which they appear in the
+data -- like \code{geom_path()} does compared to \code{geom_line()}.
 }
 
 \section{Orientation}{
@@ -153,12 +154,23 @@ p + geom_pointless(location = c("first", "last"))
 p + geom_pointless(location = c("minimum", "maximum"))
 p + geom_pointless(location = c("all"))
 
-# The layer computes one additional variable, `location`, you can map e.g. to the color aesthetic
+# The layer computes one additional variable, `location`,
+# that you can map e.g. to the color aesthetic
 p + geom_pointless(
  aes(color = after_stat(location)),
  location = c("all"),
  size = 3
  )
+
+# Use `stat_pointless()` with a geom other than "point"
+ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
+ geom_line() +
+ stat_pointless(
+   aes(yintercept = y, color = after_stat(location)),
+   location = c("min", "max"),
+   geom = "hline"
+ ) +
+ guides(color = guide_legend(reverse = TRUE))
 
 \dontrun{
 # Example using facets, see https://stackoverflow.com/q/29375169

@@ -2,22 +2,26 @@
 % Please edit documentation in R/utils.R
 \name{get_decades}
 \alias{get_decades}
-\title{Given a year (A.D.), get the decade}
+\title{Given a year, get the decade}
 \usage{
-get_decades(years)
+get_decades(years, anno_domini = TRUE)
 }
 \arguments{
 \item{years}{A numeric vector}
+
+\item{anno_domini}{logical; should only "decades of the Lord" be considered?}
 }
 \value{
 A string of the same length as year
 }
 \description{
-Given a year (A.D.), get the decade
+Given a year, get the decade
 }
 \examples{
 \dontrun{
-decades(c(2019:2021))
+get_decades(c(2019:2021))
+get_decades(c(-2019:-2021))
+get_decades(c(-2019:-2021), anno_domini = FALSE)
 }
 }
 \keyword{internal}
