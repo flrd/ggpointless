@@ -26,12 +26,11 @@ devtools::install_github("flrd/ggpointless")
 ## Usage
 
 There are two functions in the `ggpointless` package:
-`geom_pointless()`, which is powered by `stat_pointless()`. Both
-functions add a point layer to a `ggplot` object by default. In addition
-to `geom_point()` both functions have an additional `location` argument.
-You can set it to `"first"`, `"last"` (default), `"minimum"`,
-`"maximum"`, and `"all"`, where `"all"` is just shorthand to select
-`"first"`, `"last"`, `"minimum"` and `"maximum"`.
+`geom_pointless()`, which is powered by `stat_pointless()`. These accept
+the same arguments like `geom_point()`, with the addition of a
+`location` argument. You can set it to `"first"`, `"last"` (default),
+`"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand
+to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.
 
 See the `vignette("ggpointless")` for more details.
 
@@ -46,7 +45,7 @@ df1 <- data.frame(
 
 ggplot(df1, aes(x = var1, y = var2)) +
   geom_line() +
-  geom_pointless(aes(colour = after_stat(location)),
+  geom_pointless(aes(color = after_stat(location)),
                  location = "all",
                  size = 3) +
   scale_color_manual(values = c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc')) +

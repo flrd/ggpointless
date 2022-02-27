@@ -11,3 +11,6 @@
 ^_pkgdown\.yaml$
 ^doc$
 ^Meta$
+^conduct\.md$
+^cran-comments\.md$
+^CRAN-RELEASE$
