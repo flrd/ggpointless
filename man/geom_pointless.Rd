@@ -62,7 +62,7 @@ often aesthetics, used to set an aesthetic to a fixed value, like
 \code{colour = "red"} or \code{size = 3}. They may also be parameters
 to the paired geom/stat.}
 
-\item{location}{A character vector specifying which observations to highlight, defaults to \code{"last"}.}
+\item{location}{A character vector specifying which observations to highlight, default is \code{"last"}.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -92,8 +92,8 @@ with \code{geom_line()} and friends.
 }
 \section{Details}{
 
-The argument \code{location} allows you to control which observations to highlight - with a point.
-When \code{location} is \code{"last"}, the default, a single point will be plotted at the last observations.
+The argument \code{location} allows you to control which observations to highlight.
+When \code{location} is \code{"last"}, the default, a single point will be plotted at the last non-missing observations.
 The locations are determined in the order in which they appear in the
 data -- like \code{geom_path()} does compared to \code{geom_line()}.
 }
@@ -154,6 +154,13 @@ p + geom_pointless(location = c("first", "last"))
 p + geom_pointless(location = c("minimum", "maximum"))
 p + geom_pointless(location = c("all"))
 
+# Example with missing first and last observation
+set.seed(42)
+df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
+ggplot(df1, aes(x, y)) +
+ geom_line() +
+ geom_pointless(location = c("first", "last"))
+
 # The layer computes one additional variable, `location`,
 # that you can map e.g. to the color aesthetic
 p + geom_pointless(
@@ -163,11 +170,13 @@ p + geom_pointless(
  )
 
 # Use `stat_pointless()` with a geom other than "point"
-ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
+set.seed(42)
+df1 <- data.frame(x = 1:10, y = sample(1:10))
+ggplot(df1, aes(x, y)) +
  geom_line() +
  stat_pointless(
    aes(yintercept = y, color = after_stat(location)),
-   location = c("min", "max"),
+   location = c("minimum", "maximum"),
    geom = "hline"
  ) +
  guides(color = guide_legend(reverse = TRUE))

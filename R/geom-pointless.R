@@ -9,15 +9,15 @@
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams ggplot2::layer
 #'
-#' @param location A character vector specifying which observations to highlight, defaults to `"last"`.
+#' @param location A character vector specifying which observations to highlight, default is `"last"`.
 #' @param orientation The orientation of the layer. The default (`NA`) automatically determines
 #' the orientation from the aesthetic mapping. In the rare event that this fails it can be given
 #' explicitly by setting `orientation` to either `"x"` or `"y"`. See the Orientation section for more detail.
 #' @param geom,stat Overwrite the default connection between `geom_pointless()` and `stat_pointless()`.
 #'
 #' @section Details:
-#' The argument `location` allows you to control which observations to highlight - with a point.
-#' When `location` is `"last"`, the default, a single point will be plotted at the last observations.
+#' The argument `location` allows you to control which observations to highlight.
+#' When `location` is `"last"`, the default, a single point will be plotted at the last non-missing observations.
 #' The locations are determined in the order in which they appear in the
 #' data -- like `geom_path()` does compared to `geom_line()`.
 #'
@@ -75,12 +75,21 @@
 #'  size = 3
 #'  )
 #'
+#'# Example with missing first and last observation
+#'set.seed(42)
+#'df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
+#'ggplot(df1, aes(x, y)) +
+#'  geom_line() +
+#'  geom_pointless(location = c("first", "last"))
+#'
 #'# Use `stat_pointless()` with a geom other than "point"
-#'ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
+#'set.seed(42)
+#'df1 <- data.frame(x = 1:10, y = sample(1:10))
+#'ggplot(df1, aes(x, y)) +
 #'  geom_line() +
 #'  stat_pointless(
 #'    aes(yintercept = y, color = after_stat(location)),
-#'    location = c("min", "max"),
+#'    location = c("minimum", "maximum"),
 #'    geom = "hline"
 #'  ) +
 #'  guides(color = guide_legend(reverse = TRUE))
