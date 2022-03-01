@@ -1,6 +1,6 @@
 Package: ggpointless
-Title: Emphasize Observations With Points
-Version: 0.0.0.9000
+Title: Emphasize Observations with Points
+Version: 0.0.1
 Authors@R: 
     person(
      given = "Markus",
