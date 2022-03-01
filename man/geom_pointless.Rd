@@ -154,13 +154,6 @@ p + geom_pointless(location = c("first", "last"))
 p + geom_pointless(location = c("minimum", "maximum"))
 p + geom_pointless(location = c("all"))
 
-# Example with missing first and last observation
-set.seed(42)
-df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
-ggplot(df1, aes(x, y)) +
- geom_line() +
- geom_pointless(location = c("first", "last"))
-
 # The layer computes one additional variable, `location`,
 # that you can map e.g. to the color aesthetic
 p + geom_pointless(
@@ -168,6 +161,13 @@ p + geom_pointless(
  location = c("all"),
  size = 3
  )
+
+# Example with missing first and last observation
+set.seed(42)
+df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
+ggplot(df1, aes(x, y)) +
+ geom_line() +
+ geom_pointless(location = c("first", "last"))
 
 # Use `stat_pointless()` with a geom other than "point"
 set.seed(42)

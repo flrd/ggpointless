@@ -2,7 +2,7 @@
 #'
 #' @description
 #' Given a data frame, this functions returns a subset of the input. It returns a data frame
-#' with either "first" row, "last" row and/or the row(s) that contain mimima or maxima
+#' with either "first" row, "last" row and/or the row(s) that contain minima or maxima
 #'
 #' @param data A `data.frame`
 #' @param location A character string specifying which rows to return:
@@ -67,7 +67,7 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 #'Given a year, get the decade
 #'
 #'@param years A numeric vector
-#'@param anno_domini logical; should only "decades of the Lord" be considered?
+#'@param anno_domini logical; should only "years of the Lord" be considered?
 #'@return A string of the same length as year
 #'
 #'@keywords internal
@@ -75,10 +75,10 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 #' \dontrun{
 #'get_decades(c(2019:2021))
 #'get_decades(c(-2019:-2021))
-#'get_decades(c(-2019:-2021), anno_domini = FALSE)
+#'get_decades(c(-723, 111, 2022), anno_domini = TRUE)
 #'}
 
-get_decades <- function(years, anno_domini = TRUE) {
+get_decades <- function(years, anno_domini = FALSE) {
   stopifnot(is.numeric(years) | !is.null(years))
 
   if(anno_domini) {
@@ -86,7 +86,7 @@ get_decades <- function(years, anno_domini = TRUE) {
     tmp <- pmax(0, years)
 
     if(!isTRUE(all.equal(years, tmp))) {
-      message("All years must be larger than 0, returning 0. Consider to use `anno_domini = FALSE`")
+      message("All years must be AD, returning 0. Consider to use `anno_domini = FALSE`")
     }
     decade <- tmp %/% 10 * 10
   } else {

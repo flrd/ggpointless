@@ -4,12 +4,12 @@
 \alias{get_decades}
 \title{Given a year, get the decade}
 \usage{
-get_decades(years, anno_domini = TRUE)
+get_decades(years, anno_domini = FALSE)
 }
 \arguments{
 \item{years}{A numeric vector}
 
-\item{anno_domini}{logical; should only "decades of the Lord" be considered?}
+\item{anno_domini}{logical; should only "years of the Lord" be considered?}
 }
 \value{
 A string of the same length as year
@@ -21,7 +21,7 @@ Given a year, get the decade
 \dontrun{
 get_decades(c(2019:2021))
 get_decades(c(-2019:-2021))
-get_decades(c(-2019:-2021), anno_domini = FALSE)
+get_decades(c(-723, 111, 2022), anno_domini = TRUE)
 }
 }
 \keyword{internal}

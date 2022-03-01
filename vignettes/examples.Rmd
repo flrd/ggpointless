@@ -24,7 +24,7 @@ library(ggpointless)
 library(ggtext)
 ```
 
-This vignette aims to demonstrate use cases for the `ggpointless` package. We will use the two data sets that `ggpointless` contains:
+This vignette shows use cases for the two data sets included in the `ggpointless` package:
 
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa, Hawaii](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
@@ -63,19 +63,19 @@ theme_set(theme_minimal() +
 
 ## Carbon Dioxide Concentration in the Atmosphere
 
-We'll start to recreate Gregor Aisch's plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). `co2_ml` is a data.frame of monthly CO~2~ measurements taken at Mauna Loa, Hawaii (see also `co2` from the `datasets` package). 
+We'll start to recreate Gregor Aisch's plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). 
 
 ```{r co2_ml}
 data(co2_ml)
 ```
 
-In order to plot lines for different decades on a common scale, we first need to add one additional variable to `co2_ml` that we'll call `date_scale`
+`co2_ml` is a data.frame of monthly CO~2~ measurements from March 1958 to January 2022, taken at Mauna Loa, Hawaii . In order to plot a line for each decade on a common scale, we first need to add one additional variable to `co2_ml` that we'll call `date_scale`.
 
 ``` {r date_scale}
 co2_ml$date_scale <- as.Date(sprintf("%d-%d-01", 1950 + (co2_ml$year %% 10), co2_ml$month))
 ```
 
-Also, we create a helper function to change the x-axis labels.
+Also, we create a helper function to change the date labels of the x-axis.
 
 ``` {r labeller_co2}
 axis_labeller <- function(date) {
@@ -89,7 +89,7 @@ axis_labeller <- function(date) {
 ```{r co2, echo=TRUE, warning=FALSE}
 # layers
 p <- ggplot(co2_ml, aes(date_scale, co2_ppm, color = decade))
-# sustainability level
+# sustainable level
 p <- p + geom_hline(aes(yintercept = 350),
                     color = "#dbd9db",
                     size = 1)
@@ -99,10 +99,9 @@ p <- p + geom_text(aes(x = as.Date("1951-01-01"), y = 348),
                    color = "#dbd9db",
                    hjust = "left",
                    inherit.aes = FALSE)
-
 p <- p + geom_line()
 p <- p + geom_pointless(location = c("first", "last"), size = 2)
-# label decade
+# label decades
 p <- p + geom_text(
   data = subset(co2_ml, subset = decade != "2020's"),
   aes(label = decade),
@@ -115,10 +114,7 @@ p <- p + geom_text(
 # label at first year in decade
 p <- p + geom_text(
   data = subset(co2_ml, subset = decade != "1950's"),
-  aes(
-    label = year,
-    group = decade
-  ),
+  aes(label = year, group = decade),
   size = text_size,
   color = text_color,
   stat = "pointless",
@@ -131,10 +127,7 @@ p <- p + geom_text(
 # label at last year in decade
 p <- p + geom_text(
   data = subset(co2_ml, subset = !(decade %in% c("1950's", "2020's"))),
-  aes(
-    label = year,
-    group = decade
-  ),
+  aes(label = year, group = decade),
   size = text_size,
   color = text_color,
   stat = "pointless",
@@ -147,10 +140,7 @@ p <- p + geom_text(
 p <- p + lapply(2014:2018, function(yrs) {
   geom_text(
     data = subset(co2_ml, subset = year == yrs),
-    aes(
-      label = sprintf("'%i", year %% 100),
-      group = year
-    ),
+    aes(label = sprintf("'%i", year %% 100), group = year),
     size = text_size,
     color = text_color,
     stat = "pointless",
@@ -240,15 +230,15 @@ p
 ```
 
 
-## Rates for vaccinated and unvaccinated
+## Rates of COVID-19 Cases and Deaths by Vaccination Status
 
-The following two charts show age-adjusted daily cases and death rates for vaccinated and unvaccinated people in 26 states in the USA. This graphic is inspired by the New York Times' [Coronavirus Map and Cases](https://www.nytimes.com/interactive/2021/us/covid-cases.html). The source of the second data set is [Centers for Disease Control and Prevention](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status). 
+The following two charts show age-adjusted daily cases and death rates for vaccinated and unvaccinated people in 26 states in the USA. This example is inspired by a graphic from the New York Times [Coronavirus Map and Cases](https://www.nytimes.com/interactive/2021/us/covid-cases.html). 
 
 ```{r}
 data(covid_vac)
 ```
 
-Again, we first create a helper function to label the facet labels: 
+Again, we create a helper function, this time to change the facet labels: 
 
 ```{r labeller_covid}
 covid_labeller <- function(label) {
@@ -263,9 +253,9 @@ p <- ggplot(covid_vac,
             aes(
               x = date,
               y = incidence / 7,
-              color = outcome,
-              alpha = status
-            ))
+              color = interaction(outcome, status)
+              )
+)
 p <- p + geom_step(size = .65, direction = "vh")
 p <- p + geom_text(
   aes(label = status),
@@ -285,10 +275,15 @@ p <- p + facet_wrap(
   )
 
 # scales
-p <- p + scale_x_date(expand = expansion(mult = c(0, 0.2))) +
-  scale_y_continuous(n.breaks = 4) +
-  scale_alpha_manual(values = c(unvaccinated = 1, 'fully vaccinated' = 0.5)) +
-  scale_color_manual(values = c(case = "#f9491b", death = "#000000"))
+p <- p + scale_x_date(expand = expansion(mult = c(0, 0.2)))
+p <- p + scale_y_continuous(n.breaks = 4)
+p <- p + scale_color_manual(
+  values = c(
+    "case.unvaccinated" = "#050038",
+    "case.fully vaccinated" = "#9187f7",
+    "death.unvaccinated" = "#f14e1c",
+    "death.fully vaccinated" = "#f8a187")
+  )
 
 # title, subtitle, caption
 p <- p + 
@@ -302,7 +297,6 @@ p <- p +
 
 # theme
 p <- p + theme(panel.grid.major.x = element_blank())
-p <- p + theme(panel.grid.major.y = element_line(linetype = "12"))
 p <- p + theme(strip.text = element_text(hjust = 0, face = "bold"))
 ```
 </details>

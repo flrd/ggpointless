@@ -18,15 +18,12 @@ library(ggpointless)
 
 
 ## Add some points 
-
-```{r lib}
-library(ggplot2)
-library(ggpointless)
-```
-
 The `ggpointless` package an extension of the `ggplot2` plotting library. The goal is to emphasize certain observations with an accent to provide some useful context.
 
-```{r default, fig.show='hold'}
+```{r default}
+library(ggplot2)
+library(ggpointless)
+
 x <- seq(-pi, pi, length.out = 100)
 y <- outer(x, 1:5, function(x, y) sin(x*y))
 
@@ -36,26 +33,19 @@ df1 <- data.frame(
 )
 
 p <- ggplot(df1, aes(x = var1, y = var2))
-p + geom_pointless() + labs(subtitle = "default")
-p + geom_pointless(location = "all") + labs(subtitle = "location = 'all'")
+p + geom_pointless(location = c("first", "last", "minimum", "maximum"))
 ```
 
-As you can see, `geom_pointless()` is not terribly useful on its own (and here I stuck thinking about a better package name) but when it teams up with `geom_line()` and friends, hopefully.
+Just adding `geom_pointless()` to `ggplot(...)` is not terribly useful on its own but when it teams up with `geom_line()` and friends, hopefully.
 
-```{r line}
-p <- p + geom_line()
-```
-
-`geom_pointless()` understands the same arguments as `geom_point()` and one additional argument `location`. You can set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
-
-
+`geom_pointless()` understands the same arguments as `geom_point()` plus one additional argument: `location`. You can set it to `"first"`, `"last"` -- the default --, `"minimum"`, `"maximum"`, and `"all"`; where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
 
 ```{r location}
-p + geom_pointless(location = "all",
-                   size = 3)
+p <- p + geom_line()
+p + geom_pointless(location = "all", size = 3)
 ```
 
-You can use the one additionally computed variable `location` and map it to an aesthetic, e.g. `color`.  
+In addition, you can use the computed variable `location` and map it to an aesthetic, e.g. `color`.  
 
 ```{r color}
 p + geom_pointless(aes(color = after_stat(location)),
@@ -66,7 +56,7 @@ p + geom_pointless(aes(color = after_stat(location)),
 
 ### Order and orientation
 
-The locations are determined in the order in which they appear in the data -- like `geom_path()` does compared to `geom_line()`. This can be seen in the next example, with data kindly taken from the [`geomtextpath`](https://github.com/AllanCameron/geomtextpath/#using-geomtextpath) package:
+The locations are determined in the order in which they appear in the data, like `geom_path()` does compared to `geom_line()`. This can be seen in the next example, with sample data kindly taken from the [`geomtextpath`](https://github.com/AllanCameron/geomtextpath/#using-geomtextpath) package:
 
 ```{r spiral, fig.show='hold'}
 x <- seq(5, -1, length.out = 1000) * pi
@@ -86,8 +76,8 @@ p + aes(x = var1, y = var2) +
 
 p + aes(y = var1, x = var2) +
   geom_pointless(aes(color = after_stat(location)),
-                   location = "all",
-                   size = 3) +
+                 location = "all",
+                 size = 3) +
   labs(subtitle = "orientation = 'y'")
 ```
 
@@ -95,19 +85,19 @@ As you see from the first of the last two examples `"first"` and `"minimum"` ove
 
 ## Pick another geom
 
-Just like all `stat_*` functions, `stat_pointless` has a default geom, in this case `"point"`. Conversely, this means that we can change it to highlight maximum and minimum, for example, with a horizontal line. 
+Just like all `stat_*` functions, `stat_pointless` has a default geom, which is `"point"`. This means in reverse that we can highlight e.g. minimum and maximum in a different way, for example with a horizontal line.
+
 ```{r stat}
+set.seed(42)
 ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) + 
   geom_line() + 
   stat_pointless(
     aes(yintercept = y, color = after_stat(location)),
-    location = c("min", "max"),
+    location = c("minimum", "maximum"),
     geom = "hline"
     ) + 
   guides(color = guide_legend(reverse = TRUE))
 ```
-
-
 
 ## Data
 

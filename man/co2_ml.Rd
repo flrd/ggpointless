@@ -26,6 +26,6 @@ co2_ml
 Atmospheric Carbon Dioxide Dry Air Mole Fractions from the
 NOAA GML Carbon Cycle Cooperative Global Air Sampling
 Network. Monthly time series constructed from daily mean values,
-see \url{www.esrl.noaa.gov/gmd/ccgg/trends/} for additional details.
+from March 1958 to January 2022.
 }
 \keyword{datasets}
