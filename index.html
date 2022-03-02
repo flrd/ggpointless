@@ -89,7 +89,7 @@
 </div>
 <!-- badges: start -->
 
-<p>The goal is to emphasize certain observations with an accent to provide some additional context.</p>
+<p>Add a minimal accent to your plots. <code>ggpointless</code> is an extension of the <a href="https://ggplot2.tidyverse.org/" class="external-link"><code>ggplot2</code></a> library making it easy to add a simple point layer to highlight first, last, minima or maxima observations with the goal to provide some additional context. Or just some visual sugar.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -101,7 +101,7 @@
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<p>There are two functions in the <code>ggpointless</code> package: <code><a href="reference/geom_pointless.html">geom_pointless()</a></code>, which is powered by <code><a href="reference/geom_pointless.html">stat_pointless()</a></code>. These accept the same arguments like <code>geom_point()</code>, with the addition of a <code>location</code> argument. You can set it to <code>"first"</code>, <code>"last"</code> (default), <code>"minimum"</code>, <code>"maximum"</code>, and <code>"all"</code>, where <code>"all"</code> is just shorthand to select <code>"first"</code>, <code>"last"</code>, <code>"minimum"</code> and <code>"maximum"</code>.</p>
+<p>There are two functions in this small package package: <code><a href="reference/geom_pointless.html">geom_pointless()</a></code>, which is powered by <code><a href="reference/geom_pointless.html">stat_pointless()</a></code>. These functions behave like <code>geom_point()</code> does, with the addition of a <code>location</code> argument. You can set it to <code>"first"</code>, <code>"last"</code> (default), <code>"minimum"</code>, <code>"maximum"</code>, and <code>"all"</code>, where <code>"all"</code> is just shorthand to select <code>"first"</code>, <code>"last"</code>, <code>"minimum"</code> and <code>"maximum"</code>.</p>
 <p>See the <code><a href="articles/ggpointless.html">vignette("ggpointless")</a></code> for more details.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>
