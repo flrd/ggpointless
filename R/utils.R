@@ -10,10 +10,6 @@
 #' @return A data.frame
 #'
 #' @keywords internal
-#' @examples
-#' \dontrun{
-#' get_locations(iris, c("first", "last"))
-#' }
 get_locations <- function(data = NULL, location = c("first", "last", "minimum", "maximum", "all")) {
 
   if (is.null(data) | !is.data.frame(data) | nrow(data) == 0) {
@@ -71,12 +67,6 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 #'@return A string of the same length as year
 #'
 #'@keywords internal
-#'@examples
-#' \dontrun{
-#'get_decades(c(2019:2021))
-#'get_decades(c(-2019:-2021))
-#'get_decades(c(-723, 111, 2022), anno_domini = TRUE)
-#'}
 
 get_decades <- function(years, anno_domini = FALSE) {
   stopifnot(is.numeric(years) | !is.null(years))
