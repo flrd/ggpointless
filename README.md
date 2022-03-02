@@ -10,8 +10,11 @@ coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](h
 [![R-CMD-check](https://github.com/flrd/ggpointless/workflows/R-CMD-check/badge.svg)](https://github.com/flrd/ggpointless/actions)
 <!-- badges: end -->
 
-The goal is to emphasize certain observations with an accent to provide
-some additional context.
+Add a minimal accent to your plots. `ggpointless` is an extension of the
+[`ggplot2`](https://ggplot2.tidyverse.org/) library making it easy to
+add a simple point layer to highlight first, last, minima or maxima
+observations with the goal to provide some additional context. Or just
+some visual sugar.
 
 ## Installation
 
@@ -25,9 +28,9 @@ devtools::install_github("flrd/ggpointless")
 
 ## Usage
 
-There are two functions in the `ggpointless` package:
-`geom_pointless()`, which is powered by `stat_pointless()`. These accept
-the same arguments like `geom_point()`, with the addition of a
+There are two functions in this small package package:
+`geom_pointless()`, which is powered by `stat_pointless()`. These
+functions behave like `geom_point()` does, with the addition of a
 `location` argument. You can set it to `"first"`, `"last"` (default),
 `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand
 to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.
