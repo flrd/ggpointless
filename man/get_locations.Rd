@@ -22,9 +22,4 @@ A data.frame
 Given a data frame, this functions returns a subset of the input. It returns a data frame
 with either "first" row, "last" row and/or the row(s) that contain minima or maxima
 }
-\examples{
-\dontrun{
-get_locations(iris, c("first", "last"))
-}
-}
 \keyword{internal}

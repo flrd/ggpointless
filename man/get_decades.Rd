@@ -17,11 +17,4 @@ A string of the same length as year
 \description{
 Given a year, get the decade
 }
-\examples{
-\dontrun{
-get_decades(c(2019:2021))
-get_decades(c(-2019:-2021))
-get_decades(c(-723, 111, 2022), anno_domini = TRUE)
-}
-}
 \keyword{internal}
