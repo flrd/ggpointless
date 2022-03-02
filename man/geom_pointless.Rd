@@ -86,7 +86,7 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
 This is a wrapper around \code{geom_point()} with the one additional argument: \code{location}.
-It allows to emphazise some observations, namely the first, the last, the minima and/or maxima, see examples.
+It allows to emphasize some observations, namely the first, the last, the minima and/or maxima, see examples.
 This geom is not particularly useful on its own, hence the name, but hopefully in conjunction
 with \code{geom_line()} and friends.
 }

@@ -27,7 +27,10 @@ library(ggpointless)
 [![R-CMD-check](https://github.com/flrd/ggpointless/workflows/R-CMD-check/badge.svg)](https://github.com/flrd/ggpointless/actions)
 <!-- badges: end -->
 
-The goal is to emphasize certain observations with an accent to provide some additional context.
+Add a minimal accent to your plots. `ggpointless` is an extension 
+of the [`ggplot2`](https://ggplot2.tidyverse.org/) library making it easy to add a simple point layer to
+highlight first, last, minima or maxima observations with the goal to provide
+some additional context. Or just some visual sugar.
 
 ## Installation
 
