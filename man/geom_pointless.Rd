@@ -114,6 +114,7 @@ to guess which orientation the layer should have. Under rare circumstances,
 the orientation is ambiguous and guessing may fail. In that case the orientation
 can be specified directly using the orientation parameter, which can be either
 "x" or "y". The value gives the axis that the geom should run along, "x"
+being the default orientation you would expect for the geom.
 }
 
 \section{Aesthetics}{
