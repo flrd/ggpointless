@@ -10,12 +10,19 @@ test_that("location = 'all' is equal to c('first', 'last', 'minimum', 'maximum')
 
   set.seed(42)
   df2 <- data.frame(x = 1:10, y = sample(1:10))
-
   p1 <- ggplot(df2, aes(x, y)) +
     geom_pointless(location = c("all"))
   p2 <- ggplot(df2, aes(x, y)) +
     geom_pointless(location = c("first", "last", "minimum", "maximum"))
+  expect_equal(layer_data(p1), layer_data(p2))
 
+  df3 <- data.frame(var1 = 1:2,
+                    var2 = 1:2)
+  p <- ggplot(df3, aes(x = var1, y = var2))
+  p1 <- p + geom_pointless(aes(color = after_stat(location)),
+                           location = c("first", "last", "minimum", "maximum"))
+  p2 <- p + geom_pointless(aes(color = after_stat(location)),
+                           location = c("maximum", "minimum", "last", "first", "all"))
   expect_equal(layer_data(p1), layer_data(p2))
 })
 
