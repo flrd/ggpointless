@@ -228,7 +228,7 @@ being the default orientation you would expect for the geom.</p>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span>location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-6.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="co"># The layer computes one additional variable, `location`,</span></span>
+<span class="r-in"><span class="co"># The layer computes one additional variable, 'location',</span></span>
 <span class="r-in"><span class="co"># that you can map e.g. to the color aesthetic</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span></span>
 <span class="r-in"> <span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -237,7 +237,7 @@ being the default orientation you would expect for the geom.</p>
 <span class="r-in"> <span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-7.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="co"># Example with missing first and last observation</span></span>
+<span class="r-in"><span class="co"># Example with missing first and last observations</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -267,31 +267,30 @@ being the default orientation you would expect for the geom.</p>
 <span class="r-in">                  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span>, <span class="st">"all"</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-11.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="co"># Use `stat_pointless()` with a geom other than "point"</span></span>
+<span class="r-in"><span class="co"># Use stat_pointless() with a geom other than "point"</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span class="r-in"> <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span class="r-in"> <span class="fu">stat_pointless</span><span class="op">(</span></span>
 <span class="r-in">   <span class="fu">aes</span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">y</span>, color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">   location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
+<span class="r-in">   location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span><span class="op">)</span>,</span>
 <span class="r-in">   geom <span class="op">=</span> <span class="st">"hline"</span></span>
-<span class="r-in"> <span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu">guides</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">guide_legend</span><span class="op">(</span>reverse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"> <span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-12.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Example using facets</span></span>
-<span class="r-in"><span class="co"># see https://stackoverflow.com/q/29375169</span></span>
+<span class="r-in"><span class="co"># https://stackoverflow.com/q/29375169</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">economics_long</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"> <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span class="r-in"> <span class="fu">facet_wrap</span><span class="op">(</span> <span class="op">~</span> <span class="va">variable</span>, ncol <span class="op">=</span> <span class="fl">1</span>, scales <span class="op">=</span> <span class="st">'free_y'</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">geom_pointless</span><span class="op">(</span></span>
-<span class="r-in">    <span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">    location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
-<span class="r-in">    size <span class="op">=</span> <span class="fl">2</span></span>
-<span class="r-in">  <span class="op">)</span></span>
+<span class="r-in"> <span class="fu">geom_pointless</span><span class="op">(</span></span>
+<span class="r-in">   <span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">   location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
+<span class="r-in">   size <span class="op">=</span> <span class="fl">2</span></span>
+<span class="r-in"> <span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-13.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
 </code></pre></div>
