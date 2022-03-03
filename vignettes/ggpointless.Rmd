@@ -16,9 +16,8 @@ knitr::opts_chunk$set(
 library(ggpointless)
 ```
 
-
 ## Add some points 
-The `ggpointless` package an extension of the `ggplot2` plotting library. The goal is to emphasize certain observations with an accent to provide some useful context.
+`ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/). The goal is to easily add minimal emphasis to your plots. 
 
 ```{r default}
 library(ggplot2)
@@ -36,14 +35,16 @@ p <- ggplot(df1, aes(x = var1, y = var2))
 p + geom_pointless(location = c("first", "last", "minimum", "maximum"))
 ```
 
-Just adding `geom_pointless()` to `ggplot(...)` is not terribly useful on its own but when it teams up with `geom_line()` and friends, hopefully.
+As you see, just adding `geom_pointless()` to `ggplot(...)` is not terribly useful on its own but when it teams up with `geom_line()` and friends, hopefully.
 
-`geom_pointless()` understands the same arguments as `geom_point()` plus one additional argument: `location`. You can set it to `"first"`, `"last"` -- the default --, `"minimum"`, `"maximum"`, and `"all"`; where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
 
 ```{r location}
 p <- p + geom_line()
 p + geom_pointless(location = "all", size = 3)
 ```
+
+
+`geom_pointless()` behaves like `geom_point()` does with the addition of a `location` argument. You can set it to `"first"`, `"last"`, the default, `"minimum"`, `"maximum"`, and `"all"`; where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
 
 In addition, you can use the computed variable `location` and map it to an aesthetic, e.g. `color`.  
 
@@ -83,9 +84,10 @@ p + aes(y = var1, x = var2) +
 
 As you see from the first of the last two examples `"first"` and `"minimum"` overlap, and `"first"` wins over `"minimum"`. The order in which points are plotted (if specified together) from top to bottom is: `"first"` > `"last"` > `"minimum"` > `"maximum"`. 
 
+
 ## Pick another geom
 
-Just like all `stat_*` functions, `stat_pointless` has a default geom, which is `"point"`. This means in reverse that we can highlight e.g. minimum and maximum in a different way, for example with a horizontal line.
+Just like all `stat_*` functions, `stat_pointless()` has a default geom, which is `"point"`. This means in reverse that you can highlight e.g. minimum and maximum in another way, for example with a horizontal line.
 
 ```{r stat}
 set.seed(42)

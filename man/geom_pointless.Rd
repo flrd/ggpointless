@@ -93,9 +93,16 @@ with \code{geom_line()} and friends.
 \section{Details}{
 
 The argument \code{location} allows you to control which observations to highlight.
-When \code{location} is \code{"last"}, the default, a single point will be plotted at the last non-missing observations.
-The locations are determined in the order in which they appear in the
-data -- like \code{geom_path()} does compared to \code{geom_line()}.
+If \code{location} is \code{"last"}, a single point is plotted by default at the last
+non-missing observation. The locations are determined in the order in which they
+appear in the data -- like \code{geom_path()} does compared to \code{geom_line()}.
+See the \code{vignette("ggpointless")} for more details.
+}
+
+\section{Overplotting}{
+
+Points may be plotted on top of one another. The order in which points are plotted
+from top to bottom is: first > last > minimum > maximum.
 }
 
 \section{Orientation}{
@@ -107,7 +114,6 @@ to guess which orientation the layer should have. Under rare circumstances,
 the orientation is ambiguous and guessing may fail. In that case the orientation
 can be specified directly using the orientation parameter, which can be either
 "x" or "y". The value gives the axis that the geom should run along, "x"
-being the default orientation you would expect for the geom.
 }
 
 \section{Aesthetics}{
@@ -181,8 +187,8 @@ ggplot(df1, aes(x, y)) +
  ) +
  guides(color = guide_legend(reverse = TRUE))
 
-\dontrun{
-# Example using facets, see https://stackoverflow.com/q/29375169
+# Example using facets
+# see https://stackoverflow.com/q/29375169
 p <- ggplot(economics_long, aes(x = date, y = value)) +
   geom_line() +
  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
@@ -193,7 +199,6 @@ p +
     location = c("minimum", "maximum"),
     size = 2
   )
- }
 
 }
 \keyword{datasets}

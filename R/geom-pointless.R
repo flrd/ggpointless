@@ -17,9 +17,14 @@
 #'
 #' @section Details:
 #' The argument `location` allows you to control which observations to highlight.
-#' When `location` is `"last"`, the default, a single point will be plotted at the last non-missing observations.
-#' The locations are determined in the order in which they appear in the
-#' data -- like `geom_path()` does compared to `geom_line()`.
+#' If `location` is `"last"`, a single point is plotted by default at the last
+#' non-missing observation. The locations are determined in the order in which they
+#' appear in the data -- like `geom_path()` does compared to `geom_line()`.
+#' See the `vignette("ggpointless")` for more details.
+#'
+#' @section Overplotting:
+#' Points may be plotted on top of one another. The order in which points are plotted
+#' from top to bottom is: first > last > minimum > maximum.
 #'
 #' @section Orientation:
 #' This geom treats each axis differently and, can thus have two orientations.
@@ -94,8 +99,8 @@
 #'  ) +
 #'  guides(color = guide_legend(reverse = TRUE))
 #'
-#' \dontrun{
-#' # Example using facets, see https://stackoverflow.com/q/29375169
+#' # Example using facets
+#' # see https://stackoverflow.com/q/29375169
 #' p <- ggplot(economics_long, aes(x = date, y = value)) +
 #'   geom_line() +
 #'  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
@@ -106,7 +111,6 @@
 #'     location = c("minimum", "maximum"),
 #'     size = 2
 #'   )
-#'  }
 #'
 geom_pointless <- function(mapping = NULL,
                            data = NULL,

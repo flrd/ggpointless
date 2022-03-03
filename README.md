@@ -28,12 +28,12 @@ devtools::install_github("flrd/ggpointless")
 
 ## Usage
 
-There are two functions in this small package package:
-`geom_pointless()`, which is powered by `stat_pointless()`. These
-functions behave like `geom_point()` does, with the addition of a
-`location` argument. You can set it to `"first"`, `"last"` (default),
-`"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand
-to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.
+There are two functions in this small package: `geom_pointless()`, which
+is powered by `stat_pointless()`. `geom_pointless()` behaves like
+`geom_point()` does with the addition of a `location` argument. You can
+set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and
+`"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`,
+`"minimum"` and `"maximum"`.
 
 See the `vignette("ggpointless")` for more details.
 
