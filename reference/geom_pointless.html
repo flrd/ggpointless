@@ -157,8 +157,11 @@ See the <code><a href="../articles/ggpointless.html">vignette("ggpointless")</a>
     <h2 id="overplotting">Overplotting<a class="anchor" aria-label="anchor" href="#overplotting"></a></h2>
     
 
-<p>Points may be plotted on top of one another. The order in which points are plotted
-from top to bottom is: first &gt; last &gt; minimum &gt; maximum.</p>
+<p>Points may be plotted on top of one another. If <code>location</code> is set to <code>"all"</code>, then
+the order in which points are plotted from top to bottom is:
+<code>"first"</code> &gt; <code>"last"</code> &gt; <code>"minimum"</code> &gt; <code>"maximum"</code>.
+Otherwise, the order is determined as specified in the <code>location</code> argument,
+which also then applies to the order legend key labels, see examples.</p>
     </div>
     <div class="section level2">
     <h2 id="orientation">Orientation<a class="anchor" aria-label="anchor" href="#orientation"></a></h2>
@@ -244,6 +247,26 @@ being the default orientation you would expect for the geom.</p>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 2 row(s) containing missing values (geom_path).</span>
 <span class="r-plt img"><img src="geom_pointless-8.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
+<span class="r-in"><span class="co"># Change the order in which points are drawn when they overlap</span></span>
+<span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>var1 <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, var2 <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"> <span class="fu">geom_path</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"> <span class="fu">coord_equal</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># same as location = 'all'</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">                  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first"</span>, <span class="st">"last"</span>, <span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-plt img"><img src="geom_pointless-9.png" alt="" width="962" height="595"></span>
+<span class="r-in"><span class="co"># reversed custom order</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">                  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-plt img"><img src="geom_pointless-10.png" alt="" width="962" height="595"></span>
+<span class="r-in"><span class="co"># same as location = 'all' again</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">                  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span>, <span class="st">"all"</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-plt img"><img src="geom_pointless-11.png" alt="" width="962" height="595"></span>
+<span class="r-in"></span>
 <span class="r-in"><span class="co"># Use `stat_pointless()` with a geom other than "point"</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
@@ -255,7 +278,7 @@ being the default orientation you would expect for the geom.</p>
 <span class="r-in">   geom <span class="op">=</span> <span class="st">"hline"</span></span>
 <span class="r-in"> <span class="op">)</span> <span class="op">+</span></span>
 <span class="r-in"> <span class="fu">guides</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">guide_legend</span><span class="op">(</span>reverse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="geom_pointless-9.png" alt="" width="962" height="595"></span>
+<span class="r-plt img"><img src="geom_pointless-12.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Example using facets</span></span>
 <span class="r-in"><span class="co"># see https://stackoverflow.com/q/29375169</span></span>
@@ -269,7 +292,7 @@ being the default orientation you would expect for the geom.</p>
 <span class="r-in">    location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
 <span class="r-in">    size <span class="op">=</span> <span class="fl">2</span></span>
 <span class="r-in">  <span class="op">)</span></span>
-<span class="r-plt img"><img src="geom_pointless-10.png" alt="" width="962" height="595"></span>
+<span class="r-plt img"><img src="geom_pointless-13.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
