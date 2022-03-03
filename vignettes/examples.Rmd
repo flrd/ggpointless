@@ -225,7 +225,7 @@ p <- p +
 ```
 </details>
 
-```{r co2_plot, fig.height=6, echo=FALSE, warning=FALSE}
+```{r co2_plot, fig.height=6.5, echo=FALSE, warning=FALSE}
 p
 ```
 
