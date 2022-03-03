@@ -101,8 +101,11 @@ See the \code{vignette("ggpointless")} for more details.
 
 \section{Overplotting}{
 
-Points may be plotted on top of one another. The order in which points are plotted
-from top to bottom is: first > last > minimum > maximum.
+Points may be plotted on top of one another. If \code{location} is set to \code{"all"}, then
+the order in which points are plotted from top to bottom is:
+\code{"first"} > \code{"last"} > \code{"minimum"} > \code{"maximum"}.
+Otherwise, the order is determined as specified in the \code{location} argument,
+which also then applies to the order legend key labels, see examples.
 }
 
 \section{Orientation}{
@@ -175,6 +178,23 @@ df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
 ggplot(df1, aes(x, y)) +
  geom_line() +
  geom_pointless(location = c("first", "last"))
+
+# Change the order in which points are drawn when they overlap
+df1 <- data.frame(var1 = 1:2, var2 = 1:2)
+
+p <- ggplot(df1, aes(x = var1, y = var2)) +
+ geom_path() +
+ coord_equal()
+
+# same as location = 'all'
+p + geom_pointless(aes(color = after_stat(location)),
+                  location = c("first", "last", "minimum", "maximum"))
+# reversed custom order
+p + geom_pointless(aes(color = after_stat(location)),
+                  location = c("maximum", "minimum", "last", "first"))
+# same as location = 'all' again
+p + geom_pointless(aes(color = after_stat(location)),
+                  location = c("maximum", "minimum", "last", "first", "all"))
 
 # Use `stat_pointless()` with a geom other than "point"
 set.seed(42)
