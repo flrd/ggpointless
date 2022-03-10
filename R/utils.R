@@ -22,12 +22,6 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
     locations <- c("first", "last", "minimum", "maximum")
   }
 
-  # might move this to compute_panel ?
-  if(nrow(data) == 1) {
-    message("Data contains a single row only. Returning data.")
-    return(data)
-  }
-
   # get row indices
   first_row <- 1
   n_rows <- nrow(data)

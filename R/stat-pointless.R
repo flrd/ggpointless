@@ -39,6 +39,15 @@ stat_pointless <- function(mapping = NULL,
 #' @export
 StatPointless <- ggproto("StatPointless", Stat,
     setup_params = function(data, params) {
+
+      if(!anyDuplicated(data$group)) {
+        message(
+          paste(
+            "Each group consists of only one observation.",
+            "Do you need to adjust the group aesthetic?"
+            )
+        )
+      }
       GeomPath$setup_params(data, params)
       },
     extra_params = c("na.rm", "orientation"),
