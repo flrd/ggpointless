@@ -1,0 +1,116 @@
+#' Lexis charts
+#'
+#' The lexis geom is used to plot "lifelines" for each cohort.
+#'
+#' The plot method for Lexis objects draws "lifelines" from the start to the end for each cohort.
+#' Lexis diagrams are used by demographers for more than a century and they are named after the
+#' American economist and social scientist Wilhelm Lexis. They are a combination of a segment,
+#' starting at 0 with a dot at the end.
+#'
+#' @section Aesthetics:
+#' geom_pointless() understands the following aesthetics (required aesthetics are in bold):
+#'
+#' - **x**
+#' - **xend**
+#' - alpha
+#' - color
+#' - fill
+#' - group
+#' - shape
+#' - size
+#' - stroke
+#' @inheritParams ggplot2::layer
+#' @param na.rm If \code{FALSE} (the default), removes missing values with
+#'    a warning.  If \code{TRUE} silently removes missing values.
+#' @param ... other arguments passed on to \code{\link{layer}}. These are
+#'   often aesthetics, used to set an aesthetic to a fixed value, like
+#'   \code{color = "red"} or \code{size = 3}. They may also be parameters
+#'   to the paired geom/stat.
+#' @param point.size the size of the point
+#' @param point.colour the colour of the point
+#' @inheritParams ggplot2::layer
+#' @export
+#' @examples
+#'
+#'df1 <- data.frame(
+#'  key = c("A", "B", "B", "C", "D", "E"),
+#'  start = c(0, 1, 6, 5, 6, 9),
+#'  end = c(5, 4, 10, 9, 8, 11)
+#')
+#'ggplot(df1, aes(x = start, xend = end, color = key)) +
+#'  geom_lexis() +
+#'  coord_equal()
+#'
+geom_lexis <- function(mapping = NULL, data = NULL, ...,
+                       point.colour = NULL, point.size = NULL,
+                       na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+
+  layer(
+    data = data,
+    mapping = mapping,
+    stat = "identity",
+    geom = GeomLexis,
+    position = "identity",
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      na.rm = na.rm,
+      point.colour = point.colour,
+      point.size = point.size,
+      ...
+    )
+  )
+}
+
+
+GeomLexis <- ggproto("GeomLexis", Geom,
+   required_aes = c("x", "xend"),
+   non_missing_aes = c("size", "shape", "point.colour", "point.size", "type"),
+   default_aes = aes(
+     shape = 19, colour = "black", size = 0.5, fill = NA,
+     alpha = NA, stroke = 0.5
+   ),
+   setup_data = function(data, params) {
+
+     if(all(is.na(data$xend))) {
+       x_max <- max(data$x, na.rm = TRUE)
+       message(paste("All 'xend' values missing, setting them to", x_max))
+       data$xend <- x_max
+     }
+
+     if(anyNA(data$xend)) {
+       xend_max <- max(data$xend, na.rm = TRUE)
+       message(paste("Setting missing 'xend' values to", xend_max))
+       data$xend <- replace(data$xend, is.na(data$xend), xend_max)
+       }
+
+     cols_to_keep <- setdiff(names(data), c("x", "y", "xend", "yend"))
+     lst <- by(data, data$group, FUN = function(grp) {
+       lexis_segment <- create_lexis(grp$x, grp$xend)
+       suppressWarnings({
+         cbind(lexis_segment, grp[1, cols_to_keep])
+       })
+     })
+
+     do.call(rbind, lst)
+   },
+
+   draw_group = function(data, panel_params, coord,
+                         point.colour = NULL, point.size = NULL) {
+
+     points <- tail(data, 1)
+     points$colour <- point.colour %||% points$colour
+     points$size <- point.size %||% (points$size * 3)
+     points <- transform(points, x = xend, y = yend)
+     points <- subset(points, select = c(-xend, -yend))
+
+
+     grid::gList(
+       ggplot2::GeomSegment$draw_panel(data, panel_params, coord),
+       ggplot2::GeomPoint$draw_panel(points, panel_params, coord)
+     )
+   },
+
+   draw_key = draw_key_pointrange
+)
+

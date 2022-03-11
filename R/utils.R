@@ -84,3 +84,67 @@ get_decades <- function(years, anno_domini = FALSE) {
   out
 }
 
+
+# x else y ----------------------------------------------------------------
+#'If not x, return y
+#'
+#'@keywords internal
+`%||%` <- function(x, y) {
+  if(is.null(x)) y else x
+}
+
+
+# get 'lifelines' ---------------------------------------------------------
+#'Given a year, get the decade
+#'
+#'@param x A vector of mode numeric
+#'@param xend A vector of mode numeric
+#'@return A data.frame
+#'
+#'@keywords internal
+get_lexis <- function(x, xend) {
+
+  if(is.character(x) || is.character(x)) {
+    stop("`x` and `xend` must be continous.")
+  }
+
+  # if(typeof(x) != typeof(xend)) {
+  #   stop("`x` and `xend` must be of the same type.")
+  # }
+
+  if(anyNA(x)) {
+    stop("`x` should not contain missing values.")
+  }
+
+  if(any(xend < 0, na.rm = TRUE)) {
+    stop("All values in `xend` must be greater than zero.")
+  }
+
+  if(any(x > xend, na.rm = TRUE)) {
+    stop("`xend` must be greater than `x`")
+  }
+
+  # get all x-postions
+  tmp_x <- sort(c(x, xend))
+
+  # get the y-positions
+  # unclass because cumsum won't work if we work with difftime objects
+  tmp_y <- cumsum(unclass(xend - x))
+  tmp_y <- sort(c(0, tmp_y[-length(tmp_y)], tmp_y))
+
+  # collect xy-coordinates
+  out <- data.frame(
+    x = tmp_x[-length(tmp_x)],
+    xend = tmp_x[-1],
+    y = tmp_y[-length(tmp_y)],
+    yend = tmp_y[-1]
+  )
+
+  # check y and yend positions are the same, if so, assign
+  # dotted linetype to this segment, else solid
+  # out[["lty"]] <- c("solid", "dotted")[(out[["yend"]] - out[["y"]] == 0) + 1]
+  out[["type"]] <- ifelse(out[["yend"]] - out[["y"]] == 0, "constant", "diagonal")
+  return(out)
+}
+
+
