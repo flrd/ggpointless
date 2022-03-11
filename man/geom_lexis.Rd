@@ -60,13 +60,15 @@ that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
-The lexis geom is used to plot "lifelines" for each cohort.
+The lexis geom is used to plot 45° "lifelines" for each cohort. Lexis diagrams
+are used by demographers for more than a century and they are named after Wilhelm Lexis.
+They are a combination of a segment, starting at 0 with a dot at the end.
 }
 \details{
-The plot method for Lexis objects draws "lifelines" from the start to the end for each cohort.
-Lexis diagrams are used by demographers for more than a century and they are named after the
-American economist and social scientist Wilhelm Lexis. They are a combination of a segment,
-starting at 0 with a dot at the end.
+This geom draws 45° lines from the start to the end of a lifetime. The geom
+generates one variable called \code{'type'} in the layer data, that you can map
+with \code{\link[=after_scale]{after_scale()}} to an aesthetic.
+See the examples and \code{vignette("ggpointless")} for more details.
 }
 \section{Aesthetics}{
 
@@ -80,6 +82,7 @@ geom_pointless() understands the following aesthetics (required aesthetics are i
 \item group
 \item shape
 \item size
+\item linetype
 \item stroke
 }
 }
@@ -93,6 +96,10 @@ df1 <- data.frame(
 )
 ggplot(df1, aes(x = start, xend = end, color = key)) +
  geom_lexis() +
+ coord_equal()
+
+ggplot(df1, aes(x = start, xend = end, color = key)) +
+ geom_lexis(aes(linetype = after_scale(type))) +
  coord_equal()
 
 }

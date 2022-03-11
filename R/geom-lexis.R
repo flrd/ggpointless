@@ -1,11 +1,8 @@
 #' Lexis charts
 #'
-#' The lexis geom is used to plot "lifelines" for each cohort.
-#'
-#' The plot method for Lexis objects draws "lifelines" from the start to the end for each cohort.
-#' Lexis diagrams are used by demographers for more than a century and they are named after the
-#' American economist and social scientist Wilhelm Lexis. They are a combination of a segment,
-#' starting at 0 with a dot at the end.
+#' The lexis geom is used to plot 45° "lifelines" for each cohort. Lexis diagrams
+#' are used by demographers for more than a century and they are named after Wilhelm Lexis.
+#' They are a combination of a segment, starting at 0 with a dot at the end.
 #'
 #' @section Aesthetics:
 #' geom_pointless() understands the following aesthetics (required aesthetics are in bold):
@@ -18,6 +15,7 @@
 #' - group
 #' - shape
 #' - size
+#' - linetype
 #' - stroke
 #' @inheritParams ggplot2::layer
 #' @param na.rm If \code{FALSE} (the default), removes missing values with
@@ -29,6 +27,12 @@
 #' @param point.size the size of the point
 #' @param point.colour the colour of the point
 #' @inheritParams ggplot2::layer
+#' @details
+#' This geom draws 45° lines from the start to the end of a lifetime. The geom
+#' generates one variable called `'type'` in the layer data, that you can map
+#' with [after_scale()] to an aesthetic.
+#' See the examples and `vignette("ggpointless")` for more details.
+#'
 #' @export
 #' @examples
 #'
@@ -39,6 +43,10 @@
 #')
 #'ggplot(df1, aes(x = start, xend = end, color = key)) +
 #'  geom_lexis() +
+#'  coord_equal()
+#'
+#'ggplot(df1, aes(x = start, xend = end, color = key)) +
+#'  geom_lexis(aes(linetype = after_scale(type))) +
 #'  coord_equal()
 #'
 geom_lexis <- function(mapping = NULL, data = NULL, ...,
@@ -67,26 +75,26 @@ GeomLexis <- ggproto("GeomLexis", Geom,
    required_aes = c("x", "xend"),
    non_missing_aes = c("size", "shape", "point.colour", "point.size", "type"),
    default_aes = aes(
-     shape = 19, colour = "black", size = 0.5, fill = NA,
+     shape = 19, colour = "black", linetype = "solid", size = 0.5, fill = NA,
      alpha = NA, stroke = 0.5
    ),
    setup_data = function(data, params) {
 
      if(all(is.na(data$xend))) {
        x_max <- max(data$x, na.rm = TRUE)
-       message(paste("All 'xend' values missing, setting them to", x_max))
+       message(paste("All 'xend' values missing, setting those to", x_max))
        data$xend <- x_max
      }
 
      if(anyNA(data$xend)) {
        xend_max <- max(data$xend, na.rm = TRUE)
-       message(paste("Setting missing 'xend' values to", xend_max))
+       message(paste("Missing 'xend' values set to", xend_max))
        data$xend <- replace(data$xend, is.na(data$xend), xend_max)
        }
 
      cols_to_keep <- setdiff(names(data), c("x", "y", "xend", "yend"))
      lst <- by(data, data$group, FUN = function(grp) {
-       lexis_segment <- create_lexis(grp$x, grp$xend)
+       lexis_segment <- get_lexis(grp$x, grp$xend)
        suppressWarnings({
          cbind(lexis_segment, grp[1, cols_to_keep])
        })

@@ -87,7 +87,8 @@ get_decades <- function(years, anno_domini = FALSE) {
 
 # x else y ----------------------------------------------------------------
 #'If not x, return y
-#'
+#'@param x an R object
+#'@param y an R object
 #'@keywords internal
 `%||%` <- function(x, y) {
   if(is.null(x)) y else x
@@ -142,8 +143,10 @@ get_lexis <- function(x, xend) {
 
   # check y and yend positions are the same, if so, assign
   # dotted linetype to this segment, else solid
-  # out[["lty"]] <- c("solid", "dotted")[(out[["yend"]] - out[["y"]] == 0) + 1]
-  out[["type"]] <- ifelse(out[["yend"]] - out[["y"]] == 0, "constant", "diagonal")
+  # Note: we need to assign 'real' linetypes here otherwise we'd
+  # run into an error if we want to use the "type" column from the
+  # layer data and map it to an aesthetic
+  out[["type"]] <- ifelse(out[["yend"]] - out[["y"]] == 0, "11", "solid")
   return(out)
 }
 
