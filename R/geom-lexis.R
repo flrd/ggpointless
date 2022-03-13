@@ -24,8 +24,11 @@
 #'   often aesthetics, used to set an aesthetic to a fixed value, like
 #'   \code{color = "red"} or \code{size = 3}. They may also be parameters
 #'   to the paired geom/stat.
+#' @param lineend	Line end style (round, butt, square)
+#' @param point.show logical. Should a point be added add the end of each segment? TRUE by default
 #' @param point.size the size of the point
 #' @param point.colour the colour of the point
+#' @param gap_filler logical. Should a line be drawn connecting segments if there are gaps? TRUE by default
 #' @inheritParams ggplot2::layer
 #' @details
 #' This geom draws 45° lines from the start to the end of a lifetime. The geom
@@ -35,7 +38,6 @@
 #'
 #' @export
 #' @examples
-#'
 #'df1 <- data.frame(
 #'  key = c("A", "B", "B", "C", "D", "E"),
 #'  start = c(0, 1, 6, 5, 6, 9),
@@ -50,7 +52,7 @@
 #'  coord_equal()
 #'
 geom_lexis <- function(mapping = NULL, data = NULL, ...,
-                       point.colour = NULL, point.size = NULL,
+                       point.show = TRUE, point.colour = NULL, point.size = NULL, gap_filler = TRUE, lineend = "round",
                        na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
   layer(
@@ -63,6 +65,9 @@ geom_lexis <- function(mapping = NULL, data = NULL, ...,
     inherit.aes = inherit.aes,
     params = list(
       na.rm = na.rm,
+      lineend = lineend,
+      gap_filler = gap_filler,
+      point.show = point.show,
       point.colour = point.colour,
       point.size = point.size,
       ...
@@ -70,12 +75,16 @@ geom_lexis <- function(mapping = NULL, data = NULL, ...,
   )
 }
 
-
+#' @rdname ggpointless-ggproto
+#' @format NULL
+#' @usage NULL
+#' @include legend-draw.R
+#' @export
 GeomLexis <- ggproto("GeomLexis", Geom,
    required_aes = c("x", "xend"),
    non_missing_aes = c("size", "shape", "point.colour", "point.size", "type"),
    default_aes = aes(
-     shape = 19, colour = "black", linetype = "solid", size = 0.5, fill = NA,
+     shape = 19, colour = "black", linetype = "solid", size = 0.3, fill = NA,
      alpha = NA, stroke = 0.5
    ),
    setup_data = function(data, params) {
@@ -104,21 +113,31 @@ GeomLexis <- ggproto("GeomLexis", Geom,
    },
 
    draw_group = function(data, panel_params, coord,
-                         point.colour = NULL, point.size = NULL) {
+                         lineend = "round",
+                         gap_filler = TRUE,
+                         point.show = TRUE, point.colour = NULL, point.size = NULL) {
 
      points <- tail(data, 1)
      points$colour <- point.colour %||% points$colour
-     points$size <- point.size %||% (points$size * 3)
+     points$size <- point.size %||% (points$size * 5)
      points <- transform(points, x = xend, y = yend)
      points <- subset(points, select = c(-xend, -yend))
 
+     if(!isTRUE(gap_filler)) {
+       data <- subset(data, type != "12")
+     }
 
-     grid::gList(
-       ggplot2::GeomSegment$draw_panel(data, panel_params, coord),
-       ggplot2::GeomPoint$draw_panel(points, panel_params, coord)
-     )
-   },
+     if(point.show) {
+       grid::gList(
+         ggplot2::GeomSegment$draw_panel(data, panel_params, coord),
+         ggplot2::GeomPoint$draw_panel(points, panel_params, coord)
+       )
+     } else {
+       grid::gList(
+         ggplot2::GeomSegment$draw_panel(data, panel_params, coord)
+         )
+       }
+     },
+   draw_key = draw_key_lexis
 
-   draw_key = draw_key_pointrange
 )
-
