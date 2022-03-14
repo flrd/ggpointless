@@ -7,9 +7,16 @@
 geom_lexis(
   mapping = NULL,
   data = NULL,
+  stat = "identity",
+  position = "identity",
   ...,
+  arrow = NULL,
+  lineend = "round",
+  linejoin = "round",
+  point.show = TRUE,
   point.colour = NULL,
   point.size = NULL,
+  gap_filler = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -36,17 +43,31 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
-\item{...}{other arguments passed on to \code{\link{layer}}. These are
+\item{stat}{The statistical transformation to use on the data for this
+layer, as a string.}
+
+\item{position}{Position adjustment, either as a string, or the result of
+a call to a position adjustment function.}
+
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
 often aesthetics, used to set an aesthetic to a fixed value, like
-\code{color = "red"} or \code{size = 3}. They may also be parameters
+\code{colour = "red"} or \code{size = 3}. They may also be parameters
 to the paired geom/stat.}
+
+\item{arrow}{specification for arrow heads, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
+
+\item{point.show}{logical. Should a point be added add the end of each segment?
+TRUE by default}
 
 \item{point.colour}{the colour of the point}
 
 \item{point.size}{the size of the point}
 
-\item{na.rm}{If \code{FALSE} (the default), removes missing values with
-a warning.  If \code{TRUE} silently removes missing values.}
+\item{gap_filler}{logical. Should gaps be filled?
+TRUE by default}
+
+\item{na.rm}{If \code{FALSE}, the default, missing values are removed with
+a warning. If \code{TRUE}, missing values are silently removed.}
 
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
@@ -60,9 +81,10 @@ that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
-The lexis geom is used to plot 45° "lifelines" for each cohort. Lexis diagrams
-are used by demographers for more than a century and they are named after Wilhelm Lexis.
-They are a combination of a segment, starting at 0 with a dot at the end.
+The lexis geom is used to plot 45° "lifelines" for each cohort.
+Lexis diagrams are used by demographers for more than a century
+and they are named after Wilhelm Lexis. They are a combination
+of a segment, starting at 0 with a dot at the end.
 }
 \details{
 This geom draws 45° lines from the start to the end of a lifetime. The geom
@@ -72,7 +94,8 @@ See the examples and \code{vignette("ggpointless")} for more details.
 }
 \section{Aesthetics}{
 
-geom_pointless() understands the following aesthetics (required aesthetics are in bold):
+geom_pointless() understands the following aesthetics (required
+aesthetics are in bold):
 \itemize{
 \item \strong{x}
 \item \strong{xend}
@@ -88,7 +111,6 @@ geom_pointless() understands the following aesthetics (required aesthetics are i
 }
 
 \examples{
-
 df1 <- data.frame(
  key = c("A", "B", "B", "C", "D", "E"),
  start = c(0, 1, 6, 5, 6, 9),

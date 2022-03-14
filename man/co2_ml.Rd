@@ -15,7 +15,8 @@ A data frame with 766 rows and 5 variables:
 }
 }
 \source{
-Dr. Pieter Tans, NOAA/GML (gml.noaa.gov/ccgg/trends/) and Dr. Ralph Keeling, Scripps Institution of Oceanography (scrippsco2.ucsd.edu/).
+Dr. Pieter Tans, NOAA/GML (gml.noaa.gov/ccgg/trends/) and Dr. Ralph Keeling,
+Scripps Institution of Oceanography (scrippsco2.ucsd.edu/).
 
 \url{https://gml.noaa.gov/ccgg/trends/data.html}
 }

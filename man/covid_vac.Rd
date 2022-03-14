@@ -14,7 +14,8 @@ A data frame with 146 rows and 4 variables:
 }
 }
 \source{
-Centers for Disease Control and Prevention Rates of COVID-19 Cases and Deaths by Vaccination Status
+Centers for Disease Control and Prevention,
+Rates of COVID-19 Cases and Deaths by Vaccination Status
 
 \url{https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status}
 }

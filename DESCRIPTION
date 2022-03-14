@@ -32,3 +32,10 @@ Suggests:
 Config/testthat/edition: 3
 LazyData: true
 VignetteBuilder: knitr
+Collate: 
+    'data.R'
+    'legend-draw.R'
+    'geom-lexis.R'
+    'geom-pointless.R'
+    'stat-pointless.R'
+    'utils.R'
