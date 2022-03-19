@@ -5,7 +5,6 @@
 #' This geom is not particularly useful on its own, hence the name, but hopefully in conjunction
 #' with `geom_line()` and friends.
 #'
-#' @import ggplot2
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams ggplot2::layer
 #'
@@ -56,80 +55,83 @@
 #' @export
 #' @examples
 #' x <- seq(-pi, pi, length.out = 100)
-#' y <- outer(x, 1:5, FUN = function(x, y) sin(x*y))
+#' y <- outer(x, 1:5, FUN = function(x, y) sin(x * y))
 #'
 #' df1 <- data.frame(
 #'   var1 = x,
 #'   var2 = rowSums(y)
 #' )
 #'
-#'# not terribly useful on its own ...
-#'p <- ggplot(df1, aes(x = var1, y = var2))
-#'p + geom_pointless()
-#'p + geom_pointless(location = "all")
+#' # not terribly useful on its own ...
+#' p <- ggplot(df1, aes(x = var1, y = var2))
+#' p + geom_pointless()
+#' p + geom_pointless(location = "all")
 #'
-#'# ... but in conjunction with geom_line(), hopefully
-#'p <- p + geom_line()
-#'p + geom_pointless()
-#'p + geom_pointless(location = c("first", "last"))
-#'p + geom_pointless(location = c("minimum", "maximum"))
-#'p + geom_pointless(location = c("all"))
+#' # ... but in conjunction with geom_line(), hopefully
+#' p <- p + geom_line()
+#' p + geom_pointless()
+#' p + geom_pointless(location = c("first", "last"))
+#' p + geom_pointless(location = c("minimum", "maximum"))
+#' p + geom_pointless(location = c("all"))
 #'
-#'# The layer computes one additional variable, 'location',
-#'# that you can map e.g. to the color aesthetic
-#'p + geom_pointless(
-#'  aes(color = after_stat(location)),
-#'  location = c("all"),
-#'  size = 3
-#'  )
+#' # The layer computes one additional variable, 'location',
+#' # that you can map e.g. to the color aesthetic
+#' p + geom_pointless(
+#'   aes(color = after_stat(location)),
+#'   location = c("all"),
+#'   size = 3
+#' )
 #'
-#'# Example with missing first and last observations
-#'set.seed(42)
-#'df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
-#'ggplot(df1, aes(x, y)) +
-#'  geom_line() +
-#'  geom_pointless(location = c("first", "last"))
+#' # Example with missing first and last observations
+#' set.seed(42)
+#' df1 <- data.frame(x = 1:10, y = c(NA, sample(1:8), NA))
+#' ggplot(df1, aes(x, y)) +
+#'   geom_line() +
+#'   geom_pointless(location = c("first", "last"))
 #'
-#'# Change the order in which points are drawn when they overlap
-#'df1 <- data.frame(var1 = 1:2, var2 = 1:2)
+#' # Change the order in which points are drawn when they overlap
+#' df1 <- data.frame(var1 = 1:2, var2 = 1:2)
 #'
-#'p <- ggplot(df1, aes(x = var1, y = var2)) +
-#'  geom_path() +
-#'  coord_equal()
+#' p <- ggplot(df1, aes(x = var1, y = var2)) +
+#'   geom_path() +
+#'   coord_equal()
 #'
-#'# same as location = 'all'
-#'p + geom_pointless(aes(color = after_stat(location)),
-#'                   location = c("first", "last", "minimum", "maximum"))
-#'# reversed custom order
-#'p + geom_pointless(aes(color = after_stat(location)),
-#'                   location = c("maximum", "minimum", "last", "first"))
-#'# same as location = 'all' again
-#'p + geom_pointless(aes(color = after_stat(location)),
-#'                   location = c("maximum", "minimum", "last", "first", "all"))
+#' # same as location = 'all'
+#' p + geom_pointless(aes(color = after_stat(location)),
+#'   location = c("first", "last", "minimum", "maximum")
+#' )
+#' # reversed custom order
+#' p + geom_pointless(aes(color = after_stat(location)),
+#'   location = c("maximum", "minimum", "last", "first")
+#' )
+#' # same as location = 'all' again
+#' p + geom_pointless(aes(color = after_stat(location)),
+#'   location = c("maximum", "minimum", "last", "first", "all")
+#' )
 #'
-#'# Use stat_pointless() with a geom other than "point"
-#'set.seed(42)
-#'df1 <- data.frame(x = 1:10, y = sample(1:10))
-#'ggplot(df1, aes(x, y)) +
-#'  geom_line() +
-#'  stat_pointless(
-#'    aes(yintercept = y, color = after_stat(location)),
-#'    location = c("maximum", "minimum"),
-#'    geom = "hline"
-#'  )
+#' # Use stat_pointless() with a geom other than "point"
+#' set.seed(42)
+#' df1 <- data.frame(x = 1:10, y = sample(1:10))
+#' ggplot(df1, aes(x, y)) +
+#'   geom_line() +
+#'   stat_pointless(
+#'     aes(yintercept = y, color = after_stat(location)),
+#'     location = c("maximum", "minimum"),
+#'     geom = "hline"
+#'   )
 #'
 #' # Example using facets
 #' # https://stackoverflow.com/q/29375169
 #' p <- ggplot(economics_long, aes(x = date, y = value)) +
-#'  geom_line() +
-#'  facet_wrap( ~ variable, ncol = 1, scales = 'free_y')
+#'   geom_line() +
+#'   facet_wrap(~variable, ncol = 1, scales = "free_y")
 #'
 #' p +
-#'  geom_pointless(
-#'    aes(color = after_stat(location)),
-#'    location = c("minimum", "maximum"),
-#'    size = 2
-#'  )
+#'   geom_pointless(
+#'     aes(color = after_stat(location)),
+#'     location = c("minimum", "maximum"),
+#'     size = 2
+#'   )
 #'
 geom_pointless <- function(mapping = NULL,
                            data = NULL,
@@ -140,8 +142,7 @@ geom_pointless <- function(mapping = NULL,
                            na.rm = FALSE,
                            orientation = NA,
                            show.legend = NA,
-                           inherit.aes = TRUE
-) {
+                           inherit.aes = TRUE) {
   ggplot2::layer(
     data = data,
     mapping = mapping,

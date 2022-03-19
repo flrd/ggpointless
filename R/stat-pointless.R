@@ -33,7 +33,7 @@ stat_pointless <- function(mapping = NULL,
   )
 }
 
-#' @rdname geom_pointless
+#' @rdname ggpointless-ggproto
 #' @format NULL
 #' @usage NULL
 #' @export
