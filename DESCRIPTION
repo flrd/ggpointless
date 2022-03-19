@@ -21,7 +21,8 @@ URL: https://flrd.github.io/ggpointless/,
 BugReports: https://github.com/flrd/ggpointless/issues
 Depends: 
     ggplot2 (>= 3.3.0),
-    R (>= 2.10)
+    R (>= 2.10),
+    scales
 Suggests: 
     knitr,
     covr,
@@ -33,9 +34,12 @@ Config/testthat/edition: 3
 LazyData: true
 VignetteBuilder: knitr
 Collate: 
+    'aaa.R'
     'data.R'
     'legend-draw.R'
     'geom-lexis.R'
     'geom-pointless.R'
+    'ggpointless-package.R'
     'stat-pointless.R'
+    'trans.R'
     'utils.R'
