@@ -6,15 +6,15 @@ co2_full <- read.table(url, header = FALSE, na.strings = c("-9.99", "-0.99", "-1
 
 # rename columns ----------------------------------------------------------
 nms <- c(
-    "year",
-    "month",
-    "year_decimal",
-    "co2_ppm",
-    "trend",
-    "#days",
-    "std_deviation",
-    "uncertainty"
-  )
+  "year",
+  "month",
+  "year_decimal",
+  "co2_ppm",
+  "trend",
+  "#days",
+  "std_deviation",
+  "uncertainty"
+)
 
 co2_full <- setNames(co2_full, nms)
 

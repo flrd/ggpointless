@@ -7,9 +7,9 @@ cdc_raw <- read.csv(url)
 # subset data -------------------------------------------------------------
 # don't distinguish between age groups and vaccine
 cdc <- subset(cdc_raw,
-              subset = Age.group == "all_ages_adj" & Vaccine.product == "all_types",
-              select = c("outcome", "month", "MMWR.week","Age.adjusted.vax.IR", "Age.adjusted.unvax.IR")
-              )
+  subset = Age.group == "all_ages_adj" & Vaccine.product == "all_types",
+  select = c("outcome", "month", "MMWR.week", "Age.adjusted.vax.IR", "Age.adjusted.unvax.IR")
+)
 
 # clean col names ---------------------------------------------------------
 vac_idx <- which(names(cdc) %in% c("Age.adjusted.vax.IR", "Age.adjusted.unvax.IR"))
@@ -17,10 +17,12 @@ names(cdc)[vac_idx] <- paste("value", c("fully.vaccinated", "unvaccinated"), sep
 
 
 # reshape to long ---------------------------------------------------------
-covid_vac <- reshape(cdc, direction = "long",
-                     idvar = c("outcome", "month", "MMWR.week"),
-                     varying = c("value_fully.vaccinated", "value_unvaccinated"),
-                     sep = "_")
+covid_vac <- reshape(cdc,
+  direction = "long",
+  idvar = c("outcome", "month", "MMWR.week"),
+  varying = c("value_fully.vaccinated", "value_unvaccinated"),
+  sep = "_"
+)
 row.names(covid_vac) <- NULL
 
 
@@ -46,4 +48,3 @@ write.csv(covid_vac, "data-raw/covid_vac.csv", row.names = FALSE)
 
 # save as .rda in /data directory -----------------------------------------
 usethis::use_data(covid_vac, overwrite = TRUE)
-

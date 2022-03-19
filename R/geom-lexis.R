@@ -59,7 +59,7 @@
 #'
 #' # missing xend values will be set to the maximum of `x`
 #' df1 <- data.frame(
-#'   key = c("A", "B", "B","C", "D"),
+#'   key = c("A", "B", "B", "C", "D"),
 #'   start = c(0, 1, 7, 5, 6),
 #'   end = c(5, 4, 13, 9, NA)
 #' )
@@ -67,7 +67,7 @@
 #'   geom_lexis()
 #'
 #' # Ideally, `x` values should be increasing, unlike in the
-#' # next example, which is
+#' # next example
 #' df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
 #' ggplot(df3, aes(x = x, xend = xend)) +
 #'   geom_lexis()

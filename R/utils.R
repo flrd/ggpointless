@@ -1,3 +1,7 @@
+"%||%" <- function(a, b) {
+  if (!is.null(a)) a else b
+}
+
 #' Subset input data based on locations
 #'
 #' @description
@@ -11,14 +15,13 @@
 #'
 #' @keywords internal
 get_locations <- function(data = NULL, location = c("first", "last", "minimum", "maximum", "all")) {
-
   if (is.null(data) | !is.data.frame(data) | nrow(data) == 0) {
     stop("Please provide a valid data frame.")
   }
 
   locations <- match.arg(location, several.ok = TRUE)
 
-  if("all" %in% location) {
+  if ("all" %in% location) {
     locations <- c("first", "last", "minimum", "maximum")
   }
 
@@ -41,12 +44,12 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 
   # make sure that first is plotted on top of last, minimum, maximum, in that order
   # hence, order by row index, i.e. "values", then by reversed location level
-  tmp <- tmp[order(tmp[["values"]], -as.integer(tmp[["ind"]])),, drop = FALSE]
+  tmp <- tmp[order(tmp[["values"]], -as.integer(tmp[["ind"]])), , drop = FALSE]
 
   # return subset of input data
   return(
     cbind(
-      data[tmp[["values"]],, drop = FALSE],
+      data[tmp[["values"]], , drop = FALSE],
       location = tmp[["ind"]]
     )
   )
@@ -54,22 +57,21 @@ get_locations <- function(data = NULL, location = c("first", "last", "minimum", 
 
 
 # create a decade from a number -------------------------------------------
-#'Given a year, get the decade
+#' Given a year, get the decade
 #'
-#'@param years A numeric vector
-#'@param anno_domini logical; should only "years of the Lord" be considered?
-#'@return A string of the same length as year
+#' @param years A numeric vector
+#' @param anno_domini logical; should only "years of the Lord" be considered?
+#' @return A string of the same length as year
 #'
-#'@keywords internal
+#' @keywords internal
 
 get_decades <- function(years, anno_domini = FALSE) {
   stopifnot(is.numeric(years) | !is.null(years))
 
-  if(anno_domini) {
-
+  if (anno_domini) {
     tmp <- pmax(0, years)
 
-    if(!isTRUE(all.equal(years, tmp))) {
+    if (!isTRUE(all.equal(years, tmp))) {
       message("All years must be AD, returning 0. Consider to use `anno_domini = FALSE`")
     }
     decade <- tmp %/% 10 * 10
@@ -85,43 +87,32 @@ get_decades <- function(years, anno_domini = FALSE) {
 }
 
 
-# x else y ----------------------------------------------------------------
-#'If not x, return y
-#'@param x an R object
-#'@param y an R object
-#'@keywords internal
-`%||%` <- function(x, y) {
-  if(is.null(x)) y else x
-}
-
-
 # get 'lifelines' ---------------------------------------------------------
-#'Given a year, get the decade
+#' Given a year, get the decade
 #'
-#'@param x A vector of mode numeric
-#'@param xend A vector of mode numeric
-#'@return A data.frame
+#' @param x A vector of mode numeric
+#' @param xend A vector of mode numeric
+#' @return A data.frame
 #'
-#'@keywords internal
+#' @keywords internal
 get_lexis <- function(x, xend) {
-
-  if(is.character(x) || is.character(x)) {
-    stop("`x` and `xend` must be continous.")
+  if (is.character(x) || is.character(xend)) {
+    stop("`x` and `xend` must be continuous.")
   }
 
-  # if(typeof(x) != typeof(xend)) {
-  #   stop("`x` and `xend` must be of the same type.")
+  if (!(mode(c(x, xend)) == "numeric")) {
+    stop("`x` and `xend` must be continuous.")
+  }
+
+  if (anyNA(x)) {
+    stop("`x` must not contain missing values.")
+  }
+
+  # if(any(xend < 0, na.rm = TRUE)) {
+  #   stop("All values in `xend` must be greater than zero.")
   # }
 
-  if(anyNA(x)) {
-    stop("`x` should not contain missing values.")
-  }
-
-  if(any(xend < 0, na.rm = TRUE)) {
-    stop("All values in `xend` must be greater than zero.")
-  }
-
-  if(any(x > xend, na.rm = TRUE)) {
+  if (any(x > xend, na.rm = TRUE)) {
     stop("`xend` must be greater than `x`")
   }
 
@@ -146,8 +137,6 @@ get_lexis <- function(x, xend) {
   # Note: we need to assign 'real' linetypes here otherwise we'd
   # run into an error if we want to use the "type" column from the
   # layer data and map it to an aesthetic
-  out[["type"]] <- ifelse(out[["yend"]] - out[["y"]] == 0, "11", "solid")
+  out[["type"]] <- c("solid", "11")[(out[["yend"]] - out[["y"]] == 0) + 1]
   return(out)
 }
-
-

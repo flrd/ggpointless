@@ -2,7 +2,7 @@ sd <- second_day_trans()
 dw <- day_week_trans()
 
 test_that("transformations work", {
-  expect_equal(sd$invers(60*60*24), 1)
+  expect_equal(sd$invers(60 * 60 * 24), 1)
   expect_equal(dw$invers(7), 1)
 })
 
