@@ -14,8 +14,7 @@ stat_pointless <- function(mapping = NULL,
                            na.rm = FALSE,
                            orientation = NA,
                            show.legend = NA,
-                           inherit.aes = TRUE
-) {
+                           inherit.aes = TRUE) {
   ggplot2::layer(
     data = data,
     mapping = mapping,
@@ -38,28 +37,23 @@ stat_pointless <- function(mapping = NULL,
 #' @usage NULL
 #' @export
 StatPointless <- ggproto("StatPointless", Stat,
-    setup_params = function(data, params) {
-
-      if(!anyDuplicated(data$group)) {
-        message(
-          paste(
-            "Each group consists of only one observation.",
-            "Do you need to adjust the group aesthetic?"
-            )
+  setup_params = function(data, params) {
+    if (!anyDuplicated(data$group)) {
+      message(
+        paste(
+          "Each group consists of only one observation.",
+          "Do you need to adjust the group aesthetic?"
         )
-      }
-      GeomPath$setup_params(data, params)
-      },
-    extra_params = c("na.rm", "orientation"),
-
-    setup_data = function(data, params) {
-      GeomPath$setup_data(data, params)
-      },
-
-    compute_group = function(data, scales, location) {
-      get_locations(data, location = location)
-      },
-
-    required_aes = c("x", "y")
-
+      )
+    }
+    GeomPath$setup_params(data, params)
+  },
+  extra_params = c("na.rm", "orientation"),
+  setup_data = function(data, params) {
+    GeomPath$setup_data(data, params)
+  },
+  compute_group = function(data, scales, location) {
+    get_locations(data, location = location)
+  },
+  required_aes = c("x", "y")
 )
