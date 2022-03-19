@@ -10,7 +10,6 @@ geom_lexis(
   stat = "identity",
   position = "identity",
   ...,
-  arrow = NULL,
   lineend = "round",
   linejoin = "round",
   point.show = TRUE,
@@ -54,14 +53,16 @@ often aesthetics, used to set an aesthetic to a fixed value, like
 \code{colour = "red"} or \code{size = 3}. They may also be parameters
 to the paired geom/stat.}
 
-\item{arrow}{specification for arrow heads, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
+\item{lineend}{line end style (round, butt, square)}
+
+\item{linejoin}{line join style (round, mitre, bevel)}
 
 \item{point.show}{logical. Should a point be added add the end of each segment?
 TRUE by default}
 
-\item{point.colour}{the colour of the point}
+\item{point.colour}{color of a point}
 
-\item{point.size}{the size of the point}
+\item{point.size}{the size of a point}
 
 \item{gap_filler}{logical. Should gaps be filled?
 TRUE by default}
@@ -87,10 +88,15 @@ and they are named after Wilhelm Lexis. They are a combination
 of a segment, starting at 0 with a dot at the end.
 }
 \details{
-This geom draws 45° lines from the start to the end of a lifetime. The geom
-generates one variable called \code{'type'} in the layer data, that you can map
-with \code{\link[=after_scale]{after_scale()}} to an aesthetic.
-See the examples and \code{vignette("ggpointless")} for more details.
+This geom draws 45° lines from the start to the end of a 'lifetime'. Besides
+\code{y} and \code{yend} coordinates this geom creates one additional variable called
+\code{type} in the layer data. You might want to map to an aesthetic with
+\code{\link[ggplot2:aes_eval]{ggplot2::after_scale()}}, see \code{Examples} and \code{vignette("ggpointless")} for
+more details.
+
+Every \code{x} must be a non-missing, numeric value (your segments must start somewhere), but when
+one or all \code{xend} values are missing, they will be set to the maximum of \code{x},
+and a message is shown, see examples.
 }
 \section{Aesthetics}{
 
@@ -112,16 +118,40 @@ aesthetics are in bold):
 
 \examples{
 df1 <- data.frame(
- key = c("A", "B", "B", "C", "D", "E"),
- start = c(0, 1, 6, 5, 6, 9),
- end = c(5, 4, 10, 9, 8, 11)
+  key = c("A", "B", "B", "C", "D", "E"),
+  start = c(0, 1, 6, 5, 6, 9),
+  end = c(5, 4, 10, 9, 8, 11)
+)
+p <- ggplot(df1, aes(x = start, xend = end, color = key))
+p +
+  geom_lexis()
+p +
+  geom_lexis(gap_filler = FALSE)
+p +
+  geom_lexis(aes(linetype = after_scale(type)),
+    point.show = FALSE
+  )
+
+# missing xend values will be set to the maximum of `x`
+df1 <- data.frame(
+  key = c("A", "B", "B","C", "D"),
+  start = c(0, 1, 7, 5, 6),
+  end = c(5, 4, 13, 9, NA)
 )
 ggplot(df1, aes(x = start, xend = end, color = key)) +
- geom_lexis() +
- coord_equal()
+  geom_lexis()
 
-ggplot(df1, aes(x = start, xend = end, color = key)) +
- geom_lexis(aes(linetype = after_scale(type))) +
- coord_equal()
+# Ideally, `x` values should be increasing, unlike in the
+# next example, which is
+df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
+ggplot(df3, aes(x = x, xend = xend)) +
+  geom_lexis()
 
+# If `x` is of class Date, `xend` can't be of class `POSIXt` or
+# `POSIXct`. The error is thrown by the scales::date_trans function.
+\dontrun{
+df4 <- data.frame(x = Sys.Date(), xend = Sys.time())
+ggplot(df4, aes(x = x, xend = xend)) +
+  geom_lexis()
+}
 }
