@@ -50,3 +50,24 @@ test_that("geom_pointless works in both directions", {
   y$flipped_aes <- NULL
   expect_identical(x, ggplot2::flip_data(y, TRUE)[names(x)])
 })
+
+test_that("readme example works", {
+  cols <- c("#f4ae1b", "#d77e7b", "#a84dbd", "#311dfc")
+  x <- seq(-pi, pi, length.out = 500)
+  y <- outer(x, 1:5, function(x, y) sin(x * y))
+
+  df1 <- data.frame(
+    var1 = x,
+    var2 = rowSums(y)
+  )
+
+  p <- ggplot(df1, aes(x = var1, y = var2)) +
+    geom_line() +
+    geom_pointless(aes(color = after_stat(location)),
+      location = "all",
+      size = 3
+    ) +
+    scale_color_manual(values = cols) +
+    theme_minimal()
+  vdiffr::expect_doppelganger("readme geom_pointless example", p)
+})

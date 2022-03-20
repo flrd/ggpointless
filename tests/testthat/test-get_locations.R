@@ -9,10 +9,16 @@ test_that("get_locations(..., c('all')) returns 4 rows", {
 
   expect_equal(
     get_locations(spiral, location = c("all")),
-    structure(list(x = c(0, -7.9847, 0, 0), y = c(-1, 83.6196, -100,
-    -100), location = structure(c(1L, 4L, 3L, 2L), .Label = c("first",
-    "last", "minimum", "maximum"), class = "factor")), class = "data.frame",
-    row.names = c("1", "84", "100", "100.1"))
+    structure(list(x = c(0, -7.9847, 0, 0), y = c(
+      -1, 83.6196, -100,
+      -100
+    ), location = structure(c(1L, 4L, 3L, 2L), .Label = c(
+      "first",
+      "last", "minimum", "maximum"
+    ), class = "factor")),
+    class = "data.frame",
+    row.names = c("1", "84", "100", "100.1")
+    )
   )
 })
 

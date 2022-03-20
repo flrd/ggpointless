@@ -1,5 +1,5 @@
-sd <- second_day_trans()
-dw <- day_week_trans()
+sd <- time_to_time_trans("second", "day")
+dw <- time_to_time_trans("day", "week")
 
 test_that("transformations work", {
   expect_equal(sd$invers(60 * 60 * 24), 1)
