@@ -16,15 +16,22 @@ knitr::opts_chunk$set(
 library(ggpointless)
 ```
 
-## Add some points 
-`ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/). The goal is to easily add minimal emphasis to your plots. 
+`ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) that provides two additional layers:
 
-```{r default}
+1. `geom_pointless()` / `stat_pointless()`
+2. `geom_lexis()`
+
+and 
+
+## geom_pointless 
+`geom_pointless()` is a layer to easily add minimal emphasis to your plots. The function takes it's power from `stat_pointless()`, which actually does all the work, but is not usually in the spotlight.
+
+```{r default_pointless}
 library(ggplot2)
 library(ggpointless)
 
 x <- seq(-pi, pi, length.out = 100)
-y <- outer(x, 1:5, function(x, y) sin(x*y))
+y <- outer(x, 1:5, function(x, y) sin(x * y))
 
 df1 <- data.frame(
   var1 = x,
@@ -50,8 +57,9 @@ In addition, you can use the computed variable `location` and map it to an aesth
 
 ```{r color}
 p + geom_pointless(aes(color = after_stat(location)),
-                   location = "all",
-                   size = 3) +
+  location = "all",
+  size = 3
+) +
   theme(legend.position = "bottom")
 ```
 
@@ -61,8 +69,10 @@ The locations are determined in the order in which they appear in the data, like
 
 ```{r spiral, fig.show='hold'}
 x <- seq(5, -1, length.out = 1000) * pi
-spiral <- data.frame(var1 = sin(x) * 1:1000, 
-                     var2 = cos(x) * 1:1000)
+spiral <- data.frame(
+  var1 = sin(x) * 1:1000,
+  var2 = cos(x) * 1:1000
+)
 
 p <- ggplot(spiral) +
   geom_path() +
@@ -71,14 +81,16 @@ p <- ggplot(spiral) +
 
 p + aes(x = var1, y = var2) +
   geom_pointless(aes(color = after_stat(location)),
-                 location = "all",
-                 size = 3) +
+    location = "all",
+    size = 3
+  ) +
   labs(subtitle = "orientation = 'x'")
 
 p + aes(y = var1, x = var2) +
   geom_pointless(aes(color = after_stat(location)),
-                 location = "all",
-                 size = 3) +
+    location = "all",
+    size = 3
+  ) +
   labs(subtitle = "orientation = 'y'")
 ```
 
@@ -87,45 +99,74 @@ As you see from the first of the last two examples `"first"` and `"minimum"` ove
 Otherwise, the order is determined as specified in the `location` argument, which also applies to the order of the legend key labels.
 
 ```{r overplotting, fig.show='hold'}
-df2 <- data.frame(var1 = 1:2,
-                  var2 = 1:2)
+df2 <- data.frame(
+  var1 = 1:2,
+  var2 = 1:2
+)
 p <- ggplot(df2, aes(x = var1, y = var2)) +
   geom_path() +
   coord_equal()
 
 # same as location = 'all'
 p + geom_pointless(aes(color = after_stat(location)),
-                   location = c("first", "last", "minimum", "maximum"),
-                   size = 3) +
+  location = c("first", "last", "minimum", "maximum"),
+  size = 3
+) +
   labs(subtitle = "same as location = 'all'")
 # reversed order
 p + geom_pointless(aes(color = after_stat(location)),
-                   location = c("maximum", "minimum", "last", "first"),
-                   size = 3) +
+  location = c("maximum", "minimum", "last", "first"),
+  size = 3
+) +
   labs(subtitle = "custom order")
 # same as location = 'all' again
 p + geom_pointless(aes(color = after_stat(location)),
-                   location = c("maximum", "minimum", "last", "first", "all"),
-                   size = 3) +
+  location = c("maximum", "minimum", "last", "first", "all"),
+  size = 3
+) +
   labs(subtitle = "same as location = 'all' again")
 ```
 
 
-## Pick another geom
+### Pick another geom
 
 Just like all `stat_*` functions, `stat_pointless()` has a default geom, which is `"point"`. This means in reverse that you can highlight e.g. minimum and maximum in another way, for example with a horizontal line.
 
 ```{r stat}
 set.seed(42)
-ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) + 
-  geom_line() + 
+ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
+  geom_line() +
   stat_pointless(
     aes(yintercept = y, color = after_stat(location)),
     location = c("minimum", "maximum"),
     geom = "hline"
-    ) + 
+  ) +
   guides(color = guide_legend(reverse = TRUE))
 ```
+
+## geom_lexis
+
+The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. 
+
+```{r default_lexis}
+df1 <- data.frame(
+  key = c("A", "B", "B", "C", "D"),
+  start = c(0, 1, 6, 5, 6),
+  end = c(5, 4, 10, 8, 10)
+)
+
+p <- ggplot(df1, aes(x = start, xend = end, color = key)) +
+  coord_equal()
+p + geom_lexis()
+```
+
+If there is a gap in an event, this is shown by a horizontal line, that you can hide. Also, `geom_lexis()` creates an additional variable, `type`, you can map to e.g. the linetype aesthetic (or any other aesthetic) using `after_scale()`.
+
+```{r after_scale, fig.show='hold'}
+p + geom_lexis(gap_filler = FALSE)
+p + geom_lexis(aes(linetype = after_scale(type)))
+```
+
 
 ## Data
 
@@ -134,4 +175,4 @@ The `ggpointless` package contains two data sets:
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
 
-See the `vignette("examples")` for possible use cases.
+See the [`vignette("examples")`]() for possible use cases.
