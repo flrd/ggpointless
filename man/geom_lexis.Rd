@@ -134,7 +134,7 @@ p +
 
 # missing xend values will be set to the maximum of `x`
 df1 <- data.frame(
-  key = c("A", "B", "B","C", "D"),
+  key = c("A", "B", "B", "C", "D"),
   start = c(0, 1, 7, 5, 6),
   end = c(5, 4, 13, 9, NA)
 )

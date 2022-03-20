@@ -19,7 +19,8 @@ get_locations(
 A data.frame
 }
 \description{
-Given a data frame, this functions returns a subset of the input. It returns a data frame
-with either "first" row, "last" row and/or the row(s) that contain minima or maxima
+Given a data frame, this functions returns a subset. Returns a
+data frame with either "first" row, "last" row and/or the row(s)
+that contain minima or maxima
 }
 \keyword{internal}
