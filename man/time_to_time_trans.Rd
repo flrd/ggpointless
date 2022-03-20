@@ -2,53 +2,14 @@
 % Please edit documentation in R/trans.R
 \name{time_to_time_trans}
 \alias{time_to_time_trans}
-\alias{day_decade_trans}
-\alias{day_year_trans}
-\alias{day_month_trans}
-\alias{day_week_trans}
-\alias{day_hour_trans}
-\alias{day_minute_trans}
-\alias{second_decade_trans}
-\alias{second_year_trans}
-\alias{second_month_trans}
-\alias{second_week_trans}
-\alias{second_day_trans}
-\alias{second_hour_trans}
-\alias{second_minute_trans}
 \title{Unit of time transformations}
 \usage{
 time_to_time_trans(
   from = c("day", "second"),
-  to = c("decade", "year", "month", "week", "day", "hour", "minute", "second")
+  to = c("century", "decade", "year", "month", "week", "day", "hour", "minute",
+    "second"),
+  ...
 )
-
-day_decade_trans()
-
-day_year_trans()
-
-day_month_trans()
-
-day_week_trans()
-
-day_hour_trans()
-
-day_minute_trans()
-
-day_minute_trans()
-
-second_decade_trans()
-
-second_year_trans()
-
-second_month_trans()
-
-second_week_trans()
-
-second_day_trans()
-
-second_hour_trans()
-
-second_minute_trans()
 }
 \arguments{
 \item{from}{a character string, unit of time to convert \code{from} to \code{to},
@@ -56,16 +17,57 @@ second_minute_trans()
 
 \item{to}{a character string, unit of time to convert \code{to} from \code{from},
 \code{"decade"} by default, see examples}
+
+\item{...}{Additional arguments passed on to scales::trans_new()}
+}
+\value{
+A new transformation object
 }
 \description{
 Transform a numeric vector assumed to represent either the number of
-seconds, or the number of days into seconds, minutes, hours, days,
-week, year, or decade.
+seconds, or the number of days into another unit of time. Supported are
+second, minute, hour, day, week, year, decade, and century, see examples.
 }
 \examples{
-df1 <- data.frame(x = as.Date("2021-01-01"), xend = as.Date("2022-01-01"))
+# Date class is internally represented as the number
+# of days since some origin, e.g. 1970-01-01
+df1 <- data.frame(
+  x = as.Date("2021-01-01"),
+  xend = as.Date("2022-01-01")
+)
 p <- ggplot(df1, aes(x, xend = xend)) +
   geom_lexis()
-p + scale_y_continuous("days")
-p + scale_y_continuous("weeks", trans = day_week_trans())
+p
+
+# wrap a transformer object into `function()` to be
+# used in scale_*_continuous
+
+day_year_trans <- function() {
+  time_to_time_trans(from = "day", to = "year")
+}
+
+p + scale_y_continuous(trans = day_year_trans())
+p + scale_y_continuous(trans = "day_year")
+
+# DateTime class on the other hand is internally represented as
+# the number of seconds since some origin
+df2 <- data.frame(
+  x = as.POSIXct("2021-01-01"),
+  xend = as.POSIXct("2022-01-01")
+)
+
+p <- ggplot(df2, aes(x, xend = xend)) +
+  geom_lexis()
+p
+
+sec_year_trans <- function() {
+  time_to_time_trans(from = "second", to = "year")
+}
+
+p + scale_y_continuous(trans = "sec_year")
+}
+\seealso{
+\code{\link[scales]{trans_new}}
+\code{\link[base]{as.Date}}
+\code{\link[base]{DateTimeClasses}}
 }
