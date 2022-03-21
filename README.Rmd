@@ -37,7 +37,7 @@ The following functions are implemented in this small package:
 - `geom_pointless()` / `stat_pointless()`: functions that are making it easy to add minimal emphasis to your plots by 
 means of a point layer. 
 
-- `geom_lexis()`: a layer to plot a 45° 'lifeline'
+- `geom_lexis()`: a layer to plot a 45° 'lifeline' of an event
 
 ## Installation
 
@@ -50,7 +50,8 @@ devtools::install_github("flrd/ggpointless")
 
 ## Usage
 
-Using the functions `geom_pointless()`, which is powered by `stat_pointless()`, you can highlight the first, or last observations, sample minimum and maximum with the goal to provide some additional context. Or just some visual sugar. `geom_pointless()` behaves like `geom_point()` does with the addition of a `location` argument. You can set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.
+### geom_pointless
+Using the functions `geom_pointless()`, which is a constructor for `stat_pointless()`, you can highlight the first, or last observations, sample minimum and maximum with the goal to provide some additional context. Or just some visual sugar. `geom_pointless()` behaves like `geom_point()` does with the addition of a `location` argument. You can set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.
 
 ```{r hello_world}
 cols <- c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc')
@@ -71,25 +72,27 @@ ggplot(df1, aes(x = var1, y = var2)) +
   theme_minimal()
 ```
 
-`geom_lexis()` is a combination of a segment and a point layer. Given a start and an end, this functions draws a 45° line. 
+### geom_lexis
+`geom_lexis()` is a combination of a segment and a point layer. Given a start value and an end value, this functions draws a 45° line which indicates the duration of an event.
 
 ```{r geom_lexis, warning=FALSE}
 df2 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   start = c(0, 1, 6, 5, 6),
-  end = c(5, 4, 9, 9, NA)
+  end = c(5, 4, 10, 8, 10)
 )
 
-ggplot(df2, aes(x = start, xend = end, color = key)) +
-  geom_lexis(aes(linetype = after_scale(type)), point.size = 3) +
-  scale_x_continuous(breaks = unique(c(df2$start, df2$end))) +
-  scale_color_manual(values = cols) +
+p <- ggplot(df2, aes(x = start, xend = end, color = key)) +
+  geom_lexis(aes(linetype = after_scale(type)), point.size = 3) 
+p +
   coord_equal() +
+  scale_x_continuous(breaks = c(df2$start, df2$end)) +
+  scale_color_manual(values = cols) +
   theme_minimal() +
   theme(panel.grid.minor = element_blank())
 ```
 
-See the `vignette("ggpointless")` for more details.
+See the [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html) for more details.
 
 
 ## Data
@@ -99,7 +102,7 @@ The `ggpointless` package contains two data sets:
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa, Hawaii](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
 
-See the `vignette("examples")` for possible use cases.
+See the [`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html) for possible use cases.
 
 ## Code of Conduct
 

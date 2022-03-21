@@ -22,7 +22,7 @@ The following functions are implemented in this small package:
     it easy to add minimal emphasis to your plots by means of a point
     layer.
 
--   `geom_lexis()`: a layer to plot a 45° ‘lifeline’
+-   `geom_lexis()`: a layer to plot a 45° ‘lifeline’ of an event
 
 ## Installation
 
@@ -35,7 +35,9 @@ devtools::install_github("flrd/ggpointless")
 
 ## Usage
 
-Using the functions `geom_pointless()`, which is powered by
+### geom_pointless
+
+Using the functions `geom_pointless()`, which is a constructor for
 `stat_pointless()`, you can highlight the first, or last observations,
 sample minimum and maximum with the goal to provide some additional
 context. Or just some visual sugar. `geom_pointless()` behaves like
@@ -65,29 +67,34 @@ ggplot(df1, aes(x = var1, y = var2)) +
 
 <img src="man/figures/README-hello_world-1.png" width="100%" style="display: block; margin: auto;" />
 
+### geom_lexis
+
 `geom_lexis()` is a combination of a segment and a point layer. Given a
-start and an end, this functions draws a 45° line.
+start value and an end value, this functions draws a 45° line which
+indicates the duration of an event.
 
 ``` r
 df2 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   start = c(0, 1, 6, 5, 6),
-  end = c(5, 4, 9, 9, NA)
+  end = c(5, 4, 10, 8, 10)
 )
 
-ggplot(df2, aes(x = start, xend = end, color = key)) +
-  geom_lexis(aes(linetype = after_scale(type)), point.size = 3) +
-  scale_x_continuous(breaks = unique(c(df2$start, df2$end))) +
-  scale_color_manual(values = cols) +
+p <- ggplot(df2, aes(x = start, xend = end, color = key)) +
+  geom_lexis(aes(linetype = after_scale(type)), point.size = 3) 
+p +
   coord_equal() +
+  scale_x_continuous(breaks = c(df2$start, df2$end)) +
+  scale_color_manual(values = cols) +
   theme_minimal() +
   theme(panel.grid.minor = element_blank())
-#> Missing 'xend' values set to 9
 ```
 
 <img src="man/figures/README-geom_lexis-1.png" width="100%" style="display: block; margin: auto;" />
 
-See the `vignette("ggpointless")` for more details.
+See the
+[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for more details.
 
 ## Data
 
@@ -98,7 +105,9 @@ The `ggpointless` package contains two data sets:
 2.  `covid_vac` : [COVID-19 Cases and Deaths by Vaccination
     Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
 
-See the `vignette("examples")` for possible use cases.
+See the
+[`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html)
+for possible use cases.
 
 ## Code of Conduct
 

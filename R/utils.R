@@ -121,7 +121,7 @@ get_lexis <- function(x, xend) {
   }
 
   if (any(x > xend, na.rm = TRUE)) {
-    stop("For each observation, `xend` must be greater than `x`")
+    stop("For each row in your data, `xend` must be greater than `x`, or NA")
   }
 
   # get all x-postions
@@ -145,7 +145,7 @@ get_lexis <- function(x, xend) {
   # Note: we need to assign 'real' linetypes here otherwise we'd
   # run into an error if we want to use the "type" column from the
   # layer data and map it to an aesthetic
-  out[["type"]] <- c("solid", "11")[(out[["yend"]] - out[["y"]] == 0) + 1]
+  out[["type"]] <- c("solid", "dotted")[(out[["yend"]] - out[["y"]] == 0) + 1]
   return(out)
 }
 

@@ -160,7 +160,7 @@ GeomLexis <- ggproto("GeomLexis", Geom,
     points <- subset(points, select = c(-xend, -yend))
 
     if (!isTRUE(gap_filler)) {
-      data <- subset(data, type != "11")
+      data <- subset(data, type != "dotted")
     }
 
     if (point.show) {
