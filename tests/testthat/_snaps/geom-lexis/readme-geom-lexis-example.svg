@@ -51,7 +51,7 @@
 <line x1='44.77' y1='490.19' x2='339.40' y2='195.56' style='stroke-width: 0.64; stroke: #F4AE1B;' />
 <circle cx='339.40' cy='195.56' r='3.56' style='stroke-width: 0.71; stroke: #F4AE1B; fill: #F4AE1B;' />
 <line x1='103.69' y1='490.19' x2='280.47' y2='313.41' style='stroke-width: 0.64; stroke: #D77E7B;' />
-<line x1='280.47' y1='313.41' x2='398.32' y2='313.41' style='stroke-width: 0.64; stroke: #D77E7B; stroke-dasharray: 1.00,1.00;' />
+<line x1='280.47' y1='313.41' x2='398.32' y2='313.41' style='stroke-width: 0.64; stroke: #D77E7B; stroke-dasharray: 1.00,3.00;' />
 <line x1='398.32' y1='313.41' x2='634.02' y2='77.71' style='stroke-width: 0.64; stroke: #D77E7B;' />
 <circle cx='634.02' cy='77.71' r='3.56' style='stroke-width: 0.71; stroke: #D77E7B; fill: #D77E7B;' />
 <line x1='339.40' y1='490.19' x2='516.17' y2='313.41' style='stroke-width: 0.64; stroke: #A84DBD;' />
