@@ -56,10 +56,14 @@ draw_key_sabline <- function(data, params, size) {
 #' @rdname draw_key_lexis
 #' @export
 draw_key_lexis <- function(data, params, size) {
-  grid::grobTree(
-    draw_key_sabline(data, params, size),
-    draw_key_pointless(
-      transform(data, size = (data$size %||% 1) * 3), params
+  if (isTRUE(params$point_show)) {
+    grid::grobTree(
+      draw_key_sabline(data, params, size),
+      draw_key_pointless(
+        transform(data, size = (data$size %||% 1) * 3), params
+      )
     )
-  )
+  } else {
+    draw_key_sabline(data, params, size)
+  }
 }
