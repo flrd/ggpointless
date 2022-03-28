@@ -12,9 +12,9 @@ geom_lexis(
   ...,
   lineend = "round",
   linejoin = "round",
-  point.show = TRUE,
-  point.colour = NULL,
-  point.size = NULL,
+  point_show = TRUE,
+  point_colour = NULL,
+  point_size = NULL,
   gap_filler = TRUE,
   na.rm = FALSE,
   show.legend = NA,
@@ -57,12 +57,12 @@ to the paired geom/stat.}
 
 \item{linejoin}{line join style (round, mitre, bevel)}
 
-\item{point.show}{logical. Should a point be added add the end of each segment?
-TRUE by default}
+\item{point_show}{logical. Should a point be shown at the end
+of each segment? TRUE by default}
 
-\item{point.colour}{color of a point}
+\item{point_colour}{color of a point}
 
-\item{point.size}{the size of a point}
+\item{point_size}{the size of a point}
 
 \item{gap_filler}{logical. Should gaps be filled?
 TRUE by default}
@@ -94,9 +94,9 @@ This geom draws 45° lines from the start to the end of a 'lifetime'. Besides
 \code{\link[ggplot2:aes_eval]{ggplot2::after_scale()}}, see \code{Examples} and \code{vignette("ggpointless")} for
 more details.
 
-Every \code{x} must be a non-missing, numeric value (your segments must start somewhere), but when
-one or all \code{xend} values are missing, they will be set to the maximum of \code{x},
-and a message is shown, see examples.
+Every \code{x} must be a non-missing, numeric value (your segments must
+start somewhere), but when one or all \code{xend} values are missing, they
+will be set to the maximum of \code{x}, and a message is shown, see examples.
 }
 \section{Aesthetics}{
 
@@ -129,7 +129,7 @@ p +
   geom_lexis(gap_filler = FALSE)
 p +
   geom_lexis(aes(linetype = after_scale(type)),
-    point.show = FALSE
+    point_show = FALSE
   )
 
 # missing xend values will be set to the maximum of `x`

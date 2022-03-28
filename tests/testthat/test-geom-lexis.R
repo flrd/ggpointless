@@ -18,7 +18,7 @@ test_that("NA in xend are filled with max(x)", {
 
 test_that("readme example works", {
   p <- ggplot(df3, aes(x = start, xend = end, color = key)) +
-    geom_lexis(aes(linetype = after_scale(type)), point.size = 3)
+    geom_lexis(aes(linetype = after_scale(type)), point_size = 3)
   p <- p +
     coord_equal() +
     scale_x_continuous(breaks = c(df3$start, df3$end)) +
@@ -36,6 +36,6 @@ test_that("horizontal lines can be hidden", {
 
 test_that("points can have different shape than 19", {
   p <- ggplot(df3, aes(x = start, xend = end, color = key)) +
-    geom_lexis(point.size = 3, shape = 21, fill = "#000000", stroke = 2)
+    geom_lexis(point_size = 3, shape = 21, fill = "#000000", stroke = 2)
   vdiffr::expect_doppelganger("different point shape", p)
 })

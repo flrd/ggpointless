@@ -21,12 +21,12 @@
 #' - stroke
 #' @inheritParams ggplot2::layer
 #' @inheritParams ggplot2::geom_point
-#' @param point.show logical. Should a point be added add the end of each segment?
-#' TRUE by default
+#' @param point_show logical. Should a point be shown at the end
+#' of each segment? TRUE by default
 #' @param lineend line end style (round, butt, square)
 #' @param linejoin line join style (round, mitre, bevel)
-#' @param point.size the size of a point
-#' @param point.colour color of a point
+#' @param point_size the size of a point
+#' @param point_colour color of a point
 #' @param gap_filler logical. Should gaps be filled?
 #' TRUE by default
 #' @details
@@ -36,9 +36,9 @@
 #'  [ggplot2::after_scale()], see `Examples` and `vignette("ggpointless")` for
 #'  more details.
 #'
-#'  Every `x` must be a non-missing, numeric value (your segments must start somewhere), but when
-#'  one or all `xend` values are missing, they will be set to the maximum of `x`,
-#'  and a message is shown, see examples.
+#'  Every `x` must be a non-missing, numeric value (your segments must
+#'  start somewhere), but when one or all `xend` values are missing, they
+#'  will be set to the maximum of `x`, and a message is shown, see examples.
 #'
 #' @export
 #' @examples
@@ -54,7 +54,7 @@
 #'   geom_lexis(gap_filler = FALSE)
 #' p +
 #'   geom_lexis(aes(linetype = after_scale(type)),
-#'     point.show = FALSE
+#'     point_show = FALSE
 #'   )
 #'
 #' # missing xend values will be set to the maximum of `x`
@@ -86,9 +86,9 @@ geom_lexis <- function(mapping = NULL,
                        ...,
                        lineend = "round",
                        linejoin = "round",
-                       point.show = TRUE,
-                       point.colour = NULL,
-                       point.size = NULL,
+                       point_show = TRUE,
+                       point_colour = NULL,
+                       point_size = NULL,
                        gap_filler = TRUE,
                        na.rm = FALSE,
                        show.legend = NA,
@@ -105,9 +105,9 @@ geom_lexis <- function(mapping = NULL,
       lineend = lineend,
       linejoin = linejoin,
       gap_filler = gap_filler,
-      point.show = point.show,
-      point.colour = point.colour,
-      point.size = point.size,
+      point_show = point_show,
+      point_colour = point_colour,
+      point_size = point_size,
       na.rm = na.rm,
       ...
     )
@@ -121,22 +121,17 @@ geom_lexis <- function(mapping = NULL,
 #' @export
 GeomLexis <- ggproto("GeomLexis", Geom,
   required_aes = c("x", "xend"),
-  non_missing_aes = c("size", "shape", "point.colour", "point.size", "type"),
+  non_missing_aes = c("size", "shape", "point_colour", "point_size", "type"),
   default_aes = aes(
     shape = 19, colour = "black", linetype = "solid", size = 0.3, fill = NA,
     alpha = NA, stroke = 0.5
   ),
   setup_data = function(data, params) {
-    if (all(is.na(data$xend))) {
-      x_max <- max(data$x, na.rm = TRUE)
-      message(paste("All 'xend' values missing, setting those to", x_max))
-      data$xend <- x_max
-    }
 
     if (anyNA(data$xend)) {
-      xend_max <- max(data$xend, na.rm = TRUE)
-      message(paste("Missing 'xend' values set to", xend_max))
-      data$xend <- replace(data$xend, is.na(data$xend), xend_max)
+      x_max <- max(data$x, data$xend, na.rm = TRUE)
+      message(paste("Missing 'xend' values set to", x_max))
+      data$xend <- replace(data$xend, is.na(data$xend), x_max)
     }
 
     cols_to_keep <- setdiff(names(data), c("x", "y", "xend", "yend"))
@@ -152,10 +147,22 @@ GeomLexis <- ggproto("GeomLexis", Geom,
   draw_group = function(data, panel_params, coord,
                         lineend = "round", linejoin = "mitre",
                         gap_filler = TRUE,
-                        point.show = TRUE, point.colour = NULL, point.size = NULL) {
+                        point_show = TRUE,
+                        point_colour = NULL,
+                        point_size = NULL) {
+
+    if(!is.logical(gap_filler)) {
+      stop("'gap_filler' must be a logical value.")
+    }
+
+    if(!is.logical(point_show)) {
+      stop("'point_show' must be a logical value.")
+    }
+
+    # browser()
     points <- tail(data, 1)
-    points$colour <- point.colour %||% points$colour
-    points$size <- point.size %||% (points$size * 3)
+    points$colour <- point_colour %||% points$colour
+    points$size <- point_size %||% (points$size * 3)
     points <- transform(points, x = xend, y = yend)
     points <- subset(points, select = c(-xend, -yend))
 
@@ -163,10 +170,10 @@ GeomLexis <- ggproto("GeomLexis", Geom,
       data <- subset(data, type != "dotted")
     }
 
-    if (point.show) {
+    if (isTRUE(point_show)) {
       grid::gList(
-        ggplot2::GeomSegment$draw_panel(data, panel_params, coord,
-          lineend = lineend, linejoin = linejoin
+        ggplot2::GeomSegment$draw_panel(
+          data, panel_params, coord, lineend = lineend, linejoin = linejoin
         ),
         ggplot2::GeomPoint$draw_panel(points, panel_params, coord)
       )
