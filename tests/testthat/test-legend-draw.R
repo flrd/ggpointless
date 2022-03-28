@@ -23,8 +23,22 @@ test_that("alternative key glyphs work", {
     ggplot(df1, aes(x = x, xend = xend)) +
       geom_lexis(aes(fill = z),
         pch = 21,
-        point.size = 3,
+        point_size = 3,
         stroke = 1
       )
+  )
+})
+
+test_that("lexis key depends on point_show setting", {
+  df2 <- data.frame(x = 0, xend = 1)
+
+  vdiffr::expect_doppelganger(
+    "point_show = TRUE",
+    ggplot(df2, aes(x = x, xend = xend, color = "red")) + geom_lexis(point_show = TRUE)
+  )
+
+  vdiffr::expect_doppelganger(
+    "point_show = FALSE",
+    ggplot(df2, aes(x = x, xend = xend, color = "red")) + geom_lexis(point_show = FALSE)
   )
 })
