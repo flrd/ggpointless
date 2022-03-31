@@ -5,7 +5,7 @@
 \alias{covid_vac}
 \title{Rates of COVID-19 Cases and Deaths by Vaccination Status}
 \format{
-A data frame with 146 rows and 4 variables:
+A data frame with 146 rows and 4 variables
 \describe{
 \item{date}{Week of data collection}
 \item{incidence}{COVID-19 cases and deaths, standardized by age}

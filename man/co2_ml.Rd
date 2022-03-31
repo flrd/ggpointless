@@ -5,7 +5,7 @@
 \alias{co2_ml}
 \title{Monthly CO2 records taken at Mauna Loa, since March 1958}
 \format{
-A data frame with 766 rows and 5 variables:
+A data frame with 766 rows and 5 variables
 \describe{
 \item{date}{date of measurement}
 \item{year}{year of measurement}
@@ -15,8 +15,9 @@ A data frame with 766 rows and 5 variables:
 }
 }
 \source{
-Dr. Pieter Tans, NOAA/GML (gml.noaa.gov/ccgg/trends/) and Dr. Ralph Keeling,
-Scripps Institution of Oceanography (scrippsco2.ucsd.edu/).
+Dr. Pieter Tans, NOAA/GML (gml.noaa.gov/ccgg/trends/)
+and Dr. Ralph Keeling, Scripps Institution of Oceanography
+(scrippsco2.ucsd.edu/).
 
 \url{https://gml.noaa.gov/ccgg/trends/data.html}
 }
