@@ -34,11 +34,13 @@ test_that("lexis key depends on point_show setting", {
 
   vdiffr::expect_doppelganger(
     "point_show = TRUE",
-    ggplot(df2, aes(x = x, xend = xend, color = "red")) + geom_lexis(point_show = TRUE)
+    ggplot(df2, aes(x = x, xend = xend, color = "red")) +
+      geom_lexis(point_show = TRUE)
   )
 
   vdiffr::expect_doppelganger(
     "point_show = FALSE",
-    ggplot(df2, aes(x = x, xend = xend, color = "red")) + geom_lexis(point_show = FALSE)
+    ggplot(df2, aes(x = x, xend = xend, color = "red")) +
+      geom_lexis(point_show = FALSE)
   )
 })
