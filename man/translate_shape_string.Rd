@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{translate_shape_string}
 \alias{translate_shape_string}
-\title{Given a year, get the decade}
+\title{Given a number, get the corresponding point shape}
 \usage{
 translate_shape_string(shape_string)
 }
@@ -13,6 +13,6 @@ translate_shape_string(shape_string)
 A data.frame
 }
 \description{
-Given a year, get the decade
+Given a number, get the corresponding point shape
 }
 \keyword{internal}
