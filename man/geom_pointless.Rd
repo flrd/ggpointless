@@ -60,14 +60,17 @@ often aesthetics, used to set an aesthetic to a fixed value, like
 \code{colour = "red"} or \code{size = 3}. They may also be parameters
 to the paired geom/stat.}
 
-\item{location}{A character vector specifying which observations to highlight, default is \code{"last"}.}
+\item{location}{A character vector specifying which observations
+to highlight, default is \code{"last"}.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
 
-\item{orientation}{The orientation of the layer. The default (\code{NA}) automatically determines
-the orientation from the aesthetic mapping. In the rare event that this fails it can be given
-explicitly by setting \code{orientation} to either \code{"x"} or \code{"y"}. See the Orientation section for more detail.}
+\item{orientation}{The orientation of the layer. The default (\code{NA})
+automatically determines the orientation from the aesthetic mapping.
+In the rare event that this fails it can be given explicitly by
+setting \code{orientation} to either \code{"x"} or \code{"y"}. See the Orientation
+section for more detail.}
 
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
@@ -80,47 +83,52 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 
-\item{geom, stat}{Overwrite the default connection between \code{geom_pointless()} and \code{stat_pointless()}.}
+\item{geom, stat}{Overwrite the default connection between
+\code{geom_pointless()} and \code{stat_pointless()}.}
 }
 \description{
-This is a wrapper around \code{geom_point()} with the one additional argument: \code{location}.
-It allows to emphasize some observations, namely the first, the last, the minima and/or maxima, see examples.
-This geom is not particularly useful on its own, hence the name, but hopefully in conjunction
-with \code{geom_line()} and friends.
+This is a wrapper around \code{geom_point()} with the one
+additional argument: \code{location}. It allows to emphasize some
+observations, namely the first, the last, the minima and/or maxima,
+see examples. This geom is not particularly useful on its own, hence
+its name, but hopefully in conjunction with \code{geom_line()} and friends.
 }
 \section{Details}{
 
-The argument \code{location} allows you to control which observations to highlight.
-If \code{location} is \code{"last"}, a single point is plotted by default at the last
-non-missing observation. The locations are determined in the order in which they
-appear in the data -- like \code{geom_path()} does compared to \code{geom_line()}.
+The argument \code{location} allows you to control which observations
+to highlight. If \code{location} is \code{"last"}, the default, a single point
+is plotted by default at the last non-missing observation. The
+locations are determined in the order in which they appear in the
+data -- like \code{geom_path()} does compared to \code{geom_line()}.
 See the \code{vignette("ggpointless")} for more details.
 }
 
 \section{Overplotting}{
 
-Points may be plotted on top of one another. If \code{location} is set to \code{"all"}, then
-the order in which points are plotted from top to bottom is:
-\code{"first"} > \code{"last"} > \code{"minimum"} > \code{"maximum"}.
+Points may be plotted on top of one another. If \code{location} is set
+to \code{"all"}, then the order in which points are plotted from top to
+bottom is: \code{"first"} > \code{"last"} > \code{"minimum"} > \code{"maximum"}.
 Otherwise, the order is determined as specified in the \code{location} argument,
 which also then applies to the order legend key labels, see examples.
 }
 
 \section{Orientation}{
 
-This geom treats each axis differently and, can thus have two orientations.
-Often the orientation is easy to deduce from a combination of the given mappings
-and the types of positional scales in use. Thus, ggplot2 will by default try
-to guess which orientation the layer should have. Under rare circumstances,
-the orientation is ambiguous and guessing may fail. In that case the orientation
-can be specified directly using the orientation parameter, which can be either
-"x" or "y". The value gives the axis that the geom should run along, "x"
-being the default orientation you would expect for the geom.
+This geom treats each axis differently and, can thus have two
+orientations. Often the orientation is easy to deduce from a combination
+of the given mappings and the types of positional scales in use. Thus,
+ggplot2 will by default try to guess which orientation the layer should
+have. Under rare circumstances, the orientation is ambiguous and guessing
+may fail. In that case the orientation can be specified directly using
+the orientation parameter, which can be either "x" or "y". The value
+gives the axis that the geom should run along, "x" being the default
+orientation you would expect for the geom.
 }
 
 \section{Aesthetics}{
 
-geom_pointless() understands the following aesthetics (required aesthetics are in bold):
+geom_pointless() understands the following aesthetics (required
+aesthetics are in bold):
 \itemize{
 \item \strong{x}
 \item \strong{y}
