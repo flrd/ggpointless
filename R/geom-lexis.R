@@ -81,22 +81,20 @@
 #' }
 geom_lexis <- function(mapping = NULL,
                        data = NULL,
-                       stat = "identity",
-                       position = "identity",
                        ...,
-                       lineend = "round",
-                       linejoin = "round",
                        point_show = TRUE,
                        point_colour = NULL,
                        point_size = NULL,
                        gap_filler = TRUE,
+                       lineend = "round",
+                       linejoin = "round",
                        na.rm = FALSE,
                        show.legend = NA,
                        inherit.aes = TRUE) {
   layer(
     data = data,
     mapping = mapping,
-    stat = "identity",
+    stat = "lexis",
     geom = GeomLexis,
     position = "identity",
     show.legend = show.legend,
@@ -120,46 +118,26 @@ geom_lexis <- function(mapping = NULL,
 #' @include legend-draw.R
 #' @export
 GeomLexis <- ggproto("GeomLexis", Geom,
-  required_aes = c("x", "xend"),
+  required_aes = c("x", "y", "xend", "yend"),
   non_missing_aes = c("size", "shape", "point_colour", "point_size", "type"),
   default_aes = aes(
     shape = 19, colour = "black", linetype = "solid", size = 0.3, fill = NA,
     alpha = NA, stroke = 0.5
   ),
-  setup_data = function(data, params) {
-
-    if (anyNA(data$xend)) {
-      x_max <- max(data$x, data$xend, na.rm = TRUE)
-      message(paste("Missing 'xend' values set to", x_max))
-      data$xend <- replace(data$xend, is.na(data$xend), x_max)
-    }
-
-    cols_to_keep <- setdiff(names(data), c("x", "y", "xend", "yend"))
-    lst <- by(data, data$group, FUN = function(grp) {
-      lexis_segment <- get_lexis(grp$x, grp$xend)
-      suppressWarnings({
-        cbind(lexis_segment, grp[1, cols_to_keep])
-      })
-    })
-
-    do.call(rbind, lst)
-  },
   draw_group = function(data, panel_params, coord,
                         lineend = "round", linejoin = "mitre",
                         gap_filler = TRUE,
                         point_show = TRUE,
                         point_colour = NULL,
                         point_size = NULL) {
-
-    if(!is.logical(gap_filler)) {
+    if (!is.logical(gap_filler)) {
       stop("'gap_filler' must be a logical value.")
     }
 
-    if(!is.logical(point_show)) {
+    if (!is.logical(point_show)) {
       stop("'point_show' must be a logical value.")
     }
 
-    # browser()
     points <- tail(data, 1)
     points$colour <- point_colour %||% points$colour
     points$size <- point_size %||% (points$size * 3)
@@ -173,15 +151,25 @@ GeomLexis <- ggproto("GeomLexis", Geom,
     if (isTRUE(point_show)) {
       grid::gList(
         ggplot2::GeomSegment$draw_panel(
-          data, panel_params, coord, lineend = lineend, linejoin = linejoin
+          data = data,
+          panel_params = panel_params,
+          coord = coord,
+          lineend = lineend,
+          linejoin = linejoin
         ),
-        ggplot2::GeomPoint$draw_panel(points, panel_params, coord)
+        ggplot2::GeomPoint$draw_panel(
+          data = points,
+          panel_params = panel_params,
+          coord = coord
+        )
       )
     } else {
-      grid::gList(
-        ggplot2::GeomSegment$draw_panel(data, panel_params, coord,
-          lineend = lineend, linejoin = linejoin
-        )
+      ggplot2::GeomSegment$draw_panel(
+        data = data,
+        panel_params = panel_params,
+        coord = coord,
+        lineend = lineend,
+        linejoin = linejoin
       )
     }
   },
