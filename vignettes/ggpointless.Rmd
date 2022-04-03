@@ -18,8 +18,8 @@ library(ggpointless)
 
 `ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) that provides two additional layers:
 
-1. `geom_pointless()` / `stat_pointless()`
-2. `geom_lexis()`
+1. `geom_pointless()` & `stat_pointless()`
+2. `geom_lexis()` & `geom_lexis()`
 
 and 
 
@@ -153,7 +153,7 @@ ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
   guides(color = guide_legend(reverse = TRUE))
 ```
 
-## geom_lexis
+## Plotting live lines with geom_lexis
 
 The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. 
 
@@ -169,19 +169,24 @@ p <- ggplot(df1, aes(x = start, xend = end, color = key)) +
 p + geom_lexis()
 ```
 
-If there is a gap in an event, this is shown by a horizontal line, that you can hide. Also, `geom_lexis()` creates an additional variable, `type`, you can map to e.g. the linetype aesthetic (or any other aesthetic) using `after_scale()`.
+If there is a gap in an event, this is shown by a horizontal line, which can be hidden by `gap_filler = FALSE`. Also, `geom_lexis()` creates an additional variable, `type` that takes two values: "solid" and "dotted". You can map the `type` the linetype aesthetic (or any other aesthetic) using `after_stat()`, see below. Since the values of the `type` column have no contextual meaning, they are probably best used in conjunction with `scale_linetype_identity()` to not show a legend.
 
-```{r after_scale, fig.show='hold'}
+```{r after_stat, fig.show='hold'}
 p + geom_lexis(gap_filler = FALSE)
-p + geom_lexis(aes(linetype = after_scale(type)))
+p + geom_lexis(
+  aes(linetype = after_scale(type)), 
+  point_show = FALSE
+  ) +
+  scale_linetype_identity()
 ```
 
 
 ## Data
 
-The `ggpointless` package contains two data sets:
+The `ggpointless` package contains the following data sets:
 
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
+3. `female_leaders` : [Elected and appointed female heads of state and government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588)
 
-See the [`vignette("examples")`]() for possible use cases.
+See the [`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html) for possible use cases.
