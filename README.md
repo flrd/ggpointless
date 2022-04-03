@@ -76,16 +76,16 @@ indicates the duration of an event.
 ``` r
 df2 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
-  start = c(0, 1, 6, 5, 6),
-  end = c(5, 4, 10, 8, 10)
+  x = c(0, 1, 6, 5, 6),
+  xend = c(5, 4, 10, 8, 10)
 )
 
-p <- ggplot(df2, aes(x = start, xend = end, color = key)) +
-  geom_lexis(aes(linetype = after_scale(type)), point.size = 3) 
-p +
+ggplot(df2, aes(x = x, xend = xend, color = key)) +
+  geom_lexis(aes(linetype = after_stat(type)), size = .5, point_size = 3) +
   coord_equal() +
-  scale_x_continuous(breaks = c(df2$start, df2$end)) +
+  scale_x_continuous(breaks = c(df2$x, df2$xend)) +
   scale_color_manual(values = cols) +
+  scale_linetype_identity() +
   theme_minimal() +
   theme(panel.grid.minor = element_blank())
 ```
@@ -98,12 +98,14 @@ for more details.
 
 ## Data
 
-The `ggpointless` package contains two data sets:
+The `ggpointless` package contains the following data sets:
 
-1.  `co2_ml` : [CO<sub>2</sub> records taken at Mauna Loa,
-    Hawaii](https://gml.noaa.gov/ccgg/trends/data.html)
+1.  `co2_ml` : [CO<sub>2</sub> records taken at Mauna
+    Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2.  `covid_vac` : [COVID-19 Cases and Deaths by Vaccination
     Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
+3.  `female_leaders` : [Elected and appointed female heads of state and
+    government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588)
 
 See the
 [`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html)
