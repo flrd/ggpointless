@@ -63,7 +63,7 @@ theme_set(theme_minimal() +
 
 ## Carbon Dioxide Concentration in the Atmosphere
 
-We'll start to recreate Gregor Aisch's plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). 
+We'll start to recreate [Gregor Aisch](https://github.com/gka)'s plot of [carbon dioxide concentration over time](https://blog.datawrapper.de/weekly-chart-carbon-dioxide/). 
 
 ```{r co2_ml}
 data(co2_ml)
@@ -313,7 +313,7 @@ p2
 ```
 
 ## Female leaders of independent states
-The inspiration to add `geom_lexis()` again came from Gregor Aisch. This time from his post om [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Unlike in his example, we use data on elected female leaders, that was scapped from the Wikipedia article [List of elected and appointed female heads of state and government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588). The dataset `female_leaders` ships with the `ggpointless` package.
+The inspiration to add `geom_lexis()` again came from [Gregor Aisch](https://github.com/gka). This time from his post om [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Unlike in his example, we use data on elected female leaders, that was scapped from the Wikipedia article [List of elected and appointed female heads of state and government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588). The dataset `female_leaders` ships with the `ggpointless` package.
 
 ```{r transformer, show=FALSE}
 day_year_trans <- function() {

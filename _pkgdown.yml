@@ -24,6 +24,8 @@ reference:
   contents:
   - geom_pointless
   - stat_pointless
+  - geom_lexis
+  - stat_lexis
 
 - title: "Data"
   desc: >
@@ -31,3 +33,4 @@ reference:
   contents:
   - co2_ml
   - covid_vac
+  - female_leaders
