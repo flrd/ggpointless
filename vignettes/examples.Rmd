@@ -313,19 +313,12 @@ p2
 ```
 
 ## Female leaders of independent states
-The inspiration to add `geom_lexis()` again came from [Gregor Aisch](https://github.com/gka). This time from his post om [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Unlike in his example, we use data on elected female leaders, that was scapped from the Wikipedia article [List of elected and appointed female heads of state and government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588). The dataset `female_leaders` ships with the `ggpointless` package.
 
-```{r transformer, show=FALSE}
-day_year_trans <- function() {
-  time_to_time_trans(from = "day", to = "year")
-}
-```
+The data used here comes from the Wikipedia article [List of elected and appointed female heads of state and government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588) and is collected in the dataset `female_leaders`.
 
-<details><summary><b>See full code</b></summary>
-```{r women_in_power}
-library(ggrepel)
+Before we plot, a bit of work needs to answer the question: which women are in office for more than 12 years?
 
-# which leaders are in office for more than 12 years
+```{r subset_in_power}
 tmp <- aggregate(
   days_in_office ~ name,
   transform(female_leaders, days_in_office = enddate - startdate),
@@ -333,18 +326,24 @@ tmp <- aggregate(
 )
 
 tmp <- subset(tmp, days_in_office / 365.25 > 12)
-leaders_long <- merge(tmp, female_leaders, by = "name")
-leaders_long <- leaders_long[order(leaders_long$name, leaders_long$enddate), ]
-leaders_long <- aggregate(. ~ name, leaders_long, tail, 1)
-leaders_long <- type.convert(leaders_long, as.is = TRUE)
-leaders_long$familyName <- vapply(
-  X = strsplit(leaders_long$name, split = " "),
+leaders_12 <- merge(tmp, female_leaders, by = "name")
+leaders_12 <- leaders_12[order(leaders_12$name, leaders_12$enddate), ]
+leaders_12 <- aggregate(. ~ name, leaders_12, tail, 1)
+leaders_12 <- type.convert(leaders_12, as.is = TRUE)
+leaders_12$familyName <- vapply(
+  X = strsplit(leaders_12$name, split = " "),
   FUN = `[`,
   ... = 2,
   FUN.VALUE = character(1)
 )
+```
+
+The inspiration to add `geom_lexis()` came again from [Gregor Aisch](https://github.com/gka). This time from his post on [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Let's see how close we can get to the orignal.
 
 
+<details><summary><b>See full code</b></summary>
+```{r women_in_power}
+library(ggrepel)
 p3 <- ggplot(
   subset(female_leaders, startdate > "1960-01-01"),
   aes(
@@ -356,20 +355,28 @@ p3 <- ggplot(
 )
 p3 <- p3 + geom_lexis(
   aes(linetype = after_stat(type)),
-  size = .1,
   point_size = 1
 )
+
+# coord
 p3 <- p3 + coord_equal()
+
+# scales
 p3 <- p3 + scale_x_date(expand = c(.02, .05))
-# p3 <- p3 + scale_y_continuous(limits = function(x) x / 365.25)
+p3 <- p3 + scale_y_continuous(
+  limits = c(0, 7400),
+  breaks = c(0, 4, 8, 12, 16, 20) * 365.25,
+  labels = function(i) floor(i / 365.25))
 p3 <- p3 + scale_color_manual(values = c(
   "executive" = "#311dfc",
   "non-executive" = "#f4ae1b"
 ))
 p3 <- p3 + scale_linetype_identity()
+
+# title, subtitle, caption
 p3 <- p3 + labs(
   title = "Elected Female Leaders Since 1960",
-  subtitle = "Year in Office",
+  subtitle = "Years in Office",
   caption = "Source: Wikipedia",
   x = NULL,
   y = NULL,
@@ -377,10 +384,10 @@ p3 <- p3 + labs(
 )
 p3 <- p3 + theme(legend.position = "bottom")
 
-# add annotations
+# annotations
 p3 <- p3 +
   geom_text_repel(
-    data = leaders_long, aes(
+    data = leaders_12, aes(
       x = as.Date(enddate, origin = "1970-01-01"),
       y = days_in_office,
       colour = power,
@@ -394,6 +401,6 @@ p3 <- p3 +
 ```
 </details>
 
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 p3
 ```
