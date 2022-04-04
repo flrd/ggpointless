@@ -15,43 +15,7 @@
 #'    \code{\link[base]{as.Date}}
 #'    \code{\link[base]{DateTimeClasses}}
 #' @keywords internal
-#' @examples
-#' # Date class is internally represented as the number
-#' # of days since some origin, e.g. 1970-01-01
-#' df1 <- data.frame(
-#'   x = as.Date("2021-01-01"),
-#'   xend = as.Date("2022-01-01")
-#' )
-#' p <- ggplot(df1, aes(x, xend = xend)) +
-#'   geom_lexis()
-#' p
-#'
-#' # wrap a transformer object into `function()` to be
-#' # used in scale_*_continuous
-#'
-#' day_year_trans <- function() {
-#'   time_to_time_trans(from = "day", to = "year")
-#' }
-#'
-#' p + scale_y_continuous(trans = day_year_trans())
-#' p + scale_y_continuous(trans = "day_year")
-#'
-#' # DateTime class on the other hand is internally represented as
-#' # the number of seconds since some origin
-#' df2 <- data.frame(
-#'   x = as.POSIXct("2021-01-01"),
-#'   xend = as.POSIXct("2022-01-01")
-#' )
-#'
-#' p <- ggplot(df2, aes(x, xend = xend)) +
-#'   geom_lexis()
-#' p
-#'
-#' sec_year_trans <- function() {
-#'   time_to_time_trans(from = "second", to = "year")
-#' }
-#'
-#' p + scale_y_continuous(trans = "sec_year")
+
 time_to_time_trans <- function(from = c(
                                  "day",
                                  "second"
