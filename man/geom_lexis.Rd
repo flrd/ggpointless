@@ -89,7 +89,7 @@ more details.
 
 Every \code{x} must be a non-missing, numeric value (your segments must
 start somewhere), but when one or all \code{xend} values are missing, they
-will be set to the maximum of \code{x}, and a message is shown, see examples.
+will be set to \code{max(x, xend)}, and a message is shown, see examples.
 }
 \section{Aesthetics}{
 

@@ -98,7 +98,7 @@ As you see from the first of the last two examples `"first"` and `"minimum"` ove
 
 Otherwise, the order is determined as specified in the `location` argument, which also applies to the order of the legend key labels.
 
-```{r overplotting, fig.show='hold'}
+```{r overplotting}
 cols <- c(
   "first" = "#f8766d", 
   "last" = "#7cae00", 
@@ -122,12 +122,18 @@ p + geom_pointless(aes(color = after_stat(location)),
   size = 3
 ) +
   labs(subtitle = "same as location = 'all'")
+```
+
+```{r}
 # reversed order
 p + geom_pointless(aes(color = after_stat(location)),
   location = c("maximum", "minimum", "last", "first"),
   size = 3
 ) +
   labs(subtitle = "custom order")
+```
+
+```{r}
 # same as location = 'all' again
 p + geom_pointless(aes(color = after_stat(location)),
   location = c("maximum", "minimum", "last", "first", "all"),
@@ -153,23 +159,23 @@ ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
   guides(color = guide_legend(reverse = TRUE))
 ```
 
-## Plotting live lines with geom_lexis
+## Plotting life lines with geom_lexis
 
 The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. 
 
 ```{r default_lexis}
 df1 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
-  start = c(0, 1, 6, 5, 6),
-  end = c(5, 4, 10, 8, 10)
+  x = c(0, 1, 6, 5, 6),
+  y = c(5, 4, 10, 8, 10)
 )
 
-p <- ggplot(df1, aes(x = start, xend = end, color = key)) +
+p <- ggplot(df1, aes(x = x, xend = y, color = key)) +
   coord_equal()
 p + geom_lexis()
 ```
 
-If there is a gap in an event, this is shown by a horizontal line, which can be hidden by `gap_filler = FALSE`. Also, `geom_lexis()` creates an additional variable, `type` that takes two values: "solid" and "dotted". You can map the `type` the linetype aesthetic (or any other aesthetic) using `after_stat()`, see below. Since the values of the `type` column have no contextual meaning, they are probably best used in conjunction with `scale_linetype_identity()` to not show a legend.
+If there is a gap in an event a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable `type` for this. This is created by `geom_lexis()` and takes two values: "solid" and "dotted". With `after_stat()` you can map the linetype (or any other aesthetic) to the variable `type`, see below. 
 
 ```{r after_stat, fig.show='hold'}
 p + geom_lexis(gap_filler = FALSE)

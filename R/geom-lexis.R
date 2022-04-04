@@ -38,7 +38,7 @@
 #'
 #'  Every `x` must be a non-missing, numeric value (your segments must
 #'  start somewhere), but when one or all `xend` values are missing, they
-#'  will be set to the maximum of `x`, and a message is shown, see examples.
+#'  will be set to `max(x, xend)`, and a message is shown, see examples.
 #'
 #' @export
 #' @examples
