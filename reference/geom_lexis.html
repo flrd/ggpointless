@@ -144,7 +144,7 @@ the default plot specification, e.g. <code><a href="https://ggplot2.tidyverse.or
 more details.</p>
 <p>Every <code>x</code> must be a non-missing, numeric value (your segments must
 start somewhere), but when one or all <code>xend</code> values are missing, they
-will be set to the maximum of <code>x</code>, and a message is shown, see examples.</p>
+will be set to <code>max(x, xend)</code>, and a message is shown, see examples.</p>
     </div>
     <div class="section level2">
     <h2 id="aesthetics">Aesthetics<a class="anchor" aria-label="anchor" href="#aesthetics"></a></h2>

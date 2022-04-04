@@ -356,35 +356,31 @@
 <div class="section level2">
 <h2 id="female-leaders-of-independent-states">Female leaders of independent states<a class="anchor" aria-label="anchor" href="#female-leaders-of-independent-states"></a>
 </h2>
-<p>The inspiration to add <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> again came from <a href="https://github.com/gka" class="external-link">Gregor Aisch</a>. This time from his post om <a href="https://blog.datawrapper.de/longest-terms-european-leaders/" class="external-link">Three decades of European government leaders</a>. Unlike in his example, we use data on elected female leaders, that was scapped from the Wikipedia article <a href="https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&amp;oldid=1078024588" class="external-link">List of elected and appointed female heads of state and government</a>. The dataset <code>female_leaders</code> ships with the <code>ggpointless</code> package.</p>
+<p>The data used here comes from the Wikipedia article <a href="https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&amp;oldid=1078024588" class="external-link">List of elected and appointed female heads of state and government</a> and is collected in the dataset <code>female_leaders</code>.</p>
+<p>Before we plot, a bit of work needs to answer the question: which women are in office for more than 12 years?</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">day_year_trans</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="../reference/time_to_time_trans.html">time_to_time_trans</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"day"</span>, to <span class="op">=</span> <span class="st">"year"</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
-<details><p><summary><b>See full code</b></summary></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/slowkow/ggrepel" class="external-link">ggrepel</a></span><span class="op">)</span>
-
-<span class="co"># which leaders are in office for more than 12 years</span>
-<span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span>
   <span class="va">days_in_office</span> <span class="op">~</span> <span class="va">name</span>,
   <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">female_leaders</span>, days_in_office <span class="op">=</span> <span class="va">enddate</span> <span class="op">-</span> <span class="va">startdate</span><span class="op">)</span>,
   <span class="va">sum</span>
 <span class="op">)</span>
-
+<span class="co"># 365.25 is an approximation of course</span>
 <span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">tmp</span>, <span class="va">days_in_office</span> <span class="op">/</span> <span class="fl">365.25</span> <span class="op">&gt;</span> <span class="fl">12</span><span class="op">)</span>
-<span class="va">leaders_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">tmp</span>, <span class="va">female_leaders</span>, by <span class="op">=</span> <span class="st">"name"</span><span class="op">)</span>
-<span class="va">leaders_long</span> <span class="op">&lt;-</span> <span class="va">leaders_long</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">leaders_long</span><span class="op">$</span><span class="va">name</span>, <span class="va">leaders_long</span><span class="op">$</span><span class="va">enddate</span><span class="op">)</span>, <span class="op">]</span>
-<span class="va">leaders_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">.</span> <span class="op">~</span> <span class="va">name</span>, <span class="va">leaders_long</span>, <span class="va">tail</span>, <span class="fl">1</span><span class="op">)</span>
-<span class="va">leaders_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/type.convert.html" class="external-link">type.convert</a></span><span class="op">(</span><span class="va">leaders_long</span>, as.is <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="va">leaders_long</span><span class="op">$</span><span class="va">familyName</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span>
-  X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">leaders_long</span><span class="op">$</span><span class="va">name</span>, split <span class="op">=</span> <span class="st">" "</span><span class="op">)</span>,
+<span class="va">leaders_12</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">tmp</span>, <span class="va">female_leaders</span>, by <span class="op">=</span> <span class="st">"name"</span><span class="op">)</span>
+<span class="va">leaders_12</span> <span class="op">&lt;-</span> <span class="va">leaders_12</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">leaders_12</span><span class="op">$</span><span class="va">name</span>, <span class="va">leaders_12</span><span class="op">$</span><span class="va">enddate</span><span class="op">)</span>, <span class="op">]</span>
+<span class="va">leaders_12</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">.</span> <span class="op">~</span> <span class="va">name</span>, <span class="va">leaders_12</span>, <span class="va">tail</span>, <span class="fl">1</span><span class="op">)</span>
+<span class="co"># aggregate() returns dates as characters</span>
+<span class="va">leaders_12</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/type.convert.html" class="external-link">type.convert</a></span><span class="op">(</span><span class="va">leaders_12</span>, as.is <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="va">leaders_12</span><span class="op">$</span><span class="va">familyName</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span>
+  X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">leaders_12</span><span class="op">$</span><span class="va">name</span>, split <span class="op">=</span> <span class="st">" "</span><span class="op">)</span>,
   FUN <span class="op">=</span> <span class="va">`[`</span>,
   ... <span class="op">=</span> <span class="fl">2</span>,
   FUN.VALUE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>
-<span class="op">)</span>
-
-
+<span class="op">)</span></code></pre></div>
+<p>The inspiration to add <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> came again from <a href="https://github.com/gka" class="external-link">Gregor Aisch</a>. This time from his post on <a href="https://blog.datawrapper.de/longest-terms-european-leaders/" class="external-link">Three decades of European government leaders</a>. Let’s see how close we can get with our example to the original.</p>
+<details><p><summary><b>See full code</b></summary></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/slowkow/ggrepel" class="external-link">ggrepel</a></span><span class="op">)</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>
   <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">female_leaders</span>, <span class="va">startdate</span> <span class="op">&gt;</span> <span class="st">"1960-01-01"</span><span class="op">)</span>,
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>
@@ -396,20 +392,28 @@
 <span class="op">)</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span><span class="op">)</span>,
-  size <span class="op">=</span> <span class="fl">.1</span>,
   point_size <span class="op">=</span> <span class="fl">1</span>
 <span class="op">)</span>
+
+<span class="co"># coord</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span>
+
+<span class="co"># scales</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_date.html" class="external-link">scale_x_date</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.02</span>, <span class="fl">.05</span><span class="op">)</span><span class="op">)</span>
-<span class="co"># p3 &lt;- p3 + scale_y_continuous(limits = function(x) x / 365.25)</span>
+<span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>
+  limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7400</span><span class="op">)</span>,
+  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span>, <span class="fl">8</span>, <span class="fl">12</span>, <span class="fl">16</span>, <span class="fl">20</span><span class="op">)</span> <span class="op">*</span> <span class="fl">365.25</span>,
+  labels <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="va">i</span> <span class="op">/</span> <span class="fl">365.25</span><span class="op">)</span><span class="op">)</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>
   <span class="st">"executive"</span> <span class="op">=</span> <span class="st">"#311dfc"</span>,
   <span class="st">"non-executive"</span> <span class="op">=</span> <span class="st">"#f4ae1b"</span>
 <span class="op">)</span><span class="op">)</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_linetype_identity</a></span><span class="op">(</span><span class="op">)</span>
+
+<span class="co"># title, subtitle, caption</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>
   title <span class="op">=</span> <span class="st">"Elected Female Leaders Since 1960"</span>,
-  subtitle <span class="op">=</span> <span class="st">"Year in Office"</span>,
+  subtitle <span class="op">=</span> <span class="st">"Years in Office"</span>,
   caption <span class="op">=</span> <span class="st">"Source: Wikipedia"</span>,
   x <span class="op">=</span> <span class="cn">NULL</span>,
   y <span class="op">=</span> <span class="cn">NULL</span>,
@@ -417,10 +421,10 @@
 <span class="op">)</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span>
 
-<span class="co"># add annotations</span>
+<span class="co"># annotations</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span>
   <span class="fu"><a href="https://rdrr.io/pkg/ggrepel/man/geom_text_repel.html" class="external-link">geom_text_repel</a></span><span class="op">(</span>
-    data <span class="op">=</span> <span class="va">leaders_long</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>
+    data <span class="op">=</span> <span class="va">leaders_12</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>
       x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">enddate</span>, origin <span class="op">=</span> <span class="st">"1970-01-01"</span><span class="op">)</span>,
       y <span class="op">=</span> <span class="va">days_in_office</span>,
       colour <span class="op">=</span> <span class="va">power</span>,
@@ -431,9 +435,7 @@
     nudge_y <span class="op">=</span> <span class="fl">10</span>,
     inherit.aes <span class="op">=</span> <span class="cn">FALSE</span>,
     show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
-</details><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">p3</span></code></pre></div>
-<p><img src="examples_files/figure-html/unnamed-chunk-3-1.png" width="95%"></p>
+</details><p><img src="examples_files/figure-html/unnamed-chunk-3-1.png" width="95%"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

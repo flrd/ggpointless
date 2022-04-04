@@ -186,26 +186,30 @@
   location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first"</span>, <span class="st">"last"</span>, <span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,
   size <span class="op">=</span> <span class="fl">3</span>
 <span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"same as location = 'all'"</span><span class="op">)</span>
-<span class="co"># reversed order</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"same as location = 'all'"</span><span class="op">)</span></code></pre></div>
+<p><img src="ggpointless_files/figure-html/overplotting-1.png" width="962.5"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># reversed order</span>
 <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_pointless.html">geom_pointless</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,
   location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span><span class="op">)</span>,
   size <span class="op">=</span> <span class="fl">3</span>
 <span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"custom order"</span><span class="op">)</span>
-<span class="co"># same as location = 'all' again</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"custom order"</span><span class="op">)</span></code></pre></div>
+<p><img src="ggpointless_files/figure-html/unnamed-chunk-2-1.png" width="962.5"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># same as location = 'all' again</span>
 <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_pointless.html">geom_pointless</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,
   location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span>, <span class="st">"all"</span><span class="op">)</span>,
   size <span class="op">=</span> <span class="fl">3</span>
 <span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"same as location = 'all' again"</span><span class="op">)</span></code></pre></div>
-<p><img src="ggpointless_files/figure-html/overplotting-1.png" width="962.5"><img src="ggpointless_files/figure-html/overplotting-2.png" width="962.5"><img src="ggpointless_files/figure-html/overplotting-3.png" width="962.5"></p>
+<p><img src="ggpointless_files/figure-html/unnamed-chunk-3-1.png" width="962.5"></p>
 </div>
 <div class="section level3">
 <h3 id="pick-another-geom">Pick another geom<a class="anchor" aria-label="anchor" href="#pick-another-geom"></a>
 </h3>
 <p>Just like all <code>stat_*</code> functions, <code><a href="../reference/geom_pointless.html">stat_pointless()</a></code> has a default geom, which is <code>"point"</code>. This means in reverse that you can highlight e.g. minimum and maximum in another way, for example with a horizontal line.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span>
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
@@ -219,22 +223,22 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="plotting-live-lines-with-geom_lexis">Plotting live lines with geom_lexis<a class="anchor" aria-label="anchor" href="#plotting-live-lines-with-geom_lexis"></a>
+<h2 id="plotting-life-lines-with-geom_lexis">Plotting life lines with geom_lexis<a class="anchor" aria-label="anchor" href="#plotting-life-lines-with-geom_lexis"></a>
 </h2>
 <p>The idea of the <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> function is to draw a lifeline for an event from it’s start to it’s end. The required aesthetics are <code>x</code> and <code>xend</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>
   key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span>,
-  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">6</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>,
-  end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">4</span>, <span class="fl">10</span>, <span class="fl">8</span>, <span class="fl">10</span><span class="op">)</span>
+  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">6</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>,
+  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">4</span>, <span class="fl">10</span>, <span class="fl">8</span>, <span class="fl">10</span><span class="op">)</span>
 <span class="op">)</span>
 
-<span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">start</span>, xend <span class="op">=</span> <span class="va">end</span>, color <span class="op">=</span> <span class="va">key</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+<span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, xend <span class="op">=</span> <span class="va">y</span>, color <span class="op">=</span> <span class="va">key</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span>
 <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/default_lexis-1.png" width="962.5"></p>
-<p>If there is a gap in an event, this is shown by a horizontal line, which can be hidden by <code>gap_filler = FALSE</code>. Also, <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> creates an additional variable, <code>type</code> that takes two values: “solid” and “dotted”. You can map the <code>type</code> the linetype aesthetic (or any other aesthetic) using <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat()</a></code>, see below. Since the values of the <code>type</code> column have no contextual meaning, they are probably best used in conjunction with <code><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_linetype_identity()</a></code> to not show a legend.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p>If there is a gap in an event a horizontal line is drawn, which can be hidden setting <code>gap_filler = FALSE</code>. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable <code>type</code> for this. This is created by <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> and takes two values: “solid” and “dotted”. With <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat()</a></code> you can map the linetype (or any other aesthetic) to the variable <code>type</code>, see below.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span>gap_filler <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
 <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_scale</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span><span class="op">)</span>, 
