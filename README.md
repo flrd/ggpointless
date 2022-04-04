@@ -14,15 +14,14 @@ coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](h
 
 `ggpointless` is an extension of the
 [`ggplot2`](https://ggplot2.tidyverse.org/) library providing additional
-layers.
-
-The following functions are implemented in this small package:
+layers. The following functions are implemented in this small package:
 
 -   `geom_pointless()` / `stat_pointless()`: functions that are making
     it easy to add minimal emphasis to your plots by means of a point
     layer.
 
--   `geom_lexis()`: a layer to plot a 45° ‘lifeline’ of an event
+-   `geom_lexis()` / `stat_lexis()`: a layer to plot a 45° ‘lifeline’ of
+    an event
 
 ## Installation
 
