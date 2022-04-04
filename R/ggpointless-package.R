@@ -1,6 +1,7 @@
-#' Additional Geoms, Stats for 'ggplot2'
-#'
-#' A package containing additional geoms, and stats for ggplot2 3.3+
+#' @keywords internal
+"_PACKAGE"
+
+#' Additional Geoms, Stats for 'ggplot2' 3.3+
 #'
 #' @name ggpointless
 #' @docType package
