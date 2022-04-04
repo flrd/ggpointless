@@ -324,11 +324,12 @@ tmp <- aggregate(
   transform(female_leaders, days_in_office = enddate - startdate),
   sum
 )
-
+# 365.25 is an approximation of course
 tmp <- subset(tmp, days_in_office / 365.25 > 12)
 leaders_12 <- merge(tmp, female_leaders, by = "name")
 leaders_12 <- leaders_12[order(leaders_12$name, leaders_12$enddate), ]
 leaders_12 <- aggregate(. ~ name, leaders_12, tail, 1)
+# aggregate() returns dates as characters
 leaders_12 <- type.convert(leaders_12, as.is = TRUE)
 leaders_12$familyName <- vapply(
   X = strsplit(leaders_12$name, split = " "),
@@ -338,7 +339,7 @@ leaders_12$familyName <- vapply(
 )
 ```
 
-The inspiration to add `geom_lexis()` came again from [Gregor Aisch](https://github.com/gka). This time from his post on [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Let's see how close we can get to the orignal.
+The inspiration to add `geom_lexis()` came again from [Gregor Aisch](https://github.com/gka). This time from his post on [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Let's see how close we can get with our example to the original.
 
 
 <details><summary><b>See full code</b></summary>
