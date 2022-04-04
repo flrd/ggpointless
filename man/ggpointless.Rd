@@ -3,10 +3,9 @@
 \docType{package}
 \name{ggpointless}
 \alias{ggpointless}
-\title{Additional Geoms, Stats, & Scales for 'ggplot2'}
+\title{Additional Geoms, Stats for 'ggplot2'}
 \description{
-A package containing additional geoms, coords, stats, scales & fonts
-for ggplot2 2.0+
+A package containing additional geoms, and stats for ggplot2 3.3+
 }
 \author{
 Markus Döring

@@ -1,7 +1,6 @@
-#' Additional Geoms, Stats, & Scales for 'ggplot2'
+#' Additional Geoms, Stats for 'ggplot2'
 #'
-#' A package containing additional geoms, coords, stats, scales & fonts
-#' for ggplot2 2.0+
+#' A package containing additional geoms, and stats for ggplot2 3.3+
 #'
 #' @name ggpointless
 #' @docType package
