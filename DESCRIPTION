@@ -1,5 +1,6 @@
 Package: ggpointless
-Title: Emphasize Observations with Points
+Title: A small collection of new geometries, and stats 
+    for 'ggplot2'.
 Version: 0.0.1.9000
 Authors@R: 
     person(
@@ -7,10 +8,13 @@ Authors@R:
      family = "Döring",
      email = "m4rkus.doering@gmail.com",
      role = c("aut", "cre"))
-Description: Add minimal emphasis to your plots. 'ggpointless' is a 
-    small extension of the 'ggplot2' library making it easy to highlight 
-    the first, or last observations, sample minimum and maximum. The goal
-    is to provide additional context. Or just some visual sugar.
+Description: A small collection of new geometries, and stats 
+    for ggplot2. geom_pointless() adds minimal emphasis to your 
+    plots making it easy to highlight the first, or last 
+    observations, sample minimum and maximum. The goal is to 
+    provide additional context. Or just some visual sugar. 
+    geom_lexis() draws a 45° lifeline of an event that mimics 
+    lexis diagrams. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
