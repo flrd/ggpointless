@@ -20,7 +20,7 @@ figures:
 reference:
 - title: "Geom, Stat"
   desc: >
-    Functions for creating new geometry layers to emphasize some observations.
+    Functions for creating new geometry layers.
   contents:
   - geom_pointless
   - stat_pointless
