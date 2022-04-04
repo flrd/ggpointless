@@ -14,7 +14,7 @@
 #' @seealso \code{\link[scales]{trans_new}}
 #'    \code{\link[base]{as.Date}}
 #'    \code{\link[base]{DateTimeClasses}}
-#' @export
+#' @keywords internal
 #' @examples
 #' # Date class is internally represented as the number
 #' # of days since some origin, e.g. 1970-01-01
@@ -66,7 +66,8 @@ time_to_time_trans <- function(from = c(
                                  "hour",
                                  "minute",
                                  "second"
-                               ), ...) {
+                               ),
+                               ...) {
   force(from)
   force(to)
 
