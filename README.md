@@ -32,7 +32,17 @@ install.packages("ggpointless")
 devtools::install_github("flrd/ggpointless")
 ```
 
-## Usage
+## Using ggpointless
+
+Once you have installed the package, simply attach it by calling:
+
+``` r
+library(ggpointless)
+```
+
+The main functions in this package are `geom_pointless()` and
+`geom_lexis()`. They work like you are used to from other `geom_*`
+functions.
 
 ### geom_pointless
 
@@ -70,7 +80,8 @@ ggplot(df1, aes(x = var1, y = var2)) +
 
 `geom_lexis()` is a combination of a segment and a point layer. Given a
 start value and an end value, this functions draws a 45° line which
-indicates the duration of an event.
+indicates the duration of an event. The geom requires an `x` and and an
+`xend` aesthetic and calculated the `y` and `yend` coordinates for you.
 
 ``` r
 df2 <- data.frame(
