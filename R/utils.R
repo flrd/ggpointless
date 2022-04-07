@@ -1,7 +1,14 @@
+#' Default value for `NULL`
+#'
+#' This infix function makes it easy to replace `NULL`s with a default
+#' value.
+#'
+#' @param x,y If `x` is NULL, will return `y`; otherwise returns `x`.
+#' @keywords internal
+#' @name operator
 `%||%` <- function(a, b) {
   if (!is.null(a)) a else b
 }
-
 
 # create a decade from a number -------------------------------------------
 #' Given a year, get the decade
