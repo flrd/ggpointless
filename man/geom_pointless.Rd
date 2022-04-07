@@ -187,23 +187,36 @@ ggplot(df1, aes(x, y)) +
 
 # Change the order in which points are drawn when they overlap
 df1 <- data.frame(var1 = 1:2, var2 = 1:2)
+cols <- c(
+"first" = "#f8766d",
+"last" = "#7cae00",
+"minimum" = "#00bfc4",
+"maximum" = "#c77cff"
+)
 
 p <- ggplot(df1, aes(x = var1, y = var2)) +
   geom_path() +
-  coord_equal()
+  coord_equal() +
+  # makes comparision easier
+  scale_color_manual(values = cols)
 
 # same as location = 'all'
 p + geom_pointless(aes(color = after_stat(location)),
   location = c("first", "last", "minimum", "maximum")
-)
+) +
+labs(subtitle = "same as location = 'all'")
+
 # reversed custom order
 p + geom_pointless(aes(color = after_stat(location)),
   location = c("maximum", "minimum", "last", "first")
-)
+) +
+labs(subtitle = "custom order")
+
 # same as location = 'all' again
 p + geom_pointless(aes(color = after_stat(location)),
   location = c("maximum", "minimum", "last", "first", "all")
-)
+) +
+labs(subtitle = "same as location = 'all' again")
 
 # Use stat_pointless() with a geom other than "point"
 set.seed(42)
