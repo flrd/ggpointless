@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   examples: examples.html
   ggpointless: ggpointless.html
-last_built: 2022-04-04T21:55Z
+last_built: 2022-04-07T14:17Z
 urls:
   reference: https://flrd.github.io/ggpointless/reference
   article: https://flrd.github.io/ggpointless/articles

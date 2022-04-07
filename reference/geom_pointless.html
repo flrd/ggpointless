@@ -63,11 +63,11 @@ its name, but hopefully in conjunction with geom_line() and friends."><meta prop
     </div>
 
     <div class="ref-description section level2">
-    <p>This is a wrapper around <code>geom_point()</code> with the one
+    <p>This is a wrapper around <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point()</a></code> with the one
 additional argument: <code>location</code>. It allows to emphasize some
 observations, namely the first, the last, the minima and/or maxima,
 see examples. This geom is not particularly useful on its own, hence
-its name, but hopefully in conjunction with <code>geom_line()</code> and friends.</p>
+its name, but hopefully in conjunction with <code><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line()</a></code> and friends.</p>
     </div>
 
     <div class="section level2">
@@ -161,7 +161,7 @@ the default plot specification, e.g. <code><a href="https://ggplot2.tidyverse.or
 to highlight. If <code>location</code> is <code>"last"</code>, the default, a single point
 is plotted by default at the last non-missing observation. The
 locations are determined in the order in which they appear in the
-data -- like <code>geom_path()</code> does compared to <code>geom_line()</code>.
+data -- like <code><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_path()</a></code> does compared to <code><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line()</a></code>.
 See the <code><a href="../articles/ggpointless.html">vignette("ggpointless")</a></code> for more details.</p>
     </div>
     <div class="section level2">
@@ -224,14 +224,14 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <span class="r-in"><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># not terribly useful on its own ...</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-1.png" alt="" width="962" height="595"></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span>location <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-2.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># ... but in conjunction with geom_line(), hopefully</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-3.png" alt="" width="962" height="595"></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span>location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first"</span>, <span class="st">"last"</span><span class="op">)</span><span class="op">)</span></span>
@@ -244,7 +244,7 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <span class="r-in"><span class="co"># The layer computes one additional variable, 'location',</span></span>
 <span class="r-in"><span class="co"># that you can map e.g. to the color aesthetic</span></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span></span>
-<span class="r-in">  <span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span><span class="op">)</span>,</span>
 <span class="r-in">  size <span class="op">=</span> <span class="fl">3</span></span>
 <span class="r-in"><span class="op">)</span></span>
@@ -253,8 +253,8 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <span class="r-in"><span class="co"># Example with missing first and last observations</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span class="r-in">  <span class="fu">geom_pointless</span><span class="op">(</span>location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first"</span>, <span class="st">"last"</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 2 rows containing non-finite values (stat_pointless).</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 2 row(s) containing missing values (geom_path).</span>
@@ -262,34 +262,47 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Change the order in which points are drawn when they overlap</span></span>
 <span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>var1 <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, var2 <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span class="r-in"><span class="st">"first"</span> <span class="op">=</span> <span class="st">"#f8766d"</span>,</span>
+<span class="r-in"><span class="st">"last"</span> <span class="op">=</span> <span class="st">"#7cae00"</span>,</span>
+<span class="r-in"><span class="st">"minimum"</span> <span class="op">=</span> <span class="st">"#00bfc4"</span>,</span>
+<span class="r-in"><span class="st">"maximum"</span> <span class="op">=</span> <span class="st">"#c77cff"</span></span>
+<span class="r-in"><span class="op">)</span></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">geom_path</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">coord_equal</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_path</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="co"># makes comparision easier</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="va">cols</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># same as location = 'all'</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first"</span>, <span class="st">"last"</span>, <span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">)</span></span>
+<span class="r-in"><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"same as location = 'all'"</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-9.png" alt="" width="962" height="595"></span>
+<span class="r-in"></span>
 <span class="r-in"><span class="co"># reversed custom order</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">)</span></span>
+<span class="r-in"><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"custom order"</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-10.png" alt="" width="962" height="595"></span>
+<span class="r-in"></span>
 <span class="r-in"><span class="co"># same as location = 'all' again</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in"><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_pointless</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">  location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span>, <span class="st">"last"</span>, <span class="st">"first"</span>, <span class="st">"all"</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">)</span></span>
+<span class="r-in"><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"same as location = 'all' again"</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="geom_pointless-11.png" alt="" width="962" height="595"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Use stat_pointless() with a geom other than "point"</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">ggplot</span><span class="op">(</span><span class="va">df1</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span class="r-in">  <span class="fu">stat_pointless</span><span class="op">(</span></span>
-<span class="r-in">    <span class="fu">aes</span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">y</span>, color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">y</span>, color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">    location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"maximum"</span>, <span class="st">"minimum"</span><span class="op">)</span>,</span>
 <span class="r-in">    geom <span class="op">=</span> <span class="st">"hline"</span></span>
 <span class="r-in">  <span class="op">)</span></span>
@@ -297,13 +310,13 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Example using facets</span></span>
 <span class="r-in"><span class="co"># https://stackoverflow.com/q/29375169</span></span>
-<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span><span class="va">economics_long</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in">  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">variable</span>, ncol <span class="op">=</span> <span class="fl">1</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">economics_long</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">date</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span class="r-in">  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">variable</span>, ncol <span class="op">=</span> <span class="fl">1</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">p</span> <span class="op">+</span></span>
 <span class="r-in">  <span class="fu">geom_pointless</span><span class="op">(</span></span>
-<span class="r-in">    <span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="fu">after_stat</span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">    location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
 <span class="r-in">    size <span class="op">=</span> <span class="fl">2</span></span>
 <span class="r-in">  <span class="op">)</span></span>

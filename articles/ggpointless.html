@@ -94,13 +94,12 @@
 <p><code>ggpointless</code> is a small extension of the <a href="https://ggplot2.tidyverse.org/" class="external-link"><code>ggplot2</code></a> that provides two additional layers:</p>
 <ol style="list-style-type: decimal">
 <li>
-<code><a href="../reference/geom_pointless.html">geom_pointless()</a></code> &amp; <code><a href="../reference/geom_pointless.html">stat_pointless()</a></code>
+<code><a href="../reference/geom_pointless.html">geom_pointless()</a></code> / <code><a href="../reference/geom_pointless.html">stat_pointless()</a></code>
 </li>
 <li>
-<code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> &amp; <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code>
+<code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> / <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code>
 </li>
 </ol>
-<p>and</p>
 <div class="section level2">
 <h2 id="geom_pointless">geom_pointless<a class="anchor" aria-label="anchor" href="#geom_pointless"></a>
 </h2>
@@ -226,7 +225,7 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="plotting-life-lines-with-geom_lexis">Plotting life lines with geom_lexis<a class="anchor" aria-label="anchor" href="#plotting-life-lines-with-geom_lexis"></a>
+<h2 id="plotting-lifelines-with-geom_lexis">Plotting lifelines with geom_lexis<a class="anchor" aria-label="anchor" href="#plotting-lifelines-with-geom_lexis"></a>
 </h2>
 <p>The idea of the <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> function is to draw a lifeline for an event from it’s start to it’s end. The required aesthetics are <code>x</code> and <code>xend</code>.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -240,21 +239,21 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span>
 <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/default_lexis-1.png" width="962.5"></p>
-<p>If there is a gap in an event a horizontal line is drawn, which can be hidden setting <code>gap_filler = FALSE</code>. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable <code>type</code> for this. This is created by <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> and takes two values: “solid” and “dotted”. With <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat()</a></code> you can map the linetype (or any other aesthetic) to the variable <code>type</code>, see below.</p>
+<p>If there is a gap in an event, by default, a horizontal line is drawn, which can be hidden setting <code>gap_filler = FALSE</code>. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable <code>type</code> for this. This is created by <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> and takes two values: “solid” and “dotted”. With <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat()</a></code> you can map the linetype (or any other aesthetic) to the variable <code>type</code>, see below.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span>gap_filler <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
 <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_scale</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span><span class="op">)</span>, 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span><span class="op">)</span>, 
   point_show <span class="op">=</span> <span class="cn">FALSE</span>
   <span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_linetype_identity</a></span><span class="op">(</span><span class="op">)</span>
-<span class="co">#&gt; Warning: Failed to apply `after_scale()` modifications to legend</span></code></pre></div>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_linetype_identity</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/after_stat-1.png" width="962.5"><img src="ggpointless_files/figure-html/after_stat-2.png" width="962.5"></p>
+<p>For all arguments that are supported see <code><a href="../reference/geom_lexis.html">?geom_lexis</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p>The <code>ggpointless</code> package contains the following data sets:</p>
+<p>In addition, the <code>ggpointless</code> package contains the following data sets:</p>
 <ol style="list-style-type: decimal">
 <li>
 <code>co2_ml</code> : <a href="https://gml.noaa.gov/ccgg/trends/data.html" class="external-link">CO<sub>2</sub> records taken at Mauna Loa</a>
