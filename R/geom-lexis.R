@@ -36,9 +36,8 @@
 #'  [ggplot2::after_scale()], see `Examples` and `vignette("ggpointless")` for
 #'  more details.
 #'
-#'  Every `x` must be a non-missing, numeric value (your segments must
-#'  start somewhere), but when one or all `xend` values are missing, they
-#'  will be set to `max(x, xend)`, and a message is shown, see examples.
+#'  Rows in your data with either missing `x` or `xend` values will be removed
+#'  (your segments must start and end somewhere).
 #'
 #' @export
 #' @examples
@@ -57,17 +56,17 @@
 #'     point_show = FALSE
 #'   )
 #'
-#' # missing xend values will be set to the maximum of `x`
-#' df1 <- data.frame(
+#' # missing values will be removed
+#' df2 <- data.frame(
 #'   key = c("A", "B", "B", "C", "D"),
 #'   start = c(0, 1, 7, 5, 6),
 #'   end = c(5, 4, 13, 9, NA)
 #' )
-#' ggplot(df1, aes(x = start, xend = end, color = key)) +
+#' ggplot(df2, aes(x = start, xend = end, color = key)) +
 #'   geom_lexis()
 #'
-#' # Ideally, `x` values should be increasing, unlike in the
-#' # next example
+#' # Ideally, `x` values should be increasing, unlike
+#' # in the next example
 #' df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
 #' ggplot(df3, aes(x = x, xend = xend)) +
 #'   geom_lexis()
@@ -79,6 +78,7 @@
 #' ggplot(df4, aes(x = x, xend = xend)) +
 #'   geom_lexis()
 #' }
+#'
 geom_lexis <- function(mapping = NULL,
                        data = NULL,
                        ...,

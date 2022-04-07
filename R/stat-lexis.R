@@ -5,14 +5,16 @@
 StatLexis <- ggproto("StatLexis", Stat,
   required_aes = c("x", "xend"),
   default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
-  setup_data = function(data, params) {
-    if (anyNA(data$xend)) {
-      x_max <- max(data$x, data$xend, na.rm = TRUE)
-      message(paste("Missing 'xend' values set to", x_max))
-      data$xend <- replace(data$xend, is.na(data$xend), x_max)
+  setup_params = function(data, params) {
+
+    has_y <- !(is.null(data$y) && is.null(params$y))
+    has_yend <- !(is.null(data$yend) && is.null(params$yend))
+    if (has_y || has_yend) {
+      message("stat_lexis() calculates y and yend aesthetics for you.")
     }
-    data
+    params
   },
+
   compute_group = function(data, scales) {
     get_lexis(data$x, data$xend)
   }

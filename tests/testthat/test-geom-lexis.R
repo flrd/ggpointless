@@ -12,10 +12,6 @@ p1 <- ggplot(df1, aes(x = x, xend = xend)) +
 p2 <- ggplot(df2, aes(x = x, xend = xend)) +
   geom_lexis()
 
-test_that("NA in xend are filled with max(x)", {
-  expect_equal(layer_data(p1), layer_data(p2))
-})
-
 test_that("readme example works", {
   p <- ggplot(df3, aes(x = x, xend = xend, color = key)) +
     geom_lexis(aes(linetype = after_stat(type)), size = .5, point_size = 3)

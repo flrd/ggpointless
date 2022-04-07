@@ -87,9 +87,8 @@ This geom draws 45° lines from the start to the end of a 'lifetime'. Besides
 \code{\link[ggplot2:aes_eval]{ggplot2::after_scale()}}, see \code{Examples} and \code{vignette("ggpointless")} for
 more details.
 
-Every \code{x} must be a non-missing, numeric value (your segments must
-start somewhere), but when one or all \code{xend} values are missing, they
-will be set to \code{max(x, xend)}, and a message is shown, see examples.
+Rows in your data with either missing \code{x} or \code{xend} values will be removed
+(your segments must start and end somewhere).
 }
 \section{Aesthetics}{
 
@@ -125,17 +124,17 @@ p +
     point_show = FALSE
   )
 
-# missing xend values will be set to the maximum of `x`
-df1 <- data.frame(
+# missing values will be removed
+df2 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   start = c(0, 1, 7, 5, 6),
   end = c(5, 4, 13, 9, NA)
 )
-ggplot(df1, aes(x = start, xend = end, color = key)) +
+ggplot(df2, aes(x = start, xend = end, color = key)) +
   geom_lexis()
 
-# Ideally, `x` values should be increasing, unlike in the
-# next example
+# Ideally, `x` values should be increasing, unlike
+# in the next example
 df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
 ggplot(df3, aes(x = x, xend = xend)) +
   geom_lexis()
@@ -147,4 +146,5 @@ df4 <- data.frame(x = Sys.Date(), xend = Sys.time())
 ggplot(df4, aes(x = x, xend = xend)) +
   geom_lexis()
 }
+
 }
