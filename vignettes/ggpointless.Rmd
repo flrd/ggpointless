@@ -18,10 +18,9 @@ library(ggpointless)
 
 `ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) that provides two additional layers:
 
-1. `geom_pointless()` & `stat_pointless()`
-2. `geom_lexis()` & `geom_lexis()`
+1. `geom_pointless()` / `stat_pointless()`
+2. `geom_lexis()` / `geom_lexis()`
 
-and 
 
 ## geom_pointless 
 `geom_pointless()` is a layer to easily add minimal emphasis to your plots. The function takes it's power from `stat_pointless()`, which actually does all the work, but is not usually in the spotlight.
@@ -159,7 +158,7 @@ ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
   guides(color = guide_legend(reverse = TRUE))
 ```
 
-## Plotting life lines with geom_lexis
+## Plotting lifelines with geom_lexis
 
 The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. 
 
@@ -175,21 +174,24 @@ p <- ggplot(df1, aes(x = x, xend = y, color = key)) +
 p + geom_lexis()
 ```
 
-If there is a gap in an event a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable `type` for this. This is created by `geom_lexis()` and takes two values: "solid" and "dotted". With `after_stat()` you can map the linetype (or any other aesthetic) to the variable `type`, see below. 
+If there is a gap in an event, by default, a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable `type` for this. This is created by `geom_lexis()` and takes two values: "solid" and "dotted". With `after_stat()` you can map the linetype (or any other aesthetic) to the variable `type`, see below. 
 
 ```{r after_stat, fig.show='hold'}
 p + geom_lexis(gap_filler = FALSE)
 p + geom_lexis(
-  aes(linetype = after_scale(type)), 
+  aes(linetype = after_stat(type)), 
   point_show = FALSE
   ) +
   scale_linetype_identity()
 ```
 
+For all arguments that are supported see `?geom_lexis`.
+
+
 
 ## Data
 
-The `ggpointless` package contains the following data sets:
+In addition, the `ggpointless` package contains the following data sets:
 
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
