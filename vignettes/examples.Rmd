@@ -22,6 +22,8 @@ knitr::opts_chunk$set(
 library(ggplot2)
 library(ggpointless)
 library(ggtext)
+library(ggrepel)
+library(scales)
 ```
 
 This vignette shows use cases for the data sets included in the `ggpointless` package:
@@ -37,6 +39,8 @@ This vignette shows use cases for the data sets included in the `ggpointless` pa
 library(ggplot2)
 library(ggpointless)
 library(ggtext)
+library(ggrepel)
+library(scales)
 ```
 
 
@@ -333,8 +337,7 @@ leaders_12 <- aggregate(. ~ name, leaders_12, tail, 1)
 leaders_12 <- type.convert(leaders_12, as.is = TRUE)
 leaders_12$familyName <- vapply(
   X = strsplit(leaders_12$name, split = " "),
-  FUN = `[`,
-  ... = 2,
+  FUN = function(name) name[length(name)],
   FUN.VALUE = character(1)
 )
 ```
@@ -344,7 +347,6 @@ The inspiration to add `geom_lexis()` came again from [Gregor Aisch](https://git
 
 <details><summary><b>See full code</b></summary>
 ```{r women_in_power}
-library(ggrepel)
 p3 <- ggplot(
   subset(female_leaders, startdate > "1960-01-01"),
   aes(

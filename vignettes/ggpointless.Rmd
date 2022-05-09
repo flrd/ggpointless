@@ -18,12 +18,12 @@ library(ggpointless)
 
 `ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) that provides two additional layers:
 
-1. `geom_pointless()` / `stat_pointless()`
-2. `geom_lexis()` / `geom_lexis()`
+1. `geom_pointless()` & `stat_pointless()`
+2. `geom_lexis()` & `geom_lexis()`
 
 
 ## geom_pointless 
-`geom_pointless()` is a layer to easily add minimal emphasis to your plots. The function takes it's power from `stat_pointless()`, which actually does all the work, but is not usually in the spotlight.
+`geom_pointless()` is a layer to easily add minimal emphasis to your plots. The function takes it's power from `stat_pointless()`, which does all the work, but is not usually in the spotlight.
 
 ```{r default_pointless}
 library(ggplot2)
@@ -50,7 +50,7 @@ p + geom_pointless(location = "all", size = 3)
 ```
 
 
-`geom_pointless()` behaves like `geom_point()` does with the addition of a `location` argument. You can set it to `"first"`, `"last"`, the default, `"minimum"`, `"maximum"`, and `"all"`; where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
+`geom_pointless()` behaves like `geom_point()` does with the addition of a `location` argument. You can set it to `"first"`, `"last"` (the default), `"minimum"`, `"maximum"`, and `"all"`; where `"all"` is just shorthand to select `"first"`, `"last"`, `"minimum"` and `"maximum"`.  
 
 In addition, you can use the computed variable `location` and map it to an aesthetic, e.g. `color`.  
 
@@ -142,7 +142,7 @@ p + geom_pointless(aes(color = after_stat(location)),
 ```
 
 
-### Pick another geom
+### Pick a different geom
 
 Just like all `stat_*` functions, `stat_pointless()` has a default geom, which is `"point"`. This means in reverse that you can highlight e.g. minimum and maximum in another way, for example with a horizontal line.
 
@@ -160,7 +160,7 @@ ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
 
 ## Plotting lifelines with geom_lexis
 
-The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. 
+The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. Here is a first example:
 
 ```{r default_lexis}
 df1 <- data.frame(
@@ -174,24 +174,70 @@ p <- ggplot(df1, aes(x = x, xend = y, color = key)) +
 p + geom_lexis()
 ```
 
-If there is a gap in an event, by default, a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`. If you want to make a visual distinction between the ascending lines and the connecting lines, you can use the variable `type` for this. This is created by `geom_lexis()` and takes two values: "solid" and "dotted". With `after_stat()` you can map the linetype (or any other aesthetic) to the variable `type`, see below. 
+You see the coordinates on the vertical y-axis show the difference between `x` and `xend` aesthetics. Also, if there is a gap in an event a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`.
 
-```{r after_stat, fig.show='hold'}
+```{r gap_filler, fig.show='hold'}
 p + geom_lexis(gap_filler = FALSE)
+```
+
+You can further style the appearance of your plot using the additional arguments. If you e.g. want to make a visual distinction between the ascending lines and the connecting lines, use the variable `type` for this which is created by `geom_lexis()` -- it takes two values: "solid" and "dotted". Use `after_stat()` to map `type` to the linetype aesthetic (or any other aesthetic) to the variable `type`. Also, you might also want to call `scale_linettype_identity`, see below. 
+
+```{r after_stat}
 p + geom_lexis(
-  aes(linetype = after_stat(type)), 
+  aes(linetype = after_scale(type)), 
   point_show = FALSE
   ) +
   scale_linetype_identity()
 ```
 
-For all arguments that are supported see `?geom_lexis`.
+### Date and POSIXct classes
+The "magic" of `geom_lexis()` happens in `stat_lexis()` when the input data is transformed and the calculations are performed. Part of this is the subtraction of `x` values from the respective `xend` values to get the coordinates on the y-scale, see the next example:
+
+```{r numeric}
+
+df1 <- data.frame(
+  start = c(2019, 2021),
+  end = c(2022, 2022),
+  key = c("A", "B")
+)
+
+ggplot(df1, aes(x = start, xend = end, group = key)) +
+  geom_lexis() +
+  coord_fixed()
+```
 
 
+Keeping in mind that dates are internally represented as the number of days, and the POSIXct class in turn represents seconds since some origin, the y-scale values in the next plots should come as no surprise.
+
+
+```{r dates}
+# days
+fun <- function(i) as.Date(paste0(i, "-01-01"))
+df1[, c("start", "end")] <- lapply(df1[, c("start", "end")], fun)
+p1 <- ggplot(df1, aes(x = start, xend = end, group = key)) +
+  geom_lexis() +
+  labs(y = "days") +
+  coord_fixed()
+p1
+```
+
+In order to change the labels of the y-scale in the prvious plot to, say, years, we make the assumption that 1 year has 365.25 days.
+
+```{r transformation, fig.show='hold'}
+# years, roughly
+p2 <- p1 +
+  scale_y_continuous(
+    breaks = 0:3 * 365.25,
+    labels = function(i) floor(i / 365.25)
+    ) +
+  labs(subtitle = "Assumption: 365.25 days/year",
+       y = "years")
+p2
+```
 
 ## Data
 
-In addition, the `ggpointless` package contains the following data sets:
+The `ggpointless` package contains the following data sets:
 
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
