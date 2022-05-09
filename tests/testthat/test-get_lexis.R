@@ -16,7 +16,7 @@ test_that("get_lexis works", {
 test_that("xend must be NA or greater than x", {
   expect_error(
     get_lexis(c(-1, 0), c(-4, 5)),
-    "or each row in your data, `xend` must either be greater than `x`, or NA"
+    "For each row in your data, `xend` must be greater than `x`"
   )
 })
 

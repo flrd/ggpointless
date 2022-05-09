@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: align='right' alt='logo' width='120'}}
 
-A collection of new geometries, and stats for ggplot2. geom_pointless() adds minimal emphasis to your plots making it easy to highlight the first, or last observations, sample minimum and maximum. The goal is to provide additional context. Or just some visual sugar. geom_lexis() draws a 45° lifeline of an event that mimics lexis diagrams.
+A collection of new geometries, and stats for 'ggplot2'. geom_pointless() adds minimal emphasis to your plots making it easy to highlight some observations. This layer provides additional context. Or just some visual sugar. geom_lexis() draws a 45° lifeline of an event that mimics lexis diagrams.
 }
 \seealso{
 Useful links:
