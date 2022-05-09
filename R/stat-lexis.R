@@ -61,20 +61,14 @@ get_lexis <- function(x, xend) {
     stop("`x` and `xend` must be continuous.")
   }
 
-  # missing xend values will be replaced by max(c(x, xend))
-  # in GeomLexis$setup_data
-  if (anyNA(x)) {
-    stop("`x` must not contain missing values.")
-  }
-
   if (any(x > xend, na.rm = TRUE)) {
     stop(paste(
       "For each row in your data, `xend` must",
-      "either be greater than `x`, or NA"
+      "be greater than `x`"
     ))
   }
 
-  # get all x-postions
+  # get all x-positions
   tmp_x <- sort(c(x, xend))
 
   # get the y-positions

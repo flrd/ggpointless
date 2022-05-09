@@ -5,6 +5,18 @@
 #' and they are named after Wilhelm Lexis. They are a combination
 #' of a segment, starting at 0 with a dot at the end.
 #'
+#' \if{html}{
+#' A sample of the output from \code{geom_lexis()}:
+#'
+#' \figure{README-geom-lexis-1.png}{options: width="100\%" alt="Figure: README-geom-lexis-1.png"}
+#' }
+#'
+#' \if{latex}{
+#' A sample of the output from \code{geom_lexis()}:
+#'
+#' \figure{README-geom-lexis-1.png}{options: width=10cm}
+#' }
+#'
 #' @section Aesthetics:
 #' geom_pointless() understands the following aesthetics (required
 #' aesthetics are in bold):
@@ -32,12 +44,12 @@
 #' @details
 #' This geom draws 45° lines from the start to the end of a 'lifetime'. Besides
 #' `y` and `yend` coordinates this geom creates one additional variable called
-#'  `type` in the layer data. You might want to map to an aesthetic with
-#'  [ggplot2::after_scale()], see `Examples` and `vignette("ggpointless")` for
-#'  more details.
+#' `type` in the layer data. You might want to map to an aesthetic with
+#' [ggplot2::after_stat()], see Examples section and `vignette("ggpointless")`
+#' for more details.
 #'
-#'  Rows in your data with either missing `x` or `xend` values will be removed
-#'  (your segments must start and end somewhere).
+#' Rows in your data with either missing `x` or `xend` values will be removed
+#' (your segments must start and end somewhere).
 #'
 #' @export
 #' @examples
@@ -52,9 +64,18 @@
 #' p +
 #'   geom_lexis(gap_filler = FALSE)
 #' p +
-#'   geom_lexis(aes(linetype = after_scale(type)),
+#'   geom_lexis(aes(linetype = after_stat(type)),
 #'     point_show = FALSE
 #'   )
+#'
+#' # change point appearance
+#' p + geom_lexis(
+#'   point_colour = "black",
+#'   point_size = 3,
+#'   shape = 21,
+#'   fill = "white",
+#'   stroke = 1
+#' )
 #'
 #' # missing values will be removed
 #' df2 <- data.frame(
@@ -72,10 +93,12 @@
 #'   geom_lexis()
 #'
 #' # If `x` is of class Date, `xend` can't be of class `POSIXt` or
-#' # `POSIXct`. The error is thrown by the scales::date_trans function.
+#' # `POSIXct`. The error is thrown by the `scales::date_trans` function.
 #' \dontrun{
-#' df4 <- data.frame(x = Sys.Date(), xend = Sys.time())
-#' ggplot(df4, aes(x = x, xend = xend)) +
+#' ggplot(
+#'   data.frame(x = Sys.Date(), xend = Sys.time()),
+#'   aes(x = x, xend = xend)
+#' ) +
 #'   geom_lexis()
 #' }
 #'

@@ -57,8 +57,8 @@ draw_key_sabline <- function(data, params, size) {
 #' @export
 draw_key_lexis <- function(data, params, size) {
 
-  # test is.null if key glayph is used by a geom_* that does
-  # not have a point_show param (i.e. all but geom_lexis)
+  # test is.null needed if key glayph is used by another geom_
+  # that does not have a point_show param (i.e. all but geom_lexis)
   if (isTRUE(params$point_show) | is.null(params$point_show)) {
     grid::grobTree(
       draw_key_sabline(data, params, size),
