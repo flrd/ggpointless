@@ -74,7 +74,7 @@ ggplot(df1, aes(x = var1, y = var2)) +
   theme_minimal()
 ```
 
-<img src="man/figures/README-hello_world-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-hello-world-1.png" width="100%" style="display: block; margin: auto;" />
 
 ### geom_lexis
 
@@ -100,7 +100,7 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-<img src="man/figures/README-geom_lexis-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-geom-lexis-1.png" width="100%" style="display: block; margin: auto;" />
 
 See the
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
