@@ -1,21 +1,9 @@
 #' Lexis charts
 #'
-#' The lexis geom is used to plot 45° "lifelines" for each cohort.
+#' This geom can be used to plot 45° lifelines for a cohort.
 #' Lexis diagrams are used by demographers for more than a century
 #' and they are named after Wilhelm Lexis. They are a combination
 #' of a segment, starting at 0 with a dot at the end.
-#'
-#' \if{html}{
-#' A sample of the output from \code{geom_lexis()}:
-#'
-#' \figure{README-geom-lexis-1.png}{options: width="100\%" alt="Figure: README-geom-lexis-1.png"}
-#' }
-#'
-#' \if{latex}{
-#' A sample of the output from \code{geom_lexis()}:
-#'
-#' \figure{README-geom-lexis-1.png}{options: width=10cm}
-#' }
 #'
 #' @section Aesthetics:
 #' geom_pointless() understands the following aesthetics (required

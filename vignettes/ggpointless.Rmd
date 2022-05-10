@@ -160,7 +160,7 @@ ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
 
 ## Plotting lifelines with geom_lexis
 
-The idea of the `geom_lexis()` function is to draw a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. Here is a first example:
+`geom_lexis()` draws a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. Here is an fexample:
 
 ```{r default_lexis}
 df1 <- data.frame(
@@ -174,13 +174,14 @@ p <- ggplot(df1, aes(x = x, xend = y, color = key)) +
 p + geom_lexis()
 ```
 
-You see the coordinates on the vertical y-axis show the difference between `x` and `xend` aesthetics. Also, if there is a gap in an event a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`.
+Also, if there is a gap in an event a horizontal line is drawn, which can be hidden setting `gap_filler = FALSE`.
 
 ```{r gap_filler, fig.show='hold'}
 p + geom_lexis(gap_filler = FALSE)
 ```
 
-You can further style the appearance of your plot using the additional arguments. If you e.g. want to make a visual distinction between the ascending lines and the connecting lines, use the variable `type` for this which is created by `geom_lexis()` -- it takes two values: "solid" and "dotted". Use `after_stat()` to map `type` to the linetype aesthetic (or any other aesthetic) to the variable `type`. Also, you might also want to call `scale_linettype_identity`, see below. 
+You can further style the appearance of your plot using the additional arguments. If you e.g. want to make a visual distinction between the ascending lines and the connecting lines, use `after_stat()` to map the `type` variable to the linetype aesthetic (or any other aesthetic). The variable `type` is created by `geom_lexis()` and takes two values: "solid" and "dotted"; so you might also want to call `scale_linettype_identity`.
+
 
 ```{r after_stat}
 p + geom_lexis(
@@ -191,7 +192,7 @@ p + geom_lexis(
 ```
 
 ### Date and POSIXct classes
-The "magic" of `geom_lexis()` happens in `stat_lexis()` when the input data is transformed and the calculations are performed. Part of this is the subtraction of `x` values from the respective `xend` values to get the coordinates on the y-scale, see the next example:
+You see the coordinates on the vertical y-axis show the difference between `x` and `xend` aesthetics. The "magic" of `geom_lexis()` happens in `stat_lexis()` when the input data is transformed and the calculations are performed. 
 
 ```{r numeric}
 
@@ -210,29 +211,36 @@ ggplot(df1, aes(x = start, xend = end, group = key)) +
 Keeping in mind that dates are internally represented as the number of days, and the POSIXct class in turn represents seconds since some origin, the y-scale values in the next plots should come as no surprise.
 
 
-```{r dates}
-# days
-fun <- function(i) as.Date(paste0(i, "-01-01"))
+```{r dates and times, fig.show='hold'}
+# Date
+fun <- function(i, class) as.Date(paste0(i, "-01-01"))
 df1[, c("start", "end")] <- lapply(df1[, c("start", "end")], fun)
 p1 <- ggplot(df1, aes(x = start, xend = end, group = key)) +
   geom_lexis() +
   labs(y = "days") +
   coord_fixed()
-p1
+
+# POSIXct
+df2 <- df1
+df2[, c("start", "end")] <- lapply(df2[, c("start", "end")], as.POSIXct)
+p2 <- ggplot(df2, aes(x = start, xend = end, group = key)) +
+  geom_lexis() +
+  labs(y = "seconds") +
+  coord_fixed()
+
+p1; p2
 ```
 
-In order to change the labels of the y-scale in the prvious plot to, say, years, we make the assumption that 1 year has 365.25 days.
+In order to change the breaks and labels of the y-scale in the left of the previous plots to, say, years, we make the assumption that 1 year has 365.25 days, or 365.25 * 86400 seconds.
 
 ```{r transformation, fig.show='hold'}
 # years, roughly
-p2 <- p1 +
+p1 +
   scale_y_continuous(
-    breaks = 0:3 * 365.25,
-    labels = function(i) floor(i / 365.25)
+    breaks = 0:3*365.25,                   # or for p2: 0:3*365.25*86400 
+    labels = function(i) floor(i / 365.25) # floor(i / 365.25*86400)
     ) +
-  labs(subtitle = "Assumption: 365.25 days/year",
-       y = "years")
-p2
+  labs(y = "years")
 ```
 
 ## Data

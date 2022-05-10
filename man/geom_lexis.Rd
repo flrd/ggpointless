@@ -75,24 +75,12 @@ that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
-The lexis geom is used to plot 45° "lifelines" for each cohort.
+This geom can be used to plot 45° lifelines for a cohort.
 Lexis diagrams are used by demographers for more than a century
 and they are named after Wilhelm Lexis. They are a combination
 of a segment, starting at 0 with a dot at the end.
 }
 \details{
-\if{html}{
-A sample of the output from \code{geom_lexis()}:
-
-\figure{README-geom-lexis-1.png}{options: width="100\%" alt="Figure: README-geom-lexis-1.png"}
-}
-
-\if{latex}{
-A sample of the output from \code{geom_lexis()}:
-
-\figure{README-geom-lexis-1.png}{options: width=10cm}
-}
-
 This geom draws 45° lines from the start to the end of a 'lifetime'. Besides
 \code{y} and \code{yend} coordinates this geom creates one additional variable called
 \code{type} in the layer data. You might want to map to an aesthetic with
