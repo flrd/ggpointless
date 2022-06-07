@@ -362,9 +362,17 @@
 <h2 id="female-leaders-of-independent-states">Female leaders of independent states<a class="anchor" aria-label="anchor" href="#female-leaders-of-independent-states"></a>
 </h2>
 <p>The data used here comes from the Wikipedia article <a href="https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&amp;oldid=1078024588" class="external-link">List of elected and appointed female heads of state and government</a> and is collected in the dataset <code>female_leaders</code>.</p>
-<p>Before we plot, a bit of work needs to answer the question: which women are in office for more than 12 years?</p>
+<p>Before we plot, we want to answer the question: which women are in office for more than 12 years?</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="co"># Sirimavo Bandaranaike was both in executive and non-executive position</span>
+<span class="co"># setting power to last observation by person</span>
+<span class="va">female_leaders</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span>
+  <span class="va">female_leaders</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span>, <span class="st">"startdate"</span>, <span class="st">"enddate"</span>, <span class="st">"country"</span><span class="op">)</span>, <span class="op">]</span>,
+  <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">.</span> <span class="op">~</span> <span class="va">name</span>, <span class="va">female_leaders</span>, <span class="va">tail</span>, <span class="fl">1</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name"</span>, <span class="st">"country"</span>, <span class="st">"power"</span><span class="op">)</span><span class="op">]</span>,
+  all.x <span class="op">=</span> <span class="cn">TRUE</span>
+<span class="op">)</span>
+
+<span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span>
   <span class="va">days_in_office</span> <span class="op">~</span> <span class="va">name</span>,
   <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">female_leaders</span>, days_in_office <span class="op">=</span> <span class="va">enddate</span> <span class="op">-</span> <span class="va">startdate</span><span class="op">)</span>,
   <span class="va">sum</span>
@@ -381,11 +389,11 @@
   FUN <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">name</span><span class="op">)</span> <span class="va">name</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">name</span><span class="op">)</span><span class="op">]</span>,
   FUN.VALUE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>
 <span class="op">)</span></code></pre></div>
-<p>The inspiration to add <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> came again from <a href="https://github.com/gka" class="external-link">Gregor Aisch</a>. This time from his post on <a href="https://blog.datawrapper.de/longest-terms-european-leaders/" class="external-link">Three decades of European government leaders</a>. Let’s see how close we can get with our example to the original.</p>
+<p>The inspiration to add <code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> came again from <a href="https://github.com/gka" class="external-link">Gregor Aisch</a>. This time from his post on <a href="https://blog.datawrapper.de/longest-terms-european-leaders/" class="external-link">Three decades of European government leaders</a>. Let’s see how close we can get with our example data to the original plot.</p>
 <details><p><summary><b>See full code</b></summary></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">female_leaders</span>, <span class="va">startdate</span> <span class="op">&gt;</span> <span class="st">"1960-01-01"</span><span class="op">)</span>,
+  <span class="va">female_leaders</span>,
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>
     x <span class="op">=</span> <span class="va">startdate</span>,
     xend <span class="op">=</span> <span class="va">enddate</span>,
@@ -415,9 +423,9 @@
 
 <span class="co"># title, subtitle, caption</span>
 <span class="va">p3</span> <span class="op">&lt;-</span> <span class="va">p3</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>
-  title <span class="op">=</span> <span class="st">"Elected Female Leaders Since 1960"</span>,
+  title <span class="op">=</span> <span class="st">"Elected Female Leaders"</span>,
   subtitle <span class="op">=</span> <span class="st">"Years in Office"</span>,
-  caption <span class="op">=</span> <span class="st">"Source: Wikipedia"</span>,
+  caption <span class="op">=</span> <span class="st">"Highlighted are women that are in office for more than 12 years.\nSource: Wikipedia"</span>,
   x <span class="op">=</span> <span class="cn">NULL</span>,
   y <span class="op">=</span> <span class="cn">NULL</span>,
   color <span class="op">=</span> <span class="cn">NULL</span>
