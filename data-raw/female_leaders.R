@@ -1,7 +1,7 @@
 # download data -----------------------------------------------------------
 library(rvest)
 url <- "https://en.wikipedia.org/wiki/List_of_elected_and_appointed_female_heads_of_state_and_government"
-xpath <- "/html/body/div[3]/div[3]/div[5]/div[1]/table[3]"
+xpath <- "/html/body/div[3]/div[3]/div[5]/div[1]/table[2]"
 
 female_leaders <- url |>
   read_html() |>
@@ -16,6 +16,8 @@ names(female_leaders) <- c("name", "startdate", "enddate", "country", "power")
 # remove Katalin Novák because she is not yet in office, as of March 2022
 female_leaders <- subset(female_leaders, enddate != "Elect")
 
+# remove note on Tannu Tuva, a partially recognized state that is now a part of Russia.
+female_leaders[female_leaders$name == "Khertek Anchimaa-Toka",]$country <- "Tannu Tuva"
 
 # Executive or non-executive? ---------------------------------------------
 female_leaders$power <- tolower(female_leaders$power)
@@ -39,7 +41,7 @@ female_leaders$enddate <- as.Date(female_leaders$enddate, "%d %B %Y")
 Sys.setlocale("LC_TIME", lct)
 
 
-# set NAs in end date to today, because ladies are still in office --------
+# set end date to today for ladies still in office ------------------------
 female_leaders <- transform(female_leaders, enddate = replace(enddate, is.na(enddate), Sys.Date()))
 
 

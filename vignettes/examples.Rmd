@@ -320,9 +320,17 @@ p2
 
 The data used here comes from the Wikipedia article [List of elected and appointed female heads of state and government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588) and is collected in the dataset `female_leaders`.
 
-Before we plot, a bit of work needs to answer the question: which women are in office for more than 12 years?
+Before we plot, we want to answer the question: which women are in office for more than 12 years?
 
 ```{r subset_in_power}
+# Sirimavo Bandaranaike was both in executive and non-executive position
+# setting power to last observation by person
+female_leaders <- merge(
+  female_leaders[, c("name", "startdate", "enddate", "country"), ],
+  aggregate(. ~ name, female_leaders, tail, 1)[, c("name", "country", "power")],
+  all.x = TRUE
+)
+
 tmp <- aggregate(
   days_in_office ~ name,
   transform(female_leaders, days_in_office = enddate - startdate),
@@ -342,13 +350,13 @@ leaders_12$familyName <- vapply(
 )
 ```
 
-The inspiration to add `geom_lexis()` came again from [Gregor Aisch](https://github.com/gka). This time from his post on [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Let's see how close we can get with our example to the original.
+The inspiration to add `geom_lexis()` came again from [Gregor Aisch](https://github.com/gka). This time from his post on [Three decades of European government leaders](https://blog.datawrapper.de/longest-terms-european-leaders/). Let's see how close we can get with our example data to the original plot.
 
 
 <details><summary><b>See full code</b></summary>
 ```{r women_in_power}
 p3 <- ggplot(
-  subset(female_leaders, startdate > "1960-01-01"),
+  female_leaders,
   aes(
     x = startdate,
     xend = enddate,
@@ -378,9 +386,9 @@ p3 <- p3 + scale_linetype_identity()
 
 # title, subtitle, caption
 p3 <- p3 + labs(
-  title = "Elected Female Leaders Since 1960",
+  title = "Elected Female Leaders",
   subtitle = "Years in Office",
-  caption = "Source: Wikipedia",
+  caption = "Highlighted are women that are in office for more than 12 years.\nSource: Wikipedia",
   x = NULL,
   y = NULL,
   color = NULL

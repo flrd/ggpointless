@@ -160,7 +160,7 @@ ggplot(data.frame(x = 1:10, y = sample(1:10)), aes(x, y)) +
 
 ## Plotting lifelines with geom_lexis
 
-`geom_lexis()` draws a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. Here is an fexample:
+`geom_lexis()` draws a lifeline for an event from it's start to it's end. The required aesthetics are `x` and `xend`. Here is an example:
 
 ```{r default_lexis}
 df1 <- data.frame(
@@ -231,7 +231,7 @@ p2 <- ggplot(df2, aes(x = start, xend = end, group = key)) +
 p1; p2
 ```
 
-In order to change the breaks and labels of the y-scale in the left of the previous plots to, say, years, we make the assumption that 1 year has 365.25 days, or 365.25 * 86400 seconds.
+In order to change the breaks and labels of the vertical scale to, say, years, we make the assumption that 1 year has 365.25 days, or 365.25 * 86400 seconds.
 
 ```{r transformation, fig.show='hold'}
 # years, roughly
