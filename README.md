@@ -5,11 +5,13 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-project.org/package=ggpointless)
+[![R-CMD-check](https://github.com/flrd/ggpointless/workflows/R-CMD-check/badge.svg)](https://github.com/flrd/ggpointless/actions)
 [![Codecov test
 coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless?branch=main)
-[![R-CMD-check](https://github.com/flrd/ggpointless/workflows/R-CMD-check/badge.svg)](https://github.com/flrd/ggpointless/actions)
-[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/ggpointless)](https://cran.r-project.org/package=ggpointless)
-[![Downloads](http://cranlogs.r-pkg.org/badges/ggpointless)](http://www.r-pkg.org/pkg/ggpointless)
+<!-- [![Downloads](http://cranlogs.r-pkg.org/badges/ggpointless)](http://www.r-pkg.org/pkg/ggpointless) -->
+
 <!-- badges: end -->
 
 `ggpointless` is an extension of the
@@ -79,9 +81,9 @@ ggplot(df1, aes(x = var1, y = var2)) +
 ### geom_lexis
 
 `geom_lexis()` is a combination of a segment and a point layer. Given a
-start value and an end value, this functions draws a 45° line which
-indicates the duration of an event. The geom requires an `x` and and an
-`xend` aesthetic and calculated the `y` and `yend` coordinates for you.
+start value and an end value, this geom draws a 45° line which indicates
+the duration of an event. Required are `x` and `xend` aesthetics, `y`
+and `yend` coordinates will be calculated for you.
 
 ``` r
 df2 <- data.frame(
