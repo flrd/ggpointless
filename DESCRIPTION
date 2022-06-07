@@ -8,7 +8,7 @@ Authors@R:
      family = "Döring",
      email = "m4rkus.doering@gmail.com",
      role = c("aut", "cre"))
-Description: A collection of new geometries, and stats for
+Description: A collection of new geometries and stats for
     'ggplot2'. geom_pointless() adds minimal emphasis to your 
     plots making it easy to highlight some observations. This
     layer provides additional context. Or just some visual sugar. 
