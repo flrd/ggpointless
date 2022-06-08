@@ -1,4 +1,4 @@
-# ggpointless (development version)
+# ggpointless 0.0.2
 ## geoms/stats
 * `geom_lexis()`
 * `stat_lexis()`
