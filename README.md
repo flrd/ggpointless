@@ -59,6 +59,8 @@ set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and
 
 ``` r
 cols <- c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc')
+theme_set(theme_minimal())
+
 x <- seq(-pi, pi, length.out = 500)
 y <- outer(x, 1:5, function(x, y) sin(x*y))
 
@@ -72,8 +74,7 @@ ggplot(df1, aes(x = var1, y = var2)) +
   geom_pointless(aes(color = after_stat(location)),
                  location = "all",
                  size = 3) +
-  scale_color_manual(values = cols) +
-  theme_minimal()
+  scale_color_manual(values = cols)
 ```
 
 <img src="man/figures/README-hello-world-1.png" width="100%" style="display: block; margin: auto;" />
@@ -98,7 +99,6 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
   scale_x_continuous(breaks = c(df2$x, df2$xend)) +
   scale_color_manual(values = cols) +
   scale_linetype_identity() +
-  theme_minimal() +
   theme(panel.grid.minor = element_blank())
 ```
 
@@ -107,6 +107,25 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
 See the
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
 for more details.
+
+## developement version
+
+### geom_chaikin
+
+Chaikin’s corner cutting algorithm in action! Credit to [Farbfetzen /
+corner_cutting](https://github.com/Farbfetzen/corner_cutting)
+
+``` r
+df3 <- data.frame(x = c(0, 4, 4, 3, 2.5),
+                  y = c(0, 0, 2, -1, 4))
+
+ggplot(df3, aes(x, y)) + 
+  geom_polygon(fill = NA, linetype = "13", color = '#f4ae1b') + 
+  geom_chaikin(color = '#f4ae1b', closed = TRUE) +
+  coord_equal()
+```
+
+<img src="man/figures/README-geom-chaikin-1.png" width="100%" style="display: block; margin: auto;" />
 
 ## Data
 
