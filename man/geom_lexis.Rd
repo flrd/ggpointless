@@ -92,7 +92,7 @@ Rows in your data with either missing \code{x} or \code{xend} values will be rem
 }
 \section{Aesthetics}{
 
-geom_pointless() understands the following aesthetics (required
+geom_lexis() understands the following aesthetics (required
 aesthetics are in bold):
 \itemize{
 \item \strong{x}
