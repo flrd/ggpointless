@@ -1,3 +1,7 @@
+# current dev version
+* `geom_chaikin()`
+* `stat_chaikin()`
+
 # ggpointless 0.0.2
 ## geoms/stats
 * `geom_lexis()`
