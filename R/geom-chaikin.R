@@ -67,16 +67,6 @@ geom_chaikin <- function(mapping = NULL,
   )
 }
 
-#' @rdname ggpointless-ggproto
-#' @format NULL
-#' @usage NULL
-#' @keywords internal
-#' @export
-GeomChaikin <- ggproto("GeomChaikin", GeomLine,
-                       required_aes = c("x", "y"),
-                       default_aes = aes(colour = "black", size = 0.5, linetype = 1, alpha = NA)
-)
-
 #' @export
 #' @rdname geom_chaikin
 stat_chaikin <- function(mapping = NULL,
@@ -116,7 +106,15 @@ StatChaikin <- ggproto("StatChaikin", Stat,
   required_aes = c("x", "y"),
   compute_group = function(data, scales, params,
                            iterations = 5, ratio = 0.25, closed = FALSE) {
-    get_chaikin(x = data$x, y = data$y, iterations = iterations, ratio = ratio, closed = closed)
+    if (is.null(data)) {
+      return(data)
+    }
+
+    data <- get_chaikin(x = data$x, y = data$y, iterations = iterations, ratio = ratio, closed = closed)
+    if (closed) {
+      data <- rbind(data, data[1, , drop = FALSE])
+    }
+    data
   }
 )
 
@@ -168,7 +166,6 @@ cut_corners <- function(x, y, ratio, closed = TRUE) {
 
 
 get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
-
   if (iterations == 0) {
     return(data.frame(x = x, y = y))
   }
@@ -177,7 +174,7 @@ get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
     stop("`iterations` should be a whole number between 1 and 15.")
   }
 
-  if(length(x) == 0 || length(y) == 0) {
+  if (length(x) == 0 || length(y) == 0) {
     stop("`x` and `y` should have a positive length, returning `data`.")
   }
 
