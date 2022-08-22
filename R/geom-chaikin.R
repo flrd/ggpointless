@@ -1,7 +1,7 @@
 #' Apply Chaikin's corner cutting algorithm to smooth a path
 #'
 #' @description
-#' Chaikin’s corner-cutting algorithm is used to smooth sharp
+#' Chaikin's corner-cutting algorithm is used to smooth sharp
 #' corners in a path. The algorithm iteratively turns a jagged
 #' path into a smooth curve.
 #'
@@ -31,13 +31,40 @@
 #' @seealso
 #'  \code{\link[ggplot2]{geom_line}}: Connect observations (x order);
 #'  \code{\link[ggplot2]{geom_path}}: Connect observations;
-#'  \code{\link[ggalt]{ggalt::geom_xspline}}: Filled paths (polygons);
-#'  \code{\link[smoothr]{smoothr::smooth_chaikin}};
+#'  \code{\link[ggplot2]{geom_polygon}}: Filled paths (polygons);
 #'
 #' @details
-#' If the iterations parameter is 0 or less, data is returned
+#' Chaikin's corner cutting algorithm iteratively turns a jagged path into
+#' a smooth path.
+#'
+#' For each pair of neighboring points P1 and P2 on the original path, by default,
+#' the algorithm finds the 2 new points that are 25% and 75% of the way between
+#' P1 and P2. Those new points form a smoother path. The ratio parameter let's
+#' you control the distance of the new points from P1 and P2. It must be a number
+#' between 0 and 1. If ratio > 0.5, then it will be flipped to 1 - ratio, and a
+#' message is shown.
+#'
+#' If the iterations parameter is 0 or less, a path is drawn based on your input
+#' data. The maximum number of iterations is 10, default is 5.
 #'
 #' @export
+#' @examples
+#' set.seed(42)
+#' dat <- data.frame(
+#'   x = rep(seq.int(10), 3),
+#'   y = sample(15:30, 10) * rep(seq.int(3), each = 10),
+#'   grp = rep(LETTERS[1:3], each = 10)
+#' )
+#'
+#' p <- ggplot(dat, aes(x, y, color = grp)) +
+#'   geom_point() +
+#'   geom_line(linetype = "12")
+#'
+#' p +
+#'   geom_chaikin()
+#'
+#' p +
+#'   geom_chaikin(iterations = 1)
 geom_chaikin <- function(mapping = NULL,
                          data = NULL,
                          stat = "chaikin",
@@ -118,9 +145,10 @@ StatChaikin <- ggproto("StatChaikin", Stat,
   }
 )
 
-#' @keywords internal
+
 # helper to test if a number is a whole number
 # in the mathematical sense, unlike is.integer
+#' @keywords internal
 is_integer <- function(x) {
   is.integer(x) || (is.numeric(x) && identical(x %% 1, 0))
 }
@@ -170,8 +198,8 @@ get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
     return(data.frame(x = x, y = y))
   }
 
-  if (!is_integer(iterations) || iterations < 0 || iterations > 15) {
-    stop("`iterations` should be a whole number between 1 and 15.")
+  if (!is_integer(iterations) || iterations < 0 || iterations > 10) {
+    stop("`iterations` should be a whole number between 1 and 10.")
   }
 
   if (length(x) == 0 || length(y) == 0) {

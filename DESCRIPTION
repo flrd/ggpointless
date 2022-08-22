@@ -1,5 +1,5 @@
 Package: ggpointless
-Title: A Small Collection of New Geometries, and Stats 
+Title: A Small Collection of Geometries, and Stats 
     for 'ggplot2'
 Version: 0.0.2.9000
 Authors@R: 
@@ -8,22 +8,22 @@ Authors@R:
      family = "Döring",
      email = "m4rkus.doering@gmail.com",
      role = c("aut", "cre"))
-Description: A collection of new geometries and stats for
-    'ggplot2'. geom_pointless() adds minimal emphasis to your 
-    plots making it easy to highlight some observations. This
-    layer provides additional context. Or just some visual sugar. 
+Description: A collection of geometries and stats for
+    'ggplot2'. Currently it supports geom_pointless() which adds
+    minimal emphasis to your plots. Or just some visual sugar. 
     geom_lexis() draws a 45° lifeline of an event that mimics 
-    lexis diagrams. 
+    lexis diagrams. And geom_chaikin() which applies Chaikin's 
+    corner cutting algorithm to a path.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 URL: https://flrd.github.io/ggpointless/,
     https://github.com/flrd/ggpointless
 BugReports: https://github.com/flrd/ggpointless/issues
 Depends:
     ggplot2 (>= 3.3.0),
-    R (>= 2.10) 
+    R (>= 3.3)
 Suggests: 
     knitr,
     covr,
@@ -40,6 +40,7 @@ VignetteBuilder: knitr
 Collate: 
     'aaa.R'
     'data.R'
+    'geom-chaikin.R'
     'legend-draw.R'
     'geom-lexis.R'
     'geom-pointless.R'

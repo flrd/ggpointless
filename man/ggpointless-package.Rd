@@ -4,11 +4,11 @@
 \name{ggpointless-package}
 \alias{ggpointless}
 \alias{ggpointless-package}
-\title{ggpointless: A Small Collection of New Geometries, and Stats for 'ggplot2'}
+\title{ggpointless: A Small Collection of Geometries, and Stats for 'ggplot2'}
 \description{
-\if{html}{\figure{logo.png}{options: align='right' alt='logo' width='120'}}
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-A collection of new geometries and stats for 'ggplot2'. geom_pointless() adds minimal emphasis to your plots making it easy to highlight some observations. This layer provides additional context. Or just some visual sugar. geom_lexis() draws a 45° lifeline of an event that mimics lexis diagrams.
+A collection of geometries and stats for 'ggplot2'. Currently it supports geom_pointless() which adds minimal emphasis to your plots. Or just some visual sugar. geom_lexis() draws a 45° lifeline of an event that mimics lexis diagrams. And geom_chaikin() which applies Chaikin's corner cutting algorithm to a path.
 }
 \seealso{
 Useful links:
