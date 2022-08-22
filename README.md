@@ -116,12 +116,24 @@ Chaikin’s corner cutting algorithm in action! Credit to [Farbfetzen /
 corner_cutting](https://github.com/Farbfetzen/corner_cutting)
 
 ``` r
-df3 <- data.frame(x = c(0, 4, 4, 3, 2.5),
-                  y = c(0, 0, 2, -1, 4))
+lst <- list(
+  data = list(
+    closed_square = data.frame(x = c(4, 4, 5, 5), y = c(2, 3, 3, 2)),
+    open_triangle = data.frame(x = c(0, 0, 1), y = c(1, 2, 2)),
+    closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5)),
+    wiggle = data.frame(x = c(1, 4, 4, 3, 2), y = c(1, 1, 1.5, .5, 3))
+  ),
+  color = cols,
+  closed = c(TRUE, FALSE, TRUE, TRUE)
+)
 
-ggplot(df3, aes(x, y)) + 
-  geom_polygon(fill = NA, linetype = "13", color = '#f4ae1b') + 
-  geom_chaikin(color = '#f4ae1b', closed = TRUE) +
+ggplot(mapping = aes(x, y)) +
+  lapply(lst$data, function(i) {
+    geom_polygon(data = i, fill = NA, linetype = "12", color = '#777777')
+  }) +
+  Map(f = function(data, color, closed) {
+    geom_chaikin(data = data, color = color, closed = closed)
+  }, data = lst$data, color = lst$color, closed = lst$closed) +
   coord_equal()
 ```
 
