@@ -17,7 +17,7 @@ names(female_leaders) <- c("name", "startdate", "enddate", "country", "power")
 female_leaders <- subset(female_leaders, enddate != "Elect")
 
 # remove note on Tannu Tuva, a partially recognized state that is now a part of Russia.
-female_leaders[female_leaders$name == "Khertek Anchimaa-Toka",]$country <- "Tannu Tuva"
+female_leaders[female_leaders$name == "Khertek Anchimaa-Toka", ]$country <- "Tannu Tuva"
 
 # Executive or non-executive? ---------------------------------------------
 female_leaders$power <- tolower(female_leaders$power)

@@ -6,7 +6,6 @@ StatLexis <- ggproto("StatLexis", Stat,
   required_aes = c("x", "xend"),
   default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
   setup_params = function(data, params) {
-
     has_y <- !(is.null(data$y) && is.null(params$y))
     has_yend <- !(is.null(data$yend) && is.null(params$yend))
     if (has_y || has_yend) {
@@ -14,7 +13,6 @@ StatLexis <- ggproto("StatLexis", Stat,
     }
     params
   },
-
   compute_group = function(data, scales) {
     get_lexis(data$x, data$xend)
   }
