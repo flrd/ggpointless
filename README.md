@@ -22,7 +22,7 @@ layers. The following functions are implemented in this small package:
     it easy to add minimal emphasis to your plots by means of a point
     layer.
 
--   `geom_lexis()` / `stat_lexis()`: a layer to plot a 45° ‘lifeline’ of
+-   `geom_lexis()` / `stat_lexis()`: a layer to plot a 45° lifeline of
     an event
 
 ## Installation
@@ -58,11 +58,11 @@ set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and
 `"minimum"` and `"maximum"`.
 
 ``` r
-cols <- c('#f4ae1b', '#d77e7b', '#a84dbd', '#311dfc')
+cols <- c("#f4ae1b", "#d77e7b", "#a84dbd", "#311dfc")
 theme_set(theme_minimal())
 
 x <- seq(-pi, pi, length.out = 500)
-y <- outer(x, 1:5, function(x, y) sin(x*y))
+y <- outer(x, 1:5, function(x, y) sin(x * y))
 
 df1 <- data.frame(
   var1 = x,
@@ -72,8 +72,9 @@ df1 <- data.frame(
 ggplot(df1, aes(x = var1, y = var2)) +
   geom_line() +
   geom_pointless(aes(color = after_stat(location)),
-                 location = "all",
-                 size = 3) +
+    location = "all",
+    size = 3
+  ) +
   scale_color_manual(values = cols)
 ```
 
@@ -112,24 +113,25 @@ for more details.
 
 ### geom_chaikin
 
-Chaikin’s corner cutting algorithm in action! Credit to [Farbfetzen /
-corner_cutting](https://github.com/Farbfetzen/corner_cutting)
+Chaikin’s corner cutting algorithm let’s you turn a ragged path into a
+smoothed one. Credit to [Farbfetzen /
+corner_cutting](https://github.com/Farbfetzen/corner_cutting).
 
 ``` r
 lst <- list(
   data = list(
-    closed_square = data.frame(x = c(4, 4, 5, 5), y = c(2, 3, 3, 2)),
-    open_triangle = data.frame(x = c(0, 0, 1), y = c(1, 2, 2)),
-    closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5)),
-    wiggle = data.frame(x = c(1, 4, 4, 3, 2), y = c(1, 1, 1.5, .5, 3))
+    closed_square = data.frame(x = c(0, 0, 1, 1), y = c(2, 3, 3, 2)),
+    whale = data.frame(x = c(1, 4, 4, 3, 2), y = c(1, 1, 1.5, .5, 3)),
+    open_triangle = data.frame(x = c(3, 3, 4), y = c(2, 3, 3)),
+    closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
   ),
   color = cols,
-  closed = c(TRUE, FALSE, TRUE, TRUE)
+  closed = c(TRUE, TRUE, FALSE, TRUE)
 )
 
 ggplot(mapping = aes(x, y)) +
   lapply(lst$data, function(i) {
-    geom_polygon(data = i, fill = NA, linetype = "12", color = '#777777')
+    geom_polygon(data = i, fill = NA, linetype = "12", color = "#777777")
   }) +
   Map(f = function(data, color, closed) {
     geom_chaikin(data = data, color = color, closed = closed)
