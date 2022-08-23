@@ -9,5 +9,6 @@ test_that("neighbors works", {
 
   expect_equal(
     neighbors(seq_len(4)),
-    c(4, 2, 1, 3, 2, 4, 3, 1))
+    c(4, 2, 1, 3, 2, 4, 3, 1)
+  )
 })

@@ -10,11 +10,9 @@ p2 <- ggplot(df2, aes(x = start, xend = end, color = key)) +
     point_colour = "black",
     point_size = 3,
     shape = 23,
-    fill = "white")
+    fill = "white"
+  )
 
 test_that("user can change point apearance", {
   vdiffr::expect_doppelganger("points can be squares", p2)
 })
-
-
-

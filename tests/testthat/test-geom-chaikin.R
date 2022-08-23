@@ -5,7 +5,6 @@ lst <- list(
     whale = data.frame(x = c(1, 4, 4, 3, 2), y = c(1, 1, 1.5, .5, 3)),
     open_triangle = data.frame(x = c(3, 3, 4), y = c(2, 3, 3)),
     closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
-
   ),
   color = cols,
   closed = c(TRUE, TRUE, FALSE, TRUE)
@@ -13,7 +12,7 @@ lst <- list(
 
 p1 <- ggplot(mapping = aes(x, y)) +
   lapply(lst$data, function(i) {
-    geom_polygon(data = i, fill = NA, linetype = "12", color = '#777777')
+    geom_polygon(data = i, fill = NA, linetype = "12", color = "#777777")
   }) +
   Map(f = function(data, color, closed) {
     geom_chaikin(data = data, color = color, closed = closed)
