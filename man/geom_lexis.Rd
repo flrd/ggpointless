@@ -3,7 +3,7 @@
 \name{geom_lexis}
 \alias{geom_lexis}
 \alias{stat_lexis}
-\title{Lexis charts}
+\title{Display events of different cohorts in form of a lexis charts}
 \usage{
 geom_lexis(
   mapping = NULL,
@@ -78,7 +78,7 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 This geom can be used to plot 45° lifelines for a cohort.
 Lexis diagrams are used by demographers for more than a century
 and they are named after Wilhelm Lexis. They are a combination
-of a segment, starting at 0 with a dot at the end.
+of a segment, and a dot.
 }
 \details{
 This geom draws 45° lines from the start to the end of a 'lifetime'. Besides

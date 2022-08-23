@@ -26,6 +26,8 @@ reference:
   - stat_pointless
   - geom_lexis
   - stat_lexis
+  - geom_chaikin
+  - stat_chaikin
 
 - title: "Data"
   desc: >

@@ -62,13 +62,11 @@ often aesthetics, used to set an aesthetic to a fixed value, like
 \code{colour = "red"} or \code{size = 3}. They may also be parameters
 to the paired geom/stat.}
 
-\item{iterations}{Integer between 0 and 15. Number of iterations to apply.}
+\item{iterations}{Integer. Number of iterations to apply. Must be between 0 and 10.}
 
-\item{ratio}{A logical value indicating whether the spline is an open or a
-closed shape.}
+\item{ratio}{Numeric. Cutting ratio must be between 0 and 1..}
 
-\item{closed}{Logical. Should first and last observation be connected? That is,
-an open or a closed shape}
+\item{closed}{Logical. Specify if result is an open or closed shape.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -88,23 +86,25 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 \code{geom_chaikin} and \code{stat_chaikin}.}
 }
 \description{
-Chaikin's corner-cutting algorithm is used to smooth sharp
-corners in a path. The algorithm iteratively turns a jagged
-path into a smooth curve.
+Chaikin's corner-cutting algorithm can be used to smooth sharp
+corners of a path.
 }
 \details{
 Chaikin's corner cutting algorithm iteratively turns a jagged path into
 a smooth path.
 
-For each pair of neighboring points P1 and P2 on the original path, by default,
-the algorithm finds the 2 new points that are 25\% and 75\% of the way between
-P1 and P2. Those new points form a smoother path. The ratio parameter let's
-you control the distance of the new points from P1 and P2. It must be a number
-between 0 and 1. If ratio > 0.5, then it will be flipped to 1 - ratio, and a
-message is shown.
+The recursion formula starts from two vertices A and B, which represent
+a single corner of your path. From this, the algorithm derives two new
+points: one at the specified ratio when going from point A to point B,
+and one when going from B to A in the opposite direction.
+By default, a ratio of 0.25 results in two points: the first at 25\% of
+point A and the other at 75\% of point A (or 25\% of point B). Those new
+points form a smoother path. Then the algorithm applies the same rule to
+each pair of new points. The rule is applied iterations times. The
+maximum number of iterations is 10, default is 5.
 
-If the iterations parameter is 0 or less, a path is drawn based on your input
-data. The maximum number of iterations is 10, default is 5.
+The ratio parameter  must be a number between 0 and 1. If ratio > 0.5,
+then it will be flipped to 1 - ratio, and a message is shown.
 }
 \section{Aesthetics}{
 
@@ -129,15 +129,28 @@ dat <- data.frame(
   grp = rep(LETTERS[1:3], each = 10)
 )
 
-p <- ggplot(dat, aes(x, y, color = grp)) +
-  geom_point() +
+p1 <- ggplot(dat, aes(x, y, color = grp)) +
   geom_line(linetype = "12")
 
-p +
+p1 +
   geom_chaikin()
 
-p +
+p1 +
   geom_chaikin(iterations = 1)
+
+triangle <- data.frame(x = c(0, 0, 1), y = c(0, 1, 1))
+p2 <- ggplot(triangle, aes(x, y)) +
+  geom_path(linetype = "12") +
+  coord_equal()
+
+# ratio let's you control
+p2 + geom_chaikin(ratio = .1)
+p2 + geom_chaikin(ratio = .5)
+
+# closed parameter to generate a closed shape - or not
+p2 + geom_chaikin(iterations = 5, ratio = 0.25, closed = FALSE) # default
+p2 + geom_chaikin(closed = TRUE)
+
 }
 \references{
 Chaikin, G. An algorithm for high speed curve generation.

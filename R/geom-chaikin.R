@@ -1,9 +1,8 @@
 #' Apply Chaikin's corner cutting algorithm to smooth a path
 #'
 #' @description
-#' Chaikin's corner-cutting algorithm is used to smooth sharp
-#' corners in a path. The algorithm iteratively turns a jagged
-#' path into a smooth curve.
+#' Chaikin's corner-cutting algorithm can be used to smooth sharp
+#' corners of a path.
 #'
 #' @section Aesthetics:
 #' geom_chaikin() understands the following aesthetics (required
@@ -20,11 +19,9 @@
 #' @inheritParams ggplot2::geom_path
 #' @param geom,stat Use to override the default connection between
 #'   \code{geom_chaikin} and \code{stat_chaikin}.
-#' @param iterations Integer between 0 and 15. Number of iterations to apply.
-#' @param ratio A logical value indicating whether the spline is an open or a
-#'        closed shape.
-#' @param closed Logical. Should first and last observation be connected? That is,
-#' an open or a closed shape
+#' @param iterations Integer. Number of iterations to apply. Must be between 0 and 10.
+#' @param ratio Numeric. Cutting ratio must be between 0 and 1..
+#' @param closed Logical. Specify if result is an open or closed shape.
 #' @references Chaikin, G. An algorithm for high speed curve generation.
 #' Computer Graphics and Image Processing 3 (1974), 346–349
 #'
@@ -37,15 +34,18 @@
 #' Chaikin's corner cutting algorithm iteratively turns a jagged path into
 #' a smooth path.
 #'
-#' For each pair of neighboring points P1 and P2 on the original path, by default,
-#' the algorithm finds the 2 new points that are 25% and 75% of the way between
-#' P1 and P2. Those new points form a smoother path. The ratio parameter let's
-#' you control the distance of the new points from P1 and P2. It must be a number
-#' between 0 and 1. If ratio > 0.5, then it will be flipped to 1 - ratio, and a
-#' message is shown.
+#' The recursion formula starts from two vertices A and B, which represent
+#' a single corner of your path. From this, the algorithm derives two new
+#' points: one at the specified ratio when going from point A to point B,
+#' and one when going from B to A in the opposite direction.
+#' By default, a ratio of 0.25 results in two points: the first at 25% of
+#' point A and the other at 75% of point A (or 25% of point B). Those new
+#' points form a smoother path. Then the algorithm applies the same rule to
+#' each pair of new points. The rule is applied iterations times. The
+#' maximum number of iterations is 10, default is 5.
 #'
-#' If the iterations parameter is 0 or less, a path is drawn based on your input
-#' data. The maximum number of iterations is 10, default is 5.
+#' The ratio parameter  must be a number between 0 and 1. If ratio > 0.5,
+#' then it will be flipped to 1 - ratio, and a message is shown.
 #'
 #' @export
 #' @examples
@@ -56,15 +56,28 @@
 #'   grp = rep(LETTERS[1:3], each = 10)
 #' )
 #'
-#' p <- ggplot(dat, aes(x, y, color = grp)) +
-#'   geom_point() +
+#' p1 <- ggplot(dat, aes(x, y, color = grp)) +
 #'   geom_line(linetype = "12")
 #'
-#' p +
+#' p1 +
 #'   geom_chaikin()
 #'
-#' p +
+#' p1 +
 #'   geom_chaikin(iterations = 1)
+#'
+#' triangle <- data.frame(x = c(0, 0, 1), y = c(0, 1, 1))
+#' p2 <- ggplot(triangle, aes(x, y)) +
+#'   geom_path(linetype = "12") +
+#'   coord_equal()
+#'
+#' # ratio let's you control
+#' p2 + geom_chaikin(ratio = .1)
+#' p2 + geom_chaikin(ratio = .5)
+#'
+#' # closed parameter to generate a closed shape - or not
+#' p2 + geom_chaikin(iterations = 5, ratio = 0.25, closed = FALSE) # default
+#' p2 + geom_chaikin(closed = TRUE)
+#'
 geom_chaikin <- function(mapping = NULL,
                          data = NULL,
                          stat = "chaikin",
@@ -153,30 +166,30 @@ is_integer <- function(x) {
   is.integer(x) || (is.numeric(x) && identical(x %% 1, 0))
 }
 
-#' @keywords internal
-lerp_neighbors <- function(x, ratio = .25) {
-  # credit:
-  # https://github.com/Farbfetzen/corner_cutting/blob/main/main.R
-  #
-  # example
-  # x:               1, 2, 3, 4
-  # left neighbors:  4, 1, 2, 3
-  # right neighbors: 2, 3, 4, 1
-  #
-  # neighbors and x combined in the correct order:
-  # x:         1, 1, 2, 2, 3, 3, 4, 4
-  # neighbors: 4, 2, 1, 3, 2, 4, 3, 1
 
-  n <- length(x)
-  a <- rep(x, each = 2)
-  b <- c(rbind(
-    c(x[n], x[-n]),
-    c(x[-1], x[1])
-  ))
+lerp <- function(a, b, ratio) {
   a + (b - a) * ratio
 }
 
+#' @keywords internal
+neighbors <- function(x) {
+  # credit:
+  # https://github.com/Farbfetzen/corner_cutting/blob/main/main.R
+  n <- length(x)
+  c(rbind(
+    c(x[n], x[-n]),
+    c(x[-1], x[1])
+  ))
+}
 
+#' @keywords internal
+lerp_neighbors <- function(x, ratio = .25) {
+  a <- rep(x, each = 2)
+  b <- neighbors(x)
+  lerp(a, b, ratio)
+}
+
+#' @keywords internal
 cut_corners <- function(x, y, ratio, closed = TRUE) {
   new_x <- lerp_neighbors(x, ratio = ratio)
   new_y <- lerp_neighbors(y, ratio = ratio)
@@ -191,8 +204,7 @@ cut_corners <- function(x, y, ratio, closed = TRUE) {
   list(x = new_x, y = new_y)
 }
 
-
-
+#' @keywords internal
 get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
   if (iterations == 0) {
     return(data.frame(x = x, y = y))

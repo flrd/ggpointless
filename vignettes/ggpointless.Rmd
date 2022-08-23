@@ -16,10 +16,11 @@ knitr::opts_chunk$set(
 library(ggpointless)
 ```
 
-`ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) that provides two additional layers:
+`ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) package that provides additional layers:
 
 1. `geom_pointless()` & `stat_pointless()`
-2. `geom_lexis()` & `geom_lexis()`
+2. `geom_lexis()` & `stat_lexis()`
+3. `geom_chaikin()` & `stat_chaikin()`
 
 
 ## geom_pointless 
@@ -99,10 +100,10 @@ Otherwise, the order is determined as specified in the `location` argument, whic
 
 ```{r overplotting}
 cols <- c(
-  "first" = "#f8766d", 
-  "last" = "#7cae00", 
-  "minimum" = "#00bfc4", 
-  "maximum" = "#c77cff" 
+  "first" = "#f8766d",
+  "last" = "#7cae00",
+  "minimum" = "#00bfc4",
+  "maximum" = "#c77cff"
 )
 
 df2 <- data.frame(
@@ -185,9 +186,9 @@ You can further style the appearance of your plot using the additional arguments
 
 ```{r after_stat}
 p + geom_lexis(
-  aes(linetype = after_scale(type)), 
+  aes(linetype = after_scale(type)),
   point_show = FALSE
-  ) +
+) +
   scale_linetype_identity()
 ```
 
@@ -228,7 +229,8 @@ p2 <- ggplot(df2, aes(x = start, xend = end, group = key)) +
   labs(y = "seconds") +
   coord_fixed()
 
-p1; p2
+p1
+p2
 ```
 
 In order to change the breaks and labels of the vertical scale to, say, years, we make the assumption that 1 year has 365.25 days, or 365.25 * 86400 seconds.
@@ -237,10 +239,31 @@ In order to change the breaks and labels of the vertical scale to, say, years, w
 # years, roughly
 p1 +
   scale_y_continuous(
-    breaks = 0:3*365.25,                   # or for p2: 0:3*365.25*86400 
+    breaks = 0:3 * 365.25, # or for p2: 0:3*365.25*86400
     labels = function(i) floor(i / 365.25) # floor(i / 365.25*86400)
-    ) +
+  ) +
   labs(y = "years")
+```
+
+
+## geom_chaikin
+`geom_chaikin()` is a function to smooth ragged paths. The algorithm iteratively cut's off sharp corners.
+
+```{r geom-chaikin-intro, fig.show='hold'}
+set.seed(42)
+df1 <- data.frame(
+  x = rep(seq.int(10), 3),
+  y = sample(15:30, 10) * rep(seq.int(3), each = 10),
+  grp = rep(LETTERS[1:3], each = 10)
+)
+
+p1 <- ggplot(df1, aes(x, y, group = grp)) +
+  geom_line(linetype = "12")
+
+p1 +
+  geom_chaikin(iterations = 5) # default
+p1 +
+  geom_chaikin(iterations = 1)
 ```
 
 ## Data

@@ -1,10 +1,10 @@
-#' Lexis charts
+#' Display events of different cohorts in form of a lexis charts
 #'
 #' @description
 #' This geom can be used to plot 45° lifelines for a cohort.
 #' Lexis diagrams are used by demographers for more than a century
 #' and they are named after Wilhelm Lexis. They are a combination
-#' of a segment, starting at 0 with a dot at the end.
+#' of a segment, and a dot.
 #'
 #' @section Aesthetics:
 #' geom_lexis() understands the following aesthetics (required
