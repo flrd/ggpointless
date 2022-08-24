@@ -133,3 +133,10 @@ translate_shape_string <- function(shape_string) {
   }
   unname(pch_table[shape_match])
 }
+
+# helper to test if a number is a whole number
+# in the mathematical sense, unlike is.integer
+#' @keywords internal
+is_integer <- function(x) {
+  is.integer(x) || (is.numeric(x) && identical(x %% 1, 0))
+}
