@@ -10,20 +10,14 @@ status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-projec
 [![R-CMD-check](https://github.com/flrd/ggpointless/workflows/R-CMD-check/badge.svg)](https://github.com/flrd/ggpointless/actions)
 [![Codecov test
 coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless?branch=main)
+![downloads](http://cranlogs.r-pkg.org/badges/grand-total/ggpointless)
 <!-- [![Downloads](http://cranlogs.r-pkg.org/badges/ggpointless)](http://www.r-pkg.org/pkg/ggpointless) -->
 
 <!-- badges: end -->
 
 `ggpointless` is an extension of the
 [`ggplot2`](https://ggplot2.tidyverse.org/) library providing additional
-layers. The following functions are implemented in this small package:
-
--   `geom_pointless()` / `stat_pointless()`: functions that are making
-    it easy to add minimal emphasis to your plots by means of a point
-    layer.
-
--   `geom_lexis()` / `stat_lexis()`: a layer to plot a 45° lifeline of
-    an event
+layers.
 
 ## Installation
 
@@ -42,20 +36,15 @@ Once you have installed the package, simply attach it by calling:
 library(ggpointless)
 ```
 
-The main functions in this package are `geom_pointless()` and
-`geom_lexis()`. They work like you are used to from other `geom_*`
-functions.
-
 ### geom_pointless
 
-Using the functions `geom_pointless()`, which is a constructor for
-`stat_pointless()`, you can highlight the first, or last observations,
-sample minimum and maximum with the goal to provide some additional
-context. Or just some visual sugar. `geom_pointless()` behaves like
-`geom_point()` does with the addition of a `location` argument. You can
-set it to `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, and
-`"all"`, where `"all"` is just shorthand to select `"first"`, `"last"`,
-`"minimum"` and `"maximum"`.
+`geom_pointless()` let’s you highlight the first, or last observations,
+sample minimum and sample maximum to provide additional context. Or just
+some visual sugar. `geom_pointless()` behaves similar to `geom_point()`
+except that it has a `location` argument. You can set it to `"first"`,
+`"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"`
+is just shorthand to select `"first"`, `"last"`, `"minimum"` and
+`"maximum"`.
 
 ``` r
 cols <- c("#f4ae1b", "#d77e7b", "#a84dbd", "#311dfc")
@@ -83,9 +72,9 @@ ggplot(df1, aes(x = var1, y = var2)) +
 ### geom_lexis
 
 `geom_lexis()` is a combination of a segment and a point layer. Given a
-start value and an end value, this geom draws a 45° line which indicates
-the duration of an event. Required are `x` and `xend` aesthetics, `y`
-and `yend` coordinates will be calculated for you.
+start and an end, this function draws a 45° line which indicates the
+duration of an event. Required are `x` and `xend` aesthetics, `y` and
+`yend` coordinates will be calculated.
 
 ``` r
 df2 <- data.frame(
@@ -105,24 +94,21 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
 
 <img src="man/figures/README-geom-lexis-1.png" width="100%" style="display: block; margin: auto;" />
 
-See the
-[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for more details.
-
-## developement version
+See also the [`LexisPlotR`
+package](https://github.com/ottlngr/LexisPlotR).
 
 ### geom_chaikin
 
-Chaikin’s corner cutting algorithm let’s you turn a ragged path into a
-smoothed one. Credit to [Farbfetzen /
+Chaikin’s corner cutting algorithm let’s you turn a ragged path or
+polygon into a smoothed one. Credit to [Farbfetzen /
 corner_cutting](https://github.com/Farbfetzen/corner_cutting).
 
 ``` r
 lst <- list(
   data = list(
     closed_square = data.frame(x = c(0, 0, 1, 1), y = c(2, 3, 3, 2)),
-    whale = data.frame(x = c(1, 4, 4, 3, 2), y = c(1, 1, 1.5, .5, 3)),
-    open_triangle = data.frame(x = c(3, 3, 4), y = c(2, 3, 3)),
+    whale = data.frame(x = c(.5, 4, 4, 3.5, 2), y = c(.5, 1, 1.5, .5, 3)),
+    open_triangle = data.frame(x = c(3, 3, 5), y = c(2, 3, 3)),
     closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
   ),
   color = cols,
@@ -136,14 +122,17 @@ ggplot(mapping = aes(x, y)) +
   Map(f = function(data, color, closed) {
     geom_chaikin(data = data, color = color, closed = closed)
   }, data = lst$data, color = lst$color, closed = lst$closed) +
+  geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
 ```
 
 <img src="man/figures/README-geom-chaikin-1.png" width="100%" style="display: block; margin: auto;" />
 
+See also the [`smoothr` package](https://github.com/mstrimas/smoothr/).
+
 ## Data
 
-The `ggpointless` package contains the following data sets:
+In addition, `ggpointless` contains the following data sets:
 
 1.  `co2_ml` : [CO<sub>2</sub> records taken at Mauna
     Loa](https://gml.noaa.gov/ccgg/trends/data.html)
@@ -152,9 +141,10 @@ The `ggpointless` package contains the following data sets:
 3.  `female_leaders` : [Elected and appointed female heads of state and
     government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588)
 
-See the
-[`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html)
-for possible use cases.
+For more examples see
+[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+and
+[`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html).
 
 ## Code of Conduct
 
