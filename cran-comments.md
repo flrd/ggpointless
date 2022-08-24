@@ -1,8 +1,15 @@
+In this version I have:
+* fixes HTML validation problems
+* add new geom/stat combo
+
 ## Test environments
-* r-devel-macosx-arm64, R 4.2.0
+* Windows Server 2022, R-devel, 64 bit
+* Windows Server 2022, R-release, 32/64 bit
+* Apple Silicon (M1), macOS 11.6 Big Sur, R-release
+* macOS 10.13.6 High Sierra, R-release, CRAN's setup
 * Fedora Linux, R-devel, clang, gfortran
 * Ubuntu Linux 20.04.1 LTS, R-release, GCC
-* win-builder (devel and release)
+
 
 ## R CMD check results
 
