@@ -76,7 +76,7 @@ ggplot(df1, aes(x = var1, y = var2)) +
 ```
 
 ### geom_lexis
-`geom_lexis()` is a combination of a segment and a point layer. Given a start and an end, this function draws a 45° line which indicates the duration of an event. Required are `x` and `xend` aesthetics, `y` and `yend` coordinates will be calculated.
+`geom_lexis()` is a combination of a segment and a point layer. Given a start value and an end value, this function draws a 45° line which indicates the duration of an event. Required are `x` and `xend` aesthetics, `y` and `yend` coordinates will be calculated.
 
 ```{r geom-lexis, warning=FALSE}
 df2 <- data.frame(
