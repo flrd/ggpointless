@@ -1,7 +1,7 @@
 Package: ggpointless
 Title: A Small Collection of Geometries, and Stats 
     for 'ggplot2'
-Version: 0.0.2.9000
+Version: 0.0.3
 Authors@R: 
     person(
      given = "Markus",
@@ -12,8 +12,8 @@ Description: A collection of geometries and stats for
     'ggplot2'. Currently it supports geom_pointless() which adds
     minimal emphasis to your plots. Or just some visual sugar. 
     geom_lexis() draws a 45° lifeline of an event that mimics 
-    lexis diagrams. And geom_chaikin() which applies Chaikin's 
-    corner cutting algorithm to a path.
+    lexis diagrams. geom_chaikin() applies Chaikin's corner
+    cutting algorithm to a path.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
