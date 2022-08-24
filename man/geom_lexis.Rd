@@ -19,6 +19,15 @@ geom_lexis(
   show.legend = NA,
   inherit.aes = TRUE
 )
+
+stat_lexis(
+  mapping = NULL,
+  data = NULL,
+  ...,
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
+)
 }
 \arguments{
 \item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{aes()}} or

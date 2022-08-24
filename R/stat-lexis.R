@@ -1,27 +1,5 @@
-#' @rdname ggpointless-ggproto
-#' @format NULL
-#' @usage NULL
-#' @export
-StatLexis <- ggproto("StatLexis", Stat,
-  required_aes = c("x", "xend"),
-  default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
-  setup_params = function(data, params) {
-    has_y <- !(is.null(data$y) && is.null(params$y))
-    has_yend <- !(is.null(data$yend) && is.null(params$yend))
-    if (has_y || has_yend) {
-      message("stat_lexis() calculates y and yend aesthetics for you.")
-    }
-    params
-  },
-  compute_group = function(data, scales) {
-    get_lexis(data$x, data$xend)
-  }
-)
-
 #' @export
 #' @rdname geom_lexis
-#' @format NULL
-#' @usage NULL
 stat_lexis <- function(mapping = NULL, data = NULL,
                        ...,
                        na.rm = FALSE,
@@ -42,6 +20,26 @@ stat_lexis <- function(mapping = NULL, data = NULL,
   )
 }
 
+
+#' @rdname ggpointless-ggproto
+#' @format NULL
+#' @usage NULL
+#' @export
+StatLexis <- ggproto("StatLexis", Stat,
+  required_aes = c("x", "xend"),
+  default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
+  setup_params = function(data, params) {
+    has_y <- !(is.null(data$y) && is.null(params$y))
+    has_yend <- !(is.null(data$yend) && is.null(params$yend))
+    if (has_y || has_yend) {
+      message("stat_lexis() calculates y and yend aesthetics for you.")
+    }
+    params
+  },
+  compute_group = function(data, scales) {
+    get_lexis(data$x, data$xend)
+  }
+)
 
 #' Given a start, and end get the 'age' of an event
 #'
