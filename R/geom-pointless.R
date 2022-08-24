@@ -20,11 +20,11 @@
 #' `geom_pointless()` and `stat_pointless()`.
 #'
 #' @section Details:
-#' The argument `location` allows you to control which observations
-#' to highlight. If `location` is `"last"`, the default, a single point
-#' is plotted by default at the last non-missing observation. The
-#' locations are determined in the order in which they appear in the
-#' data -- like `geom_path()` does compared to `geom_line()`.
+#' The `location` argument allows you to specify which observations
+#' should be highlighted. If `location` is `"last"`, the default, a
+#' single point will be plotted at the last non-missing observation.
+#' The locations are determined in the order in which they appear in
+#' the data -- like `geom_path()` does compared to `geom_line()`.
 #' See the `vignette("ggpointless")` for more details.
 #'
 #' @section Overplotting:

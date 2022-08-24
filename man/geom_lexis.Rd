@@ -76,14 +76,14 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \description{
 This geom can be used to plot 45° lifelines for a cohort.
-Lexis diagrams are used by demographers for more than a century
-and they are named after Wilhelm Lexis. They are a combination
-of a segment, and a dot.
+Lexis diagrams are named after Wilhelm Lexis and used by demographers
+for more than a century.
 }
 \details{
-This geom draws 45° lines from the start to the end of a 'lifetime'. Besides
-\code{y} and \code{yend} coordinates this geom creates one additional variable called
-\code{type} in the layer data. You might want to map to an aesthetic with
+This geom draws 45° lines from the start to the end of a 'lifetime'. It is
+a combination of a segment, and a point.
+Besides \code{y} and \code{yend} coordinates this geom creates one additional variable
+called \code{type} in the layer data. You might want to map to an aesthetic with
 \code{\link[ggplot2:aes_eval]{ggplot2::after_stat()}}, see Examples section and \code{vignette("ggpointless")}
 for more details.
 

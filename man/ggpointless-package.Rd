@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-A collection of geometries and stats for 'ggplot2'. Currently it supports geom_pointless() which adds minimal emphasis to your plots. Or just some visual sugar. geom_lexis() draws a 45° lifeline of an event that mimics lexis diagrams. And geom_chaikin() which applies Chaikin's corner cutting algorithm to a path.
+A collection of geometries and stats for 'ggplot2'. Currently it supports geom_pointless() which adds minimal emphasis to your plots. Or just some visual sugar. geom_lexis() draws a 45° lifeline of an event that mimics lexis diagrams. geom_chaikin() which applies Chaikin's corner cutting algorithm.
 }
 \seealso{
 Useful links:

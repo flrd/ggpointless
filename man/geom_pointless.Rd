@@ -95,11 +95,11 @@ its name, but hopefully in conjunction with \code{geom_line()} and friends.
 }
 \section{Details}{
 
-The argument \code{location} allows you to control which observations
-to highlight. If \code{location} is \code{"last"}, the default, a single point
-is plotted by default at the last non-missing observation. The
-locations are determined in the order in which they appear in the
-data -- like \code{geom_path()} does compared to \code{geom_line()}.
+The \code{location} argument allows you to specify which observations
+should be highlighted. If \code{location} is \code{"last"}, the default, a
+single point will be plotted at the last non-missing observation.
+The locations are determined in the order in which they appear in
+the data -- like \code{geom_path()} does compared to \code{geom_line()}.
 See the \code{vignette("ggpointless")} for more details.
 }
 

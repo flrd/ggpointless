@@ -20,15 +20,10 @@
 #' @param geom,stat Use to override the default connection between
 #'   \code{geom_chaikin} and \code{stat_chaikin}.
 #' @param iterations Integer. Number of iterations to apply. Must be between 0 and 10.
-#' @param ratio Numeric. Cutting ratio must be between 0 and 1..
+#' @param ratio Numeric. Cutting ratio must be between 0 and 1.
 #' @param closed Logical. Specify if result is an open or closed shape.
 #' @references Chaikin, G. An algorithm for high speed curve generation.
 #' Computer Graphics and Image Processing 3 (1974), 346–349
-#'
-#' @seealso
-#'  \code{\link[ggplot2]{geom_line}}: Connect observations (x order);
-#'  \code{\link[ggplot2]{geom_path}}: Connect observations;
-#'  \code{\link[ggplot2]{geom_polygon}}: Filled paths (polygons);
 #'
 #' @details
 #' Chaikin's corner cutting algorithm iteratively turns a jagged path into
@@ -51,12 +46,11 @@
 #' @examples
 #' set.seed(42)
 #' dat <- data.frame(
-#'   x = rep(seq.int(10), 3),
-#'   y = sample(15:30, 10) * rep(seq.int(3), each = 10),
-#'   grp = rep(LETTERS[1:3], each = 10)
+#'   x = seq.int(10),
+#'   y = sample(15:30, 10)
 #' )
 #'
-#' p1 <- ggplot(dat, aes(x, y, color = grp)) +
+#' p1 <- ggplot(dat, aes(x, y)) +
 #'   geom_line(linetype = "12")
 #'
 #' p1 +
@@ -158,15 +152,8 @@ StatChaikin <- ggproto("StatChaikin", Stat,
   }
 )
 
-
-# helper to test if a number is a whole number
-# in the mathematical sense, unlike is.integer
+#' Linear interpolation
 #' @keywords internal
-is_integer <- function(x) {
-  is.integer(x) || (is.numeric(x) && identical(x %% 1, 0))
-}
-
-
 lerp <- function(a, b, ratio) {
   a + (b - a) * ratio
 }

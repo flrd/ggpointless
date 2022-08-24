@@ -64,7 +64,7 @@ to the paired geom/stat.}
 
 \item{iterations}{Integer. Number of iterations to apply. Must be between 0 and 10.}
 
-\item{ratio}{Numeric. Cutting ratio must be between 0 and 1..}
+\item{ratio}{Numeric. Cutting ratio must be between 0 and 1.}
 
 \item{closed}{Logical. Specify if result is an open or closed shape.}
 
@@ -124,12 +124,11 @@ aesthetics are in bold):
 \examples{
 set.seed(42)
 dat <- data.frame(
-  x = rep(seq.int(10), 3),
-  y = sample(15:30, 10) * rep(seq.int(3), each = 10),
-  grp = rep(LETTERS[1:3], each = 10)
+  x = seq.int(10),
+  y = sample(15:30, 10)
 )
 
-p1 <- ggplot(dat, aes(x, y, color = grp)) +
+p1 <- ggplot(dat, aes(x, y)) +
   geom_line(linetype = "12")
 
 p1 +
@@ -155,9 +154,4 @@ p2 + geom_chaikin(closed = TRUE)
 \references{
 Chaikin, G. An algorithm for high speed curve generation.
 Computer Graphics and Image Processing 3 (1974), 346–349
-}
-\seealso{
-\code{\link[ggplot2]{geom_line}}: Connect observations (x order);
-\code{\link[ggplot2]{geom_path}}: Connect observations;
-\code{\link[ggplot2]{geom_polygon}}: Filled paths (polygons);
 }
