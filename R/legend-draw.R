@@ -13,14 +13,6 @@
 
 #' @rdname draw_key_lexis
 #' @keywords internal
-#' @examples
-#' df1 <- data.frame(x = c(0, 1), xend = c(2, 3), grp = c("A", "B"))
-#' ggplot(df1, aes(x, xend = xend, color = grp)) +
-#'   geom_lexis()
-#'
-#' # the glyph can be changed using the `key_glyph` argument
-#' ggplot(mtcars, aes(wt, mpg, color = "red")) +
-#'   geom_point(key_glyph = "lexis")
 draw_key_pointless <- function(data, params, size) {
   if (is.null(data$shape)) {
     data$shape <- 19
@@ -55,6 +47,14 @@ draw_key_sabline <- function(data, params, size) {
 
 #' @rdname draw_key_lexis
 #' @export
+#' @examples
+#' df1 <- data.frame(x = c(0, 1), xend = c(2, 3), grp = c("A", "B"))
+#' ggplot(df1, aes(x, xend = xend, color = grp)) +
+#'   geom_lexis()
+#'
+#' # the glyph can be changed using the `key_glyph` argument
+#' ggplot(mtcars, aes(wt, mpg, color = "red")) +
+#'   geom_point(key_glyph = "lexis")
 draw_key_lexis <- function(data, params, size) {
 
   # test is.null needed if key glayph is used by another geom_
