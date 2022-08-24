@@ -152,7 +152,6 @@ StatChaikin <- ggproto("StatChaikin", Stat,
   }
 )
 
-#' Linear interpolation
 #' @keywords internal
 lerp <- function(a, b, ratio) {
   a + (b - a) * ratio
