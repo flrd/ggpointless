@@ -1,7 +1,7 @@
 Package: ggpointless
 Title: A Small Collection of Geometries, and Stats 
     for 'ggplot2'
-Version: 0.0.3
+Version: 0.0.3.9000
 Authors@R: 
     person(
      given = "Markus",
