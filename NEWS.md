@@ -1,5 +1,9 @@
 # current dev version
 
+# ggpointless 0.1.0
+* `geom_catenary()`
+* `stat_catenary()`
+
 # ggpointless 0.0.3
 * `geom_chaikin()`
 * `stat_chaikin()`
