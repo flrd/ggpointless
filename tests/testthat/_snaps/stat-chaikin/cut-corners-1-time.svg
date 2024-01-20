@@ -27,7 +27,7 @@
 </defs>
 <g clip-path='url(#cpMjcuOTB8NzE0LjUyfDIyLjc4fDU0NS4xMQ==)'>
 <rect x='27.90' y='22.78' width='686.62' height='522.33' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<polygon points='59.11,426.40 683.31,426.40 683.31,331.43 475.24,521.37 267.18,46.53 ' style='stroke-width: 1.07; stroke: #777777; stroke-dasharray: 1.42,2.85; fill: none;' />
+<polygon points='59.11,426.40 683.31,426.40 683.31,331.43 475.24,521.37 267.18,46.53 ' style='stroke-width: 1.07; stroke: #777777; stroke-dasharray: 1.42,2.85; stroke-linecap: butt; fill: none;' />
 <circle cx='111.13' cy='331.43' r='1.95' style='stroke-width: 0.71; fill: #000000;' />
 <circle cx='215.16' cy='426.40' r='1.95' style='stroke-width: 0.71; fill: #000000;' />
 <circle cx='527.26' cy='426.40' r='1.95' style='stroke-width: 0.71; fill: #000000;' />
