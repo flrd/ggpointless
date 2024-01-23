@@ -17,7 +17,7 @@ Description: A collection of geometries and stats for
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.1
 URL: https://flrd.github.io/ggpointless/,
     https://github.com/flrd/ggpointless
 BugReports: https://github.com/flrd/ggpointless/issues
@@ -49,3 +49,5 @@ Collate:
     'stat-lexis.R'
     'stat-pointless.R'
     'utils.R'
+Imports: 
+    rlang

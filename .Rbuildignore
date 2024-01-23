@@ -11,7 +11,7 @@
 ^_pkgdown\.yaml$
 ^doc$
 ^Meta$
-^conduct\.md$
+^CODE_OF_CONDUCT\.md$
 ^cran-comments\.md$
 ^CRAN-RELEASE$
 ^CRAN-SUBMISSION$
