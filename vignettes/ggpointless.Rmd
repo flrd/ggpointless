@@ -21,6 +21,7 @@ library(ggpointless)
 1. `geom_pointless()` & `stat_pointless()`
 2. `geom_lexis()` & `stat_lexis()`
 3. `geom_chaikin()` & `stat_chaikin()`
+4. `geom_catenary()` & `stat_catenary()`
 
 
 ## geom_pointless 
@@ -186,7 +187,7 @@ You can further style the appearance of your plot using the additional arguments
 
 ```{r after_stat}
 p + geom_lexis(
-  aes(linetype = after_scale(type)),
+  aes(linetype = after_stat(type)),
   point_show = FALSE
 ) +
   scale_linetype_identity()
@@ -212,7 +213,7 @@ ggplot(df1, aes(x = start, xend = end, group = key)) +
 Keeping in mind that dates are internally represented as the number of days, and the POSIXct class in turn represents seconds since some origin, the y-scale values in the next plots should come as no surprise.
 
 
-```{r dates and times, fig.show='hold'}
+```{r dates-and-times, fig.show='hold'}
 # Date
 fun <- function(i, class) as.Date(paste0(i, "-01-01"))
 df1[, c("start", "end")] <- lapply(df1[, c("start", "end")], fun)
@@ -247,7 +248,7 @@ p1 +
 
 
 ## geom_chaikin
-`geom_chaikin()` is a function to smooth ragged paths. The algorithm iteratively cut's off sharp corners.
+The algorithm of the `geom_chaikin()` function iteratively cuts off the ragged corners, as you can see in the example below.
 
 ```{r geom-chaikin-intro, fig.show='hold'}
 set.seed(42)
@@ -263,9 +264,34 @@ p1 +
   geom_chaikin()
 ```
 
+## geom_catenary
+A catenary is the curve that an idealized hanging chain or cable assumes under its own weight when supported only at its ends (see [Wikipedia](https://en.wikipedia.org/wiki/Catenary)). `geom_catenary()` draws a 'hanging chain'.
+
+```{r geom-catenary-intro, fig.show='hold'}
+ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
+  geom_catenary()
+```
+
+The default value of `chainLength` is calculated as the Euclidean distance of all
+x/y coordinates and multiplied by 2. If you change the value of `chainLength`
+it will be applied to each 'chain link':
+
+```{r geom-catenary-chainLength, fig.show='hold'}
+ggplot(data.frame(x = c(0, 1, 2), y = c(1, 1, 2)), aes(x, y)) +
+  geom_catenary(chainLength = 2)
+```
+
+If you pick a value that is too short to connect to points, a straight line is drawn
+and a message is shown.
+
+```{r geom-catenary-chainLength-minimum, fig.show='hold'}
+ggplot(data.frame(x = c(0, 1, 2), y = c(1, 1, 4)), aes(x, y)) +
+  geom_catenary(chainLength = 2)
+```
+
 ## Data
 
-In addition, `ggpointless` contains the following data sets:
+The following data sets are shipped with the `ggpointless` package:
 
 1. `co2_ml` : [CO~2~ records taken at Mauna Loa](https://gml.noaa.gov/ccgg/trends/data.html)
 2. `covid_vac` : [COVID-19 Cases and Deaths by Vaccination Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)

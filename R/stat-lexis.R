@@ -32,7 +32,7 @@ StatLexis <- ggproto("StatLexis", Stat,
     has_y <- !(is.null(data$y) && is.null(params$y))
     has_yend <- !(is.null(data$yend) && is.null(params$yend))
     if (has_y || has_yend) {
-      message("stat_lexis() calculates y and yend aesthetics for you.")
+      message("`stat_lexis()` calculates y and yend aesthetics for you.")
     }
     params
   },

@@ -1,12 +1,10 @@
 #' Draw a catenary curve between fixed points
 #'
-#' The catenary curve has a U-like shape, superficially similar in appearance
-#' to a parabola, which it is not. If a flexible chain or rope is loosely hung
-#' between two fixed points, it is a curve called a catenary. The word
-#' 'catenary' is derived from the Latin word caténa, which means "chain".
+#' `geom_catenary()` draws a catenary curve which has a U-like shape,
+#' superficially similar in appearance to a parabola, which it is not.
 #'
 #' @section Aesthetics:
-#' geom_catenary() understands the following aesthetics (required
+#' `geom_catenary()` understands the following aesthetics (required
 #' aesthetics are in bold):
 #'
 #' - **x**
@@ -15,7 +13,7 @@
 #' - color
 #' - group
 #' - linetype
-#' - size
+#' - linewidth
 #'
 #' @inheritParams ggplot2::geom_path
 #' @param geom,stat Use to override the default connection between
@@ -23,7 +21,20 @@
 #' @param chainLength Length of chain between two points.
 #'
 #' @details
-#' Lorem ipsum
+#' If a flexible chain or rope is loosely hung between two fixed
+#' points, it is a curve called a catenary. Catenary, from Latin word catēna,
+#' means "chain".
+#'
+#' to do:
+#' - require min 2 observations
+#'    Warning message:
+#'    Computation failed in `stat_catenary()`
+#'    Caused by error in `stats::embed()`:
+#'    ! wrong embedding dimension
+#' - update
+#'    - vignette
+#' - add unit test
+#' - add snapshot tests
 #'
 #' @export
 #' @examples
@@ -33,12 +44,40 @@
 #' )
 #'
 #' ggplot(dat, aes(x, y)) +
-#'   geom_catenary(chainLength = 2)
+#'   geom_catenary()
 #'
+#' # multiple chains are supported
+#' dat <- data.frame(
+#'   x = c(0, 1, 2),
+#'   y = c(1, 1, .5)
+#' )
+#'
+#' ggplot(dat, aes(x, y)) +
+#'   geom_catenary(chainLength = 1.5)
+#'
+#' # use the 'chainLength' argument to overwrite the default behaviour,
+#' # which calculates the sum of the Euclidean distances between all
+#' # x/y coordinates, muliplies it by 2 and returns it as a messsage
+#' dat <- data.frame(
+#'   x = c(0, 1, 3),
+#'   y = c(0, 1, 2)
+#' )
+#'
+#' ggplot(dat, aes(x, y)) +
+#'   geom_catenary()
+#'
+#' # set chain length to 3 between each pair of points
+#' ggplot(dat, aes(x, y)) +
+#'   geom_catenary(chainLength = 3)
+#'
+#' # if you pick a chain length that is too short, a straight line is
+#' # drawn and a message tells you the value of the minimum chain length
+#' ggplot(dat, aes(x, y)) +
+#'   geom_catenary(chainLength = 1)
 geom_catenary <- function(mapping = NULL, data = NULL, stat = "catenary",
-position = "identity", na.rm = FALSE,
-show.legend = NA, inherit.aes = TRUE,
-chainLength, ...) {
+                          position = "identity", na.rm = FALSE,
+                          show.legend = NA, inherit.aes = TRUE,
+                          chainLength = NULL, ...) {
   layer(
     geom = GeomPath,
     data = data,
@@ -57,10 +96,10 @@ chainLength, ...) {
 #' @export
 #' @rdname geom_catenary
 stat_catenary <- function(mapping = NULL, data = NULL,
-geom = "path", position = "identity",
-na.rm = FALSE, show.legend = NA,
-inherit.aes = TRUE, chainLength = chainLength,
-...) {
+                          geom = "path", position = "identity",
+                          na.rm = FALSE, show.legend = NA,
+                          inherit.aes = TRUE, chainLength = NULL,
+                          ...) {
   ggplot2::layer(
     stat = StatCatenary,
     data = data,
@@ -81,6 +120,20 @@ inherit.aes = TRUE, chainLength = chainLength,
 #' @usage NULL
 #' @export
 StatCatenary <- ggproto("StatCatenary", Stat,
+
+                        setup_params = function(data, params) {
+                          if(is.null(params$chainLength)) {
+                            tmp_mat <- cbind(data$x, data$y)
+
+                            # if no chainLength is provided, set it to
+                            # 2 * Euclidean distance
+                            tmp_diff <- sum(sqrt(rowSums(diff(tmp_mat)^2)))
+                            params$chainLength <- tmp_diff * 2
+                            message("Overall chainLength is ", signif(params$chainLength, 3))
+                          }
+                          return(params)
+                        },
+
                         compute_group = function(data, scales, chainLength) {
                           getCatenaryCurves(data, chainLength = chainLength)
                           },
@@ -99,26 +152,13 @@ getCurve <- function(a, p1, p2, offsetX, offsetY, segments = 101) {
   # offsetY: offset y-axis
   # segments: number of segments that make the chain
 
-  # initialise data matrix
-  mat <- matrix(NA, ncol = 2, nrow = segments)
+  x <- seq(p1$x, p2$x, length.out = segments)
+  y <- a * cosh((x - offsetX) / a) + offsetY
 
-  # calculate first point
-  mat[1, ] <- c(p1$x, a * cosh((p1$x - offsetX) / a) + offsetY)
-
-  # calculate points between first and last
-  d <- p2$x - p1$x
-
-  for (i in seq.int(segments - 1)) {
-    x <- p1$x + (d * (i + 0.5)) / (segments - 1)
-    y <- a * cosh((x - offsetX) / a) + offsetY
-    mat[i + 1, ] <- c(x, y)
-  }
-
-  # calculate last point
-  mat[segments, ] <- c(p2$x, a * cosh((p2$x - offsetX) / a) + offsetY)
-
+  mat <- cbind(x, y)
   dimnames(mat) <- list(NULL, c("x", "y"))
-  return(mat)
+
+  mat
 }
 
 # calculate catenary parameter a
@@ -132,12 +172,17 @@ getCatenaryParameter <- function(h, v, L, iterationLimit = 9) {
 
   epsilon <- 1e-6
 
+  # catch potential error when two points have same x-value
+  if (h == 0) {
+    h <- 1
+  }
+
   m <- sqrt(L^2 - v^2) / h    # initial estimation for a
-  x <- acosh(m) + 1           # initialise x, as the inverse hyperbolic cosine function
-  prevx <- -1                 #
+  x <- acosh(m) + 1           # initialise x
+  prevx <- -1
   iteration <- 1
 
-  # Iteriere, bis wir einen geeigneten Catenary-Parameter finden oder das Iterationslimit erreichen
+  # iteration until a was found or limit was reached
   while (abs(x - prevx) > epsilon && iteration < iterationLimit) {
     prevx <- x
     x <- x - (sinh(x) - m * x) / (cosh(x) - m)
@@ -178,22 +223,26 @@ getCatenaryCurve <- function(point1, point2, chainLength, segments = 101, iterat
     offsetX <- p1$x - x
     offsetY <- p1$y - y
 
-    print(sprintf("a: %f", a))
-    print(sprintf("offsetX: %f", offsetX))
-    print(sprintf("offsetY: %f", offsetY))
-
     curveData <- getCurve(a, p1, p2, offsetX, offsetY, segments)
     if (isFlipped) {
       curveData <- rev(curveData)
     }
-    return(curveData)
-  } else {
 
-    message(sprintf("Minimum chain length between '[x: %.f, y: %.f]' and '[x: %.1f, y: %.1f]' is %.2f, drawing a straight line.", p1$x, p1$y, p2$x, p2$y, distance))
-    data.frame(
-      x = c(p1$x, p2$x),
-      y = c(p1$y, p2$y)
+    return(curveData)
+
+    } else {
+      message(
+        sprintf(
+          "Minimum chain length from '(%s, %s)' to '(%s, %s)' is %s, drawing a straight line.",
+          signif(p1$x, 1),
+          signif(p1$y, 1),
+          signif(p2$x, 1),
+          signif(p2$y, 1),
+          signif(distance, 3)
       )
+    )
+
+    data.frame(x = c(p1$x, p2$x), y = c(p1$y, p2$y))
 
   }
 
@@ -201,14 +250,14 @@ getCatenaryCurve <- function(point1, point2, chainLength, segments = 101, iterat
 
 #' @keywords internal
 debme <- function(x) {
-  tmp <- embed(x, 2)
+  tmp <- stats::embed(x, 2)
   cbind(tmp[,2], tmp[, 1])
 }
 
 
 # generalise getCatenaryCurve to handle 3+ points
 #' @keywords internal
-getCatenaryCurves <- function(data, chainLength, sorted = TRUE) {
+getCatenaryCurves <- function(data, chainLength = NULL, sorted = FALSE) {
 
   n_points <- nrow(data)
 
@@ -217,29 +266,29 @@ getCatenaryCurves <- function(data, chainLength, sorted = TRUE) {
   }
 
   if (identical(n_points, 2L)) {
+
     point1 <- list(x = data[1, "x"], y = data[1, "y"])
     point2 <- list(x = data[2, "x"], y = data[2, "y"])
-    out <- getCatenaryCurve(point1 = point1,
-                            point2 = point2,
-                            chainLength)
-  } else {
 
+    out <- getCatenaryCurve(point1, point2, chainLength)
+    } else {
     tmp_seq <- seq.int(n_points)
     tmp_idx <- split.default(debme(tmp_seq), tmp_seq[-n_points])
+
     catenaryCurves <- lapply(tmp_idx, function(i) {
 
       data_i <- data[i, ]
       point1 <- list(x = data_i[1, "x"], y = data_i[1, "y"])
       point2 <- list(x = data_i[2, "x"], y = data_i[2, "y"])
-      catenaryCurve <- getCatenaryCurve(point1 = point1,
-                                        point2 = point2,
-                                        chainLength)
 
+      catenaryCurve <- getCatenaryCurve(point1, point2, chainLength)
       catenaryCurve
 
     })
+
     out <- unique(do.call(rbind, catenaryCurves))
-  }
+
+    }
 
   as.data.frame(out)
 

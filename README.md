@@ -155,6 +155,8 @@ dat <- data.frame(x = c(0, 1), y = c(1, 1))
 
 ggplot(dat, aes(x, y)) +
   geom_catenary() +
+  geom_point() + 
+  ylim(c(0, 1)) +
   coord_equal()
 #> Overall chainLength is 2
 ```
