@@ -147,18 +147,17 @@ See also the [`smoothr` package](https://github.com/mstrimas/smoothr/).
 ### geom_catenary
 
 Draws a flexible curve that simulates a chain or rope hanging loosely
-between two fixed points. The default chain length is twice the
-Euclidean distance of your x/y coordinates.
+between two fixed points. By default, a chain length twice the Euclidean
+distance between each x/y combination is used. See
+[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for details.
 
 ``` r
-dat <- data.frame(x = c(0, 1), y = c(1, 1))
-
-ggplot(dat, aes(x, y)) +
+ggplot(data.frame(x = c(0, 2, 8), y = c(2, 1, 3)),
+       aes(x, y)) + 
   geom_catenary() +
-  geom_point() + 
-  ylim(c(0, 1)) +
-  coord_equal()
-#> Overall chainLength is 2
+  geom_point(size = 3, colour = cols[1])
+#> Overall chainLength is 17.1
 ```
 
 <img src="man/figures/README-geom-catenary-1.png" width="100%" style="display: block; margin: auto;" />
