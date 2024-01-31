@@ -34,7 +34,6 @@
 #' - update
 #'    - vignette
 #' - add unit test
-#' - add snapshot tests
 #'
 #' @export
 #' @examples

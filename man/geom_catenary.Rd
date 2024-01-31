@@ -13,7 +13,7 @@ geom_catenary(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  chainLength,
+  chainLength = NULL,
   ...
 )
 
@@ -25,7 +25,7 @@ stat_catenary(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  chainLength = chainLength,
+  chainLength = NULL,
   ...
 )
 }
@@ -80,17 +80,31 @@ to the paired geom/stat.}
 \code{geom_catenary} and \code{stat_catenary}.}
 }
 \description{
-The catenary curve has a U-like shape, superficially similar in appearance
-to a parabola, which it is not. If a flexible chain or rope is loosely hung
-between two fixed points, it is a curve called a catenary. The word
-'catenary' is derived from the Latin word caténa, which means "chain".
+\code{geom_catenary()} draws a catenary curve which has a U-like shape,
+superficially similar in appearance to a parabola, which it is not.
 }
 \details{
-Lorem ipsum
+If a flexible chain or rope is loosely hung between two fixed
+points, it is a curve called a catenary. Catenary, from Latin word catēna,
+means "chain".
+
+to do:
+\itemize{
+\item require min 2 observations
+Warning message:
+Computation failed in \code{stat_catenary()}
+Caused by error in \code{stats::embed()}:
+! wrong embedding dimension
+\item update
+\itemize{
+\item vignette
+}
+\item add unit test
+}
 }
 \section{Aesthetics}{
 
-geom_catenary() understands the following aesthetics (required
+\code{geom_catenary()} understands the following aesthetics (required
 aesthetics are in bold):
 \itemize{
 \item \strong{x}
@@ -99,7 +113,7 @@ aesthetics are in bold):
 \item color
 \item group
 \item linetype
-\item size
+\item linewidth
 }
 }
 
@@ -110,6 +124,34 @@ dat <- data.frame(
 )
 
 ggplot(dat, aes(x, y)) +
-  geom_catenary(chainLength = 2)
+  geom_catenary()
 
+# multiple chains are supported
+dat <- data.frame(
+  x = c(0, 1, 2),
+  y = c(1, 1, .5)
+)
+
+ggplot(dat, aes(x, y)) +
+  geom_catenary(chainLength = 1.5)
+
+# use the 'chainLength' argument to overwrite the default behaviour,
+# which calculates the sum of the Euclidean distances between all
+# x/y coordinates, muliplies it by 2 and returns it as a messsage
+dat <- data.frame(
+  x = c(0, 1, 3),
+  y = c(0, 1, 2)
+)
+
+ggplot(dat, aes(x, y)) +
+  geom_catenary()
+
+# set chain length to 3 between each pair of points
+ggplot(dat, aes(x, y)) +
+  geom_catenary(chainLength = 3)
+
+# if you pick a chain length that is too short, a straight line is
+# drawn and a message tells you the value of the minimum chain length
+ggplot(dat, aes(x, y)) +
+  geom_catenary(chainLength = 1)
 }

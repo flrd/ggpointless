@@ -2,24 +2,21 @@ url: https://flrd.github.io/ggpointless/
 template:
   bootstrap: 5
   bslib:
-    base_font: {google: "Lato"}
-    heading_font: {google: "Lato"}
-    code_font: {google: "Fira Code"}
-
+    code_font:
+      google: Fira Code
 navbar:
   structure:
-    left:  [intro, reference, articles, news]
-    right: [search, github]
-
-figures:
-  dev: ragg::agg_png
-  dpi: 132
-  dev.args: []
-  fig.ext: png
-
+    left:
+    - intro
+    - reference
+    - articles
+    - news
+    right:
+    - search
+    - github
 reference:
-- title: "Geom, Stat"
-  desc: >
+- title: Geom, Stat
+  desc: |
     Functions for creating new geometry layers.
   contents:
   - geom_pointless
@@ -28,11 +25,20 @@ reference:
   - stat_lexis
   - geom_chaikin
   - stat_chaikin
-
-- title: "Data"
-  desc: >
+  - geom_catenary
+  - stat_catenary
+- title: Data
+  desc: |
     Data objects included in the `ggpointless` package.
   contents:
   - co2_ml
   - covid_vac
   - female_leaders
+figures:
+  dev: ragg::agg_png
+  dpi: 132
+  dev.args: []
+  fig.ext: png
+development:
+  mode: auto
+

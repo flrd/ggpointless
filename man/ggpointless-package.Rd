@@ -2,8 +2,8 @@
 % Please edit documentation in R/ggpointless-package.R
 \docType{package}
 \name{ggpointless-package}
-\alias{ggpointless}
 \alias{ggpointless-package}
+\alias{ggpointless}
 \title{ggpointless: A Small Collection of Geometries, and Stats for 'ggplot2'}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
