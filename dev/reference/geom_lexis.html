@@ -72,7 +72,7 @@ for more than a century.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  point_show <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  point_colour <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  point_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  gap_filler <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  lineend <span class="op">=</span> <span class="st">"round"</span>,</span>
 <span>  linejoin <span class="op">=</span> <span class="st">"round"</span>,</span>
@@ -131,7 +131,7 @@ of each segment? TRUE by default</p></dd>
 
 
 <dt>point_size</dt>
-<dd><p>the size of a point</p></dd>
+<dd><p>deprecated, use <code>size</code></p></dd>
 
 
 <dt>gap_filler</dt>
@@ -192,6 +192,7 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <li><p>shape</p></li>
 <li><p>size</p></li>
 <li><p>linetype</p></li>
+<li><p>linewitdh</p></li>
 <li><p>stroke</p></li>
 </ul></div>
 
@@ -218,7 +219,7 @@ aesthetics are in bold):</p><ul><li><p><strong>x</strong></p></li>
 <span class="r-in"><span><span class="co"># change point appearance</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_lexis</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  point_colour <span class="op">=</span> <span class="st">"black"</span>,</span></span>
-<span class="r-in"><span>  point_size <span class="op">=</span> <span class="fl">3</span>,</span></span>
+<span class="r-in"><span>  size <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>  shape <span class="op">=</span> <span class="fl">21</span>,</span></span>
 <span class="r-in"><span>  fill <span class="op">=</span> <span class="st">"white"</span>,</span></span>
 <span class="r-in"><span>  stroke <span class="op">=</span> <span class="fl">1</span></span></span>
