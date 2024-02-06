@@ -50,4 +50,5 @@ Collate:
     'stat-pointless.R'
     'utils.R'
 Imports: 
+    lifecycle,
     rlang

@@ -23,7 +23,7 @@ test_that("alternative key glyphs work", {
     ggplot(df1, aes(x = x, xend = xend)) +
       geom_lexis(aes(fill = z),
         pch = 21,
-        point_size = 3,
+        size = 3,
         stroke = 1
       )
   )

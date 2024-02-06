@@ -11,7 +11,7 @@ geom_lexis(
   ...,
   point_show = TRUE,
   point_colour = NULL,
-  point_size = NULL,
+  point_size = deprecated(),
   gap_filler = TRUE,
   lineend = "round",
   linejoin = "round",
@@ -60,7 +60,7 @@ of each segment? TRUE by default}
 
 \item{point_colour}{color of a point}
 
-\item{point_size}{the size of a point}
+\item{point_size}{deprecated, use \code{size}}
 
 \item{gap_filler}{logical. Should gaps be filled?
 TRUE by default}
@@ -113,6 +113,7 @@ aesthetics are in bold):
 \item shape
 \item size
 \item linetype
+\item linewitdh
 \item stroke
 }
 }
@@ -136,7 +137,7 @@ p +
 # change point appearance
 p + geom_lexis(
   point_colour = "black",
-  point_size = 3,
+  size = 3,
   shape = 21,
   fill = "white",
   stroke = 1

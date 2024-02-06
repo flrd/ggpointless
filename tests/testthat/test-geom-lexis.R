@@ -14,7 +14,7 @@ p2 <- ggplot(df2, aes(x = x, xend = xend)) +
 
 test_that("readme example works", {
   p <- ggplot(df3, aes(x = x, xend = xend, color = key)) +
-    geom_lexis(aes(linetype = after_stat(type)), size = .5, point_size = 3)
+    geom_lexis(aes(linetype = after_stat(type)), size = 3)
   p <- p +
     coord_equal() +
     scale_x_continuous(breaks = c(df3$x, df3$xend)) +
@@ -34,6 +34,6 @@ test_that("horizontal lines can be hidden", {
 
 test_that("points can have different shape than 19", {
   p <- ggplot(df3, aes(x = x, xend = xend, color = key)) +
-    geom_lexis(point_size = 3, shape = 21, fill = "#000000", stroke = 2)
+    geom_lexis(size = 3, shape = 21, fill = "#000000", stroke = 2)
   vdiffr::expect_doppelganger("different point shape", p)
 })

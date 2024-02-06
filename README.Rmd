@@ -97,7 +97,7 @@ df2 <- data.frame(
 )
 
 ggplot(df2, aes(x = x, xend = xend, color = key)) +
-  geom_lexis(aes(linetype = after_stat(type)), size = .5, point_size = 3) +
+  geom_lexis(aes(linetype = after_stat(type)), size = 2) +
   coord_equal() +
   scale_x_continuous(breaks = c(df2$x, df2$xend)) +
   scale_color_manual(values = cols) +

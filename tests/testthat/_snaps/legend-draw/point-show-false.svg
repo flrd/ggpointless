@@ -27,7 +27,7 @@
 </defs>
 <g clip-path='url(#cpNDAuMTN8NjY4LjA4fDIyLjc4fDU0NS4xMQ==)'>
 <rect x='40.13' y='22.78' width='627.95' height='522.33' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='68.68' y1='521.37' x2='639.54' y2='46.53' style='stroke-width: 0.64; stroke: #F8766D;' />
+<line x1='68.68' y1='521.37' x2='639.54' y2='46.53' style='stroke-width: 1.07; stroke: #F8766D;' />
 <rect x='40.13' y='22.78' width='627.95' height='522.33' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
@@ -56,7 +56,7 @@
 <rect x='679.04' y='267.64' width='35.48' height='32.61' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <text x='679.04' y='276.35' style='font-size: 11.00px; font-family: sans;' textLength='29.96px' lengthAdjust='spacingAndGlyphs'>colour</text>
 <rect x='679.04' y='282.97' width='17.28' height='17.28' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='683.36' y1='295.93' x2='692.00' y2='287.29' style='stroke-width: 0.64; stroke: #F8766D;' />
+<line x1='683.36' y1='295.93' x2='692.00' y2='287.29' style='stroke-width: 1.07; stroke: #F8766D;' />
 <text x='701.80' y='294.64' style='font-size: 8.80px; font-family: sans;' textLength='12.72px' lengthAdjust='spacingAndGlyphs'>red</text>
 <text x='40.13' y='14.56' style='font-size: 13.20px; font-family: sans;' textLength='123.66px' lengthAdjust='spacingAndGlyphs'>point_show = FALSE</text>
 </g>

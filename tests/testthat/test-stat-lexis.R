@@ -8,7 +8,7 @@ df2 <- data.frame(
 p2 <- ggplot(df2, aes(x = start, xend = end, color = key)) +
   stat_lexis(
     point_colour = "black",
-    point_size = 3,
+    size = 3,
     shape = 23,
     fill = "white"
   )

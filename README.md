@@ -98,7 +98,7 @@ df2 <- data.frame(
 )
 
 ggplot(df2, aes(x = x, xend = xend, color = key)) +
-  geom_lexis(aes(linetype = after_stat(type)), size = .5, point_size = 3) +
+  geom_lexis(aes(linetype = after_stat(type)), size = 2) +
   coord_equal() +
   scale_x_continuous(breaks = c(df2$x, df2$xend)) +
   scale_color_manual(values = cols) +
@@ -157,7 +157,7 @@ ggplot(data.frame(x = c(0, 2, 8), y = c(2, 1, 3)),
        aes(x, y)) + 
   geom_catenary() +
   geom_point(size = 3, colour = cols[1])
-#> Overall chainLength is 17.1
+#> Set chainLength to 17.1
 ```
 
 <img src="man/figures/README-geom-catenary-1.png" width="100%" style="display: block; margin: auto;" />

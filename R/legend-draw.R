@@ -33,12 +33,12 @@ draw_key_pointless <- function(data, params, size) {
 
 #' @rdname draw_key_lexis
 #' @keywords internal
-draw_key_sabline <- function(data, params, size) {
+draw_key_sabline <- function(data, params, linewidth, size) {
   grid::segmentsGrob(
     x0 = 0.25, y0 = 0.25, x1 = 0.75, y1 = 0.75,
     gp = grid::gpar(
       col = alpha(data$colour %||% data$fill %||% "black", data$alpha),
-      lwd = (data$size %||% 0.5) * .pt,
+      lwd = (data$linewidth %||% 0.5) * .pt,
       lty = data$linetype %||% 1,
       lineend = "round"
     )
@@ -55,15 +55,15 @@ draw_key_sabline <- function(data, params, size) {
 #' # the glyph can be changed using the `key_glyph` argument
 #' ggplot(mtcars, aes(wt, mpg, color = "red")) +
 #'   geom_point(key_glyph = "lexis")
-draw_key_lexis <- function(data, params, size) {
+draw_key_lexis <- function(data, params, linewidth, size) {
 
-  # test is.null needed if key glayph is used by another geom_
+  # test is.null needed if key glyph is used by another geom_*
   # that does not have a point_show param (i.e. all but geom_lexis)
-  if (isTRUE(params$point_show) | is.null(params$point_show)) {
+  if (isTRUE(params$point_show) || is.null(params$point_show)) {
     grid::grobTree(
       draw_key_sabline(data, params, size),
       draw_key_pointless(
-        transform(data, size = (data$size %||% 1) * 3), params
+        transform(data, size = (data$size %||% 2) * 0.65), params
       )
     )
   } else {

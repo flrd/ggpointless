@@ -8,9 +8,9 @@
 \usage{
 draw_key_pointless(data, params, size)
 
-draw_key_sabline(data, params, size)
+draw_key_sabline(data, params, linewidth, size)
 
-draw_key_lexis(data, params, size)
+draw_key_lexis(data, params, linewidth, size)
 }
 \arguments{
 \item{data}{A single row data frame containing the scaled aesthetics to

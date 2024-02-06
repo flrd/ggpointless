@@ -366,7 +366,7 @@ p3 <- ggplot(
 )
 p3 <- p3 + geom_lexis(
   aes(linetype = after_stat(type)),
-  point_size = 1
+  size = 1
 )
 
 # coord

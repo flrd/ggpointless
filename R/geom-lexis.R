@@ -18,16 +18,17 @@
 #' - shape
 #' - size
 #' - linetype
+#' - linewitdh
 #' - stroke
 #'
 #' @inheritParams ggplot2::layer
 #' @inheritParams ggplot2::geom_point
-#' @param point_show logical. Should a point be shown at the end
-#' of each segment? TRUE by default
 #' @param lineend line end style (round, butt, square)
 #' @param linejoin line join style (round, mitre, bevel)
-#' @param point_size the size of a point
 #' @param point_colour color of a point
+#' @param point_show logical. Should a point be shown at the end
+#' of each segment? TRUE by default
+#' @param point_size deprecated, use `size`
 #' @param gap_filler logical. Should gaps be filled?
 #' TRUE by default
 #'
@@ -62,7 +63,7 @@
 #' # change point appearance
 #' p + geom_lexis(
 #'   point_colour = "black",
-#'   point_size = 3,
+#'   size = 3,
 #'   shape = 21,
 #'   fill = "white",
 #'   stroke = 1
@@ -98,13 +99,18 @@ geom_lexis <- function(mapping = NULL,
                        ...,
                        point_show = TRUE,
                        point_colour = NULL,
-                       point_size = NULL,
+                       point_size = deprecated(),
                        gap_filler = TRUE,
                        lineend = "round",
                        linejoin = "round",
                        na.rm = FALSE,
                        show.legend = NA,
                        inherit.aes = TRUE) {
+
+    if (lifecycle::is_present(point_size)) {
+      lifecycle::deprecate_warn("0.1.0", "geom_lexis(point_size)", "geom_lexis(size)")
+    }
+
   layer(
     data = data,
     mapping = mapping,
@@ -119,7 +125,6 @@ geom_lexis <- function(mapping = NULL,
       gap_filler = gap_filler,
       point_show = point_show,
       point_colour = point_colour,
-      point_size = point_size,
       na.rm = na.rm,
       ...
     )
@@ -132,60 +137,69 @@ geom_lexis <- function(mapping = NULL,
 #' @include legend-draw.R
 #' @export
 GeomLexis <- ggproto("GeomLexis", Geom,
-  required_aes = c("x", "y", "xend", "yend"),
-  non_missing_aes = c("size", "shape", "point_colour", "point_size", "type"),
-  default_aes = aes(
-    shape = 19, colour = "black", linetype = "solid", size = 0.3, fill = NA,
-    alpha = NA, stroke = 0.5
-  ),
-  draw_group = function(data, panel_params, coord,
-                        lineend = "round", linejoin = "mitre",
-                        gap_filler = TRUE,
-                        point_show = TRUE,
-                        point_colour = NULL,
-                        point_size = NULL) {
-    if (!is.logical(gap_filler)) {
-      stop("'gap_filler' must be a logical value.")
-    }
+                     required_aes = c("x", "y", "xend", "yend"),
+                     non_missing_aes = c("size", "shape", "point_colour", "type"),
+                     default_aes = aes(
+                       shape = 19,
+                       colour = "black",
+                       linetype = "solid",
+                       linewidth = 0.5,
+                       size = 1.5,
+                       fill = NA,
+                       alpha = NA,
+                       stroke = 0.5
+                     ),
+                     draw_group = function(data, panel_params, coord,
+                                           lineend = "round",
+                                           linejoin = "mitre",
+                                           gap_filler = TRUE,
+                                           point_show = TRUE,
+                                           point_colour = NULL
+                                           ) {
+                       if (!is.logical(gap_filler)) {
+                         stop("'gap_filler' must be a logical value.")
+                       }
 
-    if (!is.logical(point_show)) {
-      stop("'point_show' must be a logical value.")
-    }
+                       if (!is.logical(point_show)) {
+                         stop("'point_show' must be a logical value.")
+                       }
 
-    points <- tail(data, 1)
-    points$colour <- point_colour %||% points$colour
-    points$size <- point_size %||% (points$size * 3)
-    points <- transform(points, x = xend, y = yend)
-    points <- subset(points, select = c(-xend, -yend))
+                       points <- tail(data, 1)
+                       points$colour <- point_colour %||% points$colour
+                       points <- transform(points, x = xend, y = yend)
+                       points <- subset(points, select = c(-xend, -yend))
 
-    if (!isTRUE(gap_filler)) {
-      data <- subset(data, type != "dotted")
-    }
+                       if (!isTRUE(gap_filler)) {
+                         data <- subset(data, type != "dotted")
+                       }
 
-    if (isTRUE(point_show)) {
-      grid::gList(
-        ggplot2::GeomSegment$draw_panel(
-          data = data,
-          panel_params = panel_params,
-          coord = coord,
-          lineend = lineend,
-          linejoin = linejoin
-        ),
-        ggplot2::GeomPoint$draw_panel(
-          data = points,
-          panel_params = panel_params,
-          coord = coord
-        )
-      )
-    } else {
-      ggplot2::GeomSegment$draw_panel(
-        data = data,
-        panel_params = panel_params,
-        coord = coord,
-        lineend = lineend,
-        linejoin = linejoin
-      )
-    }
-  },
-  draw_key = draw_key_lexis
+                       if (isTRUE(point_show)) {
+                         grid::gList(
+                           ggplot2::GeomSegment$draw_panel(
+                             data = data,
+                             panel_params = panel_params,
+                             coord = coord,
+                             lineend = lineend,
+                             linejoin = linejoin
+                           ),
+                           ggplot2::GeomPoint$draw_panel(
+                             data = points,
+                             panel_params = panel_params,
+                             coord = coord
+                           )
+                         )
+                       } else {
+                         ggplot2::GeomSegment$draw_panel(
+                           data = data,
+                           panel_params = panel_params,
+                           coord = coord,
+                           lineend = lineend,
+                           linejoin = linejoin
+                         )
+                       }
+                     },
+                     draw_key = draw_key_lexis,
+
+                     # Should the geom rename size to linewidth?
+                     rename_size = FALSE
 )

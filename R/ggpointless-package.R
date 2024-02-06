@@ -9,4 +9,5 @@
 #' @importFrom grid grobTree gList gpar pointsGrob segmentsGrob
 #' @importFrom rlang `%||%`
 #' @importFrom stats embed
+#' @importFrom lifecycle deprecated
 NULL
