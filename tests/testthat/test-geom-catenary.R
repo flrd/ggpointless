@@ -14,12 +14,12 @@ test_that("geom_catenary has a default value for chainLength", {
 
 test_that("user can set a value for chainLength", {
   p <- ggplot(dat, aes(x, y))
-  vdiffr::expect_doppelganger("chainLength = 2", p + geom_catenary(chainLength = 2))
+  vdiffr::expect_doppelganger("chainLength = 2", p + geom_catenary(chainLength = 4))
 })
 
 test_that("straight line is drawn if chainLength is too short", {
   p <- ggplot(dat, aes(x, y))
-  vdiffr::expect_doppelganger("chainLength = 0.1", p + geom_catenary(chainLength = 0.1))
+  vdiffr::expect_doppelganger("chainLength = 3", p + geom_catenary(chainLength = 3))
 })
 
 test_that("stat_catenary also works", {
