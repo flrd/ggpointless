@@ -10,11 +10,11 @@ geom_catenary(
   data = NULL,
   stat = "catenary",
   position = "identity",
-  na.rm = FALSE,
+  ...,
+  chainLength = NULL,
   show.legend = NA,
   inherit.aes = TRUE,
-  chainLength = NULL,
-  ...
+  na.rm = FALSE
 )
 
 stat_catenary(
@@ -55,8 +55,12 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 position adjustment function. Use the latter if you need to change the
 settings of the adjustment.}
 
-\item{na.rm}{If \code{FALSE}, the default, missing values are removed with
-a warning. If \code{TRUE}, missing values are silently removed.}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
+often aesthetics, used to set an aesthetic to a fixed value, like
+\code{colour = "red"} or \code{size = 3}. They may also be parameters
+to the paired geom/stat.}
+
+\item{chainLength}{Length of chain between two points.}
 
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
@@ -69,12 +73,8 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 
-\item{chainLength}{Length of chain between two points.}
-
-\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
-often aesthetics, used to set an aesthetic to a fixed value, like
-\code{colour = "red"} or \code{size = 3}. They may also be parameters
-to the paired geom/stat.}
+\item{na.rm}{If \code{FALSE}, the default, missing values are removed with
+a warning. If \code{TRUE}, missing values are silently removed.}
 
 \item{geom, stat}{Use to override the default connection between
 \code{geom_catenary} and \code{stat_catenary}.}
@@ -87,20 +87,6 @@ superficially similar in appearance to a parabola, which it is not.
 If a flexible chain or rope is loosely hung between two fixed
 points, it is a curve called a catenary. Catenary, from Latin word catēna,
 means "chain".
-
-to do:
-\itemize{
-\item require min 2 observations
-Warning message:
-Computation failed in \code{stat_catenary()}
-Caused by error in \code{stats::embed()}:
-! wrong embedding dimension
-\item update
-\itemize{
-\item vignette
-}
-\item add unit test
-}
 }
 \section{Aesthetics}{
 
@@ -119,39 +105,17 @@ aesthetics are in bold):
 
 \examples{
 dat <- data.frame(
-  x = c(0, 1),
-  y = c(1, 1)
-)
-
-ggplot(dat, aes(x, y)) +
-  geom_catenary()
-
-# multiple chains are supported
-dat <- data.frame(
   x = c(0, 1, 2),
   y = c(1, 1, .5)
 )
 
-ggplot(dat, aes(x, y)) +
-  geom_catenary(chainLength = 1.5)
-
-# use the 'chainLength' argument to overwrite the default behaviour,
-# which calculates the sum of the Euclidean distances between all
-# x/y coordinates, muliplies it by 2 and returns it as a messsage
-dat <- data.frame(
-  x = c(0, 1, 3),
-  y = c(0, 1, 2)
-)
-
-ggplot(dat, aes(x, y)) +
-  geom_catenary()
-
-# set chain length to 3 between each pair of points
-ggplot(dat, aes(x, y)) +
-  geom_catenary(chainLength = 3)
+p <- ggplot(dat, aes(x, y))
+p + geom_catenary()
+p + geom_catenary(chainLength = 1.5)
 
 # if you pick a chain length that is too short, a straight line is
-# drawn and a message tells you the value of the minimum chain length
+# drawn and a message about minimum chain length is shown
 ggplot(dat, aes(x, y)) +
-  geom_catenary(chainLength = 1)
+  geom_catenary(chainLength = 1.1)
+
 }
