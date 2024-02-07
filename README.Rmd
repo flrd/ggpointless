@@ -144,10 +144,10 @@ between each x/y combination is used. See [`vignette("ggpointless")`](https://fl
 for details.
 
 ```{r geom-catenary, warning=FALSE}
-ggplot(data.frame(x = c(0, 2, 8), y = c(2, 1, 3)),
+ggplot(data.frame(x = 1:5, y = sample(5)),
        aes(x, y)) + 
   geom_catenary() +
-  geom_point(size = 3, colour = cols[1])
+  geom_point(size = 3, colour = "#f4ae1b")
 ```
 
 This curve is called a catenary, from Latin word catēna, which means "chain". 

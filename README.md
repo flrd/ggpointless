@@ -153,11 +153,11 @@ distance between each x/y combination is used. See
 for details.
 
 ``` r
-ggplot(data.frame(x = c(0, 2, 8), y = c(2, 1, 3)),
+ggplot(data.frame(x = 1:5, y = sample(5)),
        aes(x, y)) + 
   geom_catenary() +
-  geom_point(size = 3, colour = cols[1])
-#> Set chainLength to 17.1
+  geom_point(size = 3, colour = "#f4ae1b")
+#> Set chainLength to 18.4
 ```
 
 <img src="man/figures/README-geom-catenary-1.png" width="100%" style="display: block; margin: auto;" />

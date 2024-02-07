@@ -269,47 +269,37 @@ A catenary is the curve of an hanging chain or cable under its own weight when s
 
 ```{r geom-catenary-intro, fig.show='hold'}
 ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
-  geom_catenary()
+  geom_catenary() +
+  ylim(0, 1)
 ```
 
-`geom_catenary()` calculates a default value for the lnegth of the chain that is set
-to 2 times the Euclidean distance of all x/y coordinates. You can change this behaviour and
-the value of `chainLength` will be applied to each 'chain link':
+`geom_catenary()` calculates a default value for the length of the chain that is set
+to 2 times the Euclidean distance of all x/y coordinates. You can change this behaviour
+when you set `chainLength` argument.
 
 ```{r geom-catenary-chainLength, fig.show='hold'}
-ggplot(data.frame(x = c(0, 1, 3), y = c(1, 1, 1)), aes(x, y)) +
-  geom_catenary(chainLength = 2)
+ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
+  geom_catenary(chainLength = 1.5)  +
+  ylim(0, 1)
 ```
 
-If you pick a value that is too short to connect to points, a straight line is drawn
+If you pick a value that is too short to connect two points, a straight line is drawn
 and a message is shown.
 
 ```{r geom-catenary-chainLength-minimum, fig.show='hold'}
-ggplot(data.frame(x = c(0, 1, 2), y = c(1, 1, 4)), aes(x, y)) +
-  geom_catenary(chainLength = 2)
+ggplot(data.frame(x = c(0, 1, 4), y = c(1, 1, 1)), aes(x, y)) +
+  geom_catenary(chainLength = 4)
 ```
 
-If you want to draw a chain where each piece has a different value (or another attribute) for `chainLength` you can add a list to an ggplot object:
+If you want to draw a chain where each piece has a different `chainLength` 
+value, remember you can add a list to a ggplot object:
 
 ```{r geom-catenary-chainLength-individual, fig.show='hold'}
-lst <- list(
-  x = c(0, 1, 2, 3),
-  y = c(0, 1, 2, 3),
-  chainLength = 1 + 2 * 1:4,
-  colour = cols
-)
-
-ggplot() + Map(
-  function(x, y, chainLength, colour) {
-    geom_catenary(aes(x, y),
-                  data.frame(x = x + 0:1, y = y + 0:1),
-                  chainLength = chainLength,
-                  col = colour)
-  },
-  x = lst[["x"]],
-  y = lst[["y"]],
-  chainLength = lst[["chainLength"]],
-  colour = lst[["colour"]]
+ggplot(data.frame(x = c(0, 1), y = 1),
+       aes(x, y)) + 
+  lapply(2:10, function(chainLength) {
+    geom_catenary(chainLength = chainLength)
+  }
 )
 ```
  

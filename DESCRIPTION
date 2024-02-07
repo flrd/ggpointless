@@ -46,8 +46,10 @@ Collate:
     'geom-lexis.R'
     'geom-pointless.R'
     'ggpointless-package.R'
+    'stat-catenary.R'
     'stat-lexis.R'
     'stat-pointless.R'
+    'stat_chaikin.R'
     'utils.R'
 Imports: 
     lifecycle,
