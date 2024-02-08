@@ -274,8 +274,8 @@ ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
 ```
 
 `geom_catenary()` calculates a default value for the length of the chain that is set
-to 2 times the Euclidean distance of all x/y coordinates. You can change this behaviour
-when you set `chainLength` argument.
+to 2 times the Euclidean distance of all x/y coordinates. Use the `chainLength
+argument to overwrite the default.
 
 ```{r geom-catenary-chainLength, fig.show='hold'}
 ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
@@ -283,8 +283,14 @@ ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
   ylim(0, 1)
 ```
 
-If you pick a value that is too short to connect two points, a straight line is drawn
-and a message is shown.
+Multiple x/y coordinates are supported too.
+
+```{r geom-catenary-chainLength-two-obs, fig.show='hold'}
+ggplot(data.frame(x = c(0, 1, 4), y = c(1, 1, 1)), aes(x, y)) +
+  geom_catenary()
+```
+
+If you set `chainLength` to a value that is too short to connect two points, a straight line is drawn and a message is shown.
 
 ```{r geom-catenary-chainLength-minimum, fig.show='hold'}
 ggplot(data.frame(x = c(0, 1, 4), y = c(1, 1, 1)), aes(x, y)) +

@@ -28,6 +28,9 @@ StatCatenary <- ggproto("StatCatenary", Stat,
 
                         setup_params = function(data, params) {
 
+                          # remove rows that contain NAs
+                          data <- na.omit(data)
+
                           if (length(unique(data$x)) >= 2) {
 
                             if(!is.null(params$chainLength) && params$chainLength <= 0) {

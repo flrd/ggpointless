@@ -106,19 +106,17 @@ aesthetics are in bold):
 \examples{
 dat <- data.frame(
   x = c(0, 1, 2),
-  y = c(1, 1, .5)
+  y = c(1, 2, -3)
 )
 
 p <- ggplot(dat, aes(x, y))
-p + geom_catenary()
+p + geom_catenary() +
+  ylim(-4, NA)
 
 # use chainLength argument to change default behaviour
-p + geom_catenary(chainLength = 5) +
-  ylim(0, 1)
-
 # if you pick a chain length that is too short, a straight line is
 # drawn and a message about minimum chain length is shown
-p + geom_catenary(chainLength = 2) +
-  ylim(0, 1)
+p + geom_catenary(chainLength = 10) +
+  ylim(-4, NA)
 
 }
