@@ -5,7 +5,7 @@
 #' corners of a path.
 #'
 #' @section Aesthetics:
-#' geom_chaikin() understands the following aesthetics (required
+#' `geom_chaikin()` understands the following aesthetics (required
 #' aesthetics are in bold):
 #'
 #' - **x**
@@ -14,7 +14,7 @@
 #' - color
 #' - group
 #' - linetype
-#' - size
+#' - linewidth
 #'
 #' @inheritParams ggplot2::geom_path
 #' @param geom,stat Use to override the default connection between

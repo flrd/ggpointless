@@ -18,7 +18,7 @@
 #' - shape
 #' - size
 #' - linetype
-#' - linewitdh
+#' - linewidth
 #' - stroke
 #'
 #' @inheritParams ggplot2::layer

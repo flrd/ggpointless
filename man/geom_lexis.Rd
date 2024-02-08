@@ -113,7 +113,7 @@ aesthetics are in bold):
 \item shape
 \item size
 \item linetype
-\item linewitdh
+\item linewidth
 \item stroke
 }
 }

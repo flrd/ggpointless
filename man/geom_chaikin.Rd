@@ -110,7 +110,7 @@ then it will be flipped to 1 - ratio, and a message is shown.
 }
 \section{Aesthetics}{
 
-geom_chaikin() understands the following aesthetics (required
+\code{geom_chaikin()} understands the following aesthetics (required
 aesthetics are in bold):
 \itemize{
 \item \strong{x}
@@ -119,7 +119,7 @@ aesthetics are in bold):
 \item color
 \item group
 \item linetype
-\item size
+\item linewidth
 }
 }
 
