@@ -43,7 +43,7 @@ library(ggpointless)
 
 - `geom_pointless()` – emphasizes some observations with points
 - `geom_lexis()` – draws a Lexis diagram
-- `geom_chaikin()` – applies chaikin’s corner cutting algorithm
+- `geom_chaikin()` – applies Chaikin’s corner cutting algorithm
 - `geom_catenary()` – draws a catenary curve
 
 See
@@ -152,19 +152,18 @@ distance between each x/y combination is used. See
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
 for details.
 
+Credit to:
+[dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
+
 ``` r
 ggplot(data.frame(x = 1:5, y = sample(5)),
        aes(x, y)) + 
   geom_catenary() +
   geom_point(size = 3, colour = "#f4ae1b")
-#> Set chainLength to 18.4
+#> Set chainLength to 23.7
 ```
 
 <img src="man/figures/README-geom-catenary-1.png" width="100%" style="display: block; margin: auto;" />
-
-This curve is called a catenary, from Latin word catēna, which means
-“chain”. Credit to:
-[dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
 
 ## Data
 
