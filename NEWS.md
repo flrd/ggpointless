@@ -1,3 +1,5 @@
+# ggpointless (development version)
+
 # ggpointless 0.1.0
 * New `geom_catenary()` and `stat_catenary()` let you draw a hanging chain. 
 * `geom_lexis()` supports `linewidth` argument now, which was released in
