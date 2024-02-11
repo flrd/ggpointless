@@ -83,6 +83,12 @@ getCurve <- function(a, p1, p2, offsetX, offsetY, segments = 101) {
   x <- seq(p1$x, p2$x, length.out = segments)
   y <- a * cosh((x - offsetX) / a) + offsetY
 
+  # due to rounding it could happen that first and
+  # last value of y are not equal to coordinates given
+  # that's why we'll replace it
+  y[1] <- p1$y
+  y[segments] <- p2$y
+
   mat <- cbind(x, y)
   dimnames(mat) <- list(NULL, c("x", "y"))
 
