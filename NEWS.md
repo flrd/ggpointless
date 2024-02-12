@@ -1,5 +1,8 @@
 # ggpointless (development version)
 
+* `stat_catenary()` no longer wrongfully removes data points when upper 
+  limit in `ylim()` is set to maximum y-value of dataset to use for plot (#1).
+
 # ggpointless 0.1.0
 * New `geom_catenary()` and `stat_catenary()` let you draw a hanging chain. 
 * `geom_lexis()` supports `linewidth` argument now, which was released in
