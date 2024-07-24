@@ -1,75 +1,27 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/CODE_OF_CONDUCT.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/articles/examples.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/articles/ggpointless.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/index.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/co2_ml.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/covid_vac.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/draw_key_lexis.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/female_leaders.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/geom_catenary.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/geom_lexis.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/geom_pointless.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/get_decades.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/get_lexis.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/get_locations.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/ggpointless-ggproto.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/ggpointless-package.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://flrd.github.io/ggpointless/dev/reference/translate_shape_string.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://flrd.github.io/ggpointless/dev/CODE_OF_CONDUCT.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/LICENSE-text.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/LICENSE.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/articles/examples.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/articles/ggpointless.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/articles/index.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/authors.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/index.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/news/index.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/co2_ml.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/covid_vac.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/draw_key_lexis.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/female_leaders.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/geom_catenary.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/geom_lexis.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/geom_pointless.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/get_decades.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/get_lexis.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/get_locations.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/ggpointless-ggproto.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/ggpointless-package.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/index.html</loc></url>
+<url><loc>https://flrd.github.io/ggpointless/dev/reference/translate_shape_string.html</loc></url>
 </urlset>
+
