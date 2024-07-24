@@ -26,7 +26,7 @@ library(ggpointless)
 [![CRAN status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-project.org/package=ggpointless)
 [![R-CMD-check](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless?branch=main)
-![downloads](http://cranlogs.r-pkg.org/badges/grand-total/ggpointless)
+![downloads](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless))
 <!-- badges: end -->
 
 `ggpointless` is an extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) library providing additional layers. 
