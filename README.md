@@ -10,7 +10,7 @@ status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-projec
 [![R-CMD-check](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless?branch=main)
-![downloads](http://cranlogs.r-pkg.org/badges/grand-total/ggpointless)
+[![](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless)](https://cran.r-project.org/package=ggpointless)
 <!-- badges: end -->
 
 `ggpointless` is an extension of the
