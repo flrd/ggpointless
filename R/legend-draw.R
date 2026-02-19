@@ -70,3 +70,42 @@ draw_key_lexis <- function(data, params, linewidth, size) {
     draw_key_sabline(data, params, size)
   }
 }
+
+#' @rdname draw_key_area_fade
+#' @keywords internal
+draw_key_area_fade = function(data, params, size) {
+  # We still need to check orientation for the legend icon
+  flipped <- params$flipped_aes %||% FALSE
+  fill_color <- data$fill %||% "grey20"
+  a_start <- data$alpha %||% 1
+  a_end   <- params$alpha_fade_to %||% 0
+  
+  grad_params <- if (flipped) {
+    list(
+      x1 = 1,
+      y1 = 0.5,
+      x2 = 0,
+      y2 = 0.5
+    )
+  } else {
+    list(
+      x1 = 0.5,
+      y1 = 1,
+      x2 = 0.5,
+      y2 = 0
+    )
+  }
+  
+  grad <- grid::linearGradient(
+    colours = c(
+      scales::alpha(fill_color, a_start),
+      scales::alpha(fill_color, a_end)
+    ),
+    x1 = grad_params$x1,
+    y1 = grad_params$y1,
+    x2 = grad_params$x2,
+    y2 = grad_params$y2
+  )
+  
+  grid::rectGrob(gp = grid::gpar(fill = grad, col = NA))
+}
