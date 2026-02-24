@@ -17,16 +17,21 @@ navbar:
 reference:
 - title: Geom, Stat
   desc: |
-    Functions for creating new geometry layers.
+    Layer Functions
   contents:
-  - geom_pointless
-  - stat_pointless
-  - geom_lexis
-  - stat_lexis
-  - geom_chaikin
-  - stat_chaikin
+  - geom_area_fade
   - geom_catenary
   - stat_catenary
+  - geom_chaikin
+  - stat_chaikin
+  - geom_fourier
+  - stat_fourier
+  - geom_lexis
+  - stat_lexis
+  - geom_pointless
+  - stat_pointless
+  - geom_point_glow
+
 - title: Data
   desc: |
     Data objects included in the `ggpointless` package.
