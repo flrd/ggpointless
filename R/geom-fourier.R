@@ -1,3 +1,13 @@
+#' @rdname ggpointless-ggproto
+#' @format NULL
+#' @usage NULL
+#' @export
+GeomFourier <- ggproto(
+  "GeomFourier",
+  ggplot2::GeomLine,
+  stat = "fourier"
+  )
+
 #' @title Fourier Series Smoothing
 #'
 #' @description
@@ -51,59 +61,61 @@
 #'   before the FFT; one of `"lm"`, `"loess"`, or `NULL` (default). See
 #'   the *Detrending* section for details.
 #'
-#' @return A ggplot2 layer object.
+#' @aesthetics GeomPointless
+#'
+#' @seealso See individual modelling functions for more details:
+#'   [lm()] for linear smooths,
+#'   [loess()] for local smooths.
 #'
 #' @examples
 #' library(ggplot2)
 #'
-#' set.seed(1)
-#' df <- data.frame(
-#'   x = seq(0, 1, length.out = 100)
-#'   y = sin(seq(0, 2 * pi, length.out = 100)) + rnorm(100, sd = 0.2)
+#' n <- 100
+#' df1 <- data.frame(
+#'   x = seq(0, 1, length.out = n),
+#'   y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
 #' )
 #'
 #' # Basic usage – Interpolating fit (all harmonics)
-#' ggplot(df, aes(x, y)) +
-#'   geom_point(alpha = 0.4) +
-#'   geom_fourier()
+#' p <- ggplot(df1, aes(x, y)) +
+#'   geom_point(alpha = 0.5)
+#' p + geom_fourier()
 #'
-#' # Use 5 harmonics
-#' ggplot(df, aes(x, y)) +
-#'   geom_point(alpha = 0.4) +
-#'   geom_fourier(n_harmonics = 5)
+#' # Use 1 harmonic only
+#' p + geom_fourier(n_harmonics = 1)
 #'
 #' # De-trending a linearly drifting signal
 #' set.seed(2)
-#' x <- seq(0, 4 * pi, length.out = 80)
+#' x <- seq(0, 4 * pi, length.out = n)
 #' df2 <- data.frame(
 #'   x = x,
-#'   y = sin(x) + x * 0.3 + rnorm(80, sd = 0.15)
+#'   y = sin(x) + x * 0.3 + rnorm(n, sd = 0.15)
 #' )
 #'
 #' ggplot(df2, aes(x, y)) +
-#'   geom_point(alpha = 0.4) +
+#'   geom_point(alpha = 0.5) +
 #'   geom_fourier(detrend = "lm")
 #'
 #' # Multiple groups
 #' set.seed(3)
-#' x <- seq(0, 2 * pi, length.out = 50)
+#' x <- seq(0, 2 * pi, length.out = n/2)
 #' df3 <- rbind(
 #'   data.frame(x = x,
-#'              y = sin(x) + rnorm(50, sd = 0.2),
+#'              y = sin(x) + rnorm(n/2, sd = 0.2),
 #'              grp = "sine"),
 #'   data.frame(x = x,
-#'              y = cos(x) + rnorm(50, sd = 0.2),
+#'              y = cos(x) + rnorm(n/2, sd = 0.2),
 #'              grp = "cosine")
 #' )
 #'
 #' ggplot(df3, aes(x, y, colour = grp)) +
-#'   geom_point(alpha = 0.4) +
-#'   geom_fourier(n_harmonics = 3)
+#'   geom_point(alpha = 0.5) +
+#'   geom_fourier()
 #'
 #' @rdname geom_fourier
 #' @export
 geom_fourier <- make_constructor(
-  ggplot2::GeomLine,
+  GeomFourier,
   stat = "fourier",
   n_harmonics = NULL,
   detrend = NULL

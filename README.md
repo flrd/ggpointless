@@ -10,7 +10,7 @@ status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-projec
 [![R-CMD-check](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/flrd/ggpointless/branch/main/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless?branch=main)
-[![](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless)](https://cran.r-project.org/package=ggpointless)
+![downloads](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless))
 <!-- badges: end -->
 
 `ggpointless` is an extension of the
@@ -41,14 +41,50 @@ library(ggpointless)
 
 ## What will you get
 
-- `geom_pointless()` – emphasizes some observations with points
-- `geom_lexis()` – draws a Lexis diagram
-- `geom_chaikin()` – applies Chaikin’s corner cutting algorithm
-- `geom_catenary()` – draws a catenary curve
+This package is a collection of geoms, and stats for
+[ggplot2](https://ggplot2.tidyverse.org/). The following functions are
+implemented:
+
+- `geom_arch()` & `stat_arch()` – draws an inverted catenary curve
+- `geom_area_fade()` – area plots wiht gradient fill
+- `geom_catenary()` & `stat_catenary()` – draws a catenary curve
+- `geom_chaikin()` & `stat_chaikin()` – applies Chaikin’s corner cutting
+  algorithm
+- `geom_fourier()` & `stat_fourier()` – fits a Fourier series to `x`/`y`
+  and renders the reconstructed curve
+- `geom_lexis()` & `stat_lexis()` – draws a Lexis diagram
+- `geom_point_glow()` – adds a radial gradient to your point plots
+- `geom_pointless()` & `stat_pointless()` – emphasizes some observations
+  with points
 
 See
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
 for details and examples.
+
+### geom_area_fade
+
+This geom behaves like
+[geom_area()](https://ggplot2.tidyverse.org/reference/geom_ribbon.html?q=geom_area#null)
+does except it uses
+[grid::linearGradient()](https://search.r-project.org/CRAN/refmans/gridSVG/html/gradients.html)
+to fill the area.
+
+``` r
+cols <- c("#f4ae1b", "#d77e7b", "#a84dbd", "#311dfc")
+theme_set(theme_minimal())
+
+library(ggplot2)
+df <- data.frame(
+ g = c("a", "a", "a", "b", "b", "b"),
+ x = c(1, 3, 5, 2, 4, 6),
+ y = c(2, 5, 1, 3, 6, 7)
+)
+
+ggplot(df, aes(x, y, fill = g)) +
+ geom_area_fade()
+```
+
+<img src="man/figures/README-geom-area-fade-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### geom_pointless
 
@@ -61,9 +97,6 @@ is just shorthand to select `"first"`, `"last"`, `"minimum"` and
 `"maximum"`.
 
 ``` r
-cols <- c("#f4ae1b", "#d77e7b", "#a84dbd", "#311dfc")
-theme_set(theme_minimal())
-
 x <- seq(-pi, pi, length.out = 500)
 y <- outer(x, 1:5, function(x, y) sin(x * y))
 
@@ -81,7 +114,7 @@ ggplot(df1, aes(x = var1, y = var2)) +
   scale_color_manual(values = cols)
 ```
 
-<img src="man/figures/README-hello-world-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-hello-world-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### geom_lexis
 
@@ -106,7 +139,7 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-<img src="man/figures/README-geom-lexis-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-geom-lexis-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 See also the [`LexisPlotR`
 package](https://github.com/ottlngr/LexisPlotR).
@@ -140,7 +173,7 @@ ggplot(mapping = aes(x, y)) +
   coord_equal()
 ```
 
-<img src="man/figures/README-geom-chaikin-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-geom-chaikin-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 See also the [`smoothr` package](https://github.com/mstrimas/smoothr/).
 
@@ -160,25 +193,9 @@ ggplot(data.frame(x = 1:5, y = sample(5)),
        aes(x, y)) + 
   geom_catenary() +
   geom_point(size = 3, colour = "#f4ae1b")
-#> Set chainLength to 23.7
 ```
 
-<img src="man/figures/README-geom-catenary-1.png" width="100%" style="display: block; margin: auto;" />
-
-## Data
-
-In addition to the geoms & stats, the following data sets are contained
-in `ggpointless`:
-
-1.  `co2_ml` : [CO<sub>2</sub> records taken at Mauna
-    Loa](https://gml.noaa.gov/ccgg/trends/data.html)
-2.  `covid_vac` : [COVID-19 Cases and Deaths by Vaccination
-    Status](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status)
-3.  `female_leaders` : [Elected and appointed female heads of state and
-    government](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588)
-
-For more examples call
-[`vignette("examples")`](https://flrd.github.io/ggpointless/articles/examples.html).
+<img src="man/figures/README-geom-catenary-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Code of Conduct
 

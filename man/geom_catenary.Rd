@@ -2,8 +2,10 @@
 % Please edit documentation in R/geom-catenary.R, R/stat-catenary.R
 \name{geom_catenary}
 \alias{geom_catenary}
+\alias{geom_arch}
 \alias{stat_catenary}
-\title{Draw a catenary curve}
+\alias{stat_arch}
+\title{Catenary Curves and Arches}
 \usage{
 geom_catenary(
   mapping = NULL,
@@ -11,22 +13,54 @@ geom_catenary(
   stat = "catenary",
   position = "identity",
   ...,
-  chainLength = NULL,
+  chain_length = NULL,
+  sag = NULL,
+  chainLength = lifecycle::deprecated(),
+  na.rm = FALSE,
   show.legend = NA,
-  inherit.aes = TRUE,
-  na.rm = FALSE
+  inherit.aes = TRUE
+)
+
+geom_arch(
+  mapping = NULL,
+  data = NULL,
+  stat = "arch",
+  position = "identity",
+  ...,
+  arrow = NULL,
+  arrow.fill = NULL,
+  lineend = "butt",
+  linejoin = "round",
+  linemitre = 10,
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
 )
 
 stat_catenary(
   mapping = NULL,
   data = NULL,
-  geom = "path",
+  geom = "catenary",
   position = "identity",
+  ...,
+  chain_length = NULL,
+  sag = NULL,
   na.rm = FALSE,
   show.legend = NA,
-  inherit.aes = TRUE,
-  chainLength = NULL,
-  ...
+  inherit.aes = TRUE
+)
+
+stat_arch(
+  mapping = NULL,
+  data = NULL,
+  geom = "line",
+  position = "identity",
+  ...,
+  arch_length = NULL,
+  arch_height = NULL,
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
 )
 }
 \arguments{
@@ -50,73 +84,156 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
-\item{position}{Position adjustment, either as a string naming the adjustment
-(e.g. \code{"jitter"} to use \code{position_jitter}), or the result of a call to a
-position adjustment function. Use the latter if you need to change the
-settings of the adjustment.}
+\item{stat}{The statistical transformation to use on the data for this layer.
+When using a \verb{geom_*()} function to construct a layer, the \code{stat}
+argument can be used to override the default coupling between geoms and
+stats. The \code{stat} argument accepts the following:
+\itemize{
+\item A \code{Stat} ggproto subclass, for example \code{StatCount}.
+\item A string naming the stat. To give the stat as a string, strip the
+function name of the \code{stat_} prefix. For example, to use \code{stat_count()},
+give the stat as \code{"count"}.
+\item For more information and other ways to specify the stat, see the
+\link[ggplot2:layer_stats]{layer stat} documentation.
+}}
 
-\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
-often aesthetics, used to set an aesthetic to a fixed value, like
-\code{colour = "red"} or \code{size = 3}. They may also be parameters
-to the paired geom/stat.}
+\item{position}{A position adjustment to use on the data for this layer. This
+can be used in various ways, including to prevent overplotting and
+improving the display. The \code{position} argument accepts the following:
+\itemize{
+\item The result of calling a position function, such as \code{position_jitter()}.
+This method allows for passing extra arguments to the position.
+\item A string naming the position adjustment. To give the position as a
+string, strip the function name of the \code{position_} prefix. For example,
+to use \code{position_jitter()}, give the position as \code{"jitter"}.
+\item For more information and other ways to specify the position, see the
+\link[ggplot2:layer_positions]{layer position} documentation.
+}}
 
-\item{chainLength}{Length of chain between two points.}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}'s \code{params} argument. These
+arguments broadly fall into one of 4 categories below. Notably, further
+arguments to the \code{position} argument, or aesthetics that are required
+can \emph{not} be passed through \code{...}. Unknown arguments that are not part
+of the 4 categories below are ignored.
+\itemize{
+\item Static aesthetics that are not mapped to a scale, but are at a fixed
+value and apply to the layer as a whole. For example, \code{colour = "red"}
+or \code{linewidth = 3}. The geom's documentation has an \strong{Aesthetics}
+section that lists the available options. The 'required' aesthetics
+cannot be passed on to the \code{params}. Please note that while passing
+unmapped aesthetics as vectors is technically possible, the order and
+required length is not guaranteed to be parallel to the input data.
+\item When constructing a layer using
+a \verb{stat_*()} function, the \code{...} argument can be used to pass on
+parameters to the \code{geom} part of the layer. An example of this is
+\code{stat_density(geom = "area", outline.type = "both")}. The geom's
+documentation lists which parameters it can accept.
+\item Inversely, when constructing a layer using a
+\verb{geom_*()} function, the \code{...} argument can be used to pass on parameters
+to the \code{stat} part of the layer. An example of this is
+\code{geom_area(stat = "density", adjust = 0.5)}. The stat's documentation
+lists which parameters it can accept.
+\item The \code{key_glyph} argument of \code{\link[ggplot2:layer]{layer()}} may also be passed on through
+\code{...}. This can be one of the functions described as
+\link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
+}}
+
+\item{chain_length}{Numeric vector of physical chain lengths. Recycled to
+the number of segments. If \code{NULL} and \code{sag} is also \code{NULL}, defaults to
+twice the Euclidean distance per segment. Can be mixed with \code{sag} by
+placing \code{NA} in the appropriate positions.}
+
+\item{sag}{Numeric vector giving the vertical drop of the curve below
+the \strong{lowest endpoint} of each segment. Takes precedence over
+\code{chain_length} when both are supplied for the same segment.}
+
+\item{chainLength}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use
+\code{chain_length} instead.}
+
+\item{na.rm}{If \code{FALSE}, the default, missing values are removed with
+a warning. If \code{TRUE}, missing values are silently removed.}
 
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{na.rm}{If \code{FALSE}, the default, missing values are removed with
-a warning. If \code{TRUE}, missing values are silently removed.}
+\item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
 
-\item{geom, stat}{Use to override the default connection between
-\code{geom_catenary} and \code{stat_catenary}.}
+\item{arrow.fill}{fill colour to use for the arrow head (if closed). \code{NULL}
+means use \code{colour} aesthetic.}
+
+\item{lineend}{Line end style (round, butt, square).}
+
+\item{linejoin}{Line join style (round, mitre, bevel).}
+
+\item{linemitre}{Line mitre limit (number greater than 1).}
+
+\item{arch_length}{Numeric vector of arch lengths. Recycled to the number
+of segments. If \code{NULL} and \code{arch_height} is also \code{NULL}, defaults to
+twice the Euclidean distance per segment. Can be mixed with
+\code{arch_height} by placing \code{NA} in the appropriate positions.}
+
+\item{arch_height}{Numeric vector giving the vertical rise of the arch
+above the \strong{highest endpoint} of each segment. Takes precedence
+over \code{arch_length} when both are supplied for the same segment.}
 }
 \description{
-\code{geom_catenary()} draws a catenary curve which has a U-like shape,
-similar in appearance to a parabola, which it is not.
+\code{geom_catenary()} draws a catenary curve (hanging chain) between
+successive points. \code{geom_arch()} draws an inverted catenary curve and
+is hence intended for people living on the southern hemisphere.
+
+The shape follows the catenary equation
+\eqn{y = a \cosh\!\bigl(\frac{x - h}{a}\bigr) + v}.
 }
-\details{
-If a flexible chain or rope is loosely hung between two fixed
-points, it is a curve called a catenary. Catenary, from Latin word catēna,
-means "chain".
+\examples{
+library(ggplot2)
+
+df <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
+
+# basic usage
+p <- ggplot(df, aes(x, y)) + ylim(-3, NA) + geom_point(size = 3)
+p + geom_catenary()
+
+# Catenary with sag = 2, considered from lowest point of each segment
+# recycled, if only a one value is provided
+p + geom_catenary(sag = 2)
+p + geom_catenary(sag = c(2, 1, 1))
+
+# if sag and chain_length are provided for same segment(s), sag wins
+p + geom_catenary(sag = c(2, 1, NA), chain_length = 10)
+
+# Arch with height = 2, considered from highest point of each segment
+p + geom_arch(arch_height = c(2, 1, 1))
+
+# Rice house, see https://en.wikipedia.org/wiki/Rice_House,_Eltham
+rice_house <- data.frame(x = c(0, 1.5, 2.5, 3.5, 5), y = c(0, 1, 1, 1, 0))
+ggplot(rice_house, aes(x, y)) +
+  geom_arch(arch_height = .15, lwd = 2) +
+  geom_segment(aes(xend = x, yend = 0)) +
+  geom_hline(yintercept = 0, colour = "forestgreen", linewidth = 3) +
+  coord_equal()
 }
 \section{Aesthetics}{
 
-\code{geom_catenary()} understands the following aesthetics (required
-aesthetics are in bold):
-\itemize{
-\item \strong{x}
-\item \strong{y}
-\item alpha
-\item color
-\item group
-\item linetype
-\item linewidth
-}
+\code{geom_catenary()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
+\tabular{rll}{
+ • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → via \code{theme()} \cr
 }
 
-\examples{
-dat <- data.frame(
-  x = c(0, 1, 2),
-  y = c(1, 2, -3)
-)
-
-p <- ggplot(dat, aes(x, y))
-p + geom_catenary() +
-  ylim(-4, NA)
-
-# use chainLength argument to change default behaviour
-# if you pick a chain length that is too short, a straight line is
-# drawn and a message about minimum chain length is shown
-p + geom_catenary(chainLength = 10) +
-  ylim(-4, NA)
-
+Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }

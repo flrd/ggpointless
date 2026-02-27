@@ -4,7 +4,7 @@
 
 #' Solve catenary parameter `a` from chain/arch length
 #' @noRd
-.solve_a_from_len <- function(dx, dy, L) {
+solve_a_from_len <- function(dx, dy, L) {
   abs_dx <- abs(dx)
   discriminant <- L^2 - dy^2
   # Guard: length must exceed the vertical gap
@@ -42,7 +42,7 @@
 
 #' Solve catenary parameter `a` from sag (drop below lowest endpoint)
 #' @noRd
-.solve_a_from_lowest_sag <- function(dx, dy, S) {
+solve_a_from_lowest_sag <- function(dx, dy, S) {
   if (S <= 0)
     return(Inf)
 
@@ -84,7 +84,7 @@
     return(Inf)
 
   tryCatch(
-    uniroot(
+    stats::uniroot(
       f,
       lower = a_low,
       upper = a_up,
@@ -106,7 +106,7 @@
 #' @param gravity `1` for hanging chain, `-1` for arch.
 #' @param len_name,sag_name User-facing parameter names for messages.
 #' @noRd
-.compute_catenary_group <- function(data,
+compute_catenary_group <- function(data,
                                     n = 100L,
                                     chain_length,
                                     sag,
@@ -204,12 +204,12 @@
 
     # Priority 1: sag / arch_height
     if (!is.na(sag_vec[i])) {
-      current_alpha <- .solve_a_from_lowest_sag(dx, eff_dy, sag_vec[i])
+      current_alpha <- solve_a_from_lowest_sag(dx, eff_dy, sag_vec[i])
     }
     # Priority 2: chain_length / arch_length
     else if (!is.na(chain_length_vec[i])) {
       if (chain_length_vec[i] >= straight_dist) {
-        current_alpha <- .solve_a_from_len(dx, eff_dy, chain_length_vec[i])
+        current_alpha <- solve_a_from_len(dx, eff_dy, chain_length_vec[i])
       } else {
         cli::cli_warn(
           "The {.arg {len_name}} ({round(chain_length_vec[i], 2)}) is shorter \\
@@ -222,7 +222,7 @@
     }
     # Priority 3: default = 2x euclidean distance
     else {
-      current_alpha <- .solve_a_from_len(dx, eff_dy, straight_dist * 2)
+      current_alpha <- solve_a_from_len(dx, eff_dy, straight_dist * 2)
     }
 
     # Safety net (catches NULL, Inf, NaN)
@@ -271,7 +271,6 @@ StatCatenary <- ggproto(
   extra_params = c("na.rm", "chain_length", "chainLength"),
 
   setup_params = function(data, params) {
-
     has_chainLength <- !is.null(params$chainLength)
     has_chain_length <- !is.null(params$chain_length)
 
@@ -281,20 +280,20 @@ StatCatenary <- ggproto(
         Use {.arg chain_length}.",
         .frequency = "regularly",
         .frequency_id = "catenary_chain_length_wins"
-        )
+      )
       # drop chainLength
       params$chainLength <- NULL
     }
 
     params
 
-    },
+  },
 
   compute_group = function(data,
                            scales,
                            chain_length = NULL,
                            sag = NULL) {
-    .compute_catenary_group(
+    compute_catenary_group(
       data,
       chain_length = chain_length,
       sag = sag,
@@ -318,7 +317,7 @@ StatArch <- ggproto(
                            scales,
                            arch_length = NULL,
                            arch_height = NULL) {
-    .compute_catenary_group(
+    compute_catenary_group(
       data,
       chain_length = arch_length,
       sag = arch_height,

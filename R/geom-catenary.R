@@ -2,20 +2,18 @@
 #' @format NULL
 #' @usage NULL
 #' @export
-GeomCatenary <- ggplot2::ggproto("GeomCatenary", ggplot2::GeomLine, stat = "catenary")
-
-#' @rdname ggpointless-ggproto
-#' @format NULL
-#' @usage NULL
-#' @export
-GeomArch <- ggplot2::ggproto("GeomArch", ggplot2::GeomLine, stat = "arch")
+GeomCatenary <- ggplot2::ggproto(
+  "GeomCatenary",
+  ggplot2::GeomLine,
+  stat = "catenary"
+  )
 
 #' @title Catenary Curves and Arches
 #'
 #' @description
 #' `geom_catenary()` draws a catenary curve (hanging chain) between
-#' successive points. `geom_arch()` is made for people living on the
-#' southern hemisphere as it draws an inverted catenary curve.
+#' successive points. `geom_arch()` draws an inverted catenary curve and
+#' is hence intended for people living on the southern hemisphere.
 #'
 #' The shape follows the catenary equation
 #' \eqn{y = a \cosh\!\bigl(\frac{x - h}{a}\bigr) + v}.
@@ -43,27 +41,29 @@ GeomArch <- ggplot2::ggproto("GeomArch", ggplot2::GeomLine, stat = "arch")
 #' @examples
 #' library(ggplot2)
 #'
-#' df <- data.frame(x = 0:2, y = c(1, 0, 1))
+#' df <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
+#'
+#' # basic usage
+#' p <- ggplot(df, aes(x, y)) + ylim(-3, NA) + geom_point(size = 3)
+#' p + geom_catenary()
 #'
 #' # Catenary with sag = 2, considered from lowest point of each segment
-#' ggplot(df, aes(x, y)) +
-#'   geom_catenary(sag = 2) +
-#'   geom_point()
+#' # recycled, if only a one value is provided
+#' p + geom_catenary(sag = 2)
+#' p + geom_catenary(sag = c(2, 1, 1))
+#'
+#' # if sag and chain_length are provided for same segment(s), sag wins
+#' p + geom_catenary(sag = c(2, 1, NA), chain_length = 10)
 #'
 #' # Arch with height = 2, considered from highest point of each segment
-#' ggplot(df, aes(x, y)) +
-#'   geom_arch(arch_height = c(2, 1))
+#' p + geom_arch(arch_height = c(2, 1, 1))
 #'
-#' # stat_arch() paired with a different geom
-#' ggplot(df, aes(x, y)) +
-#'   stat_arch(arch_height = 2, geom = "point_glow", colour = "tomato")
-#'
-#' # Rice house, https://en.wikipedia.org/wiki/Rice_House,_Eltham
-#' rice_house <- data.frame(x = c(0, 2, 3, 4, 6), y = c(0, 1, 1, 1, 0))
-#' ggplot(rice_houses, aes(x, y)) +
-#'   geom_arch(arch_height = .2, lwd = 2) +
+#' # Rice house, see https://en.wikipedia.org/wiki/Rice_House,_Eltham
+#' rice_house <- data.frame(x = c(0, 1.5, 2.5, 3.5, 5), y = c(0, 1, 1, 1, 0))
+#' ggplot(rice_house, aes(x, y)) +
+#'   geom_arch(arch_height = .15, lwd = 2) +
 #'   geom_segment(aes(xend = x, yend = 0)) +
-#'   geom_hline(yintercept = 0) +
+#'   geom_hline(yintercept = 0, colour = "forestgreen", linewidth = 3) +
 #'   coord_equal()
 #' @export
 geom_catenary <- function(mapping = NULL,
@@ -73,14 +73,24 @@ geom_catenary <- function(mapping = NULL,
                           ...,
                           chain_length = NULL,
                           sag = NULL,
-                          chainLength = deprecated(),
+                          chainLength = lifecycle::deprecated(),
                           na.rm = FALSE,
                           show.legend = NA,
                           inherit.aes = TRUE) {
   if (lifecycle::is_present(chainLength)) {
-    lifecycle::deprecate_warn("0.2.0",
-                              "geom_catenary(chainLength)",
-                              "geom_catenary(chain_length)")
+    lifecycle::deprecate_warn(
+      "0.2.0",
+      "ggpointless::geom_catenary(chainLength)",
+      "ggpointless::geom_catenary(chain_length)"
+    )
+    if (!is.null(chain_length)) {
+      cli::cli_inform(
+        "Note that {.arg chain_length} wins over deprecated {.arg chainLength}. \\
+        Use {.arg chain_length}.",
+        .frequency = "regularly",
+        .frequency_id = "catenary_chain_length_wins"
+      )
+    }
     chain_length <- chain_length %||% chainLength
   }
 
@@ -103,29 +113,4 @@ geom_catenary <- function(mapping = NULL,
 
 #' @rdname geom_catenary
 #' @export
-geom_arch <- function(mapping = NULL,
-                      data = NULL,
-                      stat = "arch",
-                      position = "identity",
-                      ...,
-                      arch_length = NULL,
-                      arch_height = NULL,
-                      na.rm = FALSE,
-                      show.legend = NA,
-                      inherit.aes = TRUE) {
-  layer(
-    data = data,
-    mapping = mapping,
-    stat = stat,
-    geom = GeomArch,
-    position = position,
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = list(
-      arch_length = arch_length,
-      arch_height = arch_height,
-      na.rm = na.rm,
-      ...
-    )
-  )
-}
+geom_arch <- make_constructor(GeomCatenary, stat = "arch")

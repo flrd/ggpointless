@@ -146,9 +146,6 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 }
-\value{
-A ggplot2 layer object.
-}
 \description{
 \code{geom_fourier()} and \code{stat_fourier()} fit a truncated Fourier (discrete
 Fourier transform, DFT) series to the supplied \code{x}/\code{y} data and render
@@ -203,48 +200,68 @@ x-spacing exceeds \code{0.5}.
 \examples{
 library(ggplot2)
 
-set.seed(1)
-df <- data.frame(
-  x = seq(0, 1, length.out = 100)
-  y = sin(seq(0, 2 * pi, length.out = 100)) + rnorm(100, sd = 0.2)
+n <- 100
+df1 <- data.frame(
+  x = seq(0, 1, length.out = n),
+  y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
 )
 
 # Basic usage – Interpolating fit (all harmonics)
-ggplot(df, aes(x, y)) +
-  geom_point(alpha = 0.4) +
-  geom_fourier()
+p <- ggplot(df1, aes(x, y)) +
+  geom_point(alpha = 0.5)
+p + geom_fourier()
 
-# Use 5 harmonics
-ggplot(df, aes(x, y)) +
-  geom_point(alpha = 0.4) +
-  geom_fourier(n_harmonics = 5)
+# Use 1 harmonic only
+p + geom_fourier(n_harmonics = 1)
 
 # De-trending a linearly drifting signal
 set.seed(2)
-x <- seq(0, 4 * pi, length.out = 80)
+x <- seq(0, 4 * pi, length.out = n)
 df2 <- data.frame(
   x = x,
-  y = sin(x) + x * 0.3 + rnorm(80, sd = 0.15)
+  y = sin(x) + x * 0.3 + rnorm(n, sd = 0.15)
 )
 
 ggplot(df2, aes(x, y)) +
-  geom_point(alpha = 0.4) +
+  geom_point(alpha = 0.5) +
   geom_fourier(detrend = "lm")
 
 # Multiple groups
 set.seed(3)
-x <- seq(0, 2 * pi, length.out = 50)
+x <- seq(0, 2 * pi, length.out = n/2)
 df3 <- rbind(
   data.frame(x = x,
-             y = sin(x) + rnorm(50, sd = 0.2),
+             y = sin(x) + rnorm(n/2, sd = 0.2),
              grp = "sine"),
   data.frame(x = x,
-             y = cos(x) + rnorm(50, sd = 0.2),
+             y = cos(x) + rnorm(n/2, sd = 0.2),
              grp = "cosine")
 )
 
 ggplot(df3, aes(x, y, colour = grp)) +
-  geom_point(alpha = 0.4) +
-  geom_fourier(n_harmonics = 3)
+  geom_point(alpha = 0.5) +
+  geom_fourier()
 
+}
+\seealso{
+See individual modelling functions for more details:
+\code{\link[=lm]{lm()}} for linear smooths,
+\code{\link[=loess]{loess()}} for local smooths.
+}
+\section{Aesthetics}{
+
+\code{geom_pointless()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
+\tabular{rll}{
+ • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{fill}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{shape}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{size}} \tab → via \code{theme()} \cr
+ • \tab \code{stroke} \tab → via \code{theme()} \cr
+}
+
+Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }
