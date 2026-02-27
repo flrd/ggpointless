@@ -26,21 +26,16 @@ Suggests:
     rmarkdown,
     ragg,
     scales,
-    ggtext,
-    ggrepel,
     vdiffr (>= 1.0.0),
     spelling
 Config/testthat/edition: 3
-LazyData: true
 VignetteBuilder: knitr
-Collate: 
+Collate:
     'aaa.R'
-    'data.R'
     'geom-area-fade.R'
     'geom-catenary.R'
     'geom-chaikin.R'
     'geom-fourier.R'
-    'legend-draw.R'
     'geom-lexis.R'
     'geom-point-glow.R'
     'geom-pointless.R'
@@ -51,7 +46,10 @@ Collate:
     'stat-pointless.R'
     'stat_chaikin.R'
     'utils.R'
-Imports: 
+Imports:
+    cli,
+    grid,
     lifecycle,
-    rlang
-Language: en-US
+    rlang,
+    stats
+Language: en-GB

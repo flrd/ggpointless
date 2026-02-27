@@ -1,7 +1,7 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' Additional Geoms, Stats for 'ggplot2' 3.3+
+#' Additional Geoms, Stats for 'ggplot2' 4.0.0+
 #'
 #' @name ggpointless-package
 #' @aliases ggpointless

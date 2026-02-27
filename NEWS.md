@@ -1,7 +1,48 @@
 # ggpointless (development version)
 
-* `stat_catenary()` no longer wrongfully removes data points when upper 
-  limit in `ylim()` is set to maximum y-value of dataset to use for plot (#1).
+## New features
+
+* New `geom_fourier()` and `stat_fourier()` fit a truncated Fourier series
+  (via FFT) to `x`/`y` data and render the reconstructed curve.
+  Supports optional detrending (`"lm"` or `"loess"`) and harmonic selection
+  via `n_harmonics`  (#7).
+
+* New `geom_arch()` and `stat_arch()` draw inverted catenary curves (arches)
+  between successive points, complementing the existing `geom_catenary()` (#4).
+
+* New `geom_area_fade()` draws area charts where the fill colour fades from
+  opaque to transparent using `grid::linearGradient()`. The fade target alpha
+  is controlled via `alpha_fade_to` (#3).
+
+* New `geom_point_glow()` draws points with a radial gradient glow behind
+  each point using `grid::radialGradient()`. The glow colour, alpha, and size
+  can be customised via `glow_colour`, `glow_alpha`, and `glow_size` (#6).
+
+## Breaking changes
+
+* The bundled datasets `co2_ml`, `covid_vac`, and `female_leaders` have been
+  removed from the package. Users who relied on these datasets can obtain them
+  from their original sources: [Mauna Loa CO~2~](https://gml.noaa.gov/ccgg/trends/data.html),
+  [CDC vaccination data](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status),
+  and [Wikipedia female leaders](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588),
+  respectively. The `vignette("examples")` that showcased these datasets has
+  been removed alongside them.
+
+## Improvements
+
+* The package now requires R >= 4.2.0 and ggplot2 >= 4.0.0. Several geoms 
+  take (mostly internal) advantage of new ggplot2 features such as
+  `make_constructor()`, `gg_par()`, and gradient support from 
+  `grid::linearGradient()` and `grid::radialGradient()`.
+
+* Messages and errors across the package have been migrated to the `cli` and
+  `rlang` packages, giving consistent, hyperlink-aware output.
+
+* `geom_catenary()` gained a vectorized `chain_length` argument and 
+   deprecated `chainLength` instead (#4).
+
+* `stat_catenary()` no longer wrongfully removes data points when the upper
+  limit in `ylim()` is set to the maximum y-value of the dataset (#1).
 
 # ggpointless 0.1.0
 * New `geom_catenary()` and `stat_catenary()` let you draw a hanging chain. 

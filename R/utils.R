@@ -14,9 +14,9 @@ get_decades <- function(years, anno_domini = FALSE) {
     tmp <- pmax(0, years)
 
     if (!isTRUE(all.equal(years, tmp))) {
-      message(paste(
-        "All years must be AD, returning 0.",
-        "Consider to use `anno_domini = FALSE`"
+      cli::cli_warn(c(
+        "All years before AD are clamped to 0.",
+        "i" = "Set {.arg anno_domini} = {.val FALSE} to include BC years."
       ))
     }
     decade <- tmp %/% 10 * 10

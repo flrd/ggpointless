@@ -6,7 +6,7 @@
 #'
 #' More info at [ggplot2-book.org](https://ggplot2-book.org/)
 #'
-#' @seealso ggproto
+#' @seealso [ggplot2::ggproto()]
 #' @keywords internal
 #' @name ggpointless-ggproto
 NULL

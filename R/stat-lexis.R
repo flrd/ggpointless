@@ -29,10 +29,10 @@ StatLexis <- ggproto("StatLexis", Stat,
   required_aes = c("x", "xend"),
   default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
   setup_params = function(data, params) {
-    has_y <- !(is.null(data$y) && is.null(params$y))
-    has_yend <- !(is.null(data$yend) && is.null(params$yend))
-    if (has_y || has_yend) {
-      message("`stat_lexis()` calculates y and yend aesthetics for you.")
+    if (!is.null(data$y) || !is.null(data$yend)) {
+      cli::cli_inform(
+        "{.fn stat_lexis} calculates {.field y} and {.field yend} for you."
+      )
     }
     params
   },
@@ -49,19 +49,12 @@ StatLexis <- ggproto("StatLexis", Stat,
 #'
 #' @keywords internal
 get_lexis <- function(x, xend) {
-  if (is.character(x) || is.character(xend)) {
-    stop("`x` and `xend` must be continuous.")
-  }
-
   if (mode(c(x, xend)) != "numeric") {
-    stop("`x` and `xend` must be continuous.")
+    cli::cli_abort("{.arg x} and {.arg xend} must be continuous.")
   }
 
   if (any(x > xend, na.rm = TRUE)) {
-    stop(paste(
-      "For each row in your data, `xend` must",
-      "be greater than `x`"
-    ))
+    cli::cli_abort("Each {.arg xend} must be greater than or equal to its {.arg x}.")
   }
 
   # get all x-positions

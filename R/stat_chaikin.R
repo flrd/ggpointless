@@ -5,12 +5,26 @@ stat_chaikin <- function(mapping = NULL,
                          geom = "path",
                          position = "identity",
                          ...,
+                         mode = "open",
                          iterations = 5,
                          ratio = 0.25,
-                         closed = FALSE,
+                         closed = lifecycle::deprecated(),
                          na.rm = FALSE,
                          show.legend = NA,
                          inherit.aes = TRUE) {
+  if (lifecycle::is_present(closed)) {
+    lifecycle::deprecate_warn("0.2.0", "stat_chaikin(closed)", "stat_chaikin(mode)")
+    if (missing(mode)) {
+      mode <- if (isTRUE(closed)) "closed" else "open"
+    } else {
+      cli::cli_inform(
+        "{.arg mode} wins over deprecated {.arg closed}. Use {.arg mode}.",
+        .frequency = "regularly",
+        .frequency_id = "chaikin_mode_wins"
+      )
+    }
+  }
+
   ggplot2::layer(
     data = data,
     mapping = mapping,
@@ -20,9 +34,9 @@ stat_chaikin <- function(mapping = NULL,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
     params = list(
+      mode = mode,
       iterations = iterations,
       ratio = ratio,
-      closed = closed,
       na.rm = na.rm,
       ...
     )
@@ -34,19 +48,70 @@ stat_chaikin <- function(mapping = NULL,
 #' @usage NULL
 #' @export
 StatChaikin <- ggproto("StatChaikin", Stat,
-                       required_aes = c("x", "y"),
-                       compute_group = function(data, scales, params,
-                                                iterations = 5, ratio = 0.25, closed = FALSE) {
-                         if (is.null(data)) {
-                           return(data)
-                         }
+  required_aes = c("x", "y"),
+  extra_params = c("na.rm", "mode", "iterations", "ratio", "closed"),
 
-                         data <- get_chaikin(x = data$x, y = data$y, iterations = iterations, ratio = ratio, closed = closed)
-                         if (closed) {
-                           data <- rbind(data, data[1, , drop = FALSE])
-                         }
-                         data
-                       }
+  setup_params = function(data, params) {
+    # Handle deprecated `closed` (arrives via ... from geom_chaikin(closed = ...))
+    if (!is.null(params$closed)) {
+      lifecycle::deprecate_warn("0.2.0", "geom_chaikin(closed)", "geom_chaikin(mode)")
+      if (!is.null(params$mode)) {
+        # mode was explicitly set by the user — mode wins
+        cli::cli_inform(
+          "{.arg mode} wins over deprecated {.arg closed}. Use {.arg mode}.",
+          .frequency = "regularly",
+          .frequency_id = "chaikin_mode_wins"
+        )
+      } else {
+        params$mode <- if (isTRUE(params$closed)) "closed" else "open"
+      }
+      params$closed <- NULL
+    }
+
+    # Resolve NULL (= not explicitly set) to the default
+    params$mode <- params$mode %||% "open"
+
+    # Validate mode
+    params$mode <- rlang::arg_match0(params$mode, values = c("open", "closed"))
+
+    # Validate iterations
+    if (!is_integer(params$iterations) ||
+        params$iterations < 0L || params$iterations > 10L) {
+      cli::cli_abort(
+        "{.arg iterations} must be a whole number between 0 and 10, \\
+         not {.val {params$iterations}}."
+      )
+    }
+    params$iterations <- as.integer(params$iterations)
+
+    # Validate ratio
+    if (!is.numeric(params$ratio) ||
+        params$ratio < 0 || params$ratio > 1) {
+      cli::cli_abort(
+        "{.arg ratio} must be a number between 0 and 1, \\
+         not {.val {params$ratio}}."
+      )
+    }
+    if (params$ratio > 0.5) {
+      cli::cli_warn("A {.arg ratio} > 0.5 is mirrored to {1 - params$ratio}.")
+      params$ratio <- 1 - params$ratio
+    }
+
+    params
+  },
+
+  compute_group = function(data, scales,
+                           mode = "open", iterations = 5L, ratio = 0.25) {
+    closed <- mode == "closed"
+    data <- get_chaikin(
+      x = data$x, y = data$y,
+      iterations = iterations, ratio = ratio, closed = closed
+    )
+    if (closed) {
+      data <- rbind(data, data[1L, , drop = FALSE])
+    }
+    data
+  }
 )
 
 #' @keywords internal
@@ -89,38 +154,22 @@ cut_corners <- function(x, y, ratio, closed = TRUE) {
 
 #' @keywords internal
 get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
-  if (iterations == 0) {
+  if (iterations == 0L) {
     return(data.frame(x = x, y = y))
   }
 
-  if (!is_integer(iterations) || iterations < 0 || iterations > 10) {
-    stop("`iterations` should be a whole number between 1 and 10.")
-  }
-
-  if (length(x) == 0 || length(y) == 0) {
-    stop("`x` and `y` should have a positive length, returning `data`.")
+  if (length(x) == 0L || length(y) == 0L) {
+    cli::cli_abort("{.arg x} and {.arg y} must have a positive length.")
   }
 
   if (!identical(length(x), length(y))) {
-    stop("`x` and `y` must have the same length.")
-  }
-
-  if (ratio > 1 || ratio < 0) {
-    stop("`ratio` must be a number between 0 and 1.")
-  }
-
-  if (ratio > 0.5) {
-    ratio <- 1 - ratio
-    message("A value of `ratio` > 0.5 will be flipped to `1 - ratio`")
+    cli::cli_abort("{.arg x} and {.arg y} must have the same length.")
   }
 
   for (i in seq.int(iterations)) {
-    tmp <- list(x = x, y = y)
-    new_xy <- cut_corners(tmp[["x"]], tmp[["y"]], ratio = ratio, closed = closed)
-    tmp[["x"]] <- new_xy$x
-    tmp[["y"]] <- new_xy$y
-    x <- tmp[["x"]]
-    y <- tmp[["y"]]
+    xy <- cut_corners(x, y, ratio = ratio, closed = closed)
+    x  <- xy$x
+    y  <- xy$y
   }
   data.frame(x = x, y = y)
 }

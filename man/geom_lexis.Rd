@@ -3,15 +3,16 @@
 \name{geom_lexis}
 \alias{geom_lexis}
 \alias{stat_lexis}
-\title{Display events of different cohorts in form of a lexis charts}
+\title{Display events of different cohorts in form of a lexis chart}
 \usage{
 geom_lexis(
   mapping = NULL,
   data = NULL,
+  stat = "lexis",
+  position = "identity",
   ...,
   point_show = TRUE,
   point_colour = NULL,
-  point_size = deprecated(),
   gap_filler = TRUE,
   lineend = "round",
   linejoin = "round",
@@ -50,20 +51,68 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
-\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
-often aesthetics, used to set an aesthetic to a fixed value, like
-\code{colour = "red"} or \code{size = 3}. They may also be parameters
-to the paired geom/stat.}
+\item{stat}{The statistical transformation to use on the data for this layer.
+When using a \verb{geom_*()} function to construct a layer, the \code{stat}
+argument can be used to override the default coupling between geoms and
+stats. The \code{stat} argument accepts the following:
+\itemize{
+\item A \code{Stat} ggproto subclass, for example \code{StatCount}.
+\item A string naming the stat. To give the stat as a string, strip the
+function name of the \code{stat_} prefix. For example, to use \code{stat_count()},
+give the stat as \code{"count"}.
+\item For more information and other ways to specify the stat, see the
+\link[ggplot2:layer_stats]{layer stat} documentation.
+}}
 
-\item{point_show}{logical. Should a point be shown at the end
-of each segment? TRUE by default}
+\item{position}{A position adjustment to use on the data for this layer. This
+can be used in various ways, including to prevent overplotting and
+improving the display. The \code{position} argument accepts the following:
+\itemize{
+\item The result of calling a position function, such as \code{position_jitter()}.
+This method allows for passing extra arguments to the position.
+\item A string naming the position adjustment. To give the position as a
+string, strip the function name of the \code{position_} prefix. For example,
+to use \code{position_jitter()}, give the position as \code{"jitter"}.
+\item For more information and other ways to specify the position, see the
+\link[ggplot2:layer_positions]{layer position} documentation.
+}}
 
-\item{point_colour}{color of a point}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}'s \code{params} argument. These
+arguments broadly fall into one of 4 categories below. Notably, further
+arguments to the \code{position} argument, or aesthetics that are required
+can \emph{not} be passed through \code{...}. Unknown arguments that are not part
+of the 4 categories below are ignored.
+\itemize{
+\item Static aesthetics that are not mapped to a scale, but are at a fixed
+value and apply to the layer as a whole. For example, \code{colour = "red"}
+or \code{linewidth = 3}. The geom's documentation has an \strong{Aesthetics}
+section that lists the available options. The 'required' aesthetics
+cannot be passed on to the \code{params}. Please note that while passing
+unmapped aesthetics as vectors is technically possible, the order and
+required length is not guaranteed to be parallel to the input data.
+\item When constructing a layer using
+a \verb{stat_*()} function, the \code{...} argument can be used to pass on
+parameters to the \code{geom} part of the layer. An example of this is
+\code{stat_density(geom = "area", outline.type = "both")}. The geom's
+documentation lists which parameters it can accept.
+\item Inversely, when constructing a layer using a
+\verb{geom_*()} function, the \code{...} argument can be used to pass on parameters
+to the \code{stat} part of the layer. An example of this is
+\code{geom_area(stat = "density", adjust = 0.5)}. The stat's documentation
+lists which parameters it can accept.
+\item The \code{key_glyph} argument of \code{\link[ggplot2:layer]{layer()}} may also be passed on through
+\code{...}. This can be one of the functions described as
+\link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
+}}
 
-\item{point_size}{deprecated, use \code{size}}
+\item{point_show}{logical. Should a point be shown at the end of each
+segment? \code{TRUE} by default.}
 
-\item{gap_filler}{logical. Should gaps be filled?
-TRUE by default}
+\item{point_colour}{colour of the endpoint point. If \code{NULL} (default), the
+group colour is used.}
+
+\item{gap_filler}{logical. Should horizontal gap-filler segments be drawn?
+\code{TRUE} by default.}
 
 \item{lineend}{line end style (round, butt, square)}
 
@@ -76,12 +125,14 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 }
 \description{
 This geom can be used to plot 45° lifelines for a cohort.
@@ -97,27 +148,8 @@ called \code{type} in the layer data. You might want to map to an aesthetic with
 for more details.
 
 Rows in your data with either missing \code{x} or \code{xend} values will be removed
-(your segments must start and end somewhere).
+because your segments must start and end somewhere.
 }
-\section{Aesthetics}{
-
-geom_lexis() understands the following aesthetics (required
-aesthetics are in bold):
-\itemize{
-\item \strong{x}
-\item \strong{xend}
-\item alpha
-\item color
-\item fill
-\item group
-\item shape
-\item size
-\item linetype
-\item linewidth
-\item stroke
-}
-}
-
 \examples{
 df1 <- data.frame(
   key = c("A", "B", "B", "C", "D", "E"),
@@ -167,5 +199,25 @@ ggplot(
 ) +
   geom_lexis()
 }
+}
+\section{Aesthetics}{
 
+\code{geom_lexis()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
+\tabular{rll}{
+ • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{xend}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → \code{"black"} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{fill}} \tab → \code{NA} \cr
+ • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → \code{"solid"} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → \code{0.5} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{shape}} \tab → \code{19} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{size}} \tab → \code{1.5} \cr
+ • \tab \code{stroke} \tab → \code{0.5} \cr
+}
+
+Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }

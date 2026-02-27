@@ -1,29 +1,18 @@
-#' Apply Chaikin's corner cutting algorithm to smooth a path
+#' @rdname ggpointless-ggproto
+#' @format NULL
+#' @usage NULL
+#' @export
+GeomChaikin <- ggplot2::ggproto(
+  "GeomChaikin",
+  ggplot2::GeomPath,
+  extra_params = c(ggplot2::GeomPath$extra_params, "mode", "iterations", "ratio", "closed")
+)
+
+#' @title Apply Chaikin's corner cutting algorithm to smooth a path
 #'
 #' @description
 #' Chaikin's corner-cutting algorithm can be used to smooth sharp
 #' corners of a path.
-#'
-#' @section Aesthetics:
-#' `geom_chaikin()` understands the following aesthetics (required
-#' aesthetics are in bold):
-#'
-#' - **x**
-#' - **y**
-#' - alpha
-#' - color
-#' - group
-#' - linetype
-#' - linewidth
-#'
-#' @inheritParams ggplot2::geom_path
-#' @param geom,stat Use to override the default connection between
-#'   \code{geom_chaikin} and \code{stat_chaikin}.
-#' @param iterations Integer. Number of iterations to apply. Must be between 0 and 10.
-#' @param ratio Numeric. Cutting ratio must be between 0 and 1.
-#' @param closed Logical. Specify if result is an open or closed shape.
-#' @references Chaikin, G. An algorithm for high speed curve generation.
-#' Computer Graphics and Image Processing 3 (1974), 346–349
 #'
 #' @details
 #' Chaikin's corner cutting algorithm iteratively turns a jagged path into
@@ -39,10 +28,25 @@
 #' each pair of new points. The rule is applied iterations times. The
 #' maximum number of iterations is 10, default is 5.
 #'
-#' The ratio parameter  must be a number between 0 and 1. If ratio > 0.5,
-#' then it will be flipped to 1 - ratio, and a message is shown.
+#' @aesthetics GeomChaikin
 #'
-#' @export
+#' @inheritParams ggplot2::geom_path
+#' @param geom,stat Use to override the default connection between
+#'   `geom_chaikin()` and `stat_chaikin()`.
+#' @param iterations Integer. Number of iterations to apply between `1` and
+#'  `10`. When `iterations = 0` the original data is unchanged so essentially
+#'   this is the same as calling [`ggplot2::geom_path()`]; however this might
+#'   be useful when you want to toggle smoothing on/off programmatically without
+#'   removing the layer.
+#' @param ratio Numeric. Cutting ratio must be a number between `0` and `1`.
+#'   If `ratio > 0.5`, then it will be flipped to `1 - ratio`.
+#' @param mode Character. Should the geom draw a closed polygon or an open
+#'   path. One of `"open"` (default) or `"closed"`.
+#' @param closed `r lifecycle::badge("deprecated")` Use `mode` instead.
+#'
+#' @references Chaikin, G. An algorithm for high speed curve generation.
+#' Computer Graphics and Image Processing 3 (1974), 346–349
+#'
 #' @examples
 #' set.seed(42)
 #' dat <- data.frame(
@@ -64,39 +68,20 @@
 #'   geom_path(linetype = "12") +
 #'   coord_equal()
 #'
-#' # ratio let's you control
+#' # ratio lets you control the cutting amount
 #' p2 + geom_chaikin(ratio = .1)
 #' p2 + geom_chaikin(ratio = .5)
 #'
-#' # closed parameter to generate a closed shape - or not
-#' p2 + geom_chaikin(iterations = 5, ratio = 0.25, closed = FALSE) # default
-#' p2 + geom_chaikin(closed = TRUE)
+#' # mode controls whether the result is an open or closed shape
+#' p2 + geom_chaikin(mode = "open")   # default
+#' p2 + geom_chaikin(mode = "closed")
 #'
-geom_chaikin <- function(mapping = NULL,
-                         data = NULL,
-                         stat = "chaikin",
-                         position = "identity",
-                         ...,
-                         iterations = 5,
-                         ratio = 0.25,
-                         closed = FALSE,
-                         na.rm = FALSE,
-                         show.legend = NA,
-                         inherit.aes = TRUE) {
-  layer(
-    geom = GeomPath,
-    mapping = mapping,
-    data = data,
-    stat = stat,
-    position = position,
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = list(
-      iterations = iterations,
-      ratio = ratio,
-      closed = closed,
-      na.rm = na.rm,
-      ...
-    )
-  )
-}
+#' @export
+#' @rdname geom_chaikin
+geom_chaikin <- make_constructor(
+  GeomChaikin,
+  stat       = "chaikin",
+  mode       = NULL,
+  iterations = 5,
+  ratio      = 0.25
+)

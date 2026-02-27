@@ -11,9 +11,14 @@ geom_chaikin(
   stat = "chaikin",
   position = "identity",
   ...,
+  mode = NULL,
   iterations = 5,
   ratio = 0.25,
-  closed = FALSE,
+  arrow = NULL,
+  arrow.fill = NULL,
+  lineend = "butt",
+  linejoin = "round",
+  linemitre = 10,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -25,9 +30,10 @@ stat_chaikin(
   geom = "path",
   position = "identity",
   ...,
+  mode = "open",
   iterations = 5,
   ratio = 0.25,
-  closed = FALSE,
+  closed = lifecycle::deprecated(),
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -54,21 +60,69 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
-\item{position}{Position adjustment, either as a string naming the adjustment
-(e.g. \code{"jitter"} to use \code{position_jitter}), or the result of a call to a
-position adjustment function. Use the latter if you need to change the
-settings of the adjustment.}
+\item{position}{A position adjustment to use on the data for this layer. This
+can be used in various ways, including to prevent overplotting and
+improving the display. The \code{position} argument accepts the following:
+\itemize{
+\item The result of calling a position function, such as \code{position_jitter()}.
+This method allows for passing extra arguments to the position.
+\item A string naming the position adjustment. To give the position as a
+string, strip the function name of the \code{position_} prefix. For example,
+to use \code{position_jitter()}, give the position as \code{"jitter"}.
+\item For more information and other ways to specify the position, see the
+\link[ggplot2:layer_positions]{layer position} documentation.
+}}
 
-\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}. These are
-often aesthetics, used to set an aesthetic to a fixed value, like
-\code{colour = "red"} or \code{size = 3}. They may also be parameters
-to the paired geom/stat.}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}'s \code{params} argument. These
+arguments broadly fall into one of 4 categories below. Notably, further
+arguments to the \code{position} argument, or aesthetics that are required
+can \emph{not} be passed through \code{...}. Unknown arguments that are not part
+of the 4 categories below are ignored.
+\itemize{
+\item Static aesthetics that are not mapped to a scale, but are at a fixed
+value and apply to the layer as a whole. For example, \code{colour = "red"}
+or \code{linewidth = 3}. The geom's documentation has an \strong{Aesthetics}
+section that lists the available options. The 'required' aesthetics
+cannot be passed on to the \code{params}. Please note that while passing
+unmapped aesthetics as vectors is technically possible, the order and
+required length is not guaranteed to be parallel to the input data.
+\item When constructing a layer using
+a \verb{stat_*()} function, the \code{...} argument can be used to pass on
+parameters to the \code{geom} part of the layer. An example of this is
+\code{stat_density(geom = "area", outline.type = "both")}. The geom's
+documentation lists which parameters it can accept.
+\item Inversely, when constructing a layer using a
+\verb{geom_*()} function, the \code{...} argument can be used to pass on parameters
+to the \code{stat} part of the layer. An example of this is
+\code{geom_area(stat = "density", adjust = 0.5)}. The stat's documentation
+lists which parameters it can accept.
+\item The \code{key_glyph} argument of \code{\link[ggplot2:layer]{layer()}} may also be passed on through
+\code{...}. This can be one of the functions described as
+\link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
+}}
 
-\item{iterations}{Integer. Number of iterations to apply. Must be between 0 and 10.}
+\item{mode}{Character. Should the geom draw a closed polygon or an open
+path. One of \code{"open"} (default) or \code{"closed"}.}
 
-\item{ratio}{Numeric. Cutting ratio must be between 0 and 1.}
+\item{iterations}{Integer. Number of iterations to apply between \code{1} and
+\code{10}. When \code{iterations = 0} the original data is unchanged so essentially
+this is the same as calling \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}}; however this might
+be useful when you want to toggle smoothing on/off programmatically without
+removing the layer.}
 
-\item{closed}{Logical. Specify if result is an open or closed shape.}
+\item{ratio}{Numeric. Cutting ratio must be a number between \code{0} and \code{1}.
+If \code{ratio > 0.5}, then it will be flipped to \code{1 - ratio}.}
+
+\item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
+
+\item{arrow.fill}{fill colour to use for the arrow head (if closed). \code{NULL}
+means use \code{colour} aesthetic.}
+
+\item{lineend}{Line end style (round, butt, square).}
+
+\item{linejoin}{Line join style (round, mitre, bevel).}
+
+\item{linemitre}{Line mitre limit (number greater than 1).}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -77,15 +131,19 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{geom, stat}{Use to override the default connection between
-\code{geom_chaikin} and \code{stat_chaikin}.}
+\code{geom_chaikin()} and \code{stat_chaikin()}.}
+
+\item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{mode} instead.}
 }
 \description{
 Chaikin's corner-cutting algorithm can be used to smooth sharp
@@ -104,25 +162,7 @@ point A and the other at 75\% of point A (or 25\% of point B). Those new
 points form a smoother path. Then the algorithm applies the same rule to
 each pair of new points. The rule is applied iterations times. The
 maximum number of iterations is 10, default is 5.
-
-The ratio parameter  must be a number between 0 and 1. If ratio > 0.5,
-then it will be flipped to 1 - ratio, and a message is shown.
 }
-\section{Aesthetics}{
-
-\code{geom_chaikin()} understands the following aesthetics (required
-aesthetics are in bold):
-\itemize{
-\item \strong{x}
-\item \strong{y}
-\item alpha
-\item color
-\item group
-\item linetype
-\item linewidth
-}
-}
-
 \examples{
 set.seed(42)
 dat <- data.frame(
@@ -144,16 +184,31 @@ p2 <- ggplot(triangle, aes(x, y)) +
   geom_path(linetype = "12") +
   coord_equal()
 
-# ratio let's you control
+# ratio lets you control the cutting amount
 p2 + geom_chaikin(ratio = .1)
 p2 + geom_chaikin(ratio = .5)
 
-# closed parameter to generate a closed shape - or not
-p2 + geom_chaikin(iterations = 5, ratio = 0.25, closed = FALSE) # default
-p2 + geom_chaikin(closed = TRUE)
+# mode controls whether the result is an open or closed shape
+p2 + geom_chaikin(mode = "open")   # default
+p2 + geom_chaikin(mode = "closed")
 
 }
 \references{
 Chaikin, G. An algorithm for high speed curve generation.
 Computer Graphics and Image Processing 3 (1974), 346–349
+}
+\section{Aesthetics}{
+
+\code{geom_chaikin()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
+\tabular{rll}{
+ • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → via \code{theme()} \cr
+}
+
+Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
 }

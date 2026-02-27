@@ -32,13 +32,6 @@ reference:
   - stat_pointless
   - geom_point_glow
 
-- title: Data
-  desc: |
-    Data objects included in the `ggpointless` package.
-  contents:
-  - co2_ml
-  - covid_vac
-  - female_leaders
 figures:
   dev: ragg::agg_png
   dpi: 132
