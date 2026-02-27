@@ -101,7 +101,7 @@ the arc length is twice the Euclidean distance.
 df_arch <- data.frame(x = 1:5, y = c(0, 0.3, 0, 0.3, 0))
 
 ggplot(df_arch, aes(x, y)) +
-  geom_arch(arch_height = 0.6, linewidth = 1, colour = "#a84dbd") +
+  geom_arch(arch_height = 0.6, colour = "#a84dbd") +
   geom_point(size = 3, colour = "#a84dbd")
 ```
 
@@ -140,9 +140,9 @@ different `arch_height` values between the same two endpoints:
 
 ``` r
 ggplot(data.frame(x = c(0, 5), y = c(0, 0)), aes(x, y)) +
-  stat_arch(arch_height = 0.5, colour = "#f4ae1b", linewidth = 1) +
-  stat_arch(arch_height = 1.5, colour = "#d77e7b", linewidth = 1) +
-  stat_arch(arch_height = 3.0, colour = "#311dfc", linewidth = 1) +
+  stat_arch(arch_height = 0.5, colour = "#f4ae1b") +
+  stat_arch(arch_height = 1.5, colour = "#d77e7b") +
+  stat_arch(arch_height = 3.0, colour = "#311dfc") +
   geom_point(size = 3) +
   labs(title = "arch_height = 0.5 (yellow), 1.5 (pink), 3.0 (blue)")
 ```
@@ -157,7 +157,7 @@ draws the *non*-inverted, hanging-chain form between successive points.
 ``` r
 set.seed(1)
 ggplot(data.frame(x = 1:6, y = sample(6)), aes(x, y)) +
-  geom_catenary(colour = "#f4ae1b", linewidth = 1) +
+  geom_catenary(colour = "#f4ae1b") +
   geom_point(size = 3)
 ```
 
@@ -191,7 +191,7 @@ giving you direct control over how much the chain droops:
 df_sag <- data.frame(x = c(0, 2, 4, 6), y = c(1, 1, 1, 1))
 
 ggplot(df_sag, aes(x, y)) +
-  geom_catenary(sag = c(0.1, 0.5, 1.2), colour = "#d77e7b", linewidth = 1) +
+  geom_catenary(sag = c(0.1, 0.5, 1.2), colour = "#d77e7b") +
   geom_point(size = 3) +
   labs(title = "sag = 0.1, 0.5, 1.2 (left to right)")
 ```
@@ -211,7 +211,7 @@ dat <- data.frame(x = seq.int(10), y = sample(15:30, 10))
 
 ggplot(dat, aes(x, y)) +
   geom_line(linetype = "dashed", colour = "grey60") +
-  geom_chaikin(colour = "#311dfc", linewidth = 1) +
+  geom_chaikin(colour = "#311dfc") +
   labs(title = "Original path (dashed) vs Chaikin-smoothed (blue)")
 ```
 
@@ -228,11 +228,11 @@ triangle <- data.frame(x = c(0, 0.5, 1), y = c(0, 1, 0))
 
 ggplot(triangle, aes(x, y)) +
   geom_polygon(fill = NA, colour = "grey70", linetype = "dashed") +
-  geom_chaikin(ratio = 0.10, mode = "closed", colour = "#f4ae1b", linewidth = 1) +
-  geom_chaikin(ratio = 0.25, mode = "closed", colour = "#d77e7b", linewidth = 1) +
-  geom_chaikin(ratio = 0.50, mode = "closed", colour = "#311dfc", linewidth = 1) +
+  geom_chaikin(ratio = 0.10, mode = "closed", colour = "#f4ae1b") +
+  geom_chaikin(ratio = 0.25, mode = "closed", colour = "#d77e7b") +
+  geom_chaikin(ratio = 0.50, mode = "closed", colour = "#311dfc") +
   coord_equal() +
-  labs(title = "ratio = 0.10 (yellow), 0.25 (pink), 0.50 (blue)")
+  labs(subtitle = "ratio = 0.10 (yellow), 0.25 (pink), 0.50 (blue)")
 ```
 
 ![](ggpointless_files/figure-html/chaikin-ratio-1.png)
@@ -280,9 +280,9 @@ df_f <- data.frame(
 
 ggplot(df_f, aes(x, y)) +
   geom_point(alpha = 0.25, size = 0.8) +
-  geom_fourier(n_harmonics = 1,  colour = "#f4ae1b", linewidth = 1) +
-  geom_fourier(n_harmonics = 3,  colour = "#d77e7b", linewidth = 1) +
-  geom_fourier(n_harmonics = 10, colour = "#311dfc", linewidth = 1) +
+  geom_fourier(n_harmonics = 1,  colour = "#f4ae1b") +
+  geom_fourier(n_harmonics = 3,  colour = "#d77e7b") +
+  geom_fourier(n_harmonics = 10, colour = "#311dfc") +
   labs(
     title = "1 harmonic (yellow), 3 (pink), 10 (blue)",
     x = NULL, y = NULL
@@ -309,12 +309,12 @@ df_d <- data.frame(
 
 ggplot(df_d, aes(x, y)) +
   geom_point(alpha = 0.35, size = 0.8) +
-  geom_fourier(n_harmonics = 3, colour = "#a84dbd", linewidth = 1,
+  geom_fourier(aes(colour = "as is"), n_harmonics = 3, 
                linetype = "dashed") +
-  geom_fourier(n_harmonics = 3, detrend = "lm", colour = "#311dfc",
-               linewidth = 1) +
+  geom_fourier(aes(colour = "detrend = 'lm'"), n_harmonics = 3, detrend = "lm") +
+  scale_colour_manual(values = c("as is" = "#a84dbd", "detrend = 'lm'" = "#311dfc")) +
   labs(
-    title   = "Without detrending (dashed) vs detrend = \"lm\" (solid)",
+    title   = "With and without detrending",
     x = NULL, y = NULL
   )
 ```
@@ -356,9 +356,9 @@ draws a line through those interpolated points. Because the grid points
 fall between observation dates, the curve misses the actual data points
 even when every harmonic is included.
 
-To fix this replace the date x-axis with a plain integer index so that
-spacing is guaranteed to be uniform. You can restore human-readable year
-labels with
+To fix this you can replace the date x-axis with a plain integer index
+so that spacing is guaranteed to be uniform. You can restore
+human-readable year labels with
 [`scale_x_continuous()`](https://ggplot2.tidyverse.org/reference/scale_continuous.html):
 
 ``` r
@@ -532,14 +532,14 @@ plot_data$x <- -plot_data$ra_h
 plot_data$y <-  plot_data$dec_d
 
 ggplot(plot_data, aes(x = x, y = y)) +
-  geom_path(aes(group = group), colour = "#ffff0055", linewidth = 0.6) +
+  geom_path(aes(group = group), colour = "#f4ae1b", linewidth = 0.6) +
   geom_point_glow(
     data        = stars_base,
     aes(x = -ra_h, y = dec_d),
-    colour      = "white",
-    size        = 2.5,
-    glow_colour = "#fff8dc",
-    glow_alpha  = 0.55
+    colour      = ggplot2::alpha("#f4ae1b", alpha = .5),
+    size        = 2,
+    glow_colour = "#f4ae1b",
+    glow_alpha  = 0.75
   ) +
   geom_text(
     data  = stars_base,
@@ -551,17 +551,18 @@ ggplot(plot_data, aes(x = x, y = y)) +
   ) +
   scale_x_continuous(
     breaks = seq(-14, -8, by = 1),
-    labels = function(x) abs(x)
+    labels = \(x) paste0(abs(x), "h")
   ) +
+  scale_y_continuous(labels = \(x) paste0(x, "°")) +
   labs(
     title = "Ursa Major",
-    x     = "Right Ascension (h)",
-    y     = "Declination (°)"
+    x     = "Right Ascension",
+    y     = "Declination"
   ) +
   theme(
     panel.background = element_rect(fill = "#0d1b2a", colour = NA),
     plot.background  = element_rect(fill = "#0d1b2a", colour = NA),
-    panel.grid.major = element_line(colour = "#1e2f3e"),
+    panel.grid.major = element_line(colour = "#1e2f3e", linetype = "dotted"),
     panel.grid.minor = element_blank(),
     text             = element_text(colour = "white"),
     axis.text        = element_text(colour = "#8899aa"),
@@ -677,6 +678,7 @@ ggplot(economics_long, aes(x = date, y = value)) +
     location = c("minimum", "maximum"),
     size     = 2
   ) +
+  stat_pointless(location = "minimum", geom = "text", aes(label = after_stat(y)), vjust = -1) +
   scale_colour_manual(
     values = c(minimum = "#f4ae1b", maximum = "#311dfc")
   ) +

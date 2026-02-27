@@ -69,14 +69,8 @@
 </h2>
 <p>You can install <code>ggpointless</code> from CRAN with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ggpointless"</span><span class="op">)</span></span></code></pre></div>
-<p>To install the development version from <a href="https://github.com/" class="external-link">GitHub</a> use:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"flrd/ggpointless"</span><span class="op">)</span></span></code></pre></div>
-<p>Once you have installed the package, attach it by calling:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://flrd.github.io/ggpointless/">ggpointless</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ggpointless"</span><span class="op">)</span></span>
+<span><span class="co"># or devtools::install_github("flrd/ggpointless") for development version</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="what-will-you-get">What will you get<a class="anchor" aria-label="anchor" href="#what-will-you-get"></a>
@@ -84,11 +78,13 @@
 <p>This package is a collection of geoms, and stats for <a href="https://ggplot2.tidyverse.org/" class="external-link">ggplot2</a>. The following functions are implemented:</p>
 <ul>
 <li>
-<code><a href="reference/geom_catenary.html">geom_arch()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_arch()</a></code> – draws an inverted catenary curve</li>
+<code><a href="reference/geom_catenary.html">geom_arch()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_arch()</a></code> – draws an <a href="https://en.wikipedia.org/wiki/Catenary_arch" class="external-link">catenary arch</a>
+</li>
 <li>
-<code><a href="reference/geom_area_fade.html">geom_area_fade()</a></code> – area plots wiht gradient fill</li>
+<code><a href="reference/geom_area_fade.html">geom_area_fade()</a></code> – area plots with a gradient fill</li>
 <li>
-<code><a href="reference/geom_catenary.html">geom_catenary()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_catenary()</a></code> – draws a catenary curve</li>
+<code><a href="reference/geom_catenary.html">geom_catenary()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_catenary()</a></code> – draws a <a href="https://en.wikipedia.org/wiki/Catenary" class="external-link">catenary curve</a>
+</li>
 <li>
 <code><a href="reference/geom_chaikin.html">geom_chaikin()</a></code> &amp; <code><a href="reference/geom_chaikin.html">stat_chaikin()</a></code> – applies Chaikin’s corner cutting algorithm</li>
 <li>
@@ -98,18 +94,18 @@
 <li>
 <code><a href="reference/geom_point_glow.html">geom_point_glow()</a></code> – adds a radial gradient to your point plots</li>
 <li>
-<code><a href="reference/geom_pointless.html">geom_pointless()</a></code> &amp; <code><a href="reference/geom_pointless.html">stat_pointless()</a></code> – emphasizes some observations with points</li>
+<code><a href="reference/geom_pointless.html">geom_pointless()</a></code> &amp; <code><a href="reference/geom_pointless.html">stat_pointless()</a></code> – emphasises some observations with points</li>
 </ul>
 <p>See <a href="https://flrd.github.io/ggpointless/articles/ggpointless.html"><code>vignette("ggpointless")</code></a> for details and examples.</p>
 <div class="section level3">
 <h3 id="geom_area_fade">geom_area_fade<a class="anchor" aria-label="anchor" href="#geom_area_fade"></a>
 </h3>
-<p>This geom behaves like <a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html?q=geom_area#null" class="external-link">geom_area()</a> does except it uses <a href="https://search.r-project.org/CRAN/refmans/gridSVG/html/gradients.html" class="external-link">grid::linearGradient()</a> to fill the area.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p><code><a href="reference/geom_area_fade.html">geom_area_fade()</a></code> behaves like <a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link"><code>geom_area()</code></a> but fills each area with a vertical linear gradient using <a href="https://www.rdocumentation.org/packages/grid/topics/patterns" class="external-link"><code>grid::linearGradient()</code></a>, fading from the fill colour at the top to transparent at the baseline.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#f4ae1b"</span>, <span class="st">"#d77e7b"</span>, <span class="st">"#a84dbd"</span>, <span class="st">"#311dfc"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://flrd.github.io/ggpointless/">ggpointless</a></span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span> g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"b"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
 <span> x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>,</span>
@@ -117,57 +113,37 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">g</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span> <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-area-fade-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
-<h3 id="geom_pointless">geom_pointless<a class="anchor" aria-label="anchor" href="#geom_pointless"></a>
+<h3 id="geom_arch">geom_arch<a class="anchor" aria-label="anchor" href="#geom_arch"></a>
 </h3>
-<p><code><a href="reference/geom_pointless.html">geom_pointless()</a></code> let’s you highlight the first, or last observations, sample minimum and sample maximum to provide additional context. Or just some visual sugar. <code><a href="reference/geom_pointless.html">geom_pointless()</a></code> behaves similar to <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point()</a></code> except that it has a <code>location</code> argument. You can set it to <code>"first"</code>, <code>"last"</code> (default), <code>"minimum"</code>, <code>"maximum"</code>, and <code>"all"</code>, where <code>"all"</code> is just shorthand to select <code>"first"</code>, <code>"last"</code>, <code>"minimum"</code> and <code>"maximum"</code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/outer.html" class="external-link">outer</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  var1 <span class="op">=</span> <span class="va">x</span>,</span>
-<span>  var2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="reference/geom_pointless.html">geom_pointless</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    location <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span>    size <span class="op">=</span> <span class="fl">3</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="va">cols</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-hello-world-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p><code><a href="reference/geom_catenary.html">geom_arch()</a></code> draws an inverted catenary curve (an arch) between successive points, mirroring <code><a href="reference/geom_catenary.html">geom_catenary()</a></code> but curving upward. The shape is controlled via <code>arch_length</code> (total arc length) or <code>arch_height</code> (vertical rise above the highest endpoint of each segment). By default the arch length is twice the Euclidean distance.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/geom_catenary.html">geom_arch</a></span><span class="op">(</span>arch_height <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, colour <span class="op">=</span> <span class="st">"#f4ae1b"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-arch-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
-<h3 id="geom_lexis">geom_lexis<a class="anchor" aria-label="anchor" href="#geom_lexis"></a>
+<h3 id="geom_catenary">geom_catenary<a class="anchor" aria-label="anchor" href="#geom_catenary"></a>
 </h3>
-<p><code><a href="reference/geom_lexis.html">geom_lexis()</a></code> is a combination of a segment and a point layer. Given a start value and an end value, this function draws a 45° line which indicates the duration of an event. Required are <code>x</code> and <code>xend</code> aesthetics, <code>y</code> and <code>yend</code> coordinates will be calculated.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span>,</span>
-<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">6</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>,</span>
-<span>  xend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">4</span>, <span class="fl">10</span>, <span class="fl">8</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df2</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, xend <span class="op">=</span> <span class="va">xend</span>, color <span class="op">=</span> <span class="va">key</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">df2</span><span class="op">$</span><span class="va">x</span>, <span class="va">df2</span><span class="op">$</span><span class="va">xend</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="va">cols</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_linetype_identity</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-geom-lexis-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>See also the <a href="https://github.com/ottlngr/LexisPlotR" class="external-link"><code>LexisPlotR</code> package</a>.</p>
+<p><code><a href="reference/geom_catenary.html">geom_catenary()</a></code> draws a flexible curve that simulates a chain or rope hanging loosely between successive points. By default a chain length twice the Euclidean distance between each x/y pair is used. The shape can be controlled via <code>chain_length</code> or <code>sag</code> (vertical drop below the lowest endpoint of each segment). See <a href="https://flrd.github.io/ggpointless/articles/ggpointless.html"><code>vignette("ggpointless")</code></a> for details.</p>
+<p>Credit to: <a href="https://github.com/dulnan/catenary-curve" class="external-link">dulnan/catenary-curve</a></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>       <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/geom_catenary.html">geom_catenary</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, colour <span class="op">=</span> <span class="st">"#f4ae1b"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-catenary-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="geom_chaikin">geom_chaikin<a class="anchor" aria-label="anchor" href="#geom_chaikin"></a>
 </h3>
-<p>Chaikin’s corner cutting algorithm let’s you turn a ragged path or polygon into a smoothed one. Credit to <a href="https://github.com/Farbfetzen/corner_cutting" class="external-link">Farbfetzen / corner_cutting</a>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p><code><a href="reference/geom_chaikin.html">geom_chaikin()</a></code> applies Chaikin’s corner cutting algorithm to turn a ragged path or polygon into a smooth one. The <code>closed</code> argument controls whether the path is treated as a closed polygon. Credit to <a href="https://github.com/Farbfetzen/corner_cutting" class="external-link">Farbfetzen / corner_cutting</a>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lst</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    closed_square <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -192,16 +168,72 @@
 <p>See also the <a href="https://github.com/mstrimas/smoothr/" class="external-link"><code>smoothr</code> package</a>.</p>
 </div>
 <div class="section level3">
-<h3 id="geom_catenary">geom_catenary<a class="anchor" aria-label="anchor" href="#geom_catenary"></a>
+<h3 id="geom_fourier">geom_fourier<a class="anchor" aria-label="anchor" href="#geom_fourier"></a>
 </h3>
-<p>Draws a flexible curve that simulates a chain or rope hanging loosely between two fixed points. By default, a chain length twice the Euclidean distance between each x/y combination is used. See <a href="https://flrd.github.io/ggpointless/articles/ggpointless.html"><code>vignette("ggpointless")</code></a> for details.</p>
-<p>Credit to: <a href="https://github.com/dulnan/catenary-curve" class="external-link">dulnan/catenary-curve</a></p>
+<p><code><a href="reference/geom_fourier.html">geom_fourier()</a></code> fits a truncated Fourier series (via the discrete Fourier transform) to the supplied x/y data and renders the reconstructed smooth curve. By default all harmonics up to the Nyquist limit are used, giving an exact interpolating fit; reducing <code>n_harmonics</code> progressively smooths the result. An optional <code>detrend</code> argument (<code>"lm"</code> or <code>"loess"</code>) removes slow non-periodic trends before the transform.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">df_fourier</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span>,</span>
+<span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_fourier</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/geom_fourier.html">geom_fourier</a></span><span class="op">(</span>n_harmonics <span class="op">=</span> <span class="fl">3</span>, colour <span class="op">=</span> <span class="st">"#311dfc"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-fourier-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="geom_lexis">geom_lexis<a class="anchor" aria-label="anchor" href="#geom_lexis"></a>
+</h3>
+<p><code><a href="reference/geom_lexis.html">geom_lexis()</a></code> is a combination of a segment and a point layer. Given a start value and an end value, it draws a 45° line indicating the duration of an event. Required aesthetics are <code>x</code> and <code>xend</code>; <code>y</code> and <code>yend</code> are calculated automatically.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span><span class="op">)</span>,</span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">6</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>,</span>
+<span>  xend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">4</span>, <span class="fl">10</span>, <span class="fl">8</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df2</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, xend <span class="op">=</span> <span class="va">xend</span>, color <span class="op">=</span> <span class="va">key</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/geom_lexis.html">geom_lexis</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">df2</span><span class="op">$</span><span class="va">x</span>, <span class="va">df2</span><span class="op">$</span><span class="va">xend</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="va">cols</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_linetype_identity</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-lexis-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p>See also the <a href="https://github.com/ottlngr/LexisPlotR" class="external-link"><code>LexisPlotR</code> package</a>.</p>
+</div>
+<div class="section level3">
+<h3 id="geom_point_glow">geom_point_glow<a class="anchor" aria-label="anchor" href="#geom_point_glow"></a>
+</h3>
+<p><code><a href="reference/geom_point_glow.html">geom_point_glow()</a></code> is a drop-in replacement for <a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link"><code>geom_point()</code></a> that adds a radial gradient glow behind each point using <a href="https://www.rdocumentation.org/packages/grid/topics/patterns" class="external-link"><code>grid::radialGradient()</code></a>. The glow colour, transparency (<code>glow_alpha</code>), and radius (<code>glow_size</code>) can be set independently of the point itself; by default the glow inherits the point colour.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>       <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="reference/geom_catenary.html">geom_catenary</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, colour <span class="op">=</span> <span class="st">"#f4ae1b"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-geom-catenary-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">wt</span>, <span class="va">mpg</span>, colour <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cyl</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/geom_point_glow.html">geom_point_glow</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-point-glow-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="geom_pointless">geom_pointless<a class="anchor" aria-label="anchor" href="#geom_pointless"></a>
+</h3>
+<p><code><a href="reference/geom_pointless.html">geom_pointless()</a></code> lets you highlight the first, last, minimum, and maximum observations to provide additional context. It behaves like <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point()</a></code> but accepts a <code>location</code> argument: <code>"first"</code>, <code>"last"</code> (default), <code>"minimum"</code>, <code>"maximum"</code>, or <code>"all"</code> (shorthand for all four).</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/outer.html" class="external-link">outer</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  var1 <span class="op">=</span> <span class="va">x</span>,</span>
+<span>  var2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df1</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">var1</span>, y <span class="op">=</span> <span class="va">var2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/geom_pointless.html">geom_pointless</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    location <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>    size <span class="op">=</span> <span class="fl">3</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="va">cols</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-pointless-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 </div>
 <div class="section level2">

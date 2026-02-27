@@ -10,20 +10,7 @@ You can install `ggpointless` from CRAN with:
 
 ``` r
 install.packages("ggpointless")
-```
-
-To install the development version from [GitHub](https://github.com/)
-use:
-
-``` r
-# install.packages("devtools")
-devtools::install_github("flrd/ggpointless")
-```
-
-Once you have installed the package, attach it by calling:
-
-``` r
-library(ggpointless)
+# or devtools::install_github("flrd/ggpointless") for development version
 ```
 
 ## What will you get
@@ -35,13 +22,14 @@ implemented:
 - [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
   &
   [`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-  – draws an inverted catenary curve
+  – draws an [catenary
+  arch](https://en.wikipedia.org/wiki/Catenary_arch)
 - [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
-  – area plots wiht gradient fill
+  – area plots with a gradient fill
 - [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
   &
   [`stat_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-  – draws a catenary curve
+  – draws a [catenary curve](https://en.wikipedia.org/wiki/Catenary)
 - [`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
   &
   [`stat_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
@@ -59,7 +47,7 @@ implemented:
 - [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
   &
   [`stat_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-  – emphasizes some observations with points
+  – emphasises some observations with points
 
 See
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
@@ -67,17 +55,18 @@ for details and examples.
 
 ### geom_area_fade
 
-This geom behaves like
-[geom_area()](https://ggplot2.tidyverse.org/reference/geom_ribbon.html?q=geom_area#null)
-does except it uses
-[grid::linearGradient()](https://search.r-project.org/CRAN/refmans/gridSVG/html/gradients.html)
-to fill the area.
+[`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
+behaves like
+[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+but fills each area with a vertical linear gradient using
+[`grid::linearGradient()`](https://www.rdocumentation.org/packages/grid/topics/patterns),
+fading from the fill colour at the top to transparent at the baseline.
 
 ``` r
 cols <- c("#f4ae1b", "#d77e7b", "#a84dbd", "#311dfc")
 theme_set(theme_minimal())
 
-library(ggplot2)
+library(ggpointless)
 df <- data.frame(
  g = c("a", "a", "a", "b", "b", "b"),
  x = c(1, 3, 5, 2, 4, 6),
@@ -85,77 +74,60 @@ df <- data.frame(
 )
 
 ggplot(df, aes(x, y, fill = g)) +
- geom_area_fade()
+  geom_area_fade()
 ```
 
 ![](reference/figures/README-geom-area-fade-1.png)
 
-### geom_pointless
+### geom_arch
 
-[`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-let’s you highlight the first, or last observations, sample minimum and
-sample maximum to provide additional context. Or just some visual sugar.
-[`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-behaves similar to
-[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-except that it has a `location` argument. You can set it to `"first"`,
-`"last"` (default), `"minimum"`, `"maximum"`, and `"all"`, where `"all"`
-is just shorthand to select `"first"`, `"last"`, `"minimum"` and
-`"maximum"`.
+[`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+draws an inverted catenary curve (an arch) between successive points,
+mirroring
+[`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+but curving upward. The shape is controlled via `arch_length` (total arc
+length) or `arch_height` (vertical rise above the highest endpoint of
+each segment). By default the arch length is twice the Euclidean
+distance.
 
 ``` r
-x <- seq(-pi, pi, length.out = 500)
-y <- outer(x, 1:5, function(x, y) sin(x * y))
-
-df1 <- data.frame(
-  var1 = x,
-  var2 = rowSums(y)
-)
-
-ggplot(df1, aes(x = var1, y = var2)) +
-  geom_line() +
-  geom_pointless(aes(color = after_stat(location)),
-    location = "all",
-    size = 3
-  ) +
-  scale_color_manual(values = cols)
+df <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
+ggplot(df, aes(x, y)) +
+  geom_arch(arch_height = 0.5) +
+  geom_point(size = 3, colour = "#f4ae1b")
 ```
 
-![](reference/figures/README-hello-world-1.png)
+![](reference/figures/README-geom-arch-1.png)
 
-### geom_lexis
+### geom_catenary
 
-[`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-is a combination of a segment and a point layer. Given a start value and
-an end value, this function draws a 45° line which indicates the
-duration of an event. Required are `x` and `xend` aesthetics, `y` and
-`yend` coordinates will be calculated.
+[`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+draws a flexible curve that simulates a chain or rope hanging loosely
+between successive points. By default a chain length twice the Euclidean
+distance between each x/y pair is used. The shape can be controlled via
+`chain_length` or `sag` (vertical drop below the lowest endpoint of each
+segment). See
+[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for details.
+
+Credit to:
+[dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
 
 ``` r
-df2 <- data.frame(
-  key = c("A", "B", "B", "C", "D"),
-  x = c(0, 1, 6, 5, 6),
-  xend = c(5, 4, 10, 8, 10)
-)
-
-ggplot(df2, aes(x = x, xend = xend, color = key)) +
-  geom_lexis(aes(linetype = after_stat(type)), size = 2) +
-  coord_equal() +
-  scale_x_continuous(breaks = c(df2$x, df2$xend)) +
-  scale_color_manual(values = cols) +
-  scale_linetype_identity() +
-  theme(panel.grid.minor = element_blank())
+ggplot(data.frame(x = 1:5, y = sample(5)),
+       aes(x, y)) +
+  geom_catenary() +
+  geom_point(size = 3, colour = "#f4ae1b")
 ```
 
-![](reference/figures/README-geom-lexis-1.png)
-
-See also the [`LexisPlotR`
-package](https://github.com/ottlngr/LexisPlotR).
+![](reference/figures/README-geom-catenary-1.png)
 
 ### geom_chaikin
 
-Chaikin’s corner cutting algorithm let’s you turn a ragged path or
-polygon into a smoothed one. Credit to [Farbfetzen /
+[`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
+applies Chaikin’s corner cutting algorithm to turn a ragged path or
+polygon into a smooth one. The `closed` argument controls whether the
+path is treated as a closed polygon. Credit to [Farbfetzen /
 corner_cutting](https://github.com/Farbfetzen/corner_cutting).
 
 ``` r
@@ -185,25 +157,105 @@ ggplot(mapping = aes(x, y)) +
 
 See also the [`smoothr` package](https://github.com/mstrimas/smoothr/).
 
-### geom_catenary
+### geom_fourier
 
-Draws a flexible curve that simulates a chain or rope hanging loosely
-between two fixed points. By default, a chain length twice the Euclidean
-distance between each x/y combination is used. See
-[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for details.
-
-Credit to:
-[dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
+[`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
+fits a truncated Fourier series (via the discrete Fourier transform) to
+the supplied x/y data and renders the reconstructed smooth curve. By
+default all harmonics up to the Nyquist limit are used, giving an exact
+interpolating fit; reducing `n_harmonics` progressively smooths the
+result. An optional `detrend` argument (`"lm"` or `"loess"`) removes
+slow non-periodic trends before the transform.
 
 ``` r
-ggplot(data.frame(x = 1:5, y = sample(5)),
-       aes(x, y)) + 
-  geom_catenary() +
-  geom_point(size = 3, colour = "#f4ae1b")
+set.seed(1)
+n <- 100
+df_fourier <- data.frame(
+  x = seq(0, 2 * pi, length.out = n),
+  y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.3)
+)
+ggplot(df_fourier, aes(x, y)) +
+  geom_point(alpha = 0.4) +
+  geom_fourier(n_harmonics = 3, colour = "#311dfc")
 ```
 
-![](reference/figures/README-geom-catenary-1.png)
+![](reference/figures/README-geom-fourier-1.png)
+
+### geom_lexis
+
+[`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
+is a combination of a segment and a point layer. Given a start value and
+an end value, it draws a 45° line indicating the duration of an event.
+Required aesthetics are `x` and `xend`; `y` and `yend` are calculated
+automatically.
+
+``` r
+df2 <- data.frame(
+  key = c("A", "B", "B", "C", "D"),
+  x = c(0, 1, 6, 5, 6),
+  xend = c(5, 4, 10, 8, 10)
+)
+
+ggplot(df2, aes(x = x, xend = xend, color = key)) +
+  geom_lexis(aes(linetype = after_stat(type)), size = 2) +
+  coord_equal() +
+  scale_x_continuous(breaks = c(df2$x, df2$xend)) +
+  scale_color_manual(values = cols) +
+  scale_linetype_identity() +
+  theme(panel.grid.minor = element_blank())
+```
+
+![](reference/figures/README-geom-lexis-1.png)
+
+See also the [`LexisPlotR`
+package](https://github.com/ottlngr/LexisPlotR).
+
+### geom_point_glow
+
+[`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
+is a drop-in replacement for
+[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
+that adds a radial gradient glow behind each point using
+[`grid::radialGradient()`](https://www.rdocumentation.org/packages/grid/topics/patterns).
+The glow colour, transparency (`glow_alpha`), and radius (`glow_size`)
+can be set independently of the point itself; by default the glow
+inherits the point colour.
+
+``` r
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point_glow(size = 3)
+```
+
+![](reference/figures/README-geom-point-glow-1.png)
+
+### geom_pointless
+
+[`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
+lets you highlight the first, last, minimum, and maximum observations to
+provide additional context. It behaves like
+[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
+but accepts a `location` argument: `"first"`, `"last"` (default),
+`"minimum"`, `"maximum"`, or `"all"` (shorthand for all four).
+
+``` r
+x <- seq(-pi, pi, length.out = 500)
+y <- outer(x, 1:5, function(x, y) sin(x * y))
+
+df1 <- data.frame(
+  var1 = x,
+  var2 = rowSums(y)
+)
+
+ggplot(df1, aes(x = var1, y = var2)) +
+  geom_line() +
+  geom_pointless(aes(color = after_stat(location)),
+    location = "all",
+    size = 3
+  ) +
+  scale_color_manual(values = cols)
+```
+
+![](reference/figures/README-geom-pointless-1.png)
 
 ## Code of Conduct
 
