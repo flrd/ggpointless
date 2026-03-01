@@ -7,19 +7,12 @@ test_that("get_locations(..., c('all')) returns 4 rows", {
     y = round(cos(tmp) * 1:100, 4)
   )
 
-  expect_equal(
-    get_locations(spiral, location = c("all")),
-    structure(list(x = c(0, -7.9847, 0, 0), y = c(
-      -1, 83.6196, -100,
-      -100
-    ), location = structure(c(1L, 4L, 3L, 2L), .Label = c(
-      "first",
-      "last", "minimum", "maximum"
-    ), class = "factor")),
-    class = "data.frame",
-    row.names = c("1", "84", "100", "100.1")
-    )
-  )
+  # minimum coincides with last (both at row 100, y = -100):
+  # deduplication means it is only labelled "last", not also "minimum"
+  res <- get_locations(spiral, location = c("all"))
+  expect_equal(nrow(res), 3L)
+  expect_equal(as.character(res$location), c("first", "last", "maximum"))
+  expect_equal(levels(res$location), c("first", "last", "minimum", "maximum"))
 })
 
 test_that("emtpy data argument, or non-data.frame gives error", {

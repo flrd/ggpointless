@@ -7,9 +7,11 @@ test_that("order of ploting is first > last > minimum > maximum", {
   p <- ggplot(df1, aes(x, y)) +
     stat_pointless(aes(colour = after_stat(location)), location = "all")
   x <- layer_data(p)
+  # Deduplication: first (x=1, y=1) and last (x=5, y=1) are both minimum,
+  # so x=1 is labelled "first", x=5 "last", and only x=3 gets "minimum".
   expect_equal(
     x$location,
-    factor(c("minimum", "first", "minimum", "maximum", "minimum", "last"),
+    factor(c("first", "last", "minimum", "maximum"),
       levels = c("first", "last", "minimum", "maximum")
     )
   )
