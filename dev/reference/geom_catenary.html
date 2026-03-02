@@ -7,7 +7,7 @@ The shape follows the catenary equation
 successive points. geom_arch() draws an inverted catenary curve and
 is hence intended for people living on the southern hemisphere.
 The shape follows the catenary equation
-\(y = a \cosh\!\bigl(\frac{x - h}{a}\bigr) + v\)."><meta property="og:image" content="https://flrd.github.io/ggpointless/logo.png"><meta name="robots" content="noindex"></head><body>
+\(y = a \cosh\!\bigl(\frac{x - h}{a}\bigr) + v\)."><meta name="robots" content="noindex"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -36,7 +36,8 @@ The shape follows the catenary equation
 </nav><div class="container template-reference-topic">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Catenary Curves and Arches</h1>
+
+      <h1>Catenary Curves and Arches</h1>
       <small class="dont-index">Source: <a href="https://github.com/flrd/ggpointless/blob/main/R/geom-catenary.R" class="external-link"><code>R/geom-catenary.R</code></a>, <a href="https://github.com/flrd/ggpointless/blob/main/R/stat-catenary.R" class="external-link"><code>R/stat-catenary.R</code></a></small>
       <div class="d-none name"><code>geom_catenary.Rd</code></div>
     </div>
@@ -131,19 +132,6 @@ data. All objects will be fortified to produce a data frame. See
 the plot data. The return value must be a <code>data.frame</code>, and
 will be used as the layer data. A <code>function</code> can be created
 from a <code>formula</code> (e.g. <code>~ head(.x, 10)</code>).</p></dd>
-
-
-<dt id="arg-stat">stat<a class="anchor" aria-label="anchor" href="#arg-stat"></a></dt>
-<dd><p>The statistical transformation to use on the data for this layer.
-When using a <code>geom_*()</code> function to construct a layer, the <code>stat</code>
-argument can be used to override the default coupling between geoms and
-stats. The <code>stat</code> argument accepts the following:</p><ul><li><p>A <code>Stat</code> ggproto subclass, for example <code>StatCount</code>.</p></li>
-<li><p>A string naming the stat. To give the stat as a string, strip the
-function name of the <code>stat_</code> prefix. For example, to use <code><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">stat_count()</a></code>,
-give the stat as <code>"count"</code>.</p></li>
-<li><p>For more information and other ways to specify the stat, see the
-<a href="https://ggplot2.tidyverse.org/reference/layer_stats.html" class="external-link">layer stat</a> documentation.</p></li>
-</ul></dd>
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
@@ -246,6 +234,11 @@ means use <code>colour</code> aesthetic.</p></dd>
 
 <dt id="arg-linemitre">linemitre<a class="anchor" aria-label="anchor" href="#arg-linemitre"></a></dt>
 <dd><p>Line mitre limit (number greater than 1).</p></dd>
+
+
+<dt id="arg-geom-stat">geom, stat<a class="anchor" aria-label="anchor" href="#arg-geom-stat"></a></dt>
+<dd><p>Override the default connection between <code>geom_catenary()</code>
+and <code>stat_catenary()</code>, or between <code>geom_arch()</code> and <code>stat_arch()</code>.</p></dd>
 
 
 <dt id="arg-arch-length">arch_length<a class="anchor" aria-label="anchor" href="#arg-arch-length"></a></dt>

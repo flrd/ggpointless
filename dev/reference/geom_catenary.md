@@ -95,25 +95,6 @@ stat_arch(
   data. A `function` can be created from a `formula` (e.g.
   `~ head(.x, 10)`).
 
-- stat:
-
-  The statistical transformation to use on the data for this layer. When
-  using a `geom_*()` function to construct a layer, the `stat` argument
-  can be used to override the default coupling between geoms and stats.
-  The `stat` argument accepts the following:
-
-  - A `Stat` ggproto subclass, for example `StatCount`.
-
-  - A string naming the stat. To give the stat as a string, strip the
-    function name of the `stat_` prefix. For example, to use
-    [`stat_count()`](https://ggplot2.tidyverse.org/reference/geom_bar.html),
-    give the stat as `"count"`.
-
-  - For more information and other ways to specify the stat, see the
-    [layer
-    stat](https://ggplot2.tidyverse.org/reference/layer_stats.html)
-    documentation.
-
 - position:
 
   A position adjustment to use on the data for this layer. This can be
@@ -233,6 +214,11 @@ stat_arch(
 - linemitre:
 
   Line mitre limit (number greater than 1).
+
+- geom, stat:
+
+  Override the default connection between `geom_catenary()` and
+  `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
 
 - arch_length:
 

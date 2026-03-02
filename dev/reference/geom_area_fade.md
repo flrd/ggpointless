@@ -4,8 +4,23 @@ This geom behaves much like
 [`ggplot2::geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
 but uses
 [`grid::linearGradient()`](https://rdrr.io/r/grid/patterns.html) to
-create area plots where the fill colour fades from opaque to
-transparent.
+create area plots where the fill colour fades towards the baseline
+(`y = 0`). The gradient is always anchored at `y = 0`: maximum
+transparency there, fading to opaque at the data values. Opacity scales
+with the absolute distance from zero, so equal `|y|` values always
+receive the same alpha — full opacity is reached only at the extreme
+with the largest absolute value. This works for positive values,
+negative values, and groups that cross zero (where a three-stop gradient
+is used).
+
+When `fill` is mapped to a variable (e.g. `aes(fill = pop)`), the geom
+combines the horizontal colour gradient produced by ggplot2 with the
+vertical alpha fade, creating a two-dimensional gradient effect. This
+requires a device that supports Porter-Duff compositing (e.g.
+[`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html),
+[`grDevices::svg()`](https://rdrr.io/r/grDevices/cairo.html)). On
+unsupported devices the geom falls back to a single-colour vertical fade
+and emits an informational message.
 
 ## Usage
 
@@ -17,6 +32,7 @@ geom_area_fade(
   position = "stack",
   ...,
   alpha_fade_to = 0,
+  orientation = NULL,
   outline.type = "upper",
   na.rm = FALSE,
   show.legend = NA,
@@ -132,14 +148,23 @@ geom_area_fade(
 
 - alpha_fade_to:
 
-  A single finite number between 0 and 1. The alpha value the gradient
-  fades *to*. Defaults to 0 (fully transparent).
+  A single finite number between 0 and 1. The alpha value at `y = 0`
+  (the baseline). Defaults to `0` (fully transparent).
+
+- orientation:
+
+  The orientation of the layer. The default (`NA`) automatically
+  determines the orientation from the aesthetic mapping. In the rare
+  event that this fails it can be given explicitly by setting
+  `orientation` to either `"x"` or `"y"`. See the *Orientation* section
+  for more detail.
 
 - outline.type:
 
-  Which edges of the area to draw an outline on. One of `"none"`
-  (default), `"upper"`, `"lower"`, `"both"` (`"upper"` and `"lower"`),
-  or `"full"` (closed polygon outline).
+  Which edges of the area to draw an outline on. One of `"upper"`
+  (default), `"lower"`, `"both"` (`"upper"` and `"lower"`), `"full"`
+  (closed polygon outline), or `"none"`. When no `colour` aesthetic is
+  set the outline uses the fill colour.
 
 - na.rm:
 
@@ -175,10 +200,28 @@ directly using the `orientation` parameter, which can be either `"x"` or
 `"y"`. The value gives the axis that the geom should run along, `"x"`
 being the default orientation you would expect for the geom.
 
+## References
+
+Murrell, P. (2021). "Luminance Masks in R Graphics." Technical Report
+2021-04, Department of Statistics, The University of Auckland.
+Version 1.
+<https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/masks/masks.html>
+
+Murrell, P. (2022). "Vectorised Pattern Fills in R Graphics." Technical
+Report 2022-01, Department of Statistics, The University of Auckland.
+Version 1.
+<https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html>
+
+Murrell, P. (2023). "Groups, Compositing Operators, and Affine
+Transformations in R Graphics." Technical Report 2021-02, Department of
+Statistics, The University of Auckland. Version 3.
+<https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/groups/groups.html>
+
 ## See also
 
 [`ggplot2::geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-for fully opaque area charts
+for fully opaque area charts [ggfx
+package](https://ggfx.data-imaginist.com/) for real magic
 
 ## Aesthetics
 
@@ -213,23 +256,29 @@ df <- data.frame(
 a <- ggplot(df, aes(x, y, fill = g)) +
   theme_minimal()
 
-# default behaviour
+# default behaviour: opaque at data line, transparent at y = 0
 a + geom_area_fade()
 
 
-# change overall opacity
+# change overall opacity at the data line
 a + geom_area_fade(alpha = .5)
 
 
-# fade from 75% to 25% opacity
-a + geom_area_fade(alpha = .75, alpha_fade_to = .25)
+# keep some opacity at the baseline
+a + geom_area_fade(alpha_fade_to = .25)
 
 
-# reverse direction: transparent at top, opaque at baseline
-a + geom_area_fade(alpha = 0, alpha_fade_to = 1)
+# works with negative values too: gradient fades towards y = 0 from below
+set.seed(42)
+df2 <- data.frame(x = seq_len(10), y = rnorm(10))
+ggplot(df2, aes(x, y)) + geom_area_fade() + theme_minimal()
 
 
-# draw upper and lower outlines only (no left/right edges)
+# suppress the default upper outline
+a + geom_area_fade(outline.type = "none")
+
+
+# draw upper and lower outlines (no left/right edges)
 a + geom_area_fade(outline.type = "both")
 
 
