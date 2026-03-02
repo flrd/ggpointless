@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/flrd/ggpointless/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless)
 <!-- badges: end -->
 
-`ggpointless` is an extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) library providing additional layers.
+`ggpointless` is an extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) package providing additional layers.
 
 ## Installation
 
@@ -38,8 +38,24 @@ install.packages("ggpointless")
 # or devtools::install_github("flrd/ggpointless") for development version
 ```
 
+## What will you get
+This package is a collection of geoms and stats for [ggplot2](https://ggplot2.tidyverse.org/). The following functions are implemented:
+
+- `geom_arch()` & `stat_arch()` -- draws a [catenary arch](https://en.wikipedia.org/wiki/Catenary_arch)
+- `geom_area_fade()` -- area plots with a gradient fill
+- `geom_catenary()` & `stat_catenary()` -- draws a [catenary curve](https://en.wikipedia.org/wiki/Catenary)
+- `geom_chaikin()` & `stat_chaikin()` -- applies Chaikin's corner cutting algorithm
+- `geom_fourier()` & `stat_fourier()` -- fits a Fourier series to `x`/`y` and renders the reconstructed curve
+- `geom_lexis()` & `stat_lexis()` -- draws a Lexis diagram
+- `geom_point_glow()` -- adds a radial gradient to your point plots
+- `geom_pointless()` & `stat_pointless()` -- emphasises some observations with points
+
+See [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for details and examples.
+
+#### Set theme up
+
 ```{r theme-setup}
-library(ggplot2)
 library(ggpointless)
 
 roma <- scico::scico(4, palette = "roma")
@@ -53,21 +69,6 @@ theme_set(
     )
 )
 ```
-
-## What will you get
-This package is a collection of geoms, and stats for [ggplot2](https://ggplot2.tidyverse.org/). The following functions are implemented:
-
-- `geom_arch()` & `stat_arch()` -- draws an [catenary arch](https://en.wikipedia.org/wiki/Catenary_arch)
-- `geom_area_fade()` -- area plots with a gradient fill
-- `geom_catenary()` & `stat_catenary()` -- draws a [catenary curve](https://en.wikipedia.org/wiki/Catenary)
-- `geom_chaikin()` & `stat_chaikin()` -- applies Chaikin's corner cutting algorithm
-- `geom_fourier()` & `stat_fourier()` -- fits a Fourier series to `x`/`y` and renders the reconstructed curve
-- `geom_lexis()` & `stat_lexis()` -- draws a Lexis diagram
-- `geom_point_glow()` -- adds a radial gradient to your point plots
-- `geom_pointless()` & `stat_pointless()` -- emphasises some observations with points
-
-See [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for details and examples.
 
 ### geom_area_fade
 This is purely visual sugar. `geom_area_fade()` behaves like [`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html) but fills each area with a vertical linear gradient using [`grid::linearGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html). 
@@ -97,9 +98,10 @@ p <- ggplot(df_fade, aes(x, y))
 p + geom_area_fade()
 ```
 
-You can control the alpha value the fill fades to using `alpha_fade_to` argument.
-Below, instead of fading from full opacity towards full transparency at `y = 0` 
-alpha starts at 50% and fades to 10%:
+You can control the alpha value the fill fades to using the `alpha_fade_to` argument.
+
+Instead of fading from full opacity towards full transparency at `y = 0` 
+alpha starts at 50% and fades to 10% in this example:
 
 ```{r geom-area-fade-alpha-fade-to, warning=FALSE}
 p + geom_area_fade(alpha = .5, alpha_fade_to = .1)
@@ -111,9 +113,9 @@ By that logic you can effectively reverse the direction of the gradient like so:
 p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
 ```
 
-`geom_area_fade()` supports the `orientation` argument you know and love from other
-`geom_*`s. With `orientation = "y"`, you create a horizontal area chart where 
-the gradient fades from `x = 0` toward the data values. You can change the
+`geom_area_fade()` supports the `orientation` argument familiar from other
+`geom_*` functions. With `orientation = "y"`, you create a horizontal area chart
+where the gradient fades from `x = 0` toward the data values. You can change the
 outline colour too.
 
 ```{r geom-area-fade-orientation, warning=FALSE}
@@ -131,7 +133,6 @@ ggplot(economics, aes(date, unemploy)) +
   geom_area_fade(aes(fill = uempmed))
 ```
 
-
 ### geom_arch
 `geom_arch()` draws a catenary arch (inverted catenary curve) between successive points, mirroring `geom_catenary()`. The shape is controlled via `arch_length` or `arch_height` (vertical rise above the highest endpoint of each segment). By default the arch length is twice the Euclidean distance.
 
@@ -143,7 +144,7 @@ ggplot(df_arch, aes(x, y)) +
 ```
 
 ### geom_catenary
-`geom_catenary()` draws a flexible curve that simulates a chain or rope hanging loosely between successive points. By default a chain length twice the Euclidean distance between each `x`/`y` pair is used. The shape can be controlled via `chain_length` or `sag` (vertical drop below the lowest endpoint of each segment).
+`geom_catenary()` draws a flexible curve that simulates a chain or rope hanging loosely between successive points. By default, the chain length is twice the Euclidean distance between each `x`/`y` pair. The shape can be controlled via `chain_length` or `sag` (vertical drop below the lowest endpoint of each segment).
 
 Idea from: [dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
 
@@ -155,7 +156,7 @@ ggplot(df_catenary, aes(x, y)) +
   geom_point(size = 3)
 ```
 
-The `sag` argument can be used to define each segments drop based on the 
+The `sag` argument can be used to define each segment's drop based on the
 smallest value of each segment. `NA` keeps the default.
 
 ```{r geom-catenary-sag, warning=FALSE}
