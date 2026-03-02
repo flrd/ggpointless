@@ -6,7 +6,7 @@ GeomFourier <- ggproto(
   "GeomFourier",
   ggplot2::GeomLine,
   stat = "fourier"
-  )
+)
 
 #' @title Fourier Series Smoothing
 #'
@@ -62,6 +62,8 @@ GeomFourier <- ggproto(
 #'   the *Detrending* section for details.
 #'
 #' @aesthetics GeomPointless
+#' @param geom,stat Override the default connection between `geom_fourier()`
+#'   and `stat_fourier()`.
 #'
 #' @seealso See individual modelling functions for more details:
 #'   [lm()] for linear smooths,
@@ -119,4 +121,4 @@ geom_fourier <- make_constructor(
   stat = "fourier",
   n_harmonics = NULL,
   detrend = NULL
-  )
+)

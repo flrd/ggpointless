@@ -6,7 +6,7 @@ GeomPointless <- ggproto(
   "GeomPointless",
   ggplot2::GeomPoint,
   stat = "pointless"
-  )
+)
 
 #' Emphasize some observations with points
 #'

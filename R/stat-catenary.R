@@ -8,8 +8,9 @@ solve_a_from_len <- function(dx, dy, L) {
   abs_dx <- abs(dx)
   discriminant <- L^2 - dy^2
   # Guard: length must exceed the vertical gap
-  if (discriminant <= 0)
+  if (discriminant <= 0) {
     return(Inf)
+  }
 
   tgt <- sqrt(discriminant) / abs_dx
 
@@ -28,13 +29,15 @@ solve_a_from_len <- function(dx, dy, L) {
     val <- sinh_A / A - tgt
     deriv <- (cosh_A * A - sinh_A) / A^2
 
-    if (abs(deriv) < 1e-12)
+    if (abs(deriv) < 1e-12) {
       break
+    }
     step <- val / deriv
     A <- A - step
     A <- max(A, 1e-12)
-    if (abs(val) < 1e-9)
+    if (abs(val) < 1e-9) {
       break
+    }
   }
 
   abs_dx / (2 * A)
@@ -43,13 +46,14 @@ solve_a_from_len <- function(dx, dy, L) {
 #' Solve catenary parameter `a` from sag (drop below lowest endpoint)
 #' @noRd
 solve_a_from_lowest_sag <- function(dx, dy, S) {
-  if (S <= 0)
+  if (S <= 0) {
     return(Inf)
+  }
 
   abs_dx <- abs(dx)
   abs_dy <- abs(dy)
 
-  H_low  <- S
+  H_low <- S
   H_high <- S + abs_dy
 
   f <- function(a) {
@@ -61,27 +65,33 @@ solve_a_from_lowest_sag <- function(dx, dy, S) {
   a_up <- max(abs_dx, 1)
   for (i in seq_len(max_bracket_iter)) {
     f_up <- f(a_up)
-    if (is.nan(f_up))
+    if (is.nan(f_up)) {
       return(Inf)
-    if (f_up >= 0)
+    }
+    if (f_up >= 0) {
       break
+    }
     a_up <- a_up * 10
   }
 
   a_low <- a_up / 10
   for (i in seq_len(max_bracket_iter)) {
     f_low <- f(a_low)
-    if (is.nan(f_low))
+    if (is.nan(f_low)) {
       return(Inf)
-    if (f_low <= 0)
+    }
+    if (f_low <= 0) {
       break
+    }
     a_low <- a_low / 10
   }
 
-  if (is.nan(f(a_low)) || is.nan(f(a_up)))
+  if (is.nan(f(a_low)) || is.nan(f(a_up))) {
     return(Inf)
-  if (f(a_low) * f(a_up) > 0)
+  }
+  if (f(a_low) * f(a_up) > 0) {
     return(Inf)
+  }
 
   tryCatch(
     stats::uniroot(
@@ -90,8 +100,9 @@ solve_a_from_lowest_sag <- function(dx, dy, S) {
       upper = a_up,
       tol = 1e-10
     )$root,
-    error = function(e)
+    error = function(e) {
       Inf
+    }
   )
 }
 
@@ -106,51 +117,60 @@ solve_a_from_lowest_sag <- function(dx, dy, S) {
 #' @param gravity `1` for hanging chain, `-1` for arch.
 #' @param len_name,sag_name User-facing parameter names for messages.
 #' @noRd
-compute_catenary_group <- function(data,
-                                    n = 100L,
-                                    chain_length,
-                                    sag,
-                                    gravity,
-                                    len_name,
-                                    sag_name) {
+compute_catenary_group <- function(
+  data,
+  n = 100L,
+  chain_length,
+  sag,
+  gravity,
+  len_name,
+  sag_name
+) {
   empty <- data.frame(x = numeric(0), y = numeric(0))
 
   # 1. Deduplication
-  if (nrow(data) < 2L)
+  if (nrow(data) < 2L) {
     return(empty)
+  }
 
   dx_raw <- diff(data$x)
   dy_raw <- diff(data$y)
   is_dup <- c(FALSE, (abs(dx_raw) + abs(dy_raw)) < .cat_tol)
 
   if (any(is_dup)) {
-    cli::cli_warn("Removed {sum(is_dup)} near-duplicate point{?s} from input data.")
+    cli::cli_warn(
+      "Removed {sum(is_dup)} near-duplicate point{?s} from input data."
+    )
     data <- data[!is_dup, ]
   }
 
-  if (nrow(data) < 2L)
+  if (nrow(data) < 2L) {
     return(empty)
+  }
 
   n_segs <- nrow(data) - 1L
 
   # 2. Segment geometry
   starts <- data[-nrow(data), ]
-  ends   <- data[-1L, ]
+  ends <- data[-1L, ]
   dx_all <- ends$x - starts$x
   dy_all <- ends$y - starts$y
-  dists  <- sqrt(dx_all^2 + dy_all^2)
+  dists <- sqrt(dx_all^2 + dy_all^2)
 
   # 3. Parameter processing & validation
   process_param <- function(val, name) {
-    if (is.null(val))
+    if (is.null(val)) {
       return(rep(NA_real_, n_segs))
+    }
     if (!is.numeric(val)) {
       cli::cli_abort("{.arg {name}} must be numeric, not {.cls {class(val)}}.")
     }
     val <- rep_len(val, n_segs)
     bad <- !is.na(val) & val < 0
     if (any(bad)) {
-      cli::cli_abort("{.arg {name}} must be non-negative (got {val[which(bad)[1]]}).")
+      cli::cli_abort(
+        "{.arg {name}} must be non-negative (got {val[which(bad)[1]]})."
+      )
     }
     val
   }
@@ -205,9 +225,8 @@ compute_catenary_group <- function(data,
     # Priority 1: sag / arch_height
     if (!is.na(sag_vec[i])) {
       current_alpha <- solve_a_from_lowest_sag(dx, eff_dy, sag_vec[i])
-    }
-    # Priority 2: chain_length / arch_length
-    else if (!is.na(chain_length_vec[i])) {
+    } else if (!is.na(chain_length_vec[i])) {
+      # Priority 2: chain_length / arch_length
       if (chain_length_vec[i] >= straight_dist) {
         current_alpha <- solve_a_from_len(dx, eff_dy, chain_length_vec[i])
       } else {
@@ -219,40 +238,43 @@ compute_catenary_group <- function(data,
         )
         return(get_linear())
       }
-    }
-    # Priority 3: default = 2x euclidean distance
-    else {
+    } else {
+      # Priority 3: default = 2x euclidean distance
       current_alpha <- solve_a_from_len(dx, eff_dy, straight_dist * 2)
     }
 
     # Safety net (catches NULL, Inf, NaN)
-    if (is.null(current_alpha) ||
+    if (
+      is.null(current_alpha) ||
         !is.finite(current_alpha) ||
-        current_alpha < .cat_tol) {
+        current_alpha < .cat_tol
+    ) {
       return(get_linear())
     }
 
     # Catenary evaluation
     sinh_val <- sinh(dx / (2 * current_alpha))
-    if (abs(sinh_val) < 1e-9)
+    if (abs(sinh_val) < 1e-9) {
       return(get_linear())
+    }
 
     val <- eff_dy / (2 * current_alpha * sinh_val)
-    h   <- (x1 + x2) / 2 - current_alpha * asinh(val)
-    v   <- eff_y1 - current_alpha * cosh((x1 - h) / current_alpha)
+    h <- (x1 + x2) / 2 - current_alpha * asinh(val)
+    v <- eff_y1 - current_alpha * cosh((x1 - h) / current_alpha)
 
     y_cat <- current_alpha * cosh((x_seq - h) / current_alpha) + v
 
     # Overflow guard
-    if (any(!is.finite(y_cat)))
+    if (any(!is.finite(y_cat))) {
       return(get_linear())
+    }
 
     # Flip back for arch; snap endpoints to the exact user-specified coordinates
     # to prevent floating-point drift from clipping them at hard scale limits
     # (e.g. ylim(NA, 2) would drop a computed y of 2 + 2e-16).
-    y_out        <- y_cat * gravity
-    y_out[1L]               <- y1
-    y_out[length(y_out)]    <- y2
+    y_out <- y_cat * gravity
+    y_out[1L] <- y1
+    y_out[length(y_out)] <- y2
     data.frame(x = x_seq, y = y_out)
   })
 
@@ -286,13 +308,9 @@ StatCatenary <- ggproto(
     }
 
     params
-
   },
 
-  compute_group = function(data,
-                           scales,
-                           chain_length = NULL,
-                           sag = NULL) {
+  compute_group = function(data, scales, chain_length = NULL, sag = NULL) {
     compute_catenary_group(
       data,
       chain_length = chain_length,
@@ -313,10 +331,12 @@ StatArch <- ggproto(
   Stat,
   required_aes = c("x", "y"),
 
-  compute_group = function(data,
-                           scales,
-                           arch_length = NULL,
-                           arch_height = NULL) {
+  compute_group = function(
+    data,
+    scales,
+    arch_length = NULL,
+    arch_height = NULL
+  ) {
     compute_catenary_group(
       data,
       chain_length = arch_length,

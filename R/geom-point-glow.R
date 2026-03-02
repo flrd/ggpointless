@@ -2,10 +2,11 @@
 #' @keywords internal
 draw_key_point_glow <- function(data, params, size) {
   # Resolve legend glow colour
-  g_col <- if (is.na(params$glow_colour))
+  g_col <- if (is.na(params$glow_colour)) {
     data$colour
-  else
+  } else {
     params$glow_colour
+  }
   g_alpha <- max(params$glow_alpha, 0.8)
 
   # Create gradient for the legend box
@@ -13,8 +14,8 @@ draw_key_point_glow <- function(data, params, size) {
     colours = c(
       ggplot2::alpha(g_col, g_alpha),
       ggplot2::alpha(g_col, 0)
-      )
     )
+  )
 
   grid::gList(
     # The glow (using npc units to stay within the key box)
@@ -40,47 +41,54 @@ GeomPointGlow <- ggplot2::ggproto(
   # Custom legend key that shows the glow
   draw_key = draw_key_point_glow,
 
-  draw_panel = function(self,
-                        data,
-                        panel_params,
-                        coord,
-                        glow_colour = NA,
-                        glow_alpha = 0.75,
-                        glow_size = NA) {
+  draw_panel = function(
+    self,
+    data,
+    panel_params,
+    coord,
+    glow_colour = NA,
+    glow_alpha = 0.75,
+    glow_size = NA
+  ) {
     coords <- coord$transform(data, panel_params)
-    if (nrow(coords) == 0)
+    if (nrow(coords) == 0) {
       return(grid::nullGrob())
+    }
 
     # If glow_colour is NA, use the vector of colours from the data
-    g_cols <- if (is.na(glow_colour))
+    g_cols <- if (is.na(glow_colour)) {
       coords$colour
-    else
+    } else {
       glow_colour
+    }
 
     # If glow_size is NA, multiply the point sizes by 3
-    g_sizes <- if (is.na(glow_size))
+    g_sizes <- if (is.na(glow_size)) {
       coords$size * 3
-    else
+    } else {
       glow_size
+    }
 
     # build the Glow Grobs
     glow_grobs <- lapply(seq_len(nrow(coords)), function(i) {
       # Handle potentially vectorized colours/sizes
-      current_col <- if (length(g_cols) > 1)
+      current_col <- if (length(g_cols) > 1) {
         g_cols[i]
-      else
+      } else {
         g_cols
-      current_size <- if (length(g_sizes) > 1)
+      }
+      current_size <- if (length(g_sizes) > 1) {
         g_sizes[i]
-      else
+      } else {
         g_sizes
+      }
 
       grad <- grid::radialGradient(
         colours = c(
           ggplot2::alpha(current_col, glow_alpha),
           ggplot2::alpha(current_col, 0)
-          )
         )
+      )
 
       grid::pointsGrob(
         x = coords$x[i],
@@ -143,4 +151,3 @@ GeomPointGlow <- ggplot2::ggproto(
 #'     location = c("first", "last")
 #' )
 geom_point_glow <- make_constructor(GeomPointGlow)
-

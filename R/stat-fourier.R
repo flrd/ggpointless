@@ -14,13 +14,18 @@ StatFourier <- ggproto(
   setup_params = function(data, params) {
     # Validate detrend
     if (!is.null(params$detrend)) {
-      params$detrend <- rlang::arg_match0(params$detrend, values = c("lm", "loess"))
+      params$detrend <- rlang::arg_match0(
+        params$detrend,
+        values = c("lm", "loess")
+      )
     }
     # Validate n_harmonics
     if (!is.null(params$n_harmonics)) {
       n_h <- params$n_harmonics
       if (!rlang::is_integerish(n_h, n = 1L, finite = TRUE) || n_h < 1L) {
-        cli::cli_warn("{.arg n_harmonics} must be a positive integer. Using {.val 1L}.")
+        cli::cli_warn(
+          "{.arg n_harmonics} must be a positive integer. Using {.val 1L}."
+        )
         params$n_harmonics <- 1L
       } else {
         params$n_harmonics <- as.integer(n_h)
@@ -32,12 +37,14 @@ StatFourier <- ggproto(
 
   # NA handling, duplicate aggregation, and all maths live here so that each
   # group is processed independently.
-  compute_group = function(data,
-                           scales,
-                           n_harmonics = NULL,
-                           detrend = NULL,
-                           na.rm = FALSE,
-                           ...) {
+  compute_group = function(
+    data,
+    scales,
+    n_harmonics = NULL,
+    detrend = NULL,
+    na.rm = FALSE,
+    ...
+  ) {
     # 1. Handle missing and non-finite values per group
     is_bad <- !is.finite(data$x) | !is.finite(data$y)
     if (any(is_bad)) {
@@ -67,17 +74,21 @@ StatFourier <- ggproto(
     n_obs <- nrow(data)
 
     if (n_obs < 3L) {
-      cli::cli_inform("Fewer than 3 distinct {.arg x} values in group. Skipping.")
+      cli::cli_inform(
+        "Fewer than 3 distinct {.arg x} values in group. Skipping."
+      )
       return(data.frame(x = numeric(0L), y = numeric(0L)))
     }
 
     # 3. Guard against zero x-range
     x_min <- min(data$x)
     x_max <- max(data$x)
-    x_range <- x_max - x_min   # span of the observed data; NOT the FFT period
+    x_range <- x_max - x_min # span of the observed data; NOT the FFT period
 
     if (x_range < .Machine$double.eps * max(abs(x_min), abs(x_max), 1)) {
-      cli::cli_inform("All {.arg x} values are effectively identical. Skipping.")
+      cli::cli_inform(
+        "All {.arg x} values are effectively identical. Skipping."
+      )
       return(data.frame(x = numeric(0L), y = numeric(0L)))
     }
 
@@ -106,7 +117,7 @@ StatFourier <- ggproto(
     # The FFT period P = N * dx uses a half-open convention so that the
     # boundary point x_min + P is NOT included; this prevents the Gibbs
     # ringing that occurs when y(0) != y(end) and a closed interval is used.
-    dx <- x_range / (n_obs - 1L)        # spacing matching the source data
+    dx <- x_range / (n_obs - 1L) # spacing matching the source data
     x_even <- x_min + dx * seq(0L, n_obs - 1L)
 
     # Floating-point arithmetic can push the last element of x_even a tiny
@@ -116,34 +127,34 @@ StatFourier <- ggproto(
     x_even[1L] <- x_min
     x_even[n_obs] <- x_max
     y_even <- stats::approx(data$x, data$y, xout = x_even, rule = 2L)$y
-    period <- n_obs * dx                    # = x_range + dx  (half-open length)
+    period <- n_obs * dx # = x_range + dx  (half-open length)
 
     # 5. De-trending
     df_fit <- data.frame(x = x_even, y = y_even)
 
     fit <- if (!is.null(detrend)) {
-      switch(detrend,
-             "lm" = stats::lm(y ~ x, data = df_fit),
-             "loess" = {
-               if (n_obs < 4L) {
-                 cli::cli_inform(
-                   "Too few observations for LOESS (need >= 4). \\
+      switch(detrend, "lm" = stats::lm(y ~ x, data = df_fit), "loess" = {
+        if (n_obs < 4L) {
+          cli::cli_inform(
+            "Too few observations for LOESS (need >= 4). \\
                     Falling back to {.val lm}."
-                 )
-                 stats::lm(y ~ x, data = df_fit)
-               } else {
-                 tryCatch(
-                   stats::loess(y ~ x, data = df_fit),
-                   error = function(e) {
-                     cli::cli_warn(
-                       c("LOESS failed. Falling back to {.val lm}.",
-                         "i" = "{conditionMessage(e)}")
-                     )
-                     stats::lm(y ~ x, data = df_fit)
-                   }
-                 )
-               }
-             })
+          )
+          stats::lm(y ~ x, data = df_fit)
+        } else {
+          tryCatch(
+            stats::loess(y ~ x, data = df_fit),
+            error = function(e) {
+              cli::cli_warn(
+                c(
+                  "LOESS failed. Falling back to {.val lm}.",
+                  "i" = "{conditionMessage(e)}"
+                )
+              )
+              stats::lm(y ~ x, data = df_fit)
+            }
+          )
+        }
+      })
     } else {
       NULL
     }
@@ -154,7 +165,7 @@ StatFourier <- ggproto(
       rep(0, n_obs)
     }
 
-    y_res <- y_even - y_trend_even   # residual after de-trending
+    y_res <- y_even - y_trend_even # residual after de-trending
 
     # 6. Forward FFT (normalised)
     fft_vals <- stats::fft(y_res) / n_obs
@@ -185,14 +196,14 @@ StatFourier <- ggproto(
     # Indices 2 ... k_paired+1            -> positive frequencies
     # Indices n_obs ... n_obs-k_paired+1  -> negative frequencies (conjugates)
     # Index max_k + 1                     -> Nyquist term (even N only)
-    c_mean <- Re(fft_vals[1L])   # DC component is real by construction
+    c_mean <- Re(fft_vals[1L]) # DC component is real by construction
 
-    k_vec <- c_pos <- c_neg <- NULL           # initialise
+    k_vec <- c_pos <- c_neg <- NULL # initialise
 
     if (k_paired > 0L) {
       k_vec <- seq_len(k_paired)
-      c_pos <- fft_vals[1L + k_vec]           # indices 2, 3, ..., k_paired+1
-      c_neg <- fft_vals[n_obs - k_vec + 1L]   # indices N, N-1, ...
+      c_pos <- fft_vals[1L + k_vec] # indices 2, 3, ..., k_paired+1
+      c_neg <- fft_vals[n_obs - k_vec + 1L] # indices N, N-1, ...
     }
 
     c_nyq <- if (has_nyquist) Re(fft_vals[max_k + 1L]) else 0
@@ -220,7 +231,7 @@ StatFourier <- ggproto(
 
     calc_fourier_vec <- function(t_vec) {
       n_t <- length(t_vec)
-      val <- rep(c_mean + 0i, n_t)   # always a plain complex vector
+      val <- rep(c_mean + 0i, n_t) # always a plain complex vector
 
       if (!is.null(k_vec)) {
         # phase_mat[i, k] = t_vec[i] * k_vec[k]  (n_t x k_paired matrix)
@@ -243,7 +254,9 @@ StatFourier <- ggproto(
       # residual after reconstruction must be at machine-epsilon level.
       imag_part <- Im(val)
       if (anyNA(imag_part)) {
-        cli::cli_warn("NaN in reconstruction output. Please report this as a bug.")
+        cli::cli_warn(
+          "NaN in reconstruction output. Please report this as a bug."
+        )
       } else {
         max_imag <- max(abs(imag_part))
         if (max_imag > 1e-8) {
@@ -263,7 +276,7 @@ StatFourier <- ggproto(
     # Mapping to t via period keeps t safely inside [0, x_range/period) which
     # is a strict subset of [0, 1), so the boundary is never reached.
     x_fine <- seq(x_min, x_max, length.out = n_points)
-    t_fine <- (x_fine - x_min) / period   # in [0, x_range/period) c [0, 1)
+    t_fine <- (x_fine - x_min) / period # in [0, x_range/period) c [0, 1)
 
     y_fourier <- calc_fourier_vec(t_fine)
 
@@ -275,7 +288,6 @@ StatFourier <- ggproto(
     }
 
     data.frame(x = x_fine, y = y_fourier + y_trend_fine)
-
   }
 )
 
@@ -286,4 +298,4 @@ stat_fourier <- make_constructor(
   geom = "line",
   n_harmonics = NULL,
   detrend = NULL
-  )
+)

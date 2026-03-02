@@ -5,7 +5,13 @@
 GeomChaikin <- ggplot2::ggproto(
   "GeomChaikin",
   ggplot2::GeomPath,
-  extra_params = c(ggplot2::GeomPath$extra_params, "mode", "iterations", "ratio", "closed")
+  extra_params = c(
+    ggplot2::GeomPath$extra_params,
+    "mode",
+    "iterations",
+    "ratio",
+    "closed"
+  )
 )
 
 #' @title Apply Chaikin's corner cutting algorithm to smooth a path
@@ -80,8 +86,8 @@ GeomChaikin <- ggplot2::ggproto(
 #' @rdname geom_chaikin
 geom_chaikin <- make_constructor(
   GeomChaikin,
-  stat       = "chaikin",
-  mode       = NULL,
+  stat = "chaikin",
+  mode = NULL,
   iterations = 5,
-  ratio      = 0.25
+  ratio = 0.25
 )

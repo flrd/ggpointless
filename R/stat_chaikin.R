@@ -1,19 +1,25 @@
 #' @export
 #' @rdname geom_chaikin
-stat_chaikin <- function(mapping = NULL,
-                         data = NULL,
-                         geom = "path",
-                         position = "identity",
-                         ...,
-                         mode = "open",
-                         iterations = 5,
-                         ratio = 0.25,
-                         closed = lifecycle::deprecated(),
-                         na.rm = FALSE,
-                         show.legend = NA,
-                         inherit.aes = TRUE) {
+stat_chaikin <- function(
+  mapping = NULL,
+  data = NULL,
+  geom = "path",
+  position = "identity",
+  ...,
+  mode = "open",
+  iterations = 5,
+  ratio = 0.25,
+  closed = lifecycle::deprecated(),
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
+) {
   if (lifecycle::is_present(closed)) {
-    lifecycle::deprecate_warn("0.2.0", "stat_chaikin(closed)", "stat_chaikin(mode)")
+    lifecycle::deprecate_warn(
+      "0.2.0",
+      "stat_chaikin(closed)",
+      "stat_chaikin(mode)"
+    )
     if (missing(mode)) {
       mode <- if (isTRUE(closed)) "closed" else "open"
     } else {
@@ -47,14 +53,20 @@ stat_chaikin <- function(mapping = NULL,
 #' @format NULL
 #' @usage NULL
 #' @export
-StatChaikin <- ggproto("StatChaikin", Stat,
+StatChaikin <- ggproto(
+  "StatChaikin",
+  Stat,
   required_aes = c("x", "y"),
   extra_params = c("na.rm", "mode", "iterations", "ratio", "closed"),
 
   setup_params = function(data, params) {
     # Handle deprecated `closed` (arrives via ... from geom_chaikin(closed = ...))
     if (!is.null(params$closed)) {
-      lifecycle::deprecate_warn("0.2.0", "geom_chaikin(closed)", "geom_chaikin(mode)")
+      lifecycle::deprecate_warn(
+        "0.2.0",
+        "geom_chaikin(closed)",
+        "geom_chaikin(mode)"
+      )
       if (!is.null(params$mode)) {
         # mode was explicitly set by the user — mode wins
         cli::cli_inform(
@@ -75,8 +87,11 @@ StatChaikin <- ggproto("StatChaikin", Stat,
     params$mode <- rlang::arg_match0(params$mode, values = c("open", "closed"))
 
     # Validate iterations
-    if (!is_integer(params$iterations) ||
-        params$iterations < 0L || params$iterations > 10L) {
+    if (
+      !rlang::is_integerish(params$iterations, n = 1L, finite = TRUE) ||
+        params$iterations < 0L ||
+        params$iterations > 10L
+    ) {
       cli::cli_abort(
         "{.arg iterations} must be a whole number between 0 and 10, \\
          not {.val {params$iterations}}."
@@ -84,28 +99,47 @@ StatChaikin <- ggproto("StatChaikin", Stat,
     }
     params$iterations <- as.integer(params$iterations)
 
-    # Validate ratio
-    if (!is.numeric(params$ratio) ||
-        params$ratio < 0 || params$ratio > 1) {
+    # Validate ratio — must be a single finite number in [0, 1].
+    # Note: !is.numeric catches logical NA; !is.finite catches NA_real_, NaN,
+    # Inf, and -Inf, so the range comparisons are always safe afterwards.
+    if (
+      !is.numeric(params$ratio) ||
+        length(params$ratio) != 1L ||
+        !is.finite(params$ratio) ||
+        params$ratio < 0 ||
+        params$ratio > 1
+    ) {
       cli::cli_abort(
-        "{.arg ratio} must be a number between 0 and 1, \\
+        "{.arg ratio} must be a finite number in [0, 1], \\
          not {.val {params$ratio}}."
       )
     }
     if (params$ratio > 0.5) {
-      cli::cli_warn("A {.arg ratio} > 0.5 is mirrored to {1 - params$ratio}.")
+      cli::cli_warn(
+        "{.arg ratio} = {params$ratio} is converted to its complement \\
+         {1 - params$ratio}: for closed paths the shape is identical; \\
+         for open paths the curve near the endpoints may differ slightly."
+      )
       params$ratio <- 1 - params$ratio
     }
 
     params
   },
 
-  compute_group = function(data, scales,
-                           mode = "open", iterations = 5L, ratio = 0.25) {
+  compute_group = function(
+    data,
+    scales,
+    mode = "open",
+    iterations = 5L,
+    ratio = 0.25
+  ) {
     closed <- mode == "closed"
     data <- get_chaikin(
-      x = data$x, y = data$y,
-      iterations = iterations, ratio = ratio, closed = closed
+      x = data$x,
+      y = data$y,
+      iterations = iterations,
+      ratio = ratio,
+      closed = closed
     )
     if (closed) {
       data <- rbind(data, data[1L, , drop = FALSE])
@@ -154,10 +188,8 @@ cut_corners <- function(x, y, ratio, closed = TRUE) {
 
 #' @keywords internal
 get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
-  if (iterations == 0L) {
-    return(data.frame(x = x, y = y))
-  }
-
+  # 1. Validate lengths first — before the early-return for iterations = 0 —
+  #    so that callers always receive clean cli errors for malformed inputs.
   if (length(x) == 0L || length(y) == 0L) {
     cli::cli_abort("{.arg x} and {.arg y} must have a positive length.")
   }
@@ -166,10 +198,41 @@ get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
     cli::cli_abort("{.arg x} and {.arg y} must have the same length.")
   }
 
+  if (iterations == 0L) {
+    return(data.frame(x = x, y = y))
+  }
+
+  # 2. Non-finite values (Inf, NaN, NA) would produce NaN throughout the lerp
+  #    arithmetic via Inf - Inf = NaN.  Remove them with a warning so the
+  #    remaining path is well-defined.
+  bad <- !is.finite(x) | !is.finite(y)
+  if (any(bad)) {
+    cli::cli_warn(
+      "{sum(bad)} non-finite value{?s} in {.arg x}/{.arg y} removed before \\
+       corner-cutting."
+    )
+    x <- x[!bad]
+    y <- y[!bad]
+    if (length(x) == 0L) {
+      return(data.frame(x = numeric(0L), y = numeric(0L)))
+    }
+  }
+
+  # 3. Fewer than 3 points means there are no interior corners to cut
+  #    (open path) or no non-degenerate polygon to smooth (closed path).
+  #    Returning the input unchanged avoids a base-R warning from the empty-
+  #    vector assignment that would otherwise occur in cut_corners().
+  if (length(x) < 3L) {
+    cli::cli_warn(
+      "Corner-cutting requires at least 3 points; returning input unchanged."
+    )
+    return(data.frame(x = x, y = y))
+  }
+
   for (i in seq.int(iterations)) {
     xy <- cut_corners(x, y, ratio = ratio, closed = closed)
-    x  <- xy$x
-    y  <- xy$y
+    x <- xy$x
+    y <- xy$y
   }
   data.frame(x = x, y = y)
 }

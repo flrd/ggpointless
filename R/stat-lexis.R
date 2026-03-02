@@ -1,31 +1,10 @@
-#' @export
-#' @rdname geom_lexis
-stat_lexis <- function(mapping = NULL, data = NULL,
-                       ...,
-                       na.rm = FALSE,
-                       show.legend = NA,
-                       inherit.aes = TRUE) {
-  layer(
-    data = data,
-    mapping = mapping,
-    stat = StatLexis,
-    geom = "lexis",
-    position = "identity",
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = list(
-      na.rm = na.rm,
-      ...
-    )
-  )
-}
-
-
 #' @rdname ggpointless-ggproto
 #' @format NULL
 #' @usage NULL
 #' @export
-StatLexis <- ggproto("StatLexis", Stat,
+StatLexis <- ggproto(
+  "StatLexis",
+  Stat,
   required_aes = c("x", "xend"),
   default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
   setup_params = function(data, params) {
@@ -41,12 +20,10 @@ StatLexis <- ggproto("StatLexis", Stat,
   }
 )
 
-#' Given a start, and end get the 'age' of an event
-#'
-#' @param x A vector of mode numeric
-#' @param xend A vector of mode numeric
-#' @return A data.frame
-#'
+#' @export
+#' @rdname geom_lexis
+stat_lexis <- make_constructor(StatLexis, geom = "lexis")
+
 #' @keywords internal
 get_lexis <- function(x, xend) {
   if (mode(c(x, xend)) != "numeric") {
@@ -54,7 +31,9 @@ get_lexis <- function(x, xend) {
   }
 
   if (any(x > xend, na.rm = TRUE)) {
-    cli::cli_abort("Each {.arg xend} must be greater than or equal to its {.arg x}.")
+    cli::cli_abort(
+      "Each {.arg xend} must be greater than or equal to its {.arg x}."
+    )
   }
 
   # get all x-positions

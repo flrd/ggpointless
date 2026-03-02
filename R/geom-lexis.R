@@ -1,12 +1,14 @@
 #' @keywords internal
 draw_key_sabline <- function(data, params, size) {
   grid::segmentsGrob(
-    x0 = 0.25, y0 = 0.25,
-    x1 = 0.75, y1 = 0.75,
+    x0 = 0.25,
+    y0 = 0.25,
+    x1 = 0.75,
+    y1 = 0.75,
     gp = ggplot2::gg_par(
-      col     = alpha(data$colour %||% data$fill %||% "black", data$alpha),
-      lwd     = data$linewidth %||% 0.5,
-      lty     = data$linetype  %||% 1,
+      col = alpha(data$colour %||% data$fill %||% "black", data$alpha),
+      lwd = data$linewidth %||% 0.5,
+      lty = data$linetype %||% 1,
       lineend = "round"
     )
   )
@@ -17,7 +19,7 @@ draw_key_pointless <- function(data, params, size) {
   if (is.null(data$shape)) {
     data$shape <- 19
   } else if (is.character(data$shape)) {
-    data$shape <- translate_shape_string(data$shape)
+    data$shape <- ggplot2::translate_shape_string(data$shape)
   }
 
   grid::pointsGrob(
@@ -25,19 +27,37 @@ draw_key_pointless <- function(data, params, size) {
     y = 0.75,
     pch = data$shape,
     gp = ggplot2::gg_par(
-      col      = alpha(data$colour %||% "black", data$alpha),
-      fill     = alpha(data$fill   %||% "black", data$alpha),
-      fontsize = data$size   %||% 1.5,
-      lwd      = data$stroke %||% 0.5
+      col = alpha(data$colour %||% "black", data$alpha),
+      fill = alpha(data$fill %||% "black", data$alpha),
+      pointsize = data$size %||% 1.5,
+      stroke = data$stroke %||% 0.5
     )
   )
 }
 
-#' @keywords internal
+#' Legend key glyph for \code{geom_lexis}
+#'
+#' Draws a short 45° line with an optional point at the upper-right end,
+#' matching the visual appearance of a Lexis diagram segment. Can also be
+#' used as a \code{key_glyph} in other geoms via \code{key_glyph = "lexis"}.
+#'
+#' @inheritParams ggplot2::draw_key
+#' @return A grid grob.
+#' @export
+#' @examples
+#' df <- data.frame(x = c(0, 1), xend = c(3, 4), grp = c("A", "B"))
+#'
+#' # default key glyph used automatically by geom_lexis
+#' ggplot2::ggplot(df, aes(x = x, xend = xend, color = grp)) +
+#'   geom_lexis()
+#'
+#' # borrow the glyph for another geom
+#' ggplot2::ggplot(df, aes(x, xend, colour = grp)) +
+#'   ggplot2::geom_line(key_glyph = "lexis")
 draw_key_lexis <- function(data, params, size) {
   # is.null guard: key glyph may be borrowed by geom_*s without point_show
   if (isTRUE(params$point_show) || is.null(params$point_show)) {
-    pts_data      <- data
+    pts_data <- data
     pts_data$size <- (data$size %||% 2) * 0.65
     grid::grobTree(
       draw_key_sabline(data, params, size),
@@ -57,27 +77,35 @@ GeomLexis <- ggproto(
   Geom,
   required_aes = c("x", "y", "xend", "yend"),
   non_missing_aes = c("size", "shape", "point_colour", "type"),
-  extra_params = c("na.rm", "point_show", "point_colour", "gap_filler",
-                   "lineend", "linejoin"),
+  extra_params = c(
+    "na.rm",
+    "point_show",
+    "point_colour",
+    "gap_filler",
+    "lineend",
+    "linejoin"
+  ),
   default_aes = aes(
-    shape     = 19,
-    colour    = "black",
-    linetype  = "solid",
+    shape = 19,
+    colour = "black",
+    linetype = "solid",
     linewidth = 0.5,
-    size      = 1.5,
-    fill      = NA,
-    alpha     = NA,
-    stroke    = 0.5
+    size = 1.5,
+    fill = NA,
+    alpha = NA,
+    stroke = 0.5
   ),
 
-  draw_group = function(data,
-                        panel_params,
-                        coord,
-                        lineend      = "round",
-                        linejoin     = "mitre",
-                        gap_filler   = TRUE,
-                        point_show   = TRUE,
-                        point_colour = NULL) {
+  draw_group = function(
+    data,
+    panel_params,
+    coord,
+    lineend = "round",
+    linejoin = "mitre",
+    gap_filler = TRUE,
+    point_show = TRUE,
+    point_colour = NULL
+  ) {
     if (!is.logical(gap_filler)) {
       cli::cli_abort(
         "{.arg gap_filler} must be a logical value, not {.cls {class(gap_filler)}}."
@@ -90,11 +118,11 @@ GeomLexis <- ggproto(
       )
     }
 
-    points          <- tail(data, 1)
-    points$colour   <- point_colour %||% points$colour
-    points$x        <- points$xend
-    points$y        <- points$yend
-    points          <- points[, !names(points) %in% c("xend", "yend"), drop = FALSE]
+    points <- tail(data, 1)
+    points$colour <- point_colour %||% points$colour
+    points$x <- points$xend
+    points$y <- points$yend
+    points <- points[, !names(points) %in% c("xend", "yend"), drop = FALSE]
 
     if (!isTRUE(gap_filler)) {
       data <- data[data$type != "dotted", , drop = FALSE]
@@ -103,32 +131,32 @@ GeomLexis <- ggproto(
     if (isTRUE(point_show)) {
       grid::gList(
         ggplot2::GeomSegment$draw_panel(
-          data         = data,
+          data = data,
           panel_params = panel_params,
-          coord        = coord,
-          lineend      = lineend,
-          linejoin     = linejoin
+          coord = coord,
+          lineend = lineend,
+          linejoin = linejoin
         ),
         ggplot2::GeomPoint$draw_panel(
-          data         = points,
+          data = points,
           panel_params = panel_params,
-          coord        = coord
+          coord = coord
         )
       )
     } else {
       ggplot2::GeomSegment$draw_panel(
-        data         = data,
+        data = data,
         panel_params = panel_params,
-        coord        = coord,
-        lineend      = lineend,
-        linejoin     = linejoin
+        coord = coord,
+        lineend = lineend,
+        linejoin = linejoin
       )
     }
   },
   draw_key = draw_key_lexis
 )
 
-#' Display events of different cohorts in form of a lexis chart
+#' @title Display events of different cohorts in form of a lexis chart
 #'
 #' @description
 #' This geom can be used to plot 45° lifelines for a cohort.
@@ -211,10 +239,10 @@ GeomLexis <- ggproto(
 #' }
 geom_lexis <- make_constructor(
   GeomLexis,
-  stat         = "lexis",
-  point_show   = TRUE,
+  stat = "lexis",
+  point_show = TRUE,
   point_colour = NULL,
-  gap_filler   = TRUE,
-  lineend      = "round",
-  linejoin     = "round"
+  gap_filler = TRUE,
+  lineend = "round",
+  linejoin = "round"
 )

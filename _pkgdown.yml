@@ -27,6 +27,7 @@ reference:
   - geom_fourier
   - stat_fourier
   - geom_lexis
+  - draw_key_lexis
   - stat_lexis
   - geom_pointless
   - stat_pointless

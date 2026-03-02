@@ -6,7 +6,7 @@ GeomCatenary <- ggplot2::ggproto(
   "GeomCatenary",
   ggplot2::GeomLine,
   stat = "catenary"
-  )
+)
 
 #' @title Catenary Curves and Arches
 #'
@@ -37,6 +37,8 @@ GeomCatenary <- ggplot2::ggproto(
 #' @inheritParams ggplot2::geom_path
 #'
 #' @aesthetics GeomCatenary
+#' @param geom,stat Override the default connection between `geom_catenary()`
+#'   and `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
 #'
 #' @examples
 #' library(ggplot2)
@@ -66,17 +68,19 @@ GeomCatenary <- ggplot2::ggproto(
 #'   geom_hline(yintercept = 0, colour = "forestgreen", linewidth = 3) +
 #'   coord_equal()
 #' @export
-geom_catenary <- function(mapping = NULL,
-                          data = NULL,
-                          stat = "catenary",
-                          position = "identity",
-                          ...,
-                          chain_length = NULL,
-                          sag = NULL,
-                          chainLength = lifecycle::deprecated(),
-                          na.rm = FALSE,
-                          show.legend = NA,
-                          inherit.aes = TRUE) {
+geom_catenary <- function(
+  mapping = NULL,
+  data = NULL,
+  stat = "catenary",
+  position = "identity",
+  ...,
+  chain_length = NULL,
+  sag = NULL,
+  chainLength = lifecycle::deprecated(),
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
+) {
   if (lifecycle::is_present(chainLength)) {
     lifecycle::deprecate_warn(
       "0.2.0",

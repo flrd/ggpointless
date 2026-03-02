@@ -32,7 +32,9 @@ StatPointless <- ggproto(
   },
 
   setup_data = function(data, params) {
-    if (nrow(data) == 0L) return(data.frame(x = numeric(0), y = numeric(0)))
+    if (nrow(data) == 0L) {
+      return(data.frame(x = numeric(0), y = numeric(0)))
+    }
     data
   },
 
@@ -64,9 +66,13 @@ get_locations <- function(data, location = "last") {
 
   # Handle all-NA case
   if (length(non_na_idx) == 0L) {
-    cli::cli_warn("All {.field y} values are {.val NA}; no points to highlight.")
-    data$location <- factor(character(0L),
-                            levels = c("first", "last", "minimum", "maximum"))
+    cli::cli_warn(
+      "All {.field y} values are {.val NA}; no points to highlight."
+    )
+    data$location <- factor(
+      character(0L),
+      levels = c("first", "last", "minimum", "maximum")
+    )
     return(data[0L, , drop = FALSE])
   }
 
