@@ -24,6 +24,8 @@ geom_lexis(
 stat_lexis(
   mapping = NULL,
   data = NULL,
+  geom = "lexis",
+  position = "identity",
   ...,
   na.rm = FALSE,
   show.legend = NA,
@@ -133,6 +135,19 @@ but unobserved levels are omitted.}
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
+
+\item{geom}{The geometric object to use to display the data for this layer.
+When using a \verb{stat_*()} function to construct a layer, the \code{geom} argument
+can be used to override the default coupling between stats and geoms. The
+\code{geom} argument accepts the following:
+\itemize{
+\item A \code{Geom} ggproto subclass, for example \code{GeomPoint}.
+\item A string naming the geom. To give the geom as a string, strip the
+function name of the \code{geom_} prefix. For example, to use \code{geom_point()},
+give the geom as \code{"point"}.
+\item For more information and other ways to specify the geom, see the
+\link[ggplot2:layer_geoms]{layer geom} documentation.
+}}
 }
 \description{
 This geom can be used to plot 45° lifelines for a cohort.

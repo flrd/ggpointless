@@ -84,19 +84,6 @@ the plot data. The return value must be a \code{data.frame}, and
 will be used as the layer data. A \code{function} can be created
 from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
-\item{stat}{The statistical transformation to use on the data for this layer.
-When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used to override the default coupling between geoms and
-stats. The \code{stat} argument accepts the following:
-\itemize{
-\item A \code{Stat} ggproto subclass, for example \code{StatCount}.
-\item A string naming the stat. To give the stat as a string, strip the
-function name of the \code{stat_} prefix. For example, to use \code{stat_count()},
-give the stat as \code{"count"}.
-\item For more information and other ways to specify the stat, see the
-\link[ggplot2:layer_stats]{layer stat} documentation.
-}}
-
 \item{position}{A position adjustment to use on the data for this layer. This
 can be used in various ways, including to prevent overplotting and
 improving the display. The \code{position} argument accepts the following:
@@ -176,6 +163,9 @@ means use \code{colour} aesthetic.}
 \item{linejoin}{Line join style (round, mitre, bevel).}
 
 \item{linemitre}{Line mitre limit (number greater than 1).}
+
+\item{geom, stat}{Override the default connection between \code{geom_catenary()}
+and \code{stat_catenary()}, or between \code{geom_arch()} and \code{stat_arch()}.}
 
 \item{arch_length}{Numeric vector of arch lengths. Recycled to the number
 of segments. If \code{NULL} and \code{arch_height} is also \code{NULL}, defaults to

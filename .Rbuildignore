@@ -16,3 +16,5 @@
 ^CRAN-RELEASE$
 ^CRAN-SUBMISSION$
 ^revdep$
+^CLAUDE\.md$
+^\.claude$

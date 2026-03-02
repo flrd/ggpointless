@@ -6,8 +6,6 @@
 \alias{ggpointless}
 \title{ggpointless: Additional Geometries and Stats for 'ggplot2'}
 \description{
-\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
-
 An (aspirational) collection of additional geometries and statistics for 'ggplot2'.
 }
 \seealso{
