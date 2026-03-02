@@ -120,7 +120,7 @@ $$y = a\cosh\!\left( \frac{x}{a} \right)$$
 [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
 draws these inverted catenary curves between successive points. The
 shape is controlled by `arch_length` or `arch_height` (vertical rise
-above the highest endpoint of each segment). By default the arc length
+above the highest endpoint of each segment). By default the arch length
 is twice the Euclidean distance.
 
 ``` r
@@ -190,7 +190,7 @@ ggplot(data.frame(x = 1:6, y = sample(6)), aes(x, y)) +
 By default the chain length is twice the Euclidean distance per segment.
 Pass `chain_length` to set an explicit arc length — longer values make
 the chain sag more. If the value is shorter than the straight-line
-distance a warning is issued and a straight line is drawn instead.
+distance, a warning is issued and a straight line is drawn instead.
 
 ``` r
 ggplot(data.frame(x = c(0, 2), y = c(1, 1)), aes(x, y)) +
@@ -226,10 +226,11 @@ ggplot(df_sag, aes(x, y)) +
 
 ![](ggpointless_files/figure-html/catenary-sag-1.png)
 
-### combine chain_length and sag
+### Combining chain_length and sag
 
-`sag` sets the vertical drop below the lowest endpoint of each segment,
-giving you direct control over how much the chain droops:
+Both `chain_length` and `sag` can be specified at the same time. Where
+both are given for a segment, `sag` takes precedence. Use `NA` to fall
+back to the other argument for that segment:
 
 ``` r
 df_sag <- data.frame(x = c(0, 2, 4, 6), y = c(1, 1, 1, 1))
@@ -253,7 +254,7 @@ ggplot(df_sag, aes(x, y)) +
 Chaikin’s corner-cutting algorithm smooths a polygonal path by
 iteratively replacing each corner with two new points placed at a given
 ratio along the adjacent edges. With `ratio = 0.25` (the default) and
-`iterations = 5` the path converges to a smooth B-spline approximation.
+`iterations = 5`, the path converges to a smooth B-spline approximation.
 
 ``` r
 set.seed(42)
@@ -268,7 +269,7 @@ ggplot(dat, aes(x, y)) +
 
 ### Effect of ratio
 
-`ratio` controls how aggressively corners are cut. At `ratio = 0.5` the
+`ratio` controls how aggressively corners are cut. At `ratio = 0.5`, the
 new points coincide with the edge midpoints, producing the maximum
 rounding possible in a single pass.
 
@@ -363,7 +364,7 @@ ggplot(df_d, aes(x, y)) +
   ) +
   geom_fourier(aes(colour = "detrend = 'lm'"), n_harmonics = 3, detrend = "lm") +
   labs(
-    title = "geom_fourier() w/wo detrending",
+    title = "geom_fourier() with/without detrending",
     x = NULL, y = NULL
   )
 ```
@@ -374,7 +375,7 @@ ggplot(df_d, aes(x, y)) +
 
 The Fourier transform (via
 [`stats::fft()`](https://rdrr.io/r/stats/fft.html)) assumes that
-observations are **evenly spaced** in time. When you hand it calendar
+observations are **evenly spaced** in time. When you supply calendar
 dates directly, this assumption is silently violated: months have 28–31
 days, so consecutive observations are not the same distance apart.
 

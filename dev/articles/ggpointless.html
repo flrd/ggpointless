@@ -172,7 +172,7 @@ equation:</p>
 <p><code><a href="../reference/geom_catenary.html">geom_arch()</a></code> draws these inverted catenary curves between
 successive points. The shape is controlled by <code>arch_length</code>
 or <code>arch_height</code> (vertical rise above the highest endpoint of
-each segment). By default the arc length is twice the Euclidean
+each segment). By default the arch length is twice the Euclidean
 distance.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -233,7 +233,7 @@ hanging-chain form between successive points.</p>
 <p>By default the chain length is twice the Euclidean distance per
 segment. Pass <code>chain_length</code> to set an explicit arc length —
 longer values make the chain sag more. If the value is shorter than the
-straight-line distance a warning is issued and a straight line is drawn
+straight-line distance, a warning is issued and a straight line is drawn
 instead.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -267,11 +267,12 @@ droops:</p>
 <p><img src="ggpointless_files/figure-html/catenary-sag-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
-<h3 id="combine-chain_length-and-sag">combine chain_length and sag<a class="anchor" aria-label="anchor" href="#combine-chain_length-and-sag"></a>
+<h3 id="combining-chain_length-and-sag">Combining chain_length and sag<a class="anchor" aria-label="anchor" href="#combining-chain_length-and-sag"></a>
 </h3>
-<p><code>sag</code> sets the vertical drop below the lowest endpoint of
-each segment, giving you direct control over how much the chain
-droops:</p>
+<p>Both <code>chain_length</code> and <code>sag</code> can be specified
+at the same time. Where both are given for a segment, <code>sag</code>
+takes precedence. Use <code>NA</code> to fall back to the other argument
+for that segment:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_sag</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -294,7 +295,7 @@ droops:</p>
 <p>Chaikin’s corner-cutting algorithm smooths a polygonal path by
 iteratively replacing each corner with two new points placed at a given
 ratio along the adjacent edges. With <code>ratio = 0.25</code> (the
-default) and <code>iterations = 5</code> the path converges to a smooth
+default) and <code>iterations = 5</code>, the path converges to a smooth
 B-spline approximation.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -308,7 +309,7 @@ B-spline approximation.</p>
 <h3 id="effect-of-ratio">Effect of ratio<a class="anchor" aria-label="anchor" href="#effect-of-ratio"></a>
 </h3>
 <p><code>ratio</code> controls how aggressively corners are cut. At
-<code>ratio = 0.5</code> the new points coincide with the edge
+<code>ratio = 0.5</code>, the new points coincide with the edge
 midpoints, producing the maximum rounding possible in a single pass.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">triangle</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -395,7 +396,7 @@ the output remains on the original scale.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_fourier.html">geom_fourier</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"detrend = 'lm'"</span><span class="op">)</span>, n_harmonics <span class="op">=</span> <span class="fl">3</span>, detrend <span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"geom_fourier() w/wo detrending"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"geom_fourier() with/without detrending"</span>,</span>
 <span>    x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/fourier-detrend-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
@@ -404,8 +405,8 @@ the output remains on the original scale.</p>
 <h3 id="pitfall-irregular-spacing-with-calendar-dates">Pitfall: irregular spacing with calendar dates<a class="anchor" aria-label="anchor" href="#pitfall-irregular-spacing-with-calendar-dates"></a>
 </h3>
 <p>The Fourier transform (via <code><a href="https://rdrr.io/r/stats/fft.html" class="external-link">stats::fft()</a></code>) assumes that
-observations are <strong>evenly spaced</strong> in time. When you hand
-it calendar dates directly, this assumption is silently violated: months
+observations are <strong>evenly spaced</strong> in time. When you supply
+calendar dates directly, this assumption is silently violated: months
 have 28–31 days, so consecutive observations are not the same distance
 apart.</p>
 <p>The example below maps <code>date</code> — a <code>Date</code> vector
