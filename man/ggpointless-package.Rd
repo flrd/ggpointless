@@ -4,9 +4,11 @@
 \name{ggpointless-package}
 \alias{ggpointless-package}
 \alias{ggpointless}
-\title{ggpointless: Additional Geometries and Stats for 'ggplot2'}
+\title{ggpointless: Extra Geometries and Stats for 'ggplot2'}
 \description{
-An (aspirational) collection of additional geometries and statistics for 'ggplot2'.
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+A collection of layers for 'ggplot2'.
 }
 \seealso{
 Useful links:

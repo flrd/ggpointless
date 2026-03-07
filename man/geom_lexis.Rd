@@ -3,7 +3,7 @@
 \name{geom_lexis}
 \alias{geom_lexis}
 \alias{stat_lexis}
-\title{Display events of different cohorts in form of a lexis chart}
+\title{Lexis diagrams}
 \usage{
 geom_lexis(
   mapping = NULL,
@@ -148,6 +148,9 @@ give the geom as \code{"point"}.
 \item For more information and other ways to specify the geom, see the
 \link[ggplot2:layer_geoms]{layer geom} documentation.
 }}
+}
+\value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 This geom can be used to plot 45° lifelines for a cohort.

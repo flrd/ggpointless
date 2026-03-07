@@ -102,7 +102,7 @@ lists which parameters it can accept.
 }}
 
 \item{mode}{Character. Should the geom draw a closed polygon or an open
-path. One of \code{"open"} (default) or \code{"closed"}.}
+path? Must be one of \code{"open"} (default) or \code{"closed"}.}
 
 \item{iterations}{Integer. Number of iterations to apply between \code{1} and
 \code{10}. When \code{iterations = 0} the original data is unchanged so essentially
@@ -144,6 +144,9 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 \code{geom_chaikin()} and \code{stat_chaikin()}.}
 
 \item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{mode} instead.}
+}
+\value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 Chaikin's corner-cutting algorithm can be used to smooth sharp
@@ -196,6 +199,10 @@ p2 + geom_chaikin(mode = "closed")
 \references{
 Chaikin, G. An algorithm for high speed curve generation.
 Computer Graphics and Image Processing 3 (1974), 346–349
+}
+\seealso{
+The \href{https://strimas.com/smoothr/}{smoothr} package offers tools to
+smooth and tidy spatial features
 }
 \section{Aesthetics}{
 

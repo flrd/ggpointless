@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-area-fade.R
 \name{geom_area_fade}
 \alias{geom_area_fade}
-\title{Area with Fading Linear Gradient}
+\title{Area Plots with Fading Linear Gradient}
 \usage{
 geom_area_fade(
   mapping = NULL,
@@ -11,6 +11,7 @@ geom_area_fade(
   position = "stack",
   ...,
   alpha_fade_to = 0,
+  alpha_scope = "global",
   orientation = NULL,
   outline.type = "upper",
   na.rm = FALSE,
@@ -96,6 +97,12 @@ lists which parameters it can accept.
 \item{alpha_fade_to}{A single finite number between 0 and 1. The alpha value
 at \code{y = 0} (the baseline). Defaults to \code{0} (fully transparent).}
 
+\item{alpha_scope}{How to scale alpha across groups. \code{"global"} (default)
+computes the maximum absolute y value across \strong{all} groups in the panel so
+that equal \verb{|y|} always maps to equal alpha. \code{"group"} computes the maximum
+per group, giving each group the full alpha range independently — useful
+with \code{position = "identity"} when groups have very different amplitudes.}
+
 \item{orientation}{The orientation of the layer. The default (\code{NA})
 automatically determines the orientation from the aesthetic mapping. In the
 rare event that this fails it can be given explicitly by setting \code{orientation}
@@ -104,7 +111,7 @@ to either \code{"x"} or \code{"y"}. See the \emph{Orientation} section for more 
 \item{outline.type}{Which edges of the area to draw an outline on. One of
 \code{"upper"} (default), \code{"lower"}, \code{"both"} (\code{"upper"} and \code{"lower"}),
 \code{"full"} (closed polygon outline), or \code{"none"}. When no \code{colour}
-aesthetic is set the outline uses the fill colour.}
+is specified explicitly the outline inherits the \code{fill} colour.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -122,17 +129,19 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 }
+\value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+}
 \description{
-This geom behaves much like \code{\link[ggplot2:geom_ribbon]{ggplot2::geom_area()}} but uses \code{\link[grid:patterns]{grid::linearGradient()}}
-to create area plots where the fill colour fades towards the baseline (\code{y = 0}).
-The gradient is always anchored at \code{y = 0}: maximum transparency there,
-fading to opaque at the data values. Opacity scales with the absolute
-distance from zero, so equal \verb{|y|} values always receive the same alpha —
-full opacity is reached only at the extreme with the largest absolute value.
-This works for positive values, negative values, and groups that cross zero
-(where a three-stop gradient is used).
+This geom behaves like \code{\link[ggplot2:geom_ribbon]{ggplot2::geom_area()}} but uses \code{\link[grid:patterns]{grid::linearGradient()}}
+to create area plots. The gradient is always anchored at \code{y = 0}: maximum
+transparency there, fading to opaque at the data values. Opacity scales
+with the absolute distance from zero, so equal \verb{|y|} values always receive
+the same alpha — full opacity is reached only at the extreme with the largest
+absolute value. This works for positive values, negative values, and groups
+that cross zero (where a three-stop gradient is used).
 
-When \code{fill} is mapped to a variable (e.g. \code{aes(fill = pop)}), the geom
+When \code{fill} is mapped to a variable (e.g. \code{aes(fill = z)}), the geom
 combines the horizontal colour gradient produced by ggplot2 with the
 vertical alpha fade, creating a two-dimensional gradient effect. This
 requires a device that supports Porter-Duff compositing
@@ -149,34 +158,27 @@ This geom treats each axis differently and, thus, can thus have two orientations
 
 \examples{
 library(ggplot2)
-df <- data.frame(
+df1 <- data.frame(
   g = c("a", "a", "a", "b", "b", "b"),
   x = c(1, 3, 5, 2, 4, 6),
   y = c(2, 5, 1, 3, 6, 7)
 )
 
-a <- ggplot(df, aes(x, y, fill = g)) +
+a <- ggplot(df1, aes(x, y, fill = g)) +
   theme_minimal()
 
 # default behaviour: opaque at data line, transparent at y = 0
+# the outline colour remains unaffected
 a + geom_area_fade()
 
-# change overall opacity at the data line
-a + geom_area_fade(alpha = .5)
+# change overall opacity
+a + geom_area_fade(alpha = .25)
 
 # keep some opacity at the baseline
 a + geom_area_fade(alpha_fade_to = .25)
 
-# works with negative values too: gradient fades towards y = 0 from below
-set.seed(42)
-df2 <- data.frame(x = seq_len(10), y = rnorm(10))
-ggplot(df2, aes(x, y)) + geom_area_fade() + theme_minimal()
-
 # suppress the default upper outline
 a + geom_area_fade(outline.type = "none")
-
-# draw upper and lower outlines (no left/right edges)
-a + geom_area_fade(outline.type = "both")
 
 # closed outline (all four edges)
 a + geom_area_fade(outline.type = "full")
@@ -185,8 +187,56 @@ a + geom_area_fade(outline.type = "full")
 a + geom_area_fade(orientation = "y")
 
 # disable stat alignment (useful when x values are already aligned)
-a + geom_area_fade(aes(colour = g), outline.type = "full", stat = "identity")
+a + geom_area_fade(stat = "identity")
 
+# draw upper and lower outlines (no left/right edges)
+a + geom_area_fade(outline.type = "both", stat = "identity")
+
+# geom_area_fade works with negative values too:
+# the gradient fades towards y = 0 from both sides
+set.seed(2)
+df2 <- data.frame(x = seq_len(20), y = cumsum(rnorm(20)))
+b <- ggplot(df2, aes(x, y - mean(y))) +
+  theme_minimal()
+b + geom_area_fade()
+
+# overwrite both fill and colour
+b + geom_area_fade(
+  fill = "#0833F5",
+  colour = "#d77e7b",
+  outline.type = "lower"
+  )
+
+# a 2D-gradient is produced when fill is mapped to a variable
+# this may not work on all graphic devices, see vignette for details
+b + geom_area_fade(
+  aes(fill = y),
+  colour = "#333333",
+  outline.type = "both"
+  )
+
+# Use the "alpha_scope" argument to scale the alpha
+# value of the gradients separately for each group
+df3 <- data.frame(
+  g = c("a", "a", "a", "b", "b", "b"),
+  x = c(1, 3, 5, 2, 4, 6),
+  y = c(1, 2, 1, 9, 10, 8)
+)
+c <- ggplot(df3, aes(x, y, fill = g)) +
+  theme_minimal()
+
+# alpha_scope = "group": each group uses the alpha range independently
+c + geom_area_fade(
+  alpha_scope = "group",
+  position = "identity"
+  )
+
+# compare with the default where small groups appear washed out
+# next to dominant groups, especially when position = "identity"
+c + geom_area_fade(
+  alpha_scope = "global", # default
+  position = "identity"
+  )
 }
 \references{
 Murrell, P. (2021). "Luminance Masks in R Graphics." Technical Report
@@ -198,14 +248,19 @@ Report 2022-01, Department of Statistics, The University of Auckland.
 Version 1.
 \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
 
+Murrell, P., Pedersen, T. L., and Skintzos, P. (2023). "Porter-Duff
+Compositing Operators in R Graphics." Department of Statistics, The
+University of Auckland. Version 1.
+\url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html}
+
 Murrell, P. (2023). "Groups, Compositing Operators, and Affine
 Transformations in R Graphics." Technical Report 2021-02, Department of
 Statistics, The University of Auckland. Version 3.
 \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/groups/groups.html}
 }
 \seealso{
-\code{\link[ggplot2:geom_ribbon]{ggplot2::geom_area()}} for fully opaque area charts
-\href{https://ggfx.data-imaginist.com/}{ggfx package} for real magic
+\code{\link[ggplot2:geom_ribbon]{ggplot2::geom_area()}} for fully opaque area charts,
+the \href{https://ggfx.data-imaginist.com/}{ggfx package} for real magic.
 }
 \section{Aesthetics}{
 

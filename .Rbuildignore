@@ -18,3 +18,5 @@
 ^revdep$
 ^CLAUDE\.md$
 ^\.claude$
+^figure$
+^Rplots\.pdf$

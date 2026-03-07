@@ -1,6 +1,7 @@
 url: https://flrd.github.io/ggpointless/
 template:
   bootstrap: 5
+  math-rendering: mathjax
   bslib:
     code_font:
       google: Fira Code
@@ -14,6 +15,10 @@ navbar:
     right:
     - search
     - github
+  components:
+    intro:
+      text: Examples
+      href: articles/ggpointless.html
 reference:
 - title: Geom, Stat
   desc: |
@@ -27,7 +32,6 @@ reference:
   - geom_fourier
   - stat_fourier
   - geom_lexis
-  - draw_key_lexis
   - stat_lexis
   - geom_pointless
   - stat_pointless

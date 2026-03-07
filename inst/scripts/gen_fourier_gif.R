@@ -42,11 +42,11 @@ p_anim <- ggplot(df_anim, aes(x, y)) +
     data        = df_ref,
     aes(x = x, y = y, xend = xend, yend = yend),
     colour      = "#333333",
-    linetype    = "dashed",
-    linewidth   = 0.75,
+    linetype    = "dotted",
+    linewidth   = 0.55,
     inherit.aes = FALSE
   ) +
-  geom_line(colour = "#023198", linewidth = 0.8) +
+  geom_line(colour = "#311dfc", linewidth = 0.8) +
   scale_x_continuous(
     breaks = c(0, pi / 2, pi, 3 * pi / 2, 2 * pi),
     labels = c("0", expression(pi / 2), expression(pi),

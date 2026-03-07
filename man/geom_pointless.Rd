@@ -133,13 +133,16 @@ give the geom as \code{"point"}.
 }}
 
 \item{location}{Position(s) to highlight: \code{"minimum"}, \code{"maximum"},
-\code{"first"} and/or \code{"last"} (default).}
+\code{"first"}, \code{"last"} (default), or \code{"all"}.}
+}
+\value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 This is a wrapper around \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}} with the one
-additional argument: \code{location}. This geom is not particularly useful
-on its own - hence its name - but hopefully in conjunction
-with \code{geom_line()} and friends, see examples.
+additional argument: \code{location}. This geom aims to emphasis some observations
+but is not particularly useful on its own - hence its name - but hopefully
+in conjunction with \code{geom_line()} and friends, see examples.
 }
 \section{Details}{
 
@@ -149,7 +152,7 @@ single point will be plotted at the last non-missing observation.
 The locations are determined in the order in which they appear in
 the data -- like \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}} does compared to \code{\link[ggplot2:geom_path]{ggplot2::geom_line()}}.
 
-Points may be plotted on top of one another. If \code{location} is set
+Points may be plotted on top of one another; if \code{location} is set
 to \code{"all"}, then the order in which points are plotted from top to
 bottom is: \code{"first"} > \code{"last"} > \code{"minimum"} > \code{"maximum"}.
 Otherwise, the order is determined as specified in the \code{location} argument,
@@ -222,10 +225,12 @@ set.seed(42)
 df4 <- data.frame(x = 1:10, y = sample(1:10))
 ggplot(df4, aes(x, y)) +
   geom_line() +
+  geom_pointless(location = c("maximum", "minimum"), size = 3) +
   stat_pointless(
-    aes(yintercept = y, colour = after_stat(location)),
+    aes(label = after_stat(y)),
     location = c("maximum", "minimum"),
-    geom = "hline"
+    geom = "text",
+    hjust = -1
   )
 
 # Example using facets
@@ -240,6 +245,9 @@ p + geom_pointless(
   size = 2
   )
 
+}
+\seealso{
+\code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}
 }
 \section{Aesthetics}{
 

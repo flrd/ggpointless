@@ -11,7 +11,7 @@ geom_point_glow(
   position = "identity",
   ...,
   glow_colour = NA,
-  glow_alpha = 0.75,
+  glow_alpha = NA,
   glow_size = NA,
   na.rm = FALSE,
   show.legend = NA,
@@ -96,10 +96,11 @@ lists which parameters it can accept.
 \item{glow_colour}{colour of the glow. If \code{NA} (default), it inherits the
 colour of the point itself.}
 
-\item{glow_alpha}{Transparency of the glow. Defaults to 0.5.}
+\item{glow_alpha}{Transparency of the glow. If \code{NA} (default), it inherits
+the alpha value of the point itself.}
 
 \item{glow_size}{Numerical value for the glow radius. If \code{NA} (default),
-it is calculated as two times the point size.}
+it is calculated as three times the point size.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -116,6 +117,9 @@ but unobserved levels are omitted.}
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
+}
+\value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 geom_point_glow is a version of (\code{\link[ggplot2:geom_point]{geom_point()}})
@@ -143,8 +147,14 @@ ggplot(head(economics), aes(date, uempmed)) +
     location = c("first", "last")
 )
 }
+\references{
+Murrell, P. (2022). "Vectorised Pattern Fills in R Graphics." Technical
+Report 2022-01, Department of Statistics, The University of Auckland.
+Version 1.
+\url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
+}
 \seealso{
-\code{\link[grid:patterns]{grid::linearGradient()}}, which this geom relies on.
+\code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}, \code{\link[grid:patterns]{grid::radialGradient()}}
 }
 \section{Aesthetics}{
 

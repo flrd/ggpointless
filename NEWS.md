@@ -32,8 +32,7 @@
 
 * The package now requires R >= 4.2.0 and ggplot2 >= 4.0.0. Several geoms 
   take (mostly internal) advantage of new ggplot2 features such as
-  `make_constructor()`, `gg_par()`, and gradient support from 
-  `grid::linearGradient()` and `grid::radialGradient()`.
+  `make_constructor()`, and `gg_par()`.
 
 * Messages and errors across the package have been migrated to the `cli` and
   `rlang` packages, giving consistent, hyperlink-aware output.

@@ -1,95 +1,118 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ggpointless
+# ggpointless <img src="man/figures/logo.png" align="right" height="139" alt="ggpointless logo" />
 
 <!-- badges: start -->
 
 [![CRAN
 status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-project.org/package=ggpointless)
 [![R-CMD-check](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml)
-![downloads](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless))
+![downloads](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless)
 [![Codecov test
 coverage](https://codecov.io/gh/flrd/ggpointless/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless)
 <!-- badges: end -->
 
 `ggpointless` is an extension of the
-[`ggplot2`](https://ggplot2.tidyverse.org/) library providing additional
+[`ggplot2`](https://ggplot2.tidyverse.org/) package providing additional
 layers.
 
 ## Installation
 
-You can install `ggpointless` from CRAN with:
+You can install ggpointless from CRAN with:
 
 ``` r
 install.packages("ggpointless")
-# or devtools::install_github("flrd/ggpointless") for development version
 ```
 
-``` r
-library(ggplot2)
-library(ggpointless)
+Or install development version from Github with
 
-roma <- scico::scico(4, palette = "roma")
-theme_set(
-  theme_minimal() +
-    theme(
-      palette.colour.discrete = \(n) scico::scico(n, palette = "roma"),
-      palette.fill.discrete   = \(n) scico::scico(n, palette = "roma"),
-      palette.fill.continuous = scales::colour_ramp(scico::scico(256, palette = "roma")),
-      geom                    = element_geom(fill = roma[4])
-    )
-)
+``` r
+# install.packages("pak")
+pak::pkg_install("flrd/ggpointless")
 ```
 
 ## What will you get
 
-This package is a collection of geoms, and stats for
-[ggplot2](https://ggplot2.tidyverse.org/). The following functions are
-implemented:
+The package groups into three categories:
 
-- `geom_arch()` & `stat_arch()` – draws an [catenary
-  arch](https://en.wikipedia.org/wiki/Catenary_arch)
+**Visual effects** — purely aesthetic layers that change how data looks
+without transforming it:
+
 - `geom_area_fade()` – area plots with a gradient fill
+- `geom_point_glow()` – adds a radial gradient glow to point plots
+
+**Mathematical curves** — geoms backed by a stat that fits or transforms
+data:
+
+- `geom_arch()` & `stat_arch()` – draws a [catenary
+  arch](https://en.wikipedia.org/wiki/Catenary_arch)
 - `geom_catenary()` & `stat_catenary()` – draws a [catenary
   curve](https://en.wikipedia.org/wiki/Catenary)
-- `geom_chaikin()` & `stat_chaikin()` – applies Chaikin’s corner cutting
-  algorithm
+- `geom_chaikin()` & `stat_chaikin()` – smooths paths using Chaikin’s
+  corner cutting algorithm
 - `geom_fourier()` & `stat_fourier()` – fits a Fourier series to `x`/`y`
-  and renders the reconstructed curve
+  observations and renders the reconstructed curve
+
+**Diagram types** — specialised chart forms:
+
 - `geom_lexis()` & `stat_lexis()` – draws a Lexis diagram
-- `geom_point_glow()` – adds a radial gradient to your point plots
-- `geom_pointless()` & `stat_pointless()` – emphasises some observations
-  with points
+- `geom_pointless()` & `stat_pointless()` – emphasises selected
+  observations with points
 
 See
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
 for details and examples.
 
-### geom_area_fade
-
-This is purely visual sugar. `geom_area_fade()` behaves like
-[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-but fills each area with a vertical linear gradient using
-[`grid::linearGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
-
 ``` r
-# example from geom_area()
-df <- data.frame(
-  g = c("a", "a", "a", "b", "b", "b"),
-  x = c(1, 3, 5, 2, 4, 6),
-  y = c(2, 5, 1, 3, 6, 7)
-)
-ggplot(df, aes(x, y, fill = g)) +
-  geom_area_fade()
+library(ggpointless)
+#> Loading required package: ggplot2
+
+# set consistent theme for all plots
+cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
+theme_set(
+  theme_minimal() + 
+    theme(geom = element_geom(fill = cols[1])) +
+    theme(palette.fill.discrete = c(cols[1], cols[3])) +
+    theme(palette.colour.discrete = cols)
+  )
 ```
 
-<img src="man/figures/README-geom-area-fade-basic-example-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+## geom_arch
 
-The gradient is anchored at `y = 0`: fully transparent at the baseline
-and proportionally opaque at the data values. Opacity scales with
-absolute distance from zero, so e.g. `y = -1` and `y = +1` always
-receive the same alpha.
+`geom_arch()` draws a catenary arch (inverted catenary curve) between
+successive points, mirroring `geom_catenary()`. The shape is controlled
+via `arch_length` or `arch_height` (vertical rise above the *highest*
+endpoint of each segment).
+
+``` r
+df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
+ggplot(df_arch, aes(x, y)) +
+  geom_arch(arch_height = c(1.5, NA, 0.5)) +
+  geom_point(size = 3) +
+  ylim(0, 3.5)
+```
+
+<img src="man/figures/README-geom-arch-basic-example-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+By default the arch length is twice the Euclidean distance. You can
+change that for each segment using the `arch_length` argument.
+
+``` r
+ggplot(df_arch, aes(x, y)) +
+  geom_arch(arch_length = c(2, 4, NA)) +
+  geom_point(size = 3) +
+  ylim(0, 3.5)
+```
+
+<img src="man/figures/README-geom-arch-arch-length-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+## geom_area_fade
+
+`geom_area_fade()` behaves like
+[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+but fills each area with a vertical linear gradient, see
+[`grid::linearGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
 
 ``` r
 set.seed(42)
@@ -97,17 +120,22 @@ df_fade <- data.frame(
   x = seq_len(60),
   y = cumsum(rnorm(60, sd = 0.35))
 )
-df_fade$y <- df_fade$y - mean(df_fade$y)
 
-p <- ggplot(df_fade, aes(x, y))
+p <- ggplot(df_fade, aes(x, y - mean(y)))
 p + geom_area_fade()
 ```
 
 <img src="man/figures/README-geom-area-fade-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+Opacity scales with absolute distance from zero, so e.g. `y = -1` and
+`y = +1` always receive the same alpha. The gradient is anchored at y =
+0; by default fully transparent at the baseline and proportionally
+opaque at the data values. The outline colour is unaffected from the
+alpha logic.
 
-You can control the alpha value the fill fades to using `alpha_fade_to`
-argument. Below, instead of fading from full opacity towards full
-transparency at `y = 0` alpha starts at 50% and fades to 10%:
+You can control the alpha value the fill fades to using the
+`alpha_fade_to` argument. Instead of fading from full opacity towards
+full transparency at `y = 0`, in the next example alpha starts at 50%
+and fades to 10%:
 
 ``` r
 p + geom_area_fade(alpha = .5, alpha_fade_to = .1)
@@ -124,17 +152,78 @@ p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
 
 <img src="man/figures/README-geom-area-fade-reverse-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-`geom_area_fade()` supports the `orientation` argument you know and love
-from other `geom_*`s. With `orientation = "y"`, you create a horizontal
-area chart where the gradient fades from `x = 0` toward the data values.
-You can change the outline colour too.
+`geom_area_fade()` supports the `orientation` argument familiar from
+other `geom_*` functions. With `orientation = "y"`, you create a
+horizontal area chart where the gradient fades from `x = 0` toward the
+data values.
 
 ``` r
 ggplot(df_fade, aes(y, x)) +
-  geom_area_fade(orientation = "y", colour = "#333333")
+  geom_area_fade(
+    orientation = "y",
+    colour = "#333333" # changes outline colour
+    )
 ```
 
 <img src="man/figures/README-geom-area-fade-orientation-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### Multiple groups
+
+When your data contains multiple groups those are stacked
+(`position = "stack"`) and aligned (`stat = "align"`) – just like
+`geom_area()` does it. By default, the alpha fade scales to the global
+maximum across *all* groups (`alpha_scope = "global"`), so equal `|y|`
+always maps to equal opacity.
+
+``` r
+df1 <- data.frame(
+  g = c("a", "a", "a", "b", "b", "b"),
+  x = c(1, 3, 5, 2, 4, 6),
+  y = c(2, 5, 1, 3, 6, 7)
+)
+
+ggplot(df1, aes(x, y, fill = g)) +
+  geom_area_fade()
+```
+
+<img src="man/figures/README-geom-area-fade-multiple-groups-basic-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+When groups have very different amplitudes or you may not use the
+default `position = "stack"` but `stat = "identity"` instead, this can
+make smaller groups nearly invisible and small groups would appear
+washed out next to dominant groups.
+
+``` r
+df_alpha_scope <- data.frame(
+  g = c("a", "a", "a", "b", "b", "b"),
+  x = c(1, 3, 5, 2, 4, 6),
+  y = c(1, 2, 1, 9, 10, 8)
+)
+p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+p + geom_area_fade(
+  alpha_scope = "global", # default
+  position = "identity"
+)
+```
+
+<img src="man/figures/README-geom-area-fade-global-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+Setting `alpha_scope = "group"` lets the algorithm calculate the alpha
+range for each group separately.
+
+``` r
+p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+
+# alpha_scope = "group": each group uses the alpha range independently
+p + geom_area_fade(
+  alpha_scope = "group", 
+  position = "identity"
+  )
+```
+
+<img src="man/figures/README-geom-area-fade-group-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### 2D gradient
 
 Since [ggplot2 version
 4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
@@ -145,35 +234,24 @@ gradients.
 
 ``` r
 ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed))
+  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
 ```
 
 <img src="man/figures/README-geom-area-fade-2D-gradient-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-### geom_arch
+**Note** that this kind of gradient is not supported on all graphic
+devices, see
+[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for more details and examples.
 
-`geom_arch()` draws a catenary arch (inverted catenary curve) between
-successive points, mirroring `geom_catenary()`. The shape is controlled
-via `arch_length` or `arch_height` (vertical rise above the highest
-endpoint of each segment). By default the arch length is twice the
-Euclidean distance.
-
-``` r
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-ggplot(df_arch, aes(x, y)) +
-  geom_arch(arch_height = 0.5) +
-  geom_point(size = 3)
-```
-
-<img src="man/figures/README-geom-arch-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-### geom_catenary
+## geom_catenary
 
 `geom_catenary()` draws a flexible curve that simulates a chain or rope
-hanging loosely between successive points. By default a chain length
-twice the Euclidean distance between each `x`/`y` pair is used. The
-shape can be controlled via `chain_length` or `sag` (vertical drop below
-the lowest endpoint of each segment).
+hanging loosely between successive points. By default, the chain length
+is twice the Euclidean distance between each `x`/`y` pair. The shape can
+be controlled via `chain_length` or `sag`, i.e vertical drop below the
+*lowest* endpoint of each segment.
 
 Idea from:
 [dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
@@ -188,22 +266,29 @@ ggplot(df_catenary, aes(x, y)) +
 
 <img src="man/figures/README-geom-catenary-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-The `sag` argument can be used to define each segments drop based on the
-smallest value of each segment. `NA` keeps the default.
+The `sag` argument can be used to define each segment’s drop based on
+the smallest value of each segment. `NA` keeps the default. If you
+provide `sag` and `chain_length` for the same segment, then `sag` wins.
 
 ``` r
 ggplot(df_catenary, aes(x, y)) +
-  geom_catenary(sag = c(2, 1, NA)) +
+  geom_catenary(
+    sag = c(2, .5, NA),
+    chain_length = c(NA, 4, 6)) +
   geom_point(size = 3)
+#> Both `sag` and `chain_length` supplied for 1 segment; using `sag`.
+#> This message is displayed once every 8 hours.
 ```
 
 <img src="man/figures/README-geom-catenary-sag-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-### geom_chaikin
+## geom_chaikin
 
 `geom_chaikin()` applies Chaikin’s corner cutting algorithm to turn a
 ragged path or polygon into a smooth one. The `closed` argument controls
-whether the path is treated as a closed polygon. Credit to [Farbfetzen /
+whether the path is treated as a closed polygon, or an open path.
+
+Credit to [Farbfetzen /
 corner_cutting](https://github.com/Farbfetzen/corner_cutting).
 
 ``` r
@@ -214,26 +299,24 @@ lst <- list(
     open_triangle = data.frame(x = c(3, 3, 5), y = c(2, 3, 3)),
     closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
   ),
-  color = roma,
-  closed = c(TRUE, TRUE, FALSE, TRUE)
+  color = cols,
+  mode = c("closed", "closed", "open", "closed")
 )
 
 ggplot(mapping = aes(x, y)) +
-  lapply(lst$data, function(i) {
+  lapply(lst$data, \(i) {
     geom_polygon(data = i, fill = NA, linetype = "12", color = "#333333")
   }) +
-  Map(f = function(data, color, closed) {
-    geom_chaikin(data = data, color = color, closed = closed)
-  }, data = lst$data, color = lst$color, closed = lst$closed) +
+  Map(f = \(data, color, mode) {
+    geom_chaikin(data = data, color = color, mode = mode)
+  }, data = lst$data, color = lst$color, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
 ```
 
 <img src="man/figures/README-geom-chaikin-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-See also the [`smoothr` package](https://github.com/mstrimas/smoothr/).
-
-### geom_fourier
+## geom_fourier
 
 `geom_fourier()` fits a Fourier series (via
 [fft()](https://search.r-project.org/R/refmans/stats/html/fft.html)) to
@@ -259,20 +342,21 @@ df_d <- data.frame(
 )
 
 ggplot(df_d, aes(x, y)) +
-  geom_point(alpha = 0.35, size = 0.8) +
+  geom_point(alpha = 0.35) +
   geom_fourier(
-    aes(colour = "as is"),
-    n_harmonics = 3, linetype = "dashed"
+    aes(colour = "detrend = NULL"),
+    n_harmonics = 3
   ) +
   geom_fourier(
-    aes(colour = "detrend = 'lm'"),
-    n_harmonics = 3, detrend = "lm"
+    aes(colour = "detrend = \"lm\""),
+    n_harmonics = 3,
+    detrend = "lm"
   )
 ```
 
 <img src="man/figures/README-geom-fourier-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-### geom_lexis
+## geom_lexis
 
 `geom_lexis()` is a combination of a segment and a point layer. Given a
 start value and an end value, it draws a 45° line indicating the
@@ -299,7 +383,7 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
 See also the [`LexisPlotR`
 package](https://github.com/ottlngr/LexisPlotR).
 
-### geom_point_glow
+## geom_point_glow
 
 `geom_point_glow()` is a drop-in replacement for
 [`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
@@ -307,16 +391,17 @@ that adds a radial gradient glow behind each point using
 [`grid::radialGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
 The glow colour, transparency (`glow_alpha`), and radius (`glow_size`)
 can be set independently of the point itself; by default the glow
-inherits the point colour.
+inherits the point colour and size.
 
 ``` r
 ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point_glow(glow_size = 5)
+  geom_point_glow(glow_size = 5, glow_alpha = .5) +
+  coord_cartesian(clip = "off")
 ```
 
 <img src="man/figures/README-geom-point-glow-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-### geom_pointless
+## geom_pointless
 
 `geom_pointless()` lets you highlight observations, by default using a
 point layer. Hence it behaves like `geom_point()` but accepts a
@@ -325,7 +410,7 @@ point layer. Hence it behaves like `geom_point()` but accepts a
 
 ``` r
 x <- seq(-pi, pi, length.out = 500)
-y <- outer(x, 1:5, function(x, y) sin(x * y))
+y <- outer(x, 1:5, \(x, y) sin(x * y))
 
 df1 <- data.frame(
   var1 = x,

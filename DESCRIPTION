@@ -1,5 +1,5 @@
 Package: ggpointless
-Title: Additional Geometries and Stats for 'ggplot2'
+Title: Extra Geometries and Stats for 'ggplot2'
 Version: 0.1.0.9000
 Authors@R: 
     person(
@@ -7,8 +7,7 @@ Authors@R:
      family = "Döring",
      email = "m4rkus.doering@gmail.com",
      role = c("aut", "cre", "cph"))
-Description: An (aspirational) collection of additional geometries and 
-    statistics for 'ggplot2'. 
+Description: A collection of layers for 'ggplot2'. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -18,7 +17,7 @@ URL: https://flrd.github.io/ggpointless/,
 BugReports: https://github.com/flrd/ggpointless/issues
 Depends:
     ggplot2 (>= 4.0.0),
-    R (>= 4.1)
+    R (>= 4.2.0)
 Suggests:
     knitr,
     covr,
@@ -26,9 +25,9 @@ Suggests:
     rmarkdown,
     ragg,
     scales,
-    scico,
     vdiffr (>= 1.0.0),
-    spelling
+    spelling,
+    withr
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Collate:

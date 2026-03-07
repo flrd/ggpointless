@@ -176,13 +176,16 @@ twice the Euclidean distance per segment. Can be mixed with
 above the \strong{highest endpoint} of each segment. Takes precedence
 over \code{arch_length} when both are supplied for the same segment.}
 }
+\value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+}
 \description{
 \code{geom_catenary()} draws a catenary curve (hanging chain) between
 successive points. \code{geom_arch()} draws an inverted catenary curve and
 is hence intended for people living on the southern hemisphere.
 
-The shape follows the catenary equation
-\eqn{y = a \cosh\!\bigl(\frac{x - h}{a}\bigr) + v}.
+The shape follows the catenary equation:
+\eqn{\ y = a\ \cosh \ \!\bigl(\frac{x - h}{a}\bigr) + v}.
 }
 \examples{
 library(ggplot2)
@@ -211,6 +214,12 @@ ggplot(rice_house, aes(x, y)) +
   geom_segment(aes(xend = x, yend = 0)) +
   geom_hline(yintercept = 0, colour = "forestgreen", linewidth = 3) +
   coord_equal()
+}
+\seealso{
+\code{\link[=geom_fourier]{geom_fourier()}} for fitting smooth curves to data via Fourier series,
+\code{\link[=geom_chaikin]{geom_chaikin()}} for smoothing paths via corner cutting.
+The catenary equation is described at
+\url{https://en.wikipedia.org/wiki/Catenary}.
 }
 \section{Aesthetics}{
 

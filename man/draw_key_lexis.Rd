@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-lexis.R
 \name{draw_key_lexis}
 \alias{draw_key_lexis}
-\title{Legend key glyph for \code{geom_lexis}}
+\title{Key glyphs for legends}
 \usage{
 draw_key_lexis(data, params, size)
 }
@@ -18,18 +18,15 @@ display in this key}
 A grid grob.
 }
 \description{
-Draws a short 45° line with an optional point at the upper-right end,
-matching the visual appearance of a Lexis diagram segment. Can also be
-used as a \code{key_glyph} in other geoms via \code{key_glyph = "lexis"}.
+Each geom has an associated function that draws the key when the geom needs
+to be displayed in a legend. These functions are called \verb{draw_key_*()}, where
+\code{*} stands for the name of the respective key glyph. The key glyphs can be
+customized for individual geoms by providing a geom with the \code{key_glyph}
+argument (see \code{\link[ggplot2:layer]{ggplot2::layer()}} or examples below.)
 }
 \examples{
-df <- data.frame(x = c(0, 1), xend = c(3, 4), grp = c("A", "B"))
+ggplot(economics_long, aes(date, value01, colour = variable)) +
+  geom_line(key_glyph = "lexis")
 
-# default key glyph used automatically by geom_lexis
-ggplot2::ggplot(df, aes(x = x, xend = xend, color = grp)) +
-  geom_lexis()
-
-# borrow the glyph for another geom
-ggplot2::ggplot(df, aes(x, xend, colour = grp)) +
-  ggplot2::geom_line(key_glyph = "lexis")
 }
+\keyword{internal}
