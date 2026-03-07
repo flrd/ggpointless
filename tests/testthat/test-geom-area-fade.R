@@ -47,6 +47,45 @@ test_that("all valid outline.type values are accepted", {
   }
 })
 
+# --- alpha_scope validation ---------------------------------------------------
+
+test_that("alpha_scope rejects invalid values", {
+  p <- ggplot(df_pos, aes(x, y))
+  expect_error(
+    ggplotGrob(p + geom_area_fade(alpha_scope = "panel")),
+    "alpha_scope"
+  )
+})
+
+test_that("alpha_scope = 'global' and 'group' are accepted", {
+  p <- ggplot(df_groups, aes(x, y, fill = g))
+  expect_no_error(ggplotGrob(p + geom_area_fade(alpha_scope = "global")))
+  expect_no_error(ggplotGrob(p + geom_area_fade(alpha_scope = "group")))
+})
+
+test_that("alpha_scope = 'group' produces different grobs than 'global'", {
+  # Two groups with very different amplitudes: "big" peaks at 10, "small" at 1.
+  # With "global" the small group's alpha peaks at ~0.1; with "group" it peaks
+
+  # at 1.  The grob trees must therefore differ.
+  df_amp <- data.frame(
+    g = rep(c("big", "small"), each = 4),
+    x = rep(1:4, 2),
+    y = c(2, 10, 5, 2, 0.2, 1, 0.5, 0.2)
+  )
+  p <- ggplot(df_amp, aes(x, y, fill = g))
+  grob_global <- ggplotGrob(p + geom_area_fade(
+    position = "identity", alpha_scope = "global"
+  ))
+  grob_group <- ggplotGrob(p + geom_area_fade(
+    position = "identity", alpha_scope = "group"
+  ))
+  # The serialised grob trees should differ because the alpha_ref gradients
+
+  # have different stop values.
+  expect_false(identical(grob_global, grob_group))
+})
+
 # --- single-observation warning ----------------------------------------------
 
 test_that("groups with fewer than 2 observations produce a warning", {
@@ -177,6 +216,51 @@ test_that(".composite_poly_fill wraps polygon children in GridGroup, leaves poly
   expect_identical(result$children[[2]], line)         # outline unchanged
 })
 
+test_that(".composite_poly_fill detaches outline for outline.type = 'full' polygons", {
+  # When outline.type = "full" the parent returns a single polygonGrob whose
+  # gp$col IS the outline (no separate polyline).  Without special handling
+  # the dest.in compositing fades the outline together with the fill, making
+  # it invisible near the baseline.  The fix: detach gp$col before compositing,
+  # composite the fill alone, then layer the outline on top at full opacity.
+  skip_if_not(
+    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE),
+    message = "grid::groupGrob not available (R < 4.2)"
+  )
+  poly <- grid::polygonGrob(gp = grid::gpar(fill = "red", col = "blue"))
+  src  <- grid::rectGrob()
+
+  result <- .composite_poly_fill(poly, src)
+
+  # Result is a gTree: composited fill (no outline) + outline-only polygon
+  expect_s3_class(result, "gTree")
+  expect_length(result$children, 2L)
+
+  # First child: composited fill with col stripped
+  expect_s3_class(result$children[[1]], "GridGroup")
+
+  # Second child: outline-only polygon (fill = NA, col = original)
+  outline <- result$children[[2]]
+  expect_s3_class(outline, "polygon")
+  expect_true(is.na(outline$gp$fill))
+  expect_equal(outline$gp$col, "blue")
+})
+
+test_that(".composite_poly_fill skips outline detach when col is NA", {
+  # When gp$col is NA (no outline) the polygon should be composited directly
+  # without the extra gTree wrapper.
+  skip_if_not(
+    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE),
+    message = "grid::groupGrob not available (R < 4.2)"
+  )
+  poly <- grid::polygonGrob(gp = grid::gpar(fill = "red", col = NA))
+  src  <- grid::rectGrob()
+
+  result <- .composite_poly_fill(poly, src)
+
+  # Direct GridGroup, no gTree wrapper
+  expect_s3_class(result, "GridGroup")
+})
+
 test_that(".composite_poly_fill passes non-polygon, non-gTree grobs through unchanged", {
   skip_if_not(
     exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE),
@@ -203,21 +287,28 @@ test_that(".composite_poly_fill recurses into nested gTrees", {
 })
 
 # --- mapped fill (aes(fill = var)) -------------------------------------------
-#
-# cli's .frequency = "once" means "does not support" fires only once per
-# session.  The message test MUST run before any other test that could fire the
-# same frequency-limited message.  Subsequent tests that go through the fallback
-# path use suppressMessages() so they do not compete.
 
 test_that("mapped fill: fallback emits a cli message when compositing unavailable", {
+  # The message fires at render time (makeContent) rather than at grob-build
+  # time, so we must draw the grob to trigger it.  Mock dev.cur() to simulate
+  # a non-PDF device with no compositing so we exercise the Tier 2 fallback.
   local_mocked_bindings(
+    dev.cur = function(...) c(`png` = 2L),
     dev.capabilities = function(...) list(compositing = character(0L)),
     .package = "grDevices"
   )
+  # Force verbose mode so .frequency = "once" doesn't suppress the message
+  # after it has already fired in this or a previous session.
+  withr::local_options(rlib_message_verbosity = "verbose")
   p <- ggplot(df_fill, aes(x, y, fill = z)) +
     geom_area_fade(position = "identity") +
     theme_minimal()
-  expect_message(ggplotGrob(p), "does not support")
+  grob <- ggplotGrob(p)
+  tf <- tempfile(fileext = ".png")
+  png(tf)
+  expect_message(grid::grid.draw(grob), "does not support")
+  dev.off()
+  unlink(tf)
 })
 
 test_that("mapped fill builds a valid grob on any device", {

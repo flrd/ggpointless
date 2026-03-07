@@ -231,6 +231,23 @@ test_that("compute_catenary_group: sag = 0 returns a straight line (safety net)"
   expect_true(all(result$y == 0))
 })
 
+test_that("compute_catenary_group: non-monotonic x is sorted before computing", {
+  # Regression test: head(mtcars, 3) has wt = c(2.620, 2.875, 2.320) — the
+
+  # third point has a smaller x than the second.  Without x-sorting, segments
+  # overlap in x and GeomLine's x-sort interleaves points from both segments,
+  # producing visible zigzag artefacts.
+  data <- data.frame(x = c(2.620, 2.875, 2.320), y = c(16.46, 17.02, 18.61))
+  result <- .ccg(data)
+
+  # After sorting by x the order becomes (2.320, 2.620, 2.875), giving two
+  # segments whose x ranges do not overlap.
+  expect_equal(nrow(result), 10L)  # 2 segments × 5 points each
+
+  # x must be monotonically non-decreasing across the entire output
+  expect_true(all(diff(result$x) >= 0))
+})
+
 test_that("compute_catenary_group: chain_length == straight_dist gives a straight line (tiny sinh)", {
   # When chain_length exactly equals the Euclidean distance, the solver returns
   # a near-infinite alpha and sinh(dx / (2*alpha)) underflows below 1e-9.

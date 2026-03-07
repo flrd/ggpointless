@@ -95,6 +95,15 @@ test_that("geom_fourier handles two groups independently", {
   vdiffr::expect_doppelganger("fourier two groups", p)
 })
 
+test_that("non-uniform x-spacing emits a warning", {
+  df_gap <- data.frame(
+    x = c(1:10, 19:20),
+    y = sin(seq_len(12))
+  )
+  p <- ggplot(df_gap, aes(x, y)) + geom_fourier()
+  expect_warning(ggplotGrob(p), "irregular x-spacing")
+})
+
 test_that("stat_fourier is equivalent to geom_fourier", {
   p <- ggplot(df_sine, aes(x, y)) +
     stat_fourier(geom = "line") +
