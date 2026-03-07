@@ -130,8 +130,8 @@ stat_chaikin(
 
 - mode:
 
-  Character. Should the geom draw a closed polygon or an open path. One
-  of `"open"` (default) or `"closed"`.
+  Character. Should the geom draw a closed polygon or an open path? Must
+  be one of `"open"` (default) or `"closed"`.
 
 - iterations:
 
@@ -200,6 +200,13 @@ stat_chaikin(
 
   **\[deprecated\]** Use `mode` instead.
 
+## Value
+
+A
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+object that can be added to a
+[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+
 ## Details
 
 Chaikin's corner cutting algorithm iteratively turns a jagged path into
@@ -219,6 +226,11 @@ iterations is 10, default is 5.
 
 Chaikin, G. An algorithm for high speed curve generation. Computer
 Graphics and Image Processing 3 (1974), 346–349
+
+## See also
+
+The [smoothr](https://strimas.com/smoothr/) package offers tools to
+smooth and tidy spatial features
 
 ## Aesthetics
 

@@ -1,9 +1,9 @@
 # Fourier Series Smoothing
 
 `geom_fourier()` and `stat_fourier()` fit a truncated Fourier (discrete
-Fourier transform, DFT) series to the supplied `x`/`y` data and render
-the reconstructed smooth curve. The data are first aggregated at
-duplicate x positions, interpolated to a uniform grid, optionally
+Fourier transform, DFT) series to the supplied `x`/`y` observations and
+render the reconstructed smooth curve. The data are first aggregated at
+duplicate `x` positions, interpolated to a uniform grid, optionally
 de-trended, transformed via
 [`stats::fft()`](https://rdrr.io/r/stats/fft.html), and then
 reconstructed from the requested number of harmonics.
@@ -191,6 +191,13 @@ stat_fourier(
   Override the default connection between `geom_fourier()` and
   `stat_fourier()`.
 
+## Value
+
+A
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+object that can be added to a
+[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+
 ## Period convention
 
 The DFT treats the input as one period of an infinitely repeating
@@ -199,8 +206,8 @@ spacing \\\Delta x\\ is \\P = N \cdot \Delta x\\, not \\x\_{max} -
 x\_{min}\\. Using the latter (a closed interval) implicitly maps the
 last sample to \\t = 1\\, which coincides with \\t = 0\\ of the next
 period, causing a boundary discontinuity and Gibbs-phenomenon ringing
-whenever the first and last y values differ. This implementation always
-uses the half-open period.
+whenever the first and last `y` values differ. This implementation uses
+the half-open period.
 
 ## Detrending
 
@@ -232,34 +239,37 @@ limit is used instead.
 ## Irregular spacing
 
 The input data is linearly interpolated onto a uniform grid before the
-FFT. If the original x-spacing is highly irregular (e.g. most points
-clustered in a narrow region), the interpolation may introduce artefacts
-in sparse regions. A message is emitted when the coefficient of
-variation of the x-spacing exceeds `0.5`.
+FFT. If the original x-spacing is highly irregular (e.g. monthly time
+series data), the interpolation may introduce artefacts in sparse
+regions. A message is emitted when the coefficient of variation of the
+x-spacing exceeds `0.5`.
 
 ## See also
 
-See individual modelling functions for more details:
-[`lm()`](https://rdrr.io/r/stats/lm.html) for linear smooths,
-[`loess()`](https://rdrr.io/r/stats/loess.html) for local smooths.
+[`stats::fft()`](https://rdrr.io/r/stats/fft.html) for the underlying
+Fast Fourier Transform, [`lm()`](https://rdrr.io/r/stats/lm.html) and
+[`loess()`](https://rdrr.io/r/stats/loess.html) for the optional
+detrending fits,
+[`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+and
+[`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
+for other curve-fitting geoms.
 
 ## Aesthetics
 
-[`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-understands the following aesthetics. Required aesthetics are displayed
-in bold and defaults are displayed for optional aesthetics:
+`geom_fourier()` understands the following aesthetics. Required
+aesthetics are displayed in bold and defaults are displayed for optional
+aesthetics:
 
-|     |                                                                                 |                                                                       |
-|-----|---------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**            |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**            |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)   | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)    | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)         | → inferred                                                            |
-| •   | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | `stroke`                                                                        | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|     |                                                                                     |                                                                       |
+|-----|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
+| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
+| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)       | → `NA`                                                                |
+| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)      | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)             | → inferred                                                            |
+| •   | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| •   | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -269,7 +279,7 @@ Learn more about setting these aesthetics in
 ``` r
 library(ggplot2)
 
-n <- 100
+n <- 50
 df1 <- data.frame(
   x = seq(0, 1, length.out = n),
   y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
@@ -293,9 +303,11 @@ df2 <- data.frame(
   y = sin(x) + x * 0.3 + rnorm(n, sd = 0.15)
 )
 
-ggplot(df2, aes(x, y)) +
-  geom_point(alpha = 0.5) +
-  geom_fourier(detrend = "lm")
+ggplot(df2, aes(x, y))  +
+geom_point(alpha = 0.35) +
+  geom_fourier(aes(colour = "detrend = NULL"), n_harmonics = 3) +
+  geom_fourier(aes(colour = "detrend = \"lm\""), n_harmonics = 3,
+               detrend = "lm")
 
 
 # Multiple groups
@@ -313,5 +325,18 @@ df3 <- rbind(
 ggplot(df3, aes(x, y, colour = grp)) +
   geom_point(alpha = 0.5) +
   geom_fourier()
+
+
+# when the data is not uniformly-spaced, the Fourier
+# curve will not pass through every data point
+df4 <- data.frame(
+  x = c(1:10, 19:20),
+  y = sin(seq_len(12))
+)
+
+ggplot(df4, aes(x, y)) +
+  geom_fourier()
+#> Warning: Highly irregular x-spacing detected (CV = 1.4). The uniform-grid interpolation
+#> may introduce artefacts.
 
 ```

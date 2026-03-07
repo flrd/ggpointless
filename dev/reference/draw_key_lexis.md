@@ -1,8 +1,12 @@
-# Legend key glyph for `geom_lexis`
+# Key glyphs for legends
 
-Draws a short 45° line with an optional point at the upper-right end,
-matching the visual appearance of a Lexis diagram segment. Can also be
-used as a `key_glyph` in other geoms via `key_glyph = "lexis"`.
+Each geom has an associated function that draws the key when the geom
+needs to be displayed in a legend. These functions are called
+`draw_key_*()`, where `*` stands for the name of the respective key
+glyph. The key glyphs can be customized for individual geoms by
+providing a geom with the `key_glyph` argument (see
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+or examples below.)
 
 ## Usage
 
@@ -32,16 +36,7 @@ A grid grob.
 ## Examples
 
 ``` r
-df <- data.frame(x = c(0, 1), xend = c(3, 4), grp = c("A", "B"))
+ggplot(economics_long, aes(date, value01, colour = variable)) +
+  geom_line(key_glyph = "lexis")
 
-# default key glyph used automatically by geom_lexis
-ggplot2::ggplot(df, aes(x = x, xend = xend, color = grp)) +
-  geom_lexis()
-
-
-# borrow the glyph for another geom
-ggplot2::ggplot(df, aes(x, xend, colour = grp)) +
-  ggplot2::geom_line(key_glyph = "lexis")
-#> `geom_line()`: Each group consists of only one observation.
-#> ℹ Do you need to adjust the group aesthetic?
 ```

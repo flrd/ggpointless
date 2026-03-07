@@ -1,4 +1,4 @@
-# Display events of different cohorts in form of a lexis chart
+# Lexis diagrams
 
 This geom can be used to plot 45° lifelines for a cohort. Lexis diagrams
 are named after Wilhelm Lexis and used by demographers for more than a
@@ -204,6 +204,13 @@ stat_lexis(
     [layer
     geom](https://ggplot2.tidyverse.org/reference/layer_geoms.html)
     documentation.
+
+## Value
+
+A
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+object that can be added to a
+[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
 
 ## Details
 

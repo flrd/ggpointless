@@ -2,9 +2,9 @@
 
 This is a wrapper around
 [`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-with the one additional argument: `location`. This geom is not
-particularly useful on its own - hence its name - but hopefully in
-conjunction with
+with the one additional argument: `location`. This geom aims to emphasis
+some observations but is not particularly useful on its own - hence its
+name - but hopefully in conjunction with
 [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
 and friends, see examples.
 
@@ -184,8 +184,15 @@ stat_pointless(
 
 - location:
 
-  Position(s) to highlight: `"minimum"`, `"maximum"`, `"first"` and/or
-  `"last"` (default).
+  Position(s) to highlight: `"minimum"`, `"maximum"`, `"first"`,
+  `"last"` (default), or `"all"`.
+
+## Value
+
+A
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+object that can be added to a
+[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
 
 ## Details
 
@@ -197,13 +204,17 @@ determined in the order in which they appear in the data – like
 does compared to
 [`ggplot2::geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html).
 
-Points may be plotted on top of one another. If `location` is set to
+Points may be plotted on top of one another; if `location` is set to
 `"all"`, then the order in which points are plotted from top to bottom
 is: `"first"` \> `"last"` \> `"minimum"` \> `"maximum"`. Otherwise, the
 order is determined as specified in the `location` argument, which also
 then applies to the order legend key labels, see
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/dev/articles/ggpointless.md)
 for more details.
+
+## See also
+
+[`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
 
 ## Aesthetics
 
@@ -307,10 +318,12 @@ set.seed(42)
 df4 <- data.frame(x = 1:10, y = sample(1:10))
 ggplot(df4, aes(x, y)) +
   geom_line() +
+  geom_pointless(location = c("maximum", "minimum"), size = 3) +
   stat_pointless(
-    aes(yintercept = y, colour = after_stat(location)),
+    aes(label = after_stat(y)),
     location = c("maximum", "minimum"),
-    geom = "hline"
+    geom = "text",
+    hjust = -1
   )
 
 

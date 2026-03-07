@@ -14,7 +14,7 @@ geom_point_glow(
   position = "identity",
   ...,
   glow_colour = NA,
-  glow_alpha = 0.75,
+  glow_alpha = NA,
   glow_size = NA,
   na.rm = FALSE,
   show.legend = NA,
@@ -135,12 +135,13 @@ geom_point_glow(
 
 - glow_alpha:
 
-  Transparency of the glow. Defaults to 0.5.
+  Transparency of the glow. If `NA` (default), it inherits the alpha
+  value of the point itself.
 
 - glow_size:
 
   Numerical value for the glow radius. If `NA` (default), it is
-  calculated as two times the point size.
+  calculated as three times the point size.
 
 - na.rm:
 
@@ -164,10 +165,24 @@ geom_point_glow(
   plot specification, e.g.
   [`annotation_borders()`](https://ggplot2.tidyverse.org/reference/annotation_borders.html).
 
+## Value
+
+A
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+object that can be added to a
+[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+
+## References
+
+Murrell, P. (2022). "Vectorised Pattern Fills in R Graphics." Technical
+Report 2022-01, Department of Statistics, The University of Auckland.
+Version 1.
+<https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html>
+
 ## See also
 
-[`grid::linearGradient()`](https://rdrr.io/r/grid/patterns.html), which
-this geom relies on.
+[`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html),
+[`grid::radialGradient()`](https://rdrr.io/r/grid/patterns.html)
 
 ## Aesthetics
 

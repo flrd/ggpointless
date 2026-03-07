@@ -1,7 +1,6 @@
-# ggpointless: Additional Geometries and Stats for 'ggplot2'
+# ggpointless: Extra Geometries and Stats for 'ggplot2'
 
-An (aspirational) collection of additional geometries and statistics for
-'ggplot2'.
+A collection of layers for 'ggplot2'.
 
 ## See also
 

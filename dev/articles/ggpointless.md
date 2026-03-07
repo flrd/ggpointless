@@ -1,29 +1,51 @@
 # Introduction to ggpointless
 
 `ggpointless` is a small extension of the
-[`ggplot2`](https://ggplot2.tidyverse.org/) package that provides
-additional layers:
+[`ggplot2`](https://ggplot2.tidyverse.org/) package. Its layers fall
+into three groups:
 
-1.  [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
-2.  [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-    &
-    [`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-3.  [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-    &
-    [`stat_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-4.  [`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
-    &
-    [`stat_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
-5.  [`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-    &
-    [`stat_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-6.  [`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-    &
-    [`stat_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-7.  [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
-8.  [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-    &
-    [`stat_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
+**Visual effects** — purely aesthetic, no data transformation:
+
+- [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
+- [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
+
+**Mathematical curves** — backed by a stat that fits or transforms data:
+
+- [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+  &
+  [`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+- [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+  &
+  [`stat_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+- [`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
+  &
+  [`stat_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
+- [`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
+  &
+  [`stat_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
+
+**Diagram types** — specialised chart forms:
+
+- [`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
+  &
+  [`stat_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
+- [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
+  &
+  [`stat_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
+
+``` r
+library(ggpointless)
+#> Loading required package: ggplot2
+
+# set consistent theme for all plots
+cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
+theme_set(
+  theme_minimal() + 
+    theme(geom = element_geom(fill = cols[1])) +
+    theme(palette.fill.discrete = c(cols[1], cols[3])) +
+    theme(palette.colour.discrete = cols)
+  )
+```
 
 ## geom_area_fade
 
@@ -47,24 +69,67 @@ the top, opaque at the baseline — by swapping their values.
 
 ``` r
 ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(alpha = 0.5, alpha_fade_to = 0.05)
+  geom_area_fade(alpha = 0.5, alpha_fade_to = 0.2)
 ```
 
 ![](ggpointless_files/figure-html/area-fade-alpha-1.png)
 
-Multiple groups each get their own gradient:
+### Multiple groups
+
+When your data contains multiple groups those are stacked
+(`position = "stack"`) and aligned (`stat = "align"`) – just like
+[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+does it. By default, the alpha fade scales to the global maximum across
+*all* groups (`alpha_scope = "global"`), so equal `|y|` always maps to
+equal opacity.
 
 ``` r
-df <- data.frame(
+df1 <- data.frame(
   g = c("a", "a", "a", "b", "b", "b"),
   x = c(1, 3, 5, 2, 4, 6),
   y = c(2, 5, 1, 3, 6, 7)
 )
-ggplot(df, aes(x, y, fill = g)) +
-  geom_area_fade(alpha = 0.5)
+
+ggplot(df1, aes(x, y, fill = g)) +
+  geom_area_fade()
 ```
 
-![](ggpointless_files/figure-html/area-fade-groups-1.png)
+![](ggpointless_files/figure-html/geom-area-fade-multiple-groups-basic-1.png)
+
+When groups have very different amplitudes or you may not use the
+default `position = "stack"` but `stat = "identity"` instead, this can
+make smaller groups nearly invisible and small groups would appear
+washed out next to dominant groups.
+
+``` r
+df_alpha_scope <- data.frame(
+  g = c("a", "a", "a", "b", "b", "b"),
+  x = c(1, 3, 5, 2, 4, 6),
+  y = c(1, 2, 1, 9, 10, 8)
+)
+p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+p + geom_area_fade(
+  alpha_scope = "global", # default
+  position = "identity"
+)
+```
+
+![](ggpointless_files/figure-html/geom-area-fade-global-1.png)
+
+Setting `alpha_scope = "group"` lets the algorithm calculate the alpha
+range for each group separately.
+
+``` r
+p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+
+# alpha_scope = "group": each group uses the alpha range independently
+p + geom_area_fade(
+  alpha_scope = "group", 
+  position = "identity"
+  )
+```
+
+![](ggpointless_files/figure-html/geom-area-fade-group-1.png)
 
 ### 2D gradient
 
@@ -78,28 +143,32 @@ fades from the data line down to the baseline.
 
 ``` r
 set.seed(42)
-df_fade <- data.frame(
-  x = seq_len(60),
-  y = cumsum(rnorm(60, sd = 0.35))
-)
-df_fade$y <- df_fade$y - mean(df_fade$y)
-
-ggplot(df_fade, aes(x, y, fill = y)) +
-  geom_area_fade(colour = "#333333")
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(aes(fill = uempmed), colour = cols[1])
 ```
 
 ![](ggpointless_files/figure-html/area-fade-2d-1.png)
 
 ### Device compatibility and the fallback
 
-The 2D gradient depends on **Porter-Duff compositing**, a feature of R’s
-graphics engine added in R 4.2. When the active graphics device does not
-support compositing
+The 2D gradient depends on **Porter-Duff compositing**[¹](#fn1), a
+feature of R’s graphics engine added in R 4.2. When the active graphics
+device does not support compositing
 (e.g. [`grDevices::pdf()`](https://rdrr.io/r/grDevices/pdf.html)),
 [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
 falls back to a single-colour vertical fade: the horizontal colour
 gradient is lost, only the vertical alpha fade survives, and a one-time
-message is emitted.
+message is emitted:
+
+> !
+> [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md):
+> the graphics device does not support gradient fills. The `fill` colour
+> gradient is replaced by a single colour. Switch to a device that
+> supports gradients
+> (e.g. [`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html),
+> [`svg()`](https://rdrr.io/r/grDevices/cairo.html),
+> [`cairo_pdf()`](https://rdrr.io/r/grDevices/cairo.html)) for the full
+> effect. This message is displayed once per session.
 
 Most modern raster devices — including
 [`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html) and
@@ -115,13 +184,13 @@ Graphics \> Backend* and select *AGG* to ensure full support.
 A **catenary** is the curve formed by a flexible chain or cable hanging
 freely between two fixed supports. It follows this equation:
 
-$$y = a\cosh\!\left( \frac{x}{a} \right)$$
+\\y = a \cosh\\\left(\frac{x}{a}\right)\\
 
 [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
 draws these inverted catenary curves between successive points. The
 shape is controlled by `arch_length` or `arch_height` (vertical rise
-above the highest endpoint of each segment). By default the arch length
-is twice the Euclidean distance.
+above the highest endpoint of each segment). By default the arc length
+is twice the Euclidean distance calculated for each segment.
 
 ``` r
 ggplot(data.frame(x = 1:2, y = c(0, 0)), aes(x, y)) +
@@ -129,6 +198,22 @@ ggplot(data.frame(x = 1:2, y = c(0, 0)), aes(x, y)) +
 ```
 
 ![](ggpointless_files/figure-html/arch-basic-1.png)
+
+### Controlling arch height with stat_arch
+
+[`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
+exposes the underlying computation. Here it shows the effect of
+different `arch_height` values between the same two endpoints:
+
+``` r
+ggplot(data.frame(x = c(0, 2), y = c(0, 0)), aes(x, y)) +
+  stat_arch(arch_height = 0.5, colour = cols[1]) +
+  stat_arch(arch_height = 1.5, colour = cols[2]) +
+  stat_arch(arch_height = 3.0, colour = cols[3]) +
+  labs(title = "arch_height = 0.5, 1.5, 3.0")
+```
+
+![](ggpointless_files/figure-html/stat-arch-compare-1.png)
 
 ### The Rice House
 
@@ -155,22 +240,6 @@ ggplot(rice_house, aes(x, y)) +
 
 ![](ggpointless_files/figure-html/rice-house-1.png)
 
-### Controlling arch height with stat_arch
-
-[`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-exposes the underlying computation. Here it shows the effect of
-different `arch_height` values between the same two endpoints:
-
-``` r
-ggplot(data.frame(x = c(0, 2), y = c(0, 0)), aes(x, y)) +
-  stat_arch(arch_height = 0.5, colour = roma[1]) +
-  stat_arch(arch_height = 1.5, colour = roma[2]) +
-  stat_arch(arch_height = 3.0, colour = roma[3]) +
-  labs(title = "arch_height = 0.5, 1.5, 3.0")
-```
-
-![](ggpointless_files/figure-html/stat-arch-compare-1.png)
-
 ## geom_catenary & stat_catenary
 
 [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
@@ -190,21 +259,15 @@ ggplot(data.frame(x = 1:6, y = sample(6)), aes(x, y)) +
 By default the chain length is twice the Euclidean distance per segment.
 Pass `chain_length` to set an explicit arc length — longer values make
 the chain sag more. If the value is shorter than the straight-line
-distance, a warning is issued and a straight line is drawn instead.
+distance a warning is issued and a straight line is drawn instead.
 
 ``` r
-ggplot(data.frame(x = c(0, 2), y = c(1, 1)), aes(x, y)) +
-  lapply(seq(1.1, 2.5, by = 0.3), \(cl) {
+ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
+  lapply(seq(1.5, 2.4, by = 0.3), \(cl) {
     geom_catenary(chain_length = cl)
   }) +
   ylim(NA, 1.05) +
   labs(title = "Increasing chain_length adds more sag")
-#> Warning: The `chain_length` (1.1) is shorter than the distance (2) between (0, 1) and
-#> (2, 1). Drawing a straight line.
-#> Warning: The `chain_length` (1.4) is shorter than the distance (2) between (0, 1) and
-#> (2, 1). Drawing a straight line.
-#> Warning: The `chain_length` (1.7) is shorter than the distance (2) between (0, 1) and
-#> (2, 1). Drawing a straight line.
 ```
 
 ![](ggpointless_files/figure-html/catenary-chain-length-1.png)
@@ -220,17 +283,15 @@ df_sag <- data.frame(x = c(0, 2, 4, 6), y = c(1, 1, 1, 1))
 ggplot(df_sag, aes(x, y)) +
   geom_catenary(sag = c(0.1, 0.5, 1.2)) +
   geom_point(size = 3, colour = "#333333") +
-  labs(title = "sag = 0.1, 0.5, 1.2 (left to right)") +
-  ylim(c(-.25, 1))
+  labs(title = "sag = 0.1, 0.5, 1.2 (left to right)")
 ```
 
 ![](ggpointless_files/figure-html/catenary-sag-1.png)
 
-### Combining chain_length and sag
+### combine chain_length and sag
 
-Both `chain_length` and `sag` can be specified at the same time. Where
-both are given for a segment, `sag` takes precedence. Use `NA` to fall
-back to the other argument for that segment:
+`sag` sets the vertical drop below the lowest endpoint of each segment,
+giving you direct control over how much the chain droops:
 
 ``` r
 df_sag <- data.frame(x = c(0, 2, 4, 6), y = c(1, 1, 1, 1))
@@ -254,7 +315,7 @@ ggplot(df_sag, aes(x, y)) +
 Chaikin’s corner-cutting algorithm smooths a polygonal path by
 iteratively replacing each corner with two new points placed at a given
 ratio along the adjacent edges. With `ratio = 0.25` (the default) and
-`iterations = 5`, the path converges to a smooth B-spline approximation.
+`iterations = 5` the path converges to a smooth B-spline approximation.
 
 ``` r
 set.seed(42)
@@ -262,14 +323,14 @@ dat <- data.frame(x = seq.int(10), y = sample(15:30, 10))
 
 ggplot(dat, aes(x, y)) +
   geom_line(linetype = "dashed", colour = "#333333") +
-  geom_chaikin(colour = roma[2])
+  geom_chaikin(colour = cols[1])
 ```
 
 ![](ggpointless_files/figure-html/chaikin-basic-1.png)
 
 ### Effect of ratio
 
-`ratio` controls how aggressively corners are cut. At `ratio = 0.5`, the
+`ratio` controls how aggressively corners are cut. At `ratio = 0.5` the
 new points coincide with the edge midpoints, producing the maximum
 rounding possible in a single pass.
 
@@ -278,9 +339,9 @@ triangle <- data.frame(x = c(0, 0.5, 1), y = c(0, 1, 0))
 
 ggplot(triangle, aes(x, y)) +
   geom_polygon(fill = NA, colour = "grey70", linetype = "dashed") +
-  geom_chaikin(ratio = 0.10, mode = "closed", colour = roma[1]) +
-  geom_chaikin(ratio = 0.25, mode = "closed", colour = roma[2]) +
-  geom_chaikin(ratio = 0.50, mode = "closed", colour = roma[3]) +
+  geom_chaikin(ratio = 0.10, mode = "closed", colour = cols[1]) +
+  geom_chaikin(ratio = 0.25, mode = "closed", colour = cols[2]) +
+  geom_chaikin(ratio = 0.50, mode = "closed", colour = cols[3]) +
   coord_equal() +
   labs(subtitle = "ratio = 0.10, 0.25, 0.50")
 ```
@@ -301,8 +362,8 @@ hex <- data.frame(
 )
 
 ggplot(hex, aes(x, y)) +
-  geom_polygon(fill = "grey85", colour = "#333333", linetype = "dashed") +
-  stat_chaikin(geom = "polygon", mode = "closed", alpha = 0.45, colour = NA) +
+  geom_polygon(fill = "grey95", colour = "#333333", linetype = "dashed") +
+  stat_chaikin(geom = "polygon", mode = "closed", fill = cols[1], colour = NA) +
   coord_equal() +
   labs(title = "Original polygon (dashed) with smoothed fill (purple)")
 ```
@@ -312,10 +373,10 @@ ggplot(hex, aes(x, y)) +
 ## geom_fourier & stat_fourier
 
 [`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-fits a truncated **discrete Fourier transform** to the supplied x/y data
-and renders the reconstructed curve. Fewer harmonics produce a smoother,
-low-frequency summary; retaining all harmonics reproduces the original
-signal exactly (up to interpolation artefacts).
+fits a truncated **discrete Fourier transform** to the supplied x/y
+observations and renders the reconstructed curve. Fewer harmonics
+produce a smoother, low-frequency summary; retaining all harmonics
+reproduces the original signal exactly (up to interpolation artefacts).
 
 ``` r
 set.seed(42)
@@ -328,14 +389,9 @@ df_f <- data.frame(
 )
 
 ggplot(df_f, aes(x, y)) +
-  geom_point(alpha = 0.25, size = 0.8, colour = "#333333") +
-  geom_fourier(n_harmonics = 1, colour = roma[1]) +
-  geom_fourier(n_harmonics = 3, colour = roma[2]) +
-  geom_fourier(n_harmonics = 10, colour = roma[3]) +
-  labs(
-    title = "1 harmonic, 3, 10 (light to dark)",
-    x = NULL, y = NULL
-  )
+  geom_point(alpha = 0.25) +
+  geom_fourier(aes(colour = "n_harmonics = 1"), n_harmonics = 1) +
+  geom_fourier(aes(colour = "n_harmonics = 3"), n_harmonics = 3)
 ```
 
 ![](ggpointless_files/figure-html/fourier-harmonics-1.png)
@@ -357,86 +413,45 @@ df_d <- data.frame(
 )
 
 ggplot(df_d, aes(x, y)) +
-  geom_point(alpha = 0.35, size = 0.8, colour = "#333333") +
+  geom_point(alpha = 0.35) +
   geom_fourier(aes(colour = "as is"),
-    n_harmonics = 3,
-    linetype = "dashed"
+    n_harmonics = 3
   ) +
-  geom_fourier(aes(colour = "detrend = 'lm'"), n_harmonics = 3, detrend = "lm") +
+  geom_fourier(
+    aes(colour = "detrend = 'lm'"),
+    n_harmonics = 3,
+    detrend = "lm") +
   labs(
-    title = "geom_fourier() with/without detrending",
+    title = "geom_fourier() w/wo detrending",
     x = NULL, y = NULL
   )
 ```
 
 ![](ggpointless_files/figure-html/fourier-detrend-1.png)
 
-### Pitfall: irregular spacing with calendar dates
+### Irregular spacing
 
 The Fourier transform (via
 [`stats::fft()`](https://rdrr.io/r/stats/fft.html)) assumes that
-observations are **evenly spaced** in time. When you supply calendar
-dates directly, this assumption is silently violated: months have 28–31
-days, so consecutive observations are not the same distance apart.
-
-The example below maps `date` — a `Date` vector — to the x aesthetic and
-asks
-[`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-to reconstruct the signal with all harmonics (`n_harmonics = NULL`). You
-might expect the Fourier curve to pass through every data point, but it
-does not:
+observations are **evenly spaced** in time. If this assumption is
+violated, the Fourier curve will not pass through every data point:
 
 ``` r
-ggplot(head(economics, 12 * 6), aes(date, psavert)) +
-  geom_line(linetype = "dotted") +
-  geom_point(size = 1) +
-  geom_fourier(n_harmonics = NULL) +
-  labs(
-    title = "geom_fourier() with Date x-axis — curve misses observations",
-    x = NULL
+df_gap <- data.frame(
+  x = c(1:10, 19:20),
+  y = sin(seq_len(12))
   )
+ggplot(df_gap, aes(x, y)) + 
+  geom_fourier()
+#> Warning: Highly irregular x-spacing detected (CV = 1.4). The uniform-grid interpolation
+#> may introduce artefacts.
 ```
 
-![](ggpointless_files/figure-html/fourier-dates-fail-1.png)
+![](ggpointless_files/figure-html/fourier-dates-irregular-spacing-1.png)
 
-The Fourier layer converts dates to their underlying integer
-representation (days since 1970-01-01), constructs a **uniform** grid of
-that many integer steps, computes the inverse FFT on that grid, and
-draws a line through those interpolated points. Because the grid points
-fall between observation dates, the curve misses the actual data points
-even when every harmonic is included.
-
-To fix this you can replace the date x-axis with a plain integer index
-so that spacing is guaranteed to be uniform. You can restore
-human-readable year labels with
-[`scale_x_continuous()`](https://ggplot2.tidyverse.org/reference/scale_continuous.html):
-
-``` r
-eco <- head(economics, 12 * 6)
-eco$tmp <- seq_len(nrow(eco))
-
-# integer positions for year-start labels
-yr_breaks <- which(format(eco$date, "%m") == "01")
-
-ggplot(eco, aes(tmp, psavert)) +
-  geom_line(linetype = "dotted") +
-  geom_point(size = 1) +
-  geom_fourier(n_harmonics = NULL) +
-  scale_x_continuous(
-    breaks = yr_breaks,
-    labels = format(eco$date[yr_breaks], "%Y")
-  )
-```
-
-![](ggpointless_files/figure-html/fourier-dates-fix-1.png)
-
-The Fourier curve now interpolates the data exactly. When working with
-any irregularly-spaced time series — monthly, weekly, or business-day —
-convert the time variable to a sequential integer index before passing
-it to
-[`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-or
-[`stat_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md).
+This will be relevant when you work with calendar dates directly, as
+months have 28–31 days, so consecutive observations are not the same
+distance apart.
 
 ## geom_lexis & stat_lexis
 
@@ -507,7 +522,7 @@ df_dates <- data.frame(
 )
 df_dates[, c("start", "end")] <- lapply(
   df_dates[, c("start", "end")],
-  function(i) as.Date(paste0(i, "-01-01"))
+  \(i) as.Date(paste0(i, "-01-01"))
 )
 
 ggplot(df_dates, aes(x = start, xend = end, group = key)) +
@@ -528,100 +543,87 @@ ggplot(df_dates, aes(x = start, xend = end, group = key)) +
 is a drop-in replacement for
 [`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
 that adds a radial gradient glow behind each point using
-[`grid::radialGradient()`](https://rdrr.io/r/grid/patterns.html). It
-shines brightest on dark backgrounds.
-
-### Ursa Major
-
-The constellation Ursa Major, drawn with star positions in right
-ascension and declination:
+[`grid::radialGradient()`](https://rdrr.io/r/grid/patterns.html). By
+default, alpha, colour and size inherit their values from
+[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html).
 
 ``` r
-# Precise J2000 coordinates (Hipparcos / SIMBAD) and apparent magnitudes
-# from the Wikipedia Großer Bär star table.
-stars_base <- data.frame(
+# Basic usage
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+   geom_point_glow()
+```
+
+![](ggpointless_files/figure-html/point-glow-basic-1.png)
+
+You can control the alpha, colour, and size of the gradient with these
+arguments:
+
+- `glow_alpha`
+- `glow_colour`
+- `glow_size`
+
+``` r
+# Customizing glow parameters (fixed for all points)
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point_glow(
+    glow_alpha = 0.25,
+    glow_colour = "#0833F5",
+    glow_size = 5
+    )
+```
+
+![](ggpointless_files/figure-html/point-glow-overwrite-params-1.png)
+
+### Big Dipper
+
+The constellation [Big
+Dipper](https://en.wikipedia.org/wiki/Big_Dipper), drawn with star
+positions in right ascension and declination.
+
+![](ggpointless_files/figure-html/big-dipper-1.png)
+
+``` r
+# source: https://de.wikipedia.org/wiki/Gro%C3%9Fer_B%C3%A4r#Sterne
+# colours, coordinates all approximations of course
+big_dipper <- data.frame(
   star = c(
-    "Dubhe", "Merak", "Phecda", "Megrez", "Alioth", "Mizar", "Alkaid",
-    "Muscida", "23 UMa", "Upsilon", "Phi", "Theta",
-    "Talitha", "Alkaphrah",
-    "Chi", "Psi", "Tania Borealis", "Tania Australis",
-    "Alula Borealis", "Alula Australis"
+    "Megrez",
+    "Dubhe",
+    "Merak",
+    "Phecda",
+    "Megrez",
+    "Alioth",
+    "Mizar",
+    "Alkaid"
   ),
-  ra_h = c(
-    11.062, 11.031, 11.897, 12.257, 12.900, 13.399, 13.792,
-    8.504, 9.526, 9.850, 9.868, 9.548,
-    8.987, 9.060,
-    11.767, 11.161, 10.285, 10.372,
-    11.308, 11.303
-  ),
-  dec_d = c(
-    61.75, 56.38, 53.70, 57.03, 55.96, 54.93, 49.31,
-    60.72, 63.06, 59.04, 54.06, 51.68,
-    48.04, 47.16,
-    47.78, 44.50, 42.91, 41.50,
-    33.09, 31.53
-  ),
-  # Apparent visual magnitudes (Wikipedia / Bright Star Catalogue).
-  # Alioth is slightly variable; 1.77 is the mean.
-  mag = c(
-    1.81, 2.34, 2.41, 3.32, 1.77, 2.23, 1.86,
-    3.35, 3.65, 3.78, 4.55, 3.20,
-    3.12, 3.57,
-    3.69, 3.00, 3.45, 3.06,
-    3.49, 3.79
-  )
+  ra_h = c(12.257, 11.062, 11.031, 11.897, 12.257, 12.900, 13.399, 13.792),
+  dec_d = c(57.03, 61.75, 56.38, 53.70, 57.03, 55.96, 54.93, 49.31),
+  mag = c(3.32, 1.81, 2.34, 2.41, 3.32, 1.77, 2.23, 1.86),
+  colour = c("#CFDDFF", "#FFDBBF", "#C7D9FF", "#C8D9FF", "#CFDDFF", "#C7D9FF", "#CBDBFF", "#BAD0FF")
 )
+
+big_dipper$x <- -big_dipper$ra_h
+big_dipper$y <- big_dipper$dec_d
 
 # Linear size mapping: brighter (lower mag) → larger point
-mag_to_size <- function(m) pmax(0.7, (5.5 - m) * 1.0)
+mag_to_size <- \(m) pmax(0.7, (5.5 - m) * 1.0)
 
-# Constellation figure lines (IAU official figure):
-# Big Dipper (bowl closed, then handle)
-path1 <- c("Alkaid", "Mizar", "Alioth", "Megrez", "Phecda", "Merak", "Dubhe", "Megrez")
-# Head + neck → front shoulder junction
-path2 <- c("Dubhe", "23 UMa", "Muscida", "Upsilon", "Theta")
-# Belly (Merak) to front-leg junction
-path3 <- c("Merak", "Upsilon")
-# Front paw pair
-path4 <- c("23 UMa", "Upsilon", "Theta", "Alkaphrah", "Talitha")
-# Hind leg → Alula paw pair
-path5 <- c("Phecda", "Chi", "Alula Borealis", "Alula Australis")
-# Hind leg branch → Tania paw pair
-path6 <- c("Chi", "Psi", "Tania Australis", "Tania Borealis")
-
-make_path <- function(star_names, group_id) {
-  df <- stars_base[match(star_names, stars_base$star), ]
-  df$group <- group_id
-  df
-}
-
-plot_data <- rbind(
-  make_path(path1, 1),
-  make_path(path2, 2),
-  make_path(path3, 3),
-  make_path(path4, 4),
-  make_path(path5, 5),
-  make_path(path6, 6)
-)
-plot_data$x <- -plot_data$ra_h
-plot_data$y <- plot_data$dec_d
-
-ggplot(plot_data, aes(x = x, y = y)) +
-  geom_path(aes(group = group), colour = "#F5F5F5", linewidth = 0.6, alpha = .6) +
+ggplot(big_dipper, aes(x = x, y = y)) +
+  geom_path(colour = "#F5F5F5", linewidth = 0.6, alpha = .6) +
   geom_point_glow(
-    data        = stars_base,
-    aes(x = -ra_h, y = dec_d, size = mag_to_size(mag)),
-    shape       = 8,
-    colour      = ggplot2::alpha("#F5F5F5", alpha = .6),
-    glow_colour = "#F5F5F5",
-    glow_alpha  = 0.75
+    data = big_dipper[-1L, ], # don't plot Megrez a second time
+    aes(x = -ra_h, y = dec_d, size = mag_to_size(mag), colour = colour,
+        alpha = mag),
+    shape = 8,
+    glow_alpha = 0.75
   ) +
+  scale_alpha_continuous(range = c(1, 0.4), guide = "none") +
   scale_size_identity() +
+  scale_colour_identity() +
   geom_text(
-    data = stars_base,
     aes(x = -ra_h, y = dec_d, label = star),
     colour = "#bbccdd",
-    vjust = -1.2,
+    vjust = -1.5,
     size = 2.5,
     check_overlap = TRUE
   ) +
@@ -630,22 +632,16 @@ ggplot(plot_data, aes(x = x, y = y)) +
     labels = \(x) paste0(abs(x), "h")
   ) +
   scale_y_continuous(labels = \(x) paste0(x, "°")) +
-  labs(
-    title = "Ursa Major",
-    x     = NULL,
-    y     = NULL
-  ) +
+  labs(title = "Big Dipper", x = NULL, y = NULL) +
+  coord_cartesian(clip = 'off') +
   theme(
-    panel.background = element_rect(fill = grid::linearGradient(colours = c("#081849", "#070836")), colour = NA),
-    plot.background  = element_rect(fill = grid::linearGradient(colours = c("#081849", "#070836")), colour = NA),
-    panel.grid.major = element_line(colour = "#1e2f3e", linetype = "dotted"),
-    panel.grid.minor = element_blank(),
-    text             = element_text(colour = "#344B73"),
-    plot.title       = element_text(size = 14, face = "bold")
+    panel.background = element_rect(fill = grid::linearGradient(colours = c("#1D2180", "#081849")), colour = NA),
+    plot.background = element_rect(fill = grid::linearGradient(colours = c("#1D2180", "#081849")), colour = NA),
+    panel.grid = element_blank(),
+    text = element_text(colour = "#344B73"),
+    plot.title = element_text(size = 18, face = "bold")
   )
 ```
-
-![](ggpointless_files/figure-html/ursa-major-1.png)
 
 ## geom_pointless & stat_pointless
 
@@ -685,11 +681,8 @@ p +
 
 ### Order and orientation
 
-Locations are determined in data order, as
-[`geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
-would — not sorted by x like
-[`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html).
-This matters when the path crosses itself:
+Locations are determined in data order. This matters when e.g. the path
+crosses itself:
 
 ``` r
 x <- seq(5, -1, length.out = 1000) * pi
@@ -697,8 +690,7 @@ spiral <- data.frame(var1 = sin(x) * 1:1000, var2 = cos(x) * 1:1000)
 
 p_spi <- ggplot(spiral) +
   geom_path() +
-  coord_equal(xlim = c(-1000, 1000), ylim = c(-1000, 1000)) +
-  theme(legend.position = "none")
+  coord_equal(xlim = c(-1000, 1000), ylim = c(-1000, 1000))
 
 p_spi +
   aes(x = var1, y = var2) +
@@ -748,9 +740,13 @@ ggplot(
   geom_pointless(
     aes(colour = after_stat(location)),
     location = c("minimum", "maximum"),
-    size = 2
+    size = 3
   ) +
-  stat_pointless(location = "minimum", geom = "text", aes(label = after_stat(y)), hjust = -1) +
+  stat_pointless(
+    geom = "text",
+    aes(label = after_stat(y)),
+    location = c("minimum", "maximum"),
+    hjust = -1) +
   facet_wrap(vars(variable), ncol = 1, scales = "free_y") +
   theme(legend.position = "bottom") +
   labs(x = NULL, y = NULL, colour = NULL)
@@ -775,3 +771,8 @@ ggplot(df3, aes(x, y)) +
 ```
 
 ![](ggpointless_files/figure-html/pointless-hline-1.png)
+
+------------------------------------------------------------------------
+
+1.  See:
+    <https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html>

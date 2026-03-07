@@ -4,8 +4,8 @@
 successive points. `geom_arch()` draws an inverted catenary curve and is
 hence intended for people living on the southern hemisphere.
 
-The shape follows the catenary equation \\y = a \cosh\\\bigl(\frac{x -
-h}{a}\bigr) + v\\.
+The shape follows the catenary equation: \\\\ y = a\\ \cosh \\
+\\\bigl(\frac{x - h}{a}\bigr) + v\\.
 
 ## Usage
 
@@ -232,6 +232,21 @@ stat_arch(
   Numeric vector giving the vertical rise of the arch above the
   **highest endpoint** of each segment. Takes precedence over
   `arch_length` when both are supplied for the same segment.
+
+## Value
+
+A
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
+object that can be added to a
+[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+
+## See also
+
+[`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
+for fitting smooth curves to data via Fourier series,
+[`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
+for smoothing paths via corner cutting. The catenary equation is
+described at <https://en.wikipedia.org/wiki/Catenary>.
 
 ## Aesthetics
 
