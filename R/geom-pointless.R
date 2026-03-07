@@ -8,17 +8,17 @@ GeomPointless <- ggproto(
   stat = "pointless"
 )
 
-#' Emphasize some observations with points
+#' @title Emphasize some observations with points
 #'
 #' @description This is a wrapper around [`ggplot2::geom_point()`] with the one
-#' additional argument: `location`. This geom is not particularly useful
-#' on its own - hence its name - but hopefully in conjunction
-#' with `geom_line()` and friends, see examples.
+#' additional argument: `location`. This geom aims to emphasis some observations
+#' but is not particularly useful on its own - hence its name - but hopefully
+#' in conjunction with `geom_line()` and friends, see examples.
 #'
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams ggplot2::layer
 #' @param location Position(s) to highlight: `"minimum"`, `"maximum"`,
-#' `"first"` and/or `"last"` (default).
+#' `"first"`, `"last"` (default), or `"all"`.
 #'
 #' @section Details:
 #' The `location` argument allows you to specify which observations
@@ -27,7 +27,7 @@ GeomPointless <- ggproto(
 #' The locations are determined in the order in which they appear in
 #' the data -- like [ggplot2::geom_path()] does compared to [ggplot2::geom_line()].
 #'
-#' Points may be plotted on top of one another. If `location` is set
+#' Points may be plotted on top of one another; if `location` is set
 #' to `"all"`, then the order in which points are plotted from top to
 #' bottom is: `"first"` > `"last"` > `"minimum"` > `"maximum"`.
 #' Otherwise, the order is determined as specified in the `location` argument,
@@ -36,6 +36,10 @@ GeomPointless <- ggproto(
 #'
 #' @aesthetics GeomPointless
 #'
+#' @seealso
+#'    [ggplot2::geom_point()]
+#'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @examples
 #' x <- seq(-pi, pi, length.out = 150)
@@ -102,10 +106,12 @@ GeomPointless <- ggproto(
 #' df4 <- data.frame(x = 1:10, y = sample(1:10))
 #' ggplot(df4, aes(x, y)) +
 #'   geom_line() +
+#'   geom_pointless(location = c("maximum", "minimum"), size = 3) +
 #'   stat_pointless(
-#'     aes(yintercept = y, colour = after_stat(location)),
+#'     aes(label = after_stat(y)),
 #'     location = c("maximum", "minimum"),
-#'     geom = "hline"
+#'     geom = "text",
+#'     hjust = -1
 #'   )
 #'
 #' # Example using facets

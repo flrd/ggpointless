@@ -47,11 +47,14 @@ GeomChaikin <- ggplot2::ggproto(
 #' @param ratio Numeric. Cutting ratio must be a number between `0` and `1`.
 #'   If `ratio > 0.5`, then it will be flipped to `1 - ratio`.
 #' @param mode Character. Should the geom draw a closed polygon or an open
-#'   path. One of `"open"` (default) or `"closed"`.
+#'   path? Must be one of `"open"` (default) or `"closed"`.
 #' @param closed `r lifecycle::badge("deprecated")` Use `mode` instead.
 #'
 #' @references Chaikin, G. An algorithm for high speed curve generation.
 #' Computer Graphics and Image Processing 3 (1974), 346–349
+#'
+#' @seealso The [smoothr](https://strimas.com/smoothr/) package offers tools to
+#'  smooth and tidy spatial features
 #'
 #' @examples
 #' set.seed(42)
@@ -82,6 +85,7 @@ GeomChaikin <- ggplot2::ggproto(
 #' p2 + geom_chaikin(mode = "open")   # default
 #' p2 + geom_chaikin(mode = "closed")
 #'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_chaikin
 geom_chaikin <- make_constructor(

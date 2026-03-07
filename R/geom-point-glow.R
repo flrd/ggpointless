@@ -2,12 +2,21 @@
 #' @keywords internal
 draw_key_point_glow <- function(data, params, size) {
   # Resolve legend glow colour
-  g_col <- if (is.na(params$glow_colour)) {
+  # is.null() guard: NULL arrives when the user explicitly passes e.g.
+
+  # glow_colour = NULL; isTRUE(is.na(.)) is safe for NULL and vectors.
+  g_col <- if (is.null(params$glow_colour) || isTRUE(is.na(params$glow_colour))) {
     data$colour
   } else {
     params$glow_colour
   }
-  g_alpha <- max(params$glow_alpha, 0.8)
+  g_alpha <- if (is.null(params$glow_alpha) || isTRUE(is.na(params$glow_alpha))) {
+    a <- data$alpha %||% 1
+    if (is.na(a)) a <- 1
+    max(a, 0.8)
+  } else {
+    max(params$glow_alpha, 0.8)
+  }
 
   # Create gradient for the legend box
   grad <- grid::radialGradient(
@@ -47,7 +56,7 @@ GeomPointGlow <- ggplot2::ggproto(
     panel_params,
     coord,
     glow_colour = NA,
-    glow_alpha = 0.75,
+    glow_alpha = NA,
     glow_size = NA
   ) {
     coords <- coord$transform(data, panel_params)
@@ -55,15 +64,25 @@ GeomPointGlow <- ggplot2::ggproto(
       return(grid::nullGrob())
     }
 
-    # If glow_colour is NA, use the vector of colours from the data
-    g_cols <- if (is.na(glow_colour)) {
+    # If glow_colour is NA (or NULL), use the vector of colours from the data.
+    # isTRUE(is.na(.)) is safe for NULL and length > 1 vectors.
+    g_cols <- if (is.null(glow_colour) || isTRUE(is.na(glow_colour))) {
       coords$colour
     } else {
       glow_colour
     }
 
-    # If glow_size is NA, multiply the point sizes by 3
-    g_sizes <- if (is.na(glow_size)) {
+    # If glow_alpha is NA (or NULL), inherit from the point's alpha aesthetic
+    g_alphas <- if (is.null(glow_alpha) || isTRUE(is.na(glow_alpha))) {
+      a <- coords$alpha
+      a[is.na(a)] <- 1
+      a
+    } else {
+      glow_alpha
+    }
+
+    # If glow_size is NA (or NULL), multiply the point sizes by 3
+    g_sizes <- if (is.null(glow_size) || isTRUE(is.na(glow_size))) {
       coords$size * 3
     } else {
       glow_size
@@ -71,7 +90,7 @@ GeomPointGlow <- ggplot2::ggproto(
 
     # build the Glow Grobs
     glow_grobs <- lapply(seq_len(nrow(coords)), function(i) {
-      # Handle potentially vectorized colours/sizes
+      # Handle potentially vectorized colours/sizes/alphas
       current_col <- if (length(g_cols) > 1) {
         g_cols[i]
       } else {
@@ -82,10 +101,15 @@ GeomPointGlow <- ggplot2::ggproto(
       } else {
         g_sizes
       }
+      current_alpha <- if (length(g_alphas) > 1) {
+        g_alphas[i]
+      } else {
+        g_alphas
+      }
 
       grad <- grid::radialGradient(
         colours = c(
-          ggplot2::alpha(current_col, glow_alpha),
+          ggplot2::alpha(current_col, current_alpha),
           ggplot2::alpha(current_col, 0)
         )
       )
@@ -120,13 +144,23 @@ GeomPointGlow <- ggplot2::ggproto(
 #' @inheritParams ggplot2::geom_point
 #' @param glow_colour colour of the glow. If `NA` (default), it inherits the
 #'   colour of the point itself.
-#' @param glow_alpha Transparency of the glow. Defaults to 0.5.
+#' @param glow_alpha Transparency of the glow. If `NA` (default), it inherits
+#'   the alpha value of the point itself.
 #' @param glow_size Numerical value for the glow radius. If `NA` (default),
-#'   it is calculated as two times the point size.
+#'   it is calculated as three times the point size.
 #'
 #' @aesthetics GeomPointGlow
 #'
-#' @seealso [grid::linearGradient()], which this geom relies on.
+#' @seealso
+#'    [ggplot2::geom_point()], [grid::radialGradient()]
+#'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
+#'
+#' @references
+#' Murrell, P. (2022). "Vectorised Pattern Fills in R Graphics." Technical
+#' Report 2022-01, Department of Statistics, The University of Auckland.
+#' Version 1.
+#' \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
 #'
 #' @export
 #' @examples

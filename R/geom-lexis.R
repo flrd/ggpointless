@@ -1,3 +1,4 @@
+#' @noRd
 #' @keywords internal
 draw_key_sabline <- function(data, params, size) {
   grid::segmentsGrob(
@@ -14,6 +15,7 @@ draw_key_sabline <- function(data, params, size) {
   )
 }
 
+#' @noRd
 #' @keywords internal
 draw_key_pointless <- function(data, params, size) {
   if (is.null(data$shape)) {
@@ -35,25 +37,24 @@ draw_key_pointless <- function(data, params, size) {
   )
 }
 
-#' Legend key glyph for \code{geom_lexis}
+#' @title Key glyphs for legends
 #'
-#' Draws a short 45° line with an optional point at the upper-right end,
-#' matching the visual appearance of a Lexis diagram segment. Can also be
-#' used as a \code{key_glyph} in other geoms via \code{key_glyph = "lexis"}.
+#' @description
+#' Each geom has an associated function that draws the key when the geom needs
+#' to be displayed in a legend. These functions are called `draw_key_*()`, where
+#' `*` stands for the name of the respective key glyph. The key glyphs can be
+#' customized for individual geoms by providing a geom with the `key_glyph`
+#' argument (see [`layer()`] or examples below.)
 #'
-#' @inheritParams ggplot2::draw_key
 #' @return A grid grob.
-#' @export
+#' @inheritParams ggplot2::draw_key
+#'
 #' @examples
-#' df <- data.frame(x = c(0, 1), xend = c(3, 4), grp = c("A", "B"))
+#' ggplot(economics_long, aes(date, value01, colour = variable)) +
+#'   geom_line(key_glyph = "lexis")
 #'
-#' # default key glyph used automatically by geom_lexis
-#' ggplot2::ggplot(df, aes(x = x, xend = xend, color = grp)) +
-#'   geom_lexis()
-#'
-#' # borrow the glyph for another geom
-#' ggplot2::ggplot(df, aes(x, xend, colour = grp)) +
-#'   ggplot2::geom_line(key_glyph = "lexis")
+#' @export
+#' @keywords internal
 draw_key_lexis <- function(data, params, size) {
   # is.null guard: key glyph may be borrowed by geom_*s without point_show
   if (isTRUE(params$point_show) || is.null(params$point_show)) {
@@ -156,7 +157,7 @@ GeomLexis <- ggproto(
   draw_key = draw_key_lexis
 )
 
-#' @title Display events of different cohorts in form of a lexis chart
+#' @title Lexis diagrams
 #'
 #' @description
 #' This geom can be used to plot 45° lifelines for a cohort.
@@ -187,6 +188,7 @@ GeomLexis <- ggproto(
 #' Rows in your data with either missing `x` or `xend` values will be removed
 #' because your segments must start and end somewhere.
 #'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @examples
 #' df1 <- data.frame(

@@ -15,8 +15,8 @@ GeomCatenary <- ggplot2::ggproto(
 #' successive points. `geom_arch()` draws an inverted catenary curve and
 #' is hence intended for people living on the southern hemisphere.
 #'
-#' The shape follows the catenary equation
-#' \eqn{y = a \cosh\!\bigl(\frac{x - h}{a}\bigr) + v}.
+#' The shape follows the catenary equation:
+#' \eqn{\ y = a\ \cosh \ \!\bigl(\frac{x - h}{a}\bigr) + v}.
 #'
 #' @param chain_length Numeric vector of physical chain lengths. Recycled to
 #'   the number of segments. If `NULL` and `sag` is also `NULL`, defaults to
@@ -39,6 +39,14 @@ GeomCatenary <- ggplot2::ggproto(
 #' @aesthetics GeomCatenary
 #' @param geom,stat Override the default connection between `geom_catenary()`
 #'   and `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
+#'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
+#'
+#' @seealso
+#'   [geom_fourier()] for fitting smooth curves to data via Fourier series,
+#'   [geom_chaikin()] for smoothing paths via corner cutting.
+#'   The catenary equation is described at
+#'   <https://en.wikipedia.org/wiki/Catenary>.
 #'
 #' @examples
 #' library(ggplot2)

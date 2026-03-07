@@ -12,9 +12,9 @@ GeomFourier <- ggproto(
 #'
 #' @description
 #' `geom_fourier()` and `stat_fourier()` fit a truncated Fourier (discrete
-#' Fourier transform, DFT) series to the supplied `x`/`y` data and render
-#' the reconstructed smooth curve.  The data are first aggregated at duplicate
-#' x positions, interpolated to a uniform grid, optionally de-trended,
+#' Fourier transform, DFT) series to the supplied `x`/`y` observations and render
+#' the reconstructed smooth curve. The data are first aggregated at duplicate
+#' `x` positions, interpolated to a uniform grid, optionally de-trended,
 #' transformed via [stats::fft()], and then reconstructed from the requested
 #' number of harmonics.
 #'
@@ -25,8 +25,8 @@ GeomFourier <- ggproto(
 #' x_{min}}.  Using the latter (a closed interval) implicitly maps the last
 #' sample to \eqn{t = 1}, which coincides with \eqn{t = 0} of the next
 #' period, causing a boundary discontinuity and Gibbs-phenomenon ringing
-#' whenever the first and last y values differ. This implementation always
-#' uses the half-open period.
+#' whenever the first and last `y` values differ. This implementation uses
+#' the half-open period.
 #'
 #' @section Detrending:
 #' Before the FFT is applied the data can be de-trended so that slow,
@@ -43,36 +43,36 @@ GeomFourier <- ggproto(
 #'
 #' @section Nyquist limit:
 #' The maximum number of harmonics recoverable from \eqn{N} observations is
-#' \eqn{\lfloor N/2 \rfloor}.  Requesting more triggers a message and the
+#' \eqn{\lfloor N/2 \rfloor}. Requesting more triggers a message and the
 #' limit is used instead.
 #'
 #' @section Irregular spacing:
 #' The input data is linearly interpolated onto a uniform grid before the FFT.
-#' If the original x-spacing is highly irregular (e.g. most points clustered
-#' in a narrow region), the interpolation may introduce artefacts in sparse
-#' regions. A message is emitted when the coefficient of variation of the
-#' x-spacing exceeds `0.5`.
+#' If the original x-spacing is highly irregular (e.g. monthly time series data),
+#' the interpolation may introduce artefacts in sparse regions. A message is
+#' emitted when the coefficient of variation of the x-spacing exceeds `0.5`.
 #'
 #' @inheritParams ggplot2::geom_line
-#' @param n_harmonics Integer or NULL.  Number of Fourier harmonics to
+#' @param n_harmonics Integer or NULL. Number of Fourier harmonics to
 #'   retain.  NULL (default) uses all harmonics up to the Nyquist limit,
 #'   giving an interpolating fit.  Smaller values produce smoother curves.
 #' @param detrend Character string or `NULL`. De-trending method applied
 #'   before the FFT; one of `"lm"`, `"loess"`, or `NULL` (default). See
 #'   the *Detrending* section for details.
 #'
-#' @aesthetics GeomPointless
+#' @aesthetics GeomFourier
 #' @param geom,stat Override the default connection between `geom_fourier()`
 #'   and `stat_fourier()`.
 #'
-#' @seealso See individual modelling functions for more details:
-#'   [lm()] for linear smooths,
-#'   [loess()] for local smooths.
+#' @seealso
+#'   [stats::fft()] for the underlying Fast Fourier Transform,
+#'   [lm()] and [loess()] for the optional detrending fits,
+#'   [geom_catenary()] and [geom_chaikin()] for other curve-fitting geoms.
 #'
 #' @examples
 #' library(ggplot2)
 #'
-#' n <- 100
+#' n <- 50
 #' df1 <- data.frame(
 #'   x = seq(0, 1, length.out = n),
 #'   y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
@@ -94,9 +94,11 @@ GeomFourier <- ggproto(
 #'   y = sin(x) + x * 0.3 + rnorm(n, sd = 0.15)
 #' )
 #'
-#' ggplot(df2, aes(x, y)) +
-#'   geom_point(alpha = 0.5) +
-#'   geom_fourier(detrend = "lm")
+#' ggplot(df2, aes(x, y))  +
+#' geom_point(alpha = 0.35) +
+#'   geom_fourier(aes(colour = "detrend = NULL"), n_harmonics = 3) +
+#'   geom_fourier(aes(colour = "detrend = \"lm\""), n_harmonics = 3,
+#'                detrend = "lm")
 #'
 #' # Multiple groups
 #' set.seed(3)
@@ -114,6 +116,17 @@ GeomFourier <- ggproto(
 #'   geom_point(alpha = 0.5) +
 #'   geom_fourier()
 #'
+#' # when the data is not uniformly-spaced, the Fourier
+#' # curve will not pass through every data point
+#' df4 <- data.frame(
+#'   x = c(1:10, 19:20),
+#'   y = sin(seq_len(12))
+#' )
+#'
+#' ggplot(df4, aes(x, y)) +
+#'   geom_fourier()
+#'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @rdname geom_fourier
 #' @export
 geom_fourier <- make_constructor(

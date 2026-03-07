@@ -128,10 +128,16 @@ compute_catenary_group <- function(
 ) {
   empty <- data.frame(x = numeric(0), y = numeric(0))
 
-  # 1. Deduplication
   if (nrow(data) < 2L) {
     return(empty)
   }
+
+  # 1. Sort by x so segments always go left-to-right (prevents
+
+  #    overlapping x ranges that cause rendering artefacts).
+  data <- data[order(data$x), ]
+
+  # 2. Deduplication
 
   dx_raw <- diff(data$x)
   dy_raw <- diff(data$y)
@@ -150,14 +156,14 @@ compute_catenary_group <- function(
 
   n_segs <- nrow(data) - 1L
 
-  # 2. Segment geometry
+  # 3. Segment geometry
   starts <- data[-nrow(data), ]
   ends <- data[-1L, ]
   dx_all <- ends$x - starts$x
   dy_all <- ends$y - starts$y
   dists <- sqrt(dx_all^2 + dy_all^2)
 
-  # 3. Parameter processing & validation
+  # 4. Parameter processing & validation
   process_param <- function(val, name) {
     if (is.null(val)) {
       return(rep(NA_real_, n_segs))
@@ -188,7 +194,7 @@ compute_catenary_group <- function(
     )
   }
 
-  # 4. Per-segment curve computation
+  # 5. Per-segment curve computation
   results <- lapply(seq_len(n_segs), function(i) {
     x1 <- starts$x[i]
     y1 <- starts$y[i]
