@@ -144,7 +144,8 @@ fades from the data line down to the baseline.
 ``` r
 set.seed(42)
 ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1])
+  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
 ```
 
 ![](ggpointless_files/figure-html/area-fade-2d-1.png)
