@@ -146,7 +146,8 @@ the baseline.
 ```{r area-fade-2d, fig.height = 3}
 set.seed(42)
 ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1])
+  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
 ```
 
 ### Device compatibility and the fallback
