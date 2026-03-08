@@ -14,7 +14,7 @@ p1 <- ggplot(mapping = aes(x, y)) +
   lapply(lst$data, function(i) {
     geom_polygon(data = i, fill = NA, linetype = "12", color = "#777777")
   }) +
-  Map(f = function(data, color, closed) {
+  Map(f = \(data, color, closed) {
     geom_chaikin(data = data, color = color, closed = closed)
   }, data = lst$data, color = lst$color, closed = lst$closed) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +

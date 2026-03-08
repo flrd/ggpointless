@@ -7,7 +7,7 @@ StatLexis <- ggproto(
   Stat,
   required_aes = c("x", "xend"),
   default_aes = aes(y = after_stat(y), yend = after_stat(yend)),
-  setup_params = function(data, params) {
+  setup_params = \(data, params) {
     if (!is.null(data$y) || !is.null(data$yend)) {
       cli::cli_inform(
         "{.fn stat_lexis} calculates {.field y} and {.field yend} for you."
@@ -15,7 +15,16 @@ StatLexis <- ggproto(
     }
     params
   },
-  compute_group = function(data, scales) {
+  compute_group = \(data, scales) {
+    if (isTRUE(scales$x$is_discrete())) {
+      cli::cli_abort(
+        c(
+          "{.arg x} and {.arg xend} must be continuous variables.",
+          "i" = "A discrete (character or factor) value was detected. \\
+                 Check that all values in {.arg x} and {.arg xend} are numeric."
+        )
+      )
+    }
     get_lexis(data$x, data$xend)
   }
 )

@@ -2,7 +2,7 @@
 % Please edit documentation in R/aaa.R, R/geom-area-fade.R, R/geom-catenary.R,
 %   R/geom-chaikin.R, R/geom-fourier.R, R/geom-lexis.R, R/geom-point-glow.R,
 %   R/geom-pointless.R, R/stat-catenary.R, R/stat-fourier.R, R/stat-lexis.R,
-%   R/stat-pointless.R, R/stat_chaikin.R
+%   R/stat-pointless.R, R/stat-chaikin.R
 \docType{data}
 \name{ggpointless-ggproto}
 \alias{ggpointless-ggproto}

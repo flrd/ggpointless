@@ -27,6 +27,8 @@ geom_arch(
   stat = "arch",
   position = "identity",
   ...,
+  arch_length = NULL,
+  arch_height = NULL,
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -153,6 +155,15 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
+\item{arch_length}{Numeric vector of arch lengths. Recycled to the number
+of segments. If \code{NULL} and \code{arch_height} is also \code{NULL}, defaults to
+twice the Euclidean distance per segment. Can be mixed with
+\code{arch_height} by placing \code{NA} in the appropriate positions.}
+
+\item{arch_height}{Numeric vector giving the vertical rise of the arch
+above the \strong{highest endpoint} of each segment. Takes precedence
+over \code{arch_length} when both are supplied for the same segment.}
+
 \item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
 
 \item{arrow.fill}{fill colour to use for the arrow head (if closed). \code{NULL}
@@ -166,15 +177,6 @@ means use \code{colour} aesthetic.}
 
 \item{geom, stat}{Override the default connection between \code{geom_catenary()}
 and \code{stat_catenary()}, or between \code{geom_arch()} and \code{stat_arch()}.}
-
-\item{arch_length}{Numeric vector of arch lengths. Recycled to the number
-of segments. If \code{NULL} and \code{arch_height} is also \code{NULL}, defaults to
-twice the Euclidean distance per segment. Can be mixed with
-\code{arch_height} by placing \code{NA} in the appropriate positions.}
-
-\item{arch_height}{Numeric vector giving the vertical rise of the arch
-above the \strong{highest endpoint} of each segment. Takes precedence
-over \code{arch_length} when both are supplied for the same segment.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.

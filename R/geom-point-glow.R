@@ -50,7 +50,7 @@ GeomPointGlow <- ggplot2::ggproto(
   # Custom legend key that shows the glow
   draw_key = draw_key_point_glow,
 
-  draw_panel = function(
+  draw_panel = \(
     self,
     data,
     panel_params,

@@ -126,4 +126,4 @@ GeomPointless <- ggproto(
 #'   size = 2
 #'   )
 #'
-geom_pointless <- make_constructor(GeomPointless, stat = "pointless")
+geom_pointless <- make_constructor(GeomPointless, stat = "pointless", location = "last")

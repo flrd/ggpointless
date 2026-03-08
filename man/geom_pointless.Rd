@@ -11,6 +11,7 @@ geom_pointless(
   stat = "pointless",
   position = "identity",
   ...,
+  location = "last",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -103,6 +104,9 @@ lists which parameters it can accept.
 \link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
 }}
 
+\item{location}{Position(s) to highlight: \code{"minimum"}, \code{"maximum"},
+\code{"first"}, \code{"last"} (default), or \code{"all"}.}
+
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
 
@@ -131,9 +135,6 @@ give the geom as \code{"point"}.
 \item For more information and other ways to specify the geom, see the
 \link[ggplot2:layer_geoms]{layer geom} documentation.
 }}
-
-\item{location}{Position(s) to highlight: \code{"minimum"}, \code{"maximum"},
-\code{"first"}, \code{"last"} (default), or \code{"all"}.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.

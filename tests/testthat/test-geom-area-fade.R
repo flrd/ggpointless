@@ -292,9 +292,19 @@ test_that("mapped fill: fallback emits a cli message when compositing unavailabl
   # The message fires at render time (makeContent) rather than at grob-build
   # time, so we must draw the grob to trigger it.  Mock dev.cur() to simulate
   # a non-PDF device with no compositing so we exercise the Tier 2 fallback.
+  #
+  # The mock must include `patterns` so that ggplot2's internal
+
+  # check_device("gradients") sees definitive gradient support and does not
+  # abort with "Unable to check the capabilities of the <device> device" on
+
+  # platforms where the device is not whitelisted (e.g. png on Windows).
   local_mocked_bindings(
-    dev.cur = function(...) c(`png` = 2L),
-    dev.capabilities = function(...) list(compositing = character(0L)),
+    dev.cur = \(...) c(`png` = 2L),
+    dev.capabilities = \(...) list(
+      compositing = character(0L),
+      patterns = c("LinearGradient", "RadialGradient", "TilingPattern")
+    ),
     .package = "grDevices"
   )
   # Force verbose mode so .frequency = "once" doesn't suppress the message
@@ -312,11 +322,22 @@ test_that("mapped fill: fallback emits a cli message when compositing unavailabl
 })
 
 test_that("mapped fill builds a valid grob on any device", {
+  # Mock dev.capabilities so that ggplot2's internal check_device("gradients")
+  # call gets a definitive answer on all platforms. Without this, Windows CI
+  # has an active png device whose capabilities cannot be queried, causing
+  # check_device() to abort with "Unable to check the capabilities of the png
+  # device." The rendering tier selected in makeContent() is irrelevant here —
+  # we only want to confirm the grob builds without error.
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      compositing = character(0L),
+      patterns = c("LinearGradient", "RadialGradient", "TilingPattern")
+    ),
+    .package = "grDevices"
+  )
   p <- ggplot(df_fill, aes(x, y, fill = z)) +
     geom_area_fade(position = "identity") +
     theme_minimal()
-  # suppressMessages: on non-compositing devices the fallback message may be
-  # frequency-limited; suppress silently.
   expect_no_error(suppressMessages(ggplotGrob(p)))
 })
 
@@ -326,7 +347,10 @@ test_that("mapped fill: compositing path runs without error when compositing ava
     message = "grid::groupGrob not available (R < 4.2)"
   )
   local_mocked_bindings(
-    dev.capabilities = function(...) list(compositing = "dest.in"),
+    dev.capabilities = \(...) list(
+      compositing = "dest.in",
+      patterns = c("LinearGradient", "RadialGradient", "TilingPattern")
+    ),
     .package = "grDevices"
   )
   p <- ggplot(df_fill, aes(x, y, fill = z)) +
@@ -337,7 +361,10 @@ test_that("mapped fill: compositing path runs without error when compositing ava
 
 test_that("unmapped fill does not emit a compositing message", {
   local_mocked_bindings(
-    dev.capabilities = function(...) list(compositing = character(0L)),
+    dev.capabilities = \(...) list(
+      compositing = character(0L),
+      patterns = c("LinearGradient", "RadialGradient", "TilingPattern")
+    ),
     .package = "grDevices"
   )
   p <- ggplot(df_fill, aes(x, y)) +

@@ -59,7 +59,7 @@ StatChaikin <- ggproto(
   required_aes = c("x", "y"),
   extra_params = c("na.rm", "mode", "iterations", "ratio", "closed"),
 
-  setup_params = function(data, params) {
+  setup_params = \(data, params) {
     # Handle deprecated `closed` (arrives via ... from geom_chaikin(closed = ...))
     if (!is.null(params$closed)) {
       lifecycle::deprecate_warn(
@@ -126,7 +126,7 @@ StatChaikin <- ggproto(
     params
   },
 
-  compute_group = function(
+  compute_group = \(
     data,
     scales,
     mode = "open",

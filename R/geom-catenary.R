@@ -125,4 +125,9 @@ geom_catenary <- function(
 
 #' @rdname geom_catenary
 #' @export
-geom_arch <- make_constructor(GeomCatenary, stat = "arch")
+geom_arch <- make_constructor(
+  GeomCatenary,
+  stat = "arch",
+  arch_length = NULL,
+  arch_height = NULL
+)

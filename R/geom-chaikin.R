@@ -93,5 +93,6 @@ geom_chaikin <- make_constructor(
   stat = "chaikin",
   mode = NULL,
   iterations = 5,
-  ratio = 0.25
+  ratio = 0.25,
+  closed = lifecycle::deprecated()
 )

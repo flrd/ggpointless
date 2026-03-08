@@ -5,7 +5,7 @@
 StatPointless <- ggproto(
   "StatPointless",
   Stat,
-  setup_params = function(data, params) {
+  setup_params = \(data, params) {
     # Validate location parameter
     valid_locations <- c("first", "last", "minimum", "maximum", "all")
     invalid <- setdiff(params$location, valid_locations)
@@ -31,7 +31,7 @@ StatPointless <- ggproto(
     params
   },
 
-  setup_data = function(data, params) {
+  setup_data = \(data, params) {
     if (nrow(data) == 0L) {
       return(data.frame(x = numeric(0), y = numeric(0)))
     }
@@ -40,7 +40,7 @@ StatPointless <- ggproto(
 
   extra_params = c("na.rm", "location"),
 
-  compute_group = function(data, scales, location = "last") {
+  compute_group = \(data, scales, location = "last") {
     get_locations(data, location = location)
   },
 

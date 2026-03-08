@@ -11,7 +11,7 @@ StatFourier <- ggproto(
   extra_params = c("na.rm", "n_harmonics", "detrend"),
 
   # Parameter validation (runs once, not per group)
-  setup_params = function(data, params) {
+  setup_params = \(data, params) {
     # Validate detrend
     if (!is.null(params$detrend)) {
       params$detrend <- rlang::arg_match0(
@@ -37,7 +37,7 @@ StatFourier <- ggproto(
 
   # NA handling, duplicate aggregation, and all maths live here so that each
   # group is processed independently.
-  compute_group = function(
+  compute_group = \(
     data,
     scales,
     n_harmonics = NULL,
@@ -143,7 +143,7 @@ StatFourier <- ggproto(
         } else {
           tryCatch(
             stats::loess(y ~ x, data = df_fit),
-            error = function(e) {
+            error = \(e) {
               cli::cli_warn(
                 c(
                   "LOESS failed. Falling back to {.val lm}.",

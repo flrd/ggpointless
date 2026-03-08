@@ -100,7 +100,7 @@ solve_a_from_lowest_sag <- function(dx, dy, S) {
       upper = a_up,
       tol = 1e-10
     )$root,
-    error = function(e) {
+    error = \(e) {
       Inf
     }
   )
@@ -170,6 +170,13 @@ compute_catenary_group <- function(
     }
     if (!is.numeric(val)) {
       cli::cli_abort("{.arg {name}} must be numeric, not {.cls {class(val)}}.")
+    }
+    if (length(val) > n_segs) {
+      cli::cli_warn(
+        "{length(val)} value{?s} provided for {.arg {name}} but there \\
+         {?is/are} only {n_segs} segment{?s}. Only the first {n_segs} \\
+         {?value was/values were} used; the rest was ignored."
+      )
     }
     val <- rep_len(val, n_segs)
     bad <- !is.na(val) & val < 0
@@ -298,7 +305,7 @@ StatCatenary <- ggproto(
 
   extra_params = c("na.rm", "chain_length", "chainLength"),
 
-  setup_params = function(data, params) {
+  setup_params = \(data, params) {
     has_chainLength <- !is.null(params$chainLength)
     has_chain_length <- !is.null(params$chain_length)
 
@@ -316,7 +323,7 @@ StatCatenary <- ggproto(
     params
   },
 
-  compute_group = function(data, scales, chain_length = NULL, sag = NULL) {
+  compute_group = \(data, scales, chain_length = NULL, sag = NULL) {
     compute_catenary_group(
       data,
       chain_length = chain_length,
@@ -337,7 +344,7 @@ StatArch <- ggproto(
   Stat,
   required_aes = c("x", "y"),
 
-  compute_group = function(
+  compute_group = \(
     data,
     scales,
     arch_length = NULL,

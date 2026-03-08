@@ -257,3 +257,56 @@ test_that("compute_catenary_group: chain_length == straight_dist gives a straigh
   expect_equal(nrow(result), 5L)
   expect_true(all(result$y == 0))
 })
+
+# --- too many values for segment parameters -----------------------------------
+
+test_that("compute_catenary_group warns when sag has more values than segments", {
+  data <- data.frame(x = 1:4, y = c(1, 1, 0, 2))  # 3 segments
+  expect_warning(
+    compute_catenary_group(
+      data, n = 10L, chain_length = NULL, sag = c(1, 2, 3, 4),
+      gravity = 1, len_name = "chain_length", sag_name = "sag"
+    ),
+    "4 values provided.*sag.*3 segments"
+  )
+})
+
+test_that("compute_catenary_group warns when chain_length has more values than segments", {
+  data <- data.frame(x = 1:4, y = c(1, 1, 0, 2))  # 3 segments
+  expect_warning(
+    compute_catenary_group(
+      data, n = 10L, chain_length = c(5, 5, 5, 5), sag = NULL,
+      gravity = 1, len_name = "chain_length", sag_name = "chain_length"
+    ),
+    "4 values provided.*chain_length.*3 segments"
+  )
+})
+
+test_that("compute_catenary_group warns when arch_height has more values than segments", {
+  data <- data.frame(x = 1:3, y = c(0, 1, 0))  # 2 segments
+  expect_warning(
+    compute_catenary_group(
+      data, n = 10L, chain_length = NULL, sag = c(1, 2, 3),
+      gravity = -1, len_name = "arch_length", sag_name = "arch_height"
+    ),
+    "3 values provided.*arch_height.*2 segments"
+  )
+})
+
+test_that("compute_catenary_group does not warn when values match or are fewer than segments", {
+  data <- data.frame(x = 1:4, y = c(1, 1, 0, 2))  # 3 segments
+  # Exact match — no warning
+  expect_no_warning(
+    compute_catenary_group(
+      data, n = 10L, chain_length = NULL, sag = c(1, 2, 3),
+      gravity = 1, len_name = "chain_length", sag_name = "sag"
+    )
+  )
+  # Fewer (recycled) — no warning
+  expect_no_warning(
+    compute_catenary_group(
+      data, n = 10L, chain_length = NULL, sag = 1,
+      gravity = 1, len_name = "chain_length", sag_name = "sag"
+    )
+  )
+})

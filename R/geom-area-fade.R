@@ -153,8 +153,12 @@ makeContent.area_fade_grob <- function(x) {
   #   Tier 3 — flat semi-transparent fill (base pdf(), postscript)
   no_gradient <- dev_name %in% c("pdf", "postscript")
   no_composite <- dev_name %in% c("pdf", "cairo_pdf", "postscript")
-  can_composite <- !no_composite && "dest.in" %in% grDevices::dev.capabilities()[["compositing"]] &&
-    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE)
+  can_composite <- !no_composite &&
+    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE) &&
+    tryCatch(
+      "dest.in" %in% grDevices::dev.capabilities()[["compositing"]],
+      error = \(e) FALSE
+    )
 
   if (no_gradient) {
     if (x$has_multi_fill) {
@@ -163,9 +167,9 @@ makeContent.area_fade_grob <- function(x) {
           "!" = "{.fn geom_area_fade}: the graphics device does not support \\
                  gradient fills.",
           "i" = "The {.arg fill} colour gradient is replaced by a single \\
-                 colour. Switch to a device that supports gradients \\
-                 (e.g. {.code ragg::agg_png()}, {.code svg()}, \\
-                 {.code cairo_pdf()}) for the full effect."
+                 colour. Switch to a device that supports compositing \\
+                 (e.g. {.code ragg::agg_png()}, {.code svg()}) for the \\
+                 full effect."
         ),
         .frequency = "once",
         .frequency_id = "geom_area_fade_no_gradient"
@@ -252,7 +256,7 @@ GeomAreaFade <- ggplot2::ggproto(
   # relying on ggplot2's param filtering (which uses draw_group formals
   # when draw_panel contains `...`, potentially dropping draw_panel-only
   # params like alpha_scope).
-  setup_data = function(self, data, params) {
+  setup_data = \(self, data, params) {
     data <- ggplot2::ggproto_parent(ggplot2::GeomArea, self)$setup_data(
       data,
       params
@@ -263,7 +267,7 @@ GeomAreaFade <- ggplot2::ggproto(
 
   # Validation in setup_params() keeps the constructor body clean.
 
-  setup_params = function(self, data, params) {
+  setup_params = \(self, data, params) {
     params <- ggplot2::ggproto_parent(ggplot2::GeomArea, self)$setup_params(
       data,
       params
@@ -312,7 +316,7 @@ GeomAreaFade <- ggplot2::ggproto(
   # global extreme, giving equal |y| equal alpha everywhere.
   # When alpha_scope = "group" we skip the stamp; draw_group then computes
   # max_abs from its own data so each group uses the full alpha range.
-  draw_panel = function(
+  draw_panel = \(
     self,
     data,
     panel_params,
@@ -344,7 +348,7 @@ GeomAreaFade <- ggplot2::ggproto(
     )
   },
 
-  draw_group = function(
+  draw_group = \(
     self,
     data,
     panel_params,
@@ -700,35 +704,11 @@ GeomAreaFade <- ggplot2::ggproto(
 #'   alpha_scope = "global", # default
 #'   position = "identity"
 #'   )
-geom_area_fade <- function(
-  mapping = NULL,
-  data = NULL,
+geom_area_fade <- make_constructor(
+  GeomAreaFade,
   stat = "align",
   position = "stack",
-  ...,
   alpha_fade_to = 0,
   alpha_scope = "global",
-  orientation = NULL,
-  outline.type = "upper",
-  na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE
-) {
-  ggplot2::layer(
-    data = data,
-    mapping = mapping,
-    stat = stat,
-    geom = GeomAreaFade,
-    position = position,
-    show.legend = show.legend,
-    inherit.aes = inherit.aes,
-    params = rlang::list2(
-      alpha_fade_to = alpha_fade_to,
-      alpha_scope = alpha_scope,
-      orientation = orientation,
-      outline.type = outline.type,
-      na.rm = na.rm,
-      ...
-    )
-  )
-}
+  orientation = NULL
+)

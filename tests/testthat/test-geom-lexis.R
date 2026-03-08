@@ -69,6 +69,20 @@ test_that("draw_key_pointless: character shape is translated via translate_shape
 kd_lx <- data.frame(colour = "red", fill = NA_character_, alpha = NA_real_,
                     linetype = 1L, linewidth = 0.5, size = 1, stroke = 0.5)
 
+test_that("character x/xend gives a clear warning, not a misleading geometry error", {
+  df_bad <- data.frame(
+    key = c("A", "B", "B", "C", "D"),
+    x = c(0, 1, 6, 5, "b"),
+    xend = c(5, 4, 10, 8, "c")
+  )
+  p <- ggplot(df_bad, aes(x = x, xend = xend, colour = key)) +
+    geom_lexis()
+  expect_warning(
+    ggplot_build(p),
+    "continuous variable"
+  )
+})
+
 test_that("draw_key_lexis: point_show = FALSE returns the segment grob only (no grobTree)", {
   params <- list(point_show = FALSE)
   result <- draw_key_lexis(kd_lx, params, grid::unit(c(1, 1), "cm"))
