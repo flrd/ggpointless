@@ -13,7 +13,7 @@ status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-projec
 coverage](https://codecov.io/gh/flrd/ggpointless/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless)
 <!-- badges: end -->
 
-`ggpointless` is an extension of the
+ggpointless is an extension of the
 [`ggplot2`](https://ggplot2.tidyverse.org/) package providing additional
 layers.
 
@@ -34,7 +34,7 @@ pak::pkg_install("flrd/ggpointless")
 
 ## What will you get
 
-The package groups into three categories:
+The package groups into two categories:
 
 **Visual effects** — purely aesthetic layers that change how data looks
 without transforming it:
@@ -42,8 +42,8 @@ without transforming it:
 - `geom_area_fade()` – area plots with a gradient fill
 - `geom_point_glow()` – adds a radial gradient glow to point plots
 
-**Mathematical curves** — geoms backed by a stat that fits or transforms
-data:
+**Data transformations** — geoms backed by a stat that fits or
+transforms data:
 
 - `geom_arch()` & `stat_arch()` – draws a [catenary
   arch](https://en.wikipedia.org/wiki/Catenary_arch)
@@ -53,9 +53,6 @@ data:
   corner cutting algorithm
 - `geom_fourier()` & `stat_fourier()` – fits a Fourier series to `x`/`y`
   observations and renders the reconstructed curve
-
-**Diagram types** — specialised chart forms:
-
 - `geom_lexis()` & `stat_lexis()` – draws a Lexis diagram
 - `geom_pointless()` & `stat_pointless()` – emphasises selected
   observations with points
@@ -63,6 +60,8 @@ data:
 See
 [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
 for details and examples.
+
+### Theme setup
 
 ``` r
 library(ggpointless)
@@ -81,38 +80,43 @@ theme_set(
 ## geom_arch
 
 `geom_arch()` draws a catenary arch (inverted catenary curve) between
-successive points, mirroring `geom_catenary()`. The shape is controlled
-via `arch_length` or `arch_height` (vertical rise above the *highest*
-endpoint of each segment).
+successive points. Hence it’s mirroring `geom_catenary()`.
 
 ``` r
 df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-ggplot(df_arch, aes(x, y)) +
-  geom_arch(arch_height = c(1.5, NA, 0.5)) +
-  geom_point(size = 3) +
+p <- ggplot(df_arch, aes(x, y)) +
+    geom_point(size = 3) +
   ylim(0, 3.5)
+
+p + geom_arch()
 ```
 
 <img src="man/figures/README-geom-arch-basic-example-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 By default the arch length is twice the Euclidean distance. You can
-change that for each segment using the `arch_length` argument.
+change that for each segment using the arguments `arch_length` or
+`arch_height` (vertical rise above the *highest* endpoint of each
+segment).
 
 ``` r
+df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
 ggplot(df_arch, aes(x, y)) +
-  geom_arch(arch_length = c(2, 4, NA)) +
+  geom_arch(
+    arch_height = c(1.5, NA, 0.5),
+    arch_length = c(NA, 6, NA)
+    ) +
   geom_point(size = 3) +
   ylim(0, 3.5)
 ```
 
-<img src="man/figures/README-geom-arch-arch-length-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-geom-arch-height-sag-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## geom_area_fade
 
 `geom_area_fade()` behaves like
 [`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-but fills each area with a vertical linear gradient, see
-[`grid::linearGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
+but fills each area with a vertical [linear
+gradient](https://search.r-project.org/R/refmans/grid/html/patterns.html).
 
 ``` r
 set.seed(42)
@@ -126,25 +130,15 @@ p + geom_area_fade()
 ```
 
 <img src="man/figures/README-geom-area-fade-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-Opacity scales with absolute distance from zero, so e.g. `y = -1` and
-`y = +1` always receive the same alpha. The gradient is anchored at y =
-0; by default fully transparent at the baseline and proportionally
-opaque at the data values. The outline colour is unaffected from the
-alpha logic.
+By default, the gradient fully transparent at at `y = 0` (the baseline)
+and proportionally opaque at the data values. That is, opacity scales
+with absolute distance from zero, so e.g. `y = -1` and `y = +1` always
+receive the same alpha.
 
 You can control the alpha value the fill fades to using the
-`alpha_fade_to` argument. Instead of fading from full opacity towards
-full transparency at `y = 0`, in the next example alpha starts at 50%
-and fades to 10%:
-
-``` r
-p + geom_area_fade(alpha = .5, alpha_fade_to = .1)
-```
-
-<img src="man/figures/README-geom-area-fade-alpha-fade-to-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-By that logic you can effectively reverse the direction of the gradient
-like so:
+`alpha_fade_to` argument. By that logic you can effectively reverse the
+direction of the gradient. The outline colour is unaffected from the
+alpha logic.
 
 ``` r
 p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
@@ -190,8 +184,7 @@ ggplot(df1, aes(x, y, fill = g)) +
 
 When groups have very different amplitudes or you may not use the
 default `position = "stack"` but `stat = "identity"` instead, this can
-make smaller groups nearly invisible and small groups would appear
-washed out next to dominant groups.
+make smaller groups nearly invisible next to dominant groups.
 
 ``` r
 df_alpha_scope <- data.frame(
@@ -240,10 +233,9 @@ ggplot(economics, aes(date, unemploy)) +
 
 <img src="man/figures/README-geom-area-fade-2D-gradient-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-**Note** that this kind of gradient is not supported on all graphic
-devices, see
-[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for more details and examples.
+> **Note** – Not all graphic devices support this kind of gradient, see
+> [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+> for more details and examples.
 
 ## geom_catenary
 
@@ -252,9 +244,6 @@ hanging loosely between successive points. By default, the chain length
 is twice the Euclidean distance between each `x`/`y` pair. The shape can
 be controlled via `chain_length` or `sag`, i.e vertical drop below the
 *lowest* endpoint of each segment.
-
-Idea from:
-[dulnan/catenary-curve](https://github.com/dulnan/catenary-curve)
 
 ``` r
 set.seed(5)
@@ -288,9 +277,6 @@ ggplot(df_catenary, aes(x, y)) +
 ragged path or polygon into a smooth one. The `closed` argument controls
 whether the path is treated as a closed polygon, or an open path.
 
-Credit to [Farbfetzen /
-corner_cutting](https://github.com/Farbfetzen/corner_cutting).
-
 ``` r
 lst <- list(
   data = list(
@@ -312,6 +298,8 @@ ggplot(mapping = aes(x, y)) +
   }, data = lst$data, color = lst$color, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
+#> `mode` wins over deprecated `closed`. Use `mode`.
+#> This message is displayed once every 8 hours.
 ```
 
 <img src="man/figures/README-geom-chaikin-1.png" alt="" width="100%" style="display: block; margin: auto;" />
@@ -320,15 +308,18 @@ ggplot(mapping = aes(x, y)) +
 
 `geom_fourier()` fits a Fourier series (via
 [fft()](https://search.r-project.org/R/refmans/stats/html/fft.html)) to
-the supplied `x`/`y` data and renders the reconstructed smooth curve. By
-default all harmonics up to the Nyquist limit are used, giving an exact
-interpolating fit; reducing `n_harmonics` progressively smooths the
-result.
+the supplied `x`/`y` observations and renders the reconstructed smooth
+curve. By default all harmonics up to the Nyquist limit are used, giving
+an exact interpolating fit; reducing `n_harmonics` progressively smooths
+the result.
 
 The animation below shows how `geom_fourier()` approximates a square
 wave as the number of harmonics grows from `n = 1` to the Nyquist limit:
 
 <img src="man/figures/fourier_square_wave.gif" alt="" width="100%" style="display: block; margin: auto;" />
+
+The source script that generates the animation is at
+`inst/scripts/gen_fourier_gif.R`.
 
 An optional `detrend` argument removes slow non-periodic trends before
 the transform; `detrend` accepts one of `"lm"` or `"loess"`.

@@ -44,7 +44,7 @@ Collate:
     'stat-fourier.R'
     'stat-lexis.R'
     'stat-pointless.R'
-    'stat_chaikin.R'
+    'stat-chaikin.R'
 Imports:
     cli,
     grid,

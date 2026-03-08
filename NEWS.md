@@ -58,5 +58,5 @@ algorithm to ragged paths.
 * New `female_leaders` dataset available.
 
 # ggpointless 0.0.1
-* New `geom_pointless()` and `stat_pointless()` emphazise some observations.
+* New `geom_pointless()` and `stat_pointless()` emphasise some observations.
 * New data sets on `covid_vac` and `co2_ml` added.

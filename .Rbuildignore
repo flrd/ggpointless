@@ -20,3 +20,4 @@
 ^\.claude$
 ^figure$
 ^Rplots\.pdf$
+^inst/scripts$

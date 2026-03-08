@@ -33,25 +33,9 @@ knitr::opts_chunk$set(
 </style>
 ```
 
-`ggpointless` is a small extension of the [`ggplot2`](https://ggplot2.tidyverse.org/)
-package. Its layers fall into three groups:
 
-**Visual effects** — purely aesthetic, no data transformation:
-
-- `geom_area_fade()`
-- `geom_point_glow()`
-
-**Mathematical curves** — backed by a stat that fits or transforms data:
-
-- `geom_arch()` & `stat_arch()`
-- `geom_catenary()` & `stat_catenary()`
-- `geom_chaikin()` & `stat_chaikin()`
-- `geom_fourier()` & `stat_fourier()`
-
-**Diagram types** — specialised chart forms:
-
-- `geom_lexis()` & `stat_lexis()`
-- `geom_pointless()` & `stat_pointless()`
+This vignette guides you through examples of functions from the ggpointless 
+package — an extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) package. 
 
 ```{r setup-theme, warning=FALSE}
 library(ggpointless)
@@ -106,8 +90,7 @@ ggplot(df1, aes(x, y, fill = g)) +
 
 When groups have very different amplitudes or you may not use the default
 `position = "stack"` but `stat = "identity"` instead, this can make smaller
-groups nearly invisible and small groups would appear washed out next
-to dominant groups.
+groups nearly invisible next to dominant groups.
 
 ```{r geom-area-fade-global, warning=FALSE}
 df_alpha_scope <- data.frame(
@@ -243,10 +226,10 @@ issued and a straight line is drawn instead.
 
 ```{r catenary-chain-length, fig.height = 3}
 ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
-  lapply(seq(1.5, 2.4, by = 0.3), \(cl) {
+  lapply(c(1.5, 1.75, 2), \(cl) {
     geom_catenary(chain_length = cl)
   }) +
-  ylim(NA, 1.05) +
+  ylim(0, 1.05) +
   labs(title = "Increasing chain_length adds more sag")
 ```
 
@@ -315,6 +298,19 @@ ggplot(triangle, aes(x, y)) +
   coord_equal() +
   labs(subtitle = "ratio = 0.10, 0.25, 0.50")
 ```
+
+### Effect of iterations
+
+Each call to `cut_corners()` halves the sharpness of every corner.
+The animation below steps through `iterations = 0` (original polygon) to
+`iterations = 10` (near-circular B-spline), applied to a five-pointed star:
+
+```{r chaikin-iterations-gif, echo=FALSE, out.width="60%", fig.align="center", fig.cap=""}
+knitr::include_graphics("../man/figures/chaikin_iterations.gif")
+```
+
+The source script that generates the animation is at
+`inst/scripts/gen_chaikin_gif.R`.
 
 ### Smoothing a closed polygon with stat_chaikin
 
@@ -404,8 +400,10 @@ ggplot(df_gap, aes(x, y)) +
   geom_fourier()
 ```
 
-This will be relevant when you work with calendar dates directly, as months
-have 28–31 days, so consecutive observations are not the same distance apart.
+The last example is certainly somewhat exaggerated, but irregular data is
+relevant when you work directly with calendar data, for example with monthly
+time series, since months are known to have between 28 and 31 days and
+therefore consecutive observations do not have the same interval between them.
 
 ## geom_lexis & stat_lexis
 
@@ -644,7 +642,7 @@ ggplot(big_dipper, aes(x = x, y = y)) +
 ## geom_pointless & stat_pointless
 
 `geom_pointless()` highlights selected observations — first, last, minimum,
-maximum, or all four — by default with points. Its name reflects that it is not
+maximum, or all of them — by default with points. Its name reflects that it is not
 particularly useful on its own, but in conjunction with `geom_line()` and
 friends, it adds useful context at a glance.
 
@@ -732,7 +730,7 @@ ggplot(
     geom = "text",
     aes(label = after_stat(y)),
     location = c("minimum", "maximum"),
-    hjust = -1) +
+    hjust = -.55) +
   facet_wrap(vars(variable), ncol = 1, scales = "free_y") +
   theme(legend.position = "bottom") +
   labs(x = NULL, y = NULL, colour = NULL)
@@ -749,7 +747,8 @@ ggplot(df3, aes(x, y)) +
   stat_pointless(
     aes(yintercept = y, colour = after_stat(location)),
     location = c("minimum", "maximum"),
-    geom = "hline"
+    geom = "hline",
+    linetype = "dotted"
   ) +
   theme(legend.position = "bottom")
 ```
