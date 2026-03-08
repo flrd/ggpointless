@@ -81,40 +81,9 @@
     margin-bottom: 40px;
   }
 </style>
-<p><code>ggpointless</code> is a small extension of the <a href="https://ggplot2.tidyverse.org/" class="external-link"><code>ggplot2</code></a> package.
-Its layers fall into three groups:</p>
-<p><strong>Visual effects</strong> — purely aesthetic, no data
-transformation:</p>
-<ul>
-<li><code><a href="../reference/geom_area_fade.html">geom_area_fade()</a></code></li>
-<li><code><a href="../reference/geom_point_glow.html">geom_point_glow()</a></code></li>
-</ul>
-<p><strong>Mathematical curves</strong> — backed by a stat that fits or
-transforms data:</p>
-<ul>
-<li>
-<code><a href="../reference/geom_catenary.html">geom_arch()</a></code> &amp; <code><a href="../reference/geom_catenary.html">stat_arch()</a></code>
-</li>
-<li>
-<code><a href="../reference/geom_catenary.html">geom_catenary()</a></code> &amp; <code><a href="../reference/geom_catenary.html">stat_catenary()</a></code>
-</li>
-<li>
-<code><a href="../reference/geom_chaikin.html">geom_chaikin()</a></code> &amp; <code><a href="../reference/geom_chaikin.html">stat_chaikin()</a></code>
-</li>
-<li>
-<code><a href="../reference/geom_fourier.html">geom_fourier()</a></code> &amp; <code><a href="../reference/geom_fourier.html">stat_fourier()</a></code>
-</li>
-</ul>
-<p><strong>Diagram types</strong> — specialised chart forms:</p>
-<ul>
-<li>
-<code><a href="../reference/geom_lexis.html">geom_lexis()</a></code> &amp; <code><a href="../reference/geom_lexis.html">stat_lexis()</a></code>
-</li>
-<li>
-<code><a href="../reference/geom_pointless.html">geom_pointless()</a></code> &amp;
-<code><a href="../reference/geom_pointless.html">stat_pointless()</a></code>
-</li>
-</ul>
+<p>This vignette guides you through examples of functions from the
+ggpointless package — an extension of the <a href="https://ggplot2.tidyverse.org/" class="external-link"><code>ggplot2</code></a>
+package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://flrd.github.io/ggpointless/">ggpointless</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: ggplot2</span></span>
@@ -168,8 +137,7 @@ it. By default, the alpha fade scales to the global maximum across
 <p>When groups have very different amplitudes or you may not use the
 default <code>position = "stack"</code> but
 <code>stat = "identity"</code> instead, this can make smaller groups
-nearly invisible and small groups would appear washed out next to
-dominant groups.</p>
+nearly invisible next to dominant groups.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_alpha_scope</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"b"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
@@ -313,10 +281,10 @@ straight-line distance a warning is issued and a straight line is drawn
 instead.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">2.4</span>, by <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span>, \<span class="op">(</span><span class="va">cl</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">1.75</span>, <span class="fl">2</span><span class="op">)</span>, \<span class="op">(</span><span class="va">cl</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/geom_catenary.html">geom_catenary</a></span><span class="op">(</span>chain_length <span class="op">=</span> <span class="va">cl</span><span class="op">)</span></span>
 <span>  <span class="op">}</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">1.05</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.05</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Increasing chain_length adds more sag"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/catenary-chain-length-1.png" class="r-plt" alt="" width="80%" style="display: block; margin: auto;"></p>
 </div>
@@ -371,7 +339,15 @@ B-spline approximation.</p>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">dat</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linetype <span class="op">=</span> <span class="st">"dashed"</span>, colour <span class="op">=</span> <span class="st">"#333333"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_chaikin.html">geom_chaikin</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="../reference/geom_chaikin.html">geom_chaikin</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: The `closed` argument of `geom_chaikin()` is deprecated as of ggpointless</span></span>
+<span><span class="co">#&gt; 0.2.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `mode` argument instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">ggplot2</span> package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/tidyverse/ggplot2/issues&gt;</span>.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once per session.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/chaikin-basic-1.png" class="r-plt" alt="" width="80%" style="display: block; margin: auto;"></p>
 <div class="section level3">
 <h3 id="effect-of-ratio">Effect of ratio<a class="anchor" aria-label="anchor" href="#effect-of-ratio"></a>
@@ -388,8 +364,21 @@ midpoints, producing the maximum rounding possible in a single pass.</p>
 <span>  <span class="fu"><a href="../reference/geom_chaikin.html">geom_chaikin</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fl">0.25</span>, mode <span class="op">=</span> <span class="st">"closed"</span>, colour <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_chaikin.html">geom_chaikin</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fl">0.50</span>, mode <span class="op">=</span> <span class="st">"closed"</span>, colour <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"ratio = 0.10, 0.25, 0.50"</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>subtitle <span class="op">=</span> <span class="st">"ratio = 0.10, 0.25, 0.50"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; `mode` wins over deprecated `closed`. Use `mode`.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This message is displayed once every 8 hours.</span></span></span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/chaikin-ratio-1.png" class="r-plt" alt="" width="80%" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="effect-of-iterations">Effect of iterations<a class="anchor" aria-label="anchor" href="#effect-of-iterations"></a>
+</h3>
+<p>Each call to <code>cut_corners()</code> halves the sharpness of every
+corner. The animation below steps through <code>iterations = 0</code>
+(original polygon) to <code>iterations = 10</code> (near-circular
+B-spline), applied to a five-pointed star:</p>
+<p><img src="../reference/figures/chaikin_iterations.gif" class="r-plt" alt="" width="60%" style="display: block; margin: auto;"></p>
+<p>The source script that generates the animation is at
+<code>inst/scripts/gen_chaikin_gif.R</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="smoothing-a-closed-polygon-with-stat_chaikin">Smoothing a closed polygon with stat_chaikin<a class="anchor" aria-label="anchor" href="#smoothing-a-closed-polygon-with-stat_chaikin"></a>
@@ -483,9 +472,11 @@ data point:</p>
 <span><span class="co">#&gt; Warning: Highly irregular x-spacing detected (CV = 1.4). The uniform-grid interpolation</span></span>
 <span><span class="co">#&gt; may introduce artefacts.</span></span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/fourier-dates-irregular-spacing-1.png" class="r-plt" alt="" width="80%" style="display: block; margin: auto;"></p>
-<p>This will be relevant when you work with calendar dates directly, as
-months have 28–31 days, so consecutive observations are not the same
-distance apart.</p>
+<p>The last example is certainly somewhat exaggerated, but irregular
+data is relevant when you work directly with calendar data, for example
+with monthly time series, since months are known to have between 28 and
+31 days and therefore consecutive observations do not have the same
+interval between them.</p>
 </div>
 </div>
 <div class="section level2">
@@ -662,8 +653,8 @@ with star positions in right ascension and declination.</p>
 <h2 id="geom_pointless-stat_pointless">geom_pointless &amp; stat_pointless<a class="anchor" aria-label="anchor" href="#geom_pointless-stat_pointless"></a>
 </h2>
 <p><code><a href="../reference/geom_pointless.html">geom_pointless()</a></code> highlights selected observations —
-first, last, minimum, maximum, or all four — by default with points. Its
-name reflects that it is not particularly useful on its own, but in
+first, last, minimum, maximum, or all of them — by default with points.
+Its name reflects that it is not particularly useful on its own, but in
 conjunction with <code><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line()</a></code> and friends, it adds useful
 context at a glance.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
@@ -746,7 +737,7 @@ structure and works naturally with facets:</p>
 <span>    geom <span class="op">=</span> <span class="st">"text"</span>,</span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
-<span>    hjust <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    hjust <span class="op">=</span> <span class="op">-</span><span class="fl">.55</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/vars.html" class="external-link">vars</a></span><span class="op">(</span><span class="va">variable</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="cn">NULL</span>, colour <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
@@ -762,7 +753,8 @@ maximum:</p>
 <span>  <span class="fu"><a href="../reference/geom_pointless.html">stat_pointless</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">y</span>, colour <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">location</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"minimum"</span>, <span class="st">"maximum"</span><span class="op">)</span>,</span>
-<span>    geom <span class="op">=</span> <span class="st">"hline"</span></span>
+<span>    geom <span class="op">=</span> <span class="st">"hline"</span>,</span>
+<span>    linetype <span class="op">=</span> <span class="st">"dotted"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="ggpointless_files/figure-html/pointless-hline-1.png" class="r-plt" alt="" width="80%" style="display: block; margin: auto;"></p>

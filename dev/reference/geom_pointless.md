@@ -17,6 +17,7 @@ geom_pointless(
   stat = "pointless",
   position = "identity",
   ...,
+  location = "last",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -141,6 +142,11 @@ stat_pointless(
     glyphs](https://ggplot2.tidyverse.org/reference/draw_key.html), to
     change the display of the layer in the legend.
 
+- location:
+
+  Position(s) to highlight: `"minimum"`, `"maximum"`, `"first"`,
+  `"last"` (default), or `"all"`.
+
 - na.rm:
 
   If `FALSE`, the default, missing values are removed with a warning. If
@@ -181,11 +187,6 @@ stat_pointless(
     [layer
     geom](https://ggplot2.tidyverse.org/reference/layer_geoms.html)
     documentation.
-
-- location:
-
-  Position(s) to highlight: `"minimum"`, `"maximum"`, `"first"`,
-  `"last"` (default), or `"all"`.
 
 ## Value
 

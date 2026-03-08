@@ -15,6 +15,7 @@ geom_chaikin(
   mode = NULL,
   iterations = 5,
   ratio = 0.25,
+  closed = lifecycle::deprecated(),
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -147,6 +148,10 @@ stat_chaikin(
   Numeric. Cutting ratio must be a number between `0` and `1`. If
   `ratio > 0.5`, then it will be flipped to `1 - ratio`.
 
+- closed:
+
+  **\[deprecated\]** Use `mode` instead.
+
 - arrow:
 
   Arrow specification, as created by
@@ -195,10 +200,6 @@ stat_chaikin(
 
   Use to override the default connection between `geom_chaikin()` and
   `stat_chaikin()`.
-
-- closed:
-
-  **\[deprecated\]** Use `mode` instead.
 
 ## Value
 
@@ -265,6 +266,11 @@ p1 <- ggplot(dat, aes(x, y)) +
 
 p1 +
   geom_chaikin()
+#> Warning: The `closed` argument of `geom_chaikin()` is deprecated as of ggpointless
+#> 0.2.0.
+#> ℹ Please use the `mode` argument instead.
+#> ℹ The deprecated feature was likely used in the ggplot2 package.
+#>   Please report the issue at <https://github.com/tidyverse/ggplot2/issues>.
 
 
 p1 +
@@ -284,6 +290,8 @@ p2 + geom_chaikin(ratio = .5)
 
 # mode controls whether the result is an open or closed shape
 p2 + geom_chaikin(mode = "open")   # default
+#> `mode` wins over deprecated `closed`. Use `mode`.
+#> This message is displayed once every 8 hours.
 
 p2 + geom_chaikin(mode = "closed")
 

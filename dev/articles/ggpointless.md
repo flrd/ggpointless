@@ -1,37 +1,8 @@
 # Introduction to ggpointless
 
-`ggpointless` is a small extension of the
-[`ggplot2`](https://ggplot2.tidyverse.org/) package. Its layers fall
-into three groups:
-
-**Visual effects** — purely aesthetic, no data transformation:
-
-- [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
-- [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
-
-**Mathematical curves** — backed by a stat that fits or transforms data:
-
-- [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-  &
-  [`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-- [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-  &
-  [`stat_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-- [`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
-  &
-  [`stat_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
-- [`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-  &
-  [`stat_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-
-**Diagram types** — specialised chart forms:
-
-- [`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-  &
-  [`stat_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-- [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-  &
-  [`stat_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
+This vignette guides you through examples of functions from the
+ggpointless package — an extension of the
+[`ggplot2`](https://ggplot2.tidyverse.org/) package.
 
 ``` r
 library(ggpointless)
@@ -98,8 +69,7 @@ ggplot(df1, aes(x, y, fill = g)) +
 
 When groups have very different amplitudes or you may not use the
 default `position = "stack"` but `stat = "identity"` instead, this can
-make smaller groups nearly invisible and small groups would appear
-washed out next to dominant groups.
+make smaller groups nearly invisible next to dominant groups.
 
 ``` r
 df_alpha_scope <- data.frame(
@@ -264,10 +234,10 @@ distance a warning is issued and a straight line is drawn instead.
 
 ``` r
 ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
-  lapply(seq(1.5, 2.4, by = 0.3), \(cl) {
+  lapply(c(1.5, 1.75, 2), \(cl) {
     geom_catenary(chain_length = cl)
   }) +
-  ylim(NA, 1.05) +
+  ylim(0, 1.05) +
   labs(title = "Increasing chain_length adds more sag")
 ```
 
@@ -325,6 +295,14 @@ dat <- data.frame(x = seq.int(10), y = sample(15:30, 10))
 ggplot(dat, aes(x, y)) +
   geom_line(linetype = "dashed", colour = "#333333") +
   geom_chaikin(colour = cols[1])
+#> Warning: The `closed` argument of `geom_chaikin()` is deprecated as of ggpointless
+#> 0.2.0.
+#> ℹ Please use the `mode` argument instead.
+#> ℹ The deprecated feature was likely used in the ggplot2 package.
+#>   Please report the issue at <https://github.com/tidyverse/ggplot2/issues>.
+#> This warning is displayed once per session.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
 ```
 
 ![](ggpointless_files/figure-html/chaikin-basic-1.png)
@@ -345,9 +323,23 @@ ggplot(triangle, aes(x, y)) +
   geom_chaikin(ratio = 0.50, mode = "closed", colour = cols[3]) +
   coord_equal() +
   labs(subtitle = "ratio = 0.10, 0.25, 0.50")
+#> `mode` wins over deprecated `closed`. Use `mode`.
+#> This message is displayed once every 8 hours.
 ```
 
 ![](ggpointless_files/figure-html/chaikin-ratio-1.png)
+
+### Effect of iterations
+
+Each call to `cut_corners()` halves the sharpness of every corner. The
+animation below steps through `iterations = 0` (original polygon) to
+`iterations = 10` (near-circular B-spline), applied to a five-pointed
+star:
+
+![](../reference/figures/chaikin_iterations.gif)
+
+The source script that generates the animation is at
+`inst/scripts/gen_chaikin_gif.R`.
 
 ### Smoothing a closed polygon with stat_chaikin
 
@@ -450,9 +442,11 @@ ggplot(df_gap, aes(x, y)) +
 
 ![](ggpointless_files/figure-html/fourier-dates-irregular-spacing-1.png)
 
-This will be relevant when you work with calendar dates directly, as
-months have 28–31 days, so consecutive observations are not the same
-distance apart.
+The last example is certainly somewhat exaggerated, but irregular data
+is relevant when you work directly with calendar data, for example with
+monthly time series, since months are known to have between 28 and 31
+days and therefore consecutive observations do not have the same
+interval between them.
 
 ## geom_lexis & stat_lexis
 
@@ -648,7 +642,7 @@ ggplot(big_dipper, aes(x = x, y = y)) +
 
 [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
 highlights selected observations — first, last, minimum, maximum, or all
-four — by default with points. Its name reflects that it is not
+of them — by default with points. Its name reflects that it is not
 particularly useful on its own, but in conjunction with
 [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
 and friends, it adds useful context at a glance.
@@ -747,7 +741,7 @@ ggplot(
     geom = "text",
     aes(label = after_stat(y)),
     location = c("minimum", "maximum"),
-    hjust = -1) +
+    hjust = -.55) +
   facet_wrap(vars(variable), ncol = 1, scales = "free_y") +
   theme(legend.position = "bottom") +
   labs(x = NULL, y = NULL, colour = NULL)
@@ -766,7 +760,8 @@ ggplot(df3, aes(x, y)) +
   stat_pointless(
     aes(yintercept = y, colour = after_stat(location)),
     location = c("minimum", "maximum"),
-    geom = "hline"
+    geom = "hline",
+    linetype = "dotted"
   ) +
   theme(legend.position = "bottom")
 ```

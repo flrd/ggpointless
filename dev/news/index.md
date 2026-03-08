@@ -115,5 +115,5 @@ CRAN release: 2022-03-08
   [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
   and
   [`stat_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
-  emphazise some observations.
+  emphasise some observations.
 - New data sets on `covid_vac` and `co2_ml` added.

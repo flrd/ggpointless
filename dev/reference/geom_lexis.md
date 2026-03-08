@@ -300,13 +300,14 @@ ggplot(df3, aes(x = x, xend = xend)) +
   geom_lexis()
 
 
-# If `x` is of class Date, `xend` can't be of class `POSIXt` or
-# `POSIXct`. The error is thrown by the `scales::date_trans` function.
-if (FALSE) { # \dontrun{
+# Mixing Date and POSIXct in x/xend is not supported: scales cannot
+# transform across the two types and will throw an error.
+# \donttest{
 ggplot(
   data.frame(x = Sys.Date(), xend = Sys.time()),
   aes(x = x, xend = xend)
 ) +
   geom_lexis()
-} # }
+
+# }
 ```

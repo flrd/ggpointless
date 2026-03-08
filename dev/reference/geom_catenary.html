@@ -77,6 +77,8 @@ is hence intended for people living on the southern hemisphere.</p>
 <span>  stat <span class="op">=</span> <span class="st">"arch"</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  arch_length <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  arch_height <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  arrow <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  arrow.fill <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lineend <span class="op">=</span> <span class="st">"butt"</span>,</span>
@@ -220,6 +222,19 @@ that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. <code><a href="https://ggplot2.tidyverse.org/reference/annotation_borders.html" class="external-link">annotation_borders()</a></code>.</p></dd>
 
 
+<dt id="arg-arch-length">arch_length<a class="anchor" aria-label="anchor" href="#arg-arch-length"></a></dt>
+<dd><p>Numeric vector of arch lengths. Recycled to the number
+of segments. If <code>NULL</code> and <code>arch_height</code> is also <code>NULL</code>, defaults to
+twice the Euclidean distance per segment. Can be mixed with
+<code>arch_height</code> by placing <code>NA</code> in the appropriate positions.</p></dd>
+
+
+<dt id="arg-arch-height">arch_height<a class="anchor" aria-label="anchor" href="#arg-arch-height"></a></dt>
+<dd><p>Numeric vector giving the vertical rise of the arch
+above the <strong>highest endpoint</strong> of each segment. Takes precedence
+over <code>arch_length</code> when both are supplied for the same segment.</p></dd>
+
+
 <dt id="arg-arrow">arrow<a class="anchor" aria-label="anchor" href="#arg-arrow"></a></dt>
 <dd><p>Arrow specification, as created by <code><a href="https://rdrr.io/r/grid/arrow.html" class="external-link">grid::arrow()</a></code>.</p></dd>
 
@@ -244,19 +259,6 @@ means use <code>colour</code> aesthetic.</p></dd>
 <dt id="arg-geom-stat">geom, stat<a class="anchor" aria-label="anchor" href="#arg-geom-stat"></a></dt>
 <dd><p>Override the default connection between <code>geom_catenary()</code>
 and <code>stat_catenary()</code>, or between <code>geom_arch()</code> and <code>stat_arch()</code>.</p></dd>
-
-
-<dt id="arg-arch-length">arch_length<a class="anchor" aria-label="anchor" href="#arg-arch-length"></a></dt>
-<dd><p>Numeric vector of arch lengths. Recycled to the number
-of segments. If <code>NULL</code> and <code>arch_height</code> is also <code>NULL</code>, defaults to
-twice the Euclidean distance per segment. Can be mixed with
-<code>arch_height</code> by placing <code>NA</code> in the appropriate positions.</p></dd>
-
-
-<dt id="arg-arch-height">arch_height<a class="anchor" aria-label="anchor" href="#arg-arch-height"></a></dt>
-<dd><p>Numeric vector giving the vertical rise of the arch
-above the <strong>highest endpoint</strong> of each segment. Takes precedence
-over <code>arch_length</code> when both are supplied for the same segment.</p></dd>
 
 </dl></div>
     <div class="section level2">

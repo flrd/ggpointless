@@ -30,6 +30,8 @@ geom_arch(
   stat = "arch",
   position = "identity",
   ...,
+  arch_length = NULL,
+  arch_height = NULL,
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -193,6 +195,19 @@ stat_arch(
   plot specification, e.g.
   [`annotation_borders()`](https://ggplot2.tidyverse.org/reference/annotation_borders.html).
 
+- arch_length:
+
+  Numeric vector of arch lengths. Recycled to the number of segments. If
+  `NULL` and `arch_height` is also `NULL`, defaults to twice the
+  Euclidean distance per segment. Can be mixed with `arch_height` by
+  placing `NA` in the appropriate positions.
+
+- arch_height:
+
+  Numeric vector giving the vertical rise of the arch above the
+  **highest endpoint** of each segment. Takes precedence over
+  `arch_length` when both are supplied for the same segment.
+
 - arrow:
 
   Arrow specification, as created by
@@ -219,19 +234,6 @@ stat_arch(
 
   Override the default connection between `geom_catenary()` and
   `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
-
-- arch_length:
-
-  Numeric vector of arch lengths. Recycled to the number of segments. If
-  `NULL` and `arch_height` is also `NULL`, defaults to twice the
-  Euclidean distance per segment. Can be mixed with `arch_height` by
-  placing `NA` in the appropriate positions.
-
-- arch_height:
-
-  Numeric vector giving the vertical rise of the arch above the
-  **highest endpoint** of each segment. Takes precedence over
-  `arch_length` when both are supplied for the same segment.
 
 ## Value
 
