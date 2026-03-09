@@ -12,6 +12,7 @@ library(ggpointless)
 cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
 theme_set(
   theme_minimal() + 
+    theme(legend.position = "bottom") +
     theme(geom = element_geom(fill = cols[1])) +
     theme(palette.fill.discrete = c(cols[1], cols[3])) +
     theme(palette.colour.discrete = cols)
@@ -24,8 +25,7 @@ theme_set(
 behaves like
 [`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
 but fills each group with a linear gradient that fades from the fill
-colour to transparent at the baseline, drawing the eye to the signal
-rather than the area underneath.
+colour to transparent at the baseline at `y = 0`.
 
 ``` r
 ggplot(economics, aes(date, unemploy)) +
@@ -35,15 +35,72 @@ ggplot(economics, aes(date, unemploy)) +
 ![](ggpointless_files/figure-html/area-fade-economics-1.png)
 
 Use `alpha` to set the starting opacity and `alpha_fade_to` to control
-where the gradient ends. The direction can be reversed — transparent at
-the top, opaque at the baseline — by swapping their values.
+at which alpha value the gradient ends.
 
 ``` r
 ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(alpha = 0.5, alpha_fade_to = 0.2)
+  geom_area_fade(alpha = 0.75, alpha_fade_to = 0.1)
 ```
 
 ![](ggpointless_files/figure-html/area-fade-alpha-1.png)
+
+The direction can be reversed — transparent at the top, opaque at the
+baseline — by swapping their values. The outline colour is unaffected
+from the alpha logic.
+
+``` r
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(alpha = 0, alpha_fade_to = 1)
+```
+
+![](ggpointless_files/figure-html/geom-area-fade-reverse-1.png)
+
+### 2D gradient
+
+When `fill` is mapped to a variable inside
+[`aes()`](https://ggplot2.tidyverse.org/reference/aes.html), ggplot2
+builds a **horizontal** colour gradient across each group.
+[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+overlays its vertical alpha schedule on top, giving a true
+two-dimensional gradient: colour varies left-to-right while opacity
+fades from the data line down to the baseline.
+
+``` r
+set.seed(42)
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
+```
+
+![](ggpointless_files/figure-html/area-fade-2d-1.png)
+
+### Device compatibility and the fallback
+
+The 2D gradient depends on **Porter-Duff compositing**[¹](#fn1), a
+feature of R’s graphics engine added in R 4.2. When the active graphics
+device does not support compositing
+(e.g. [`grDevices::pdf()`](https://rdrr.io/r/grDevices/pdf.html)),
+[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+falls back to a single-colour vertical fade: the horizontal colour
+gradient is lost, only the vertical alpha fade survives, and a one-time
+message is emitted:
+
+> !
+> [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md):
+> the graphics device does not support gradient fills. The `fill` colour
+> gradient is replaced by a single colour. Switch to a device that
+> supports gradients
+> (e.g. [`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html),
+> [`svg()`](https://rdrr.io/r/grDevices/cairo.html),
+> [`cairo_pdf()`](https://rdrr.io/r/grDevices/cairo.html)) for the full
+> effect. This message is displayed once per session.
+
+Most modern raster devices — including
+[`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html) and
+the Cairo-backed [`png()`](https://rdrr.io/r/grDevices/png.html) shipped
+on Linux and macOS — **do** support compositing, so the 2D gradient
+works out of the box. In RStudio, go to *Tools \> Global Options \>
+Graphics \> Backend* and select *AGG* to ensure full support.
 
 ### Multiple groups
 
@@ -101,53 +158,6 @@ p + geom_area_fade(
 
 ![](ggpointless_files/figure-html/geom-area-fade-group-1.png)
 
-### 2D gradient
-
-When `fill` is mapped to a variable inside
-[`aes()`](https://ggplot2.tidyverse.org/reference/aes.html), ggplot2
-builds a **horizontal** colour gradient across each group.
-[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-overlays its vertical alpha schedule on top, giving a true
-two-dimensional gradient: colour varies left-to-right while opacity
-fades from the data line down to the baseline.
-
-``` r
-set.seed(42)
-ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-![](ggpointless_files/figure-html/area-fade-2d-1.png)
-
-### Device compatibility and the fallback
-
-The 2D gradient depends on **Porter-Duff compositing**[¹](#fn1), a
-feature of R’s graphics engine added in R 4.2. When the active graphics
-device does not support compositing
-(e.g. [`grDevices::pdf()`](https://rdrr.io/r/grDevices/pdf.html)),
-[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-falls back to a single-colour vertical fade: the horizontal colour
-gradient is lost, only the vertical alpha fade survives, and a one-time
-message is emitted:
-
-> !
-> [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md):
-> the graphics device does not support gradient fills. The `fill` colour
-> gradient is replaced by a single colour. Switch to a device that
-> supports gradients
-> (e.g. [`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html),
-> [`svg()`](https://rdrr.io/r/grDevices/cairo.html),
-> [`cairo_pdf()`](https://rdrr.io/r/grDevices/cairo.html)) for the full
-> effect. This message is displayed once per session.
-
-Most modern raster devices — including
-[`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html) and
-the Cairo-backed [`png()`](https://rdrr.io/r/grDevices/png.html) shipped
-on Linux and macOS — **do** support compositing, so the 2D gradient
-works out of the box. In RStudio, go to *Tools \> Global Options \>
-Graphics \> Backend* and select *AGG* to ensure full support.
-
 ## geom_arch & stat_arch
 
 ### Catenary curves and arches
@@ -178,10 +188,9 @@ different `arch_height` values between the same two endpoints:
 
 ``` r
 ggplot(data.frame(x = c(0, 2), y = c(0, 0)), aes(x, y)) +
-  stat_arch(arch_height = 0.5, colour = cols[1]) +
-  stat_arch(arch_height = 1.5, colour = cols[2]) +
-  stat_arch(arch_height = 3.0, colour = cols[3]) +
-  labs(title = "arch_height = 0.5, 1.5, 3.0")
+  stat_arch(arch_height = 0.5, aes(colour = "arch_height = 0.5")) +
+  stat_arch(arch_height = 1.5, aes(colour = "arch_height = 1.5")) +
+  stat_arch(arch_height = 3.0, aes(colour = "arch_height = 3"))
 ```
 
 ![](ggpointless_files/figure-html/stat-arch-compare-1.png)
@@ -295,14 +304,6 @@ dat <- data.frame(x = seq.int(10), y = sample(15:30, 10))
 ggplot(dat, aes(x, y)) +
   geom_line(linetype = "dashed", colour = "#333333") +
   geom_chaikin(colour = cols[1])
-#> Warning: The `closed` argument of `geom_chaikin()` is deprecated as of ggpointless
-#> 0.2.0.
-#> ℹ Please use the `mode` argument instead.
-#> ℹ The deprecated feature was likely used in the ggplot2 package.
-#>   Please report the issue at <https://github.com/tidyverse/ggplot2/issues>.
-#> This warning is displayed once per session.
-#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-#> generated.
 ```
 
 ![](ggpointless_files/figure-html/chaikin-basic-1.png)
@@ -318,25 +319,24 @@ triangle <- data.frame(x = c(0, 0.5, 1), y = c(0, 1, 0))
 
 ggplot(triangle, aes(x, y)) +
   geom_polygon(fill = NA, colour = "grey70", linetype = "dashed") +
-  geom_chaikin(ratio = 0.10, mode = "closed", colour = cols[1]) +
-  geom_chaikin(ratio = 0.25, mode = "closed", colour = cols[2]) +
-  geom_chaikin(ratio = 0.50, mode = "closed", colour = cols[3]) +
-  coord_equal() +
-  labs(subtitle = "ratio = 0.10, 0.25, 0.50")
-#> `mode` wins over deprecated `closed`. Use `mode`.
-#> This message is displayed once every 8 hours.
+  geom_chaikin(ratio = 0.10, mode = "closed", aes(colour = "ratio = 0.10")) +
+  geom_chaikin(ratio = 0.25, mode = "closed", aes(colour = "ratio = 0.25")) +
+  geom_chaikin(ratio = 0.50, mode = "closed", aes(colour = "ratio = 0.50")) +
+  coord_equal()
 ```
 
 ![](ggpointless_files/figure-html/chaikin-ratio-1.png)
 
 ### Effect of iterations
 
-Each call to `cut_corners()` halves the sharpness of every corner,
-stepping from `iterations = 0` (original polygon) towards a
-near-circular B-spline. An animated illustration applied to a
-five-pointed star is available on the [package
-website](https://flrd.github.io/ggpointless/articles/ggpointless.html).
-The source script that generates it is `inst/scripts/gen_chaikin_gif.R`.
+Each iteration halves the sharpness of every corner. The animation below
+steps through iterations = 0, 1, 2, 3, 5, and 10, applied to a
+five-pointed star.
+
+![](../reference/figures/chaikin_iterations.gif)
+
+The source script that generates the animation is
+`inst/scripts/gen_chaikin_gif.R`.
 
 ### Smoothing a closed polygon with stat_chaikin
 
@@ -433,8 +433,8 @@ df_gap <- data.frame(
   )
 ggplot(df_gap, aes(x, y)) + 
   geom_fourier()
-#> Warning: Highly irregular x-spacing detected (CV = 1.4). The uniform-grid interpolation
-#> may introduce artefacts.
+#> Warning: Highly irregular x-spacing detected (coefficient of variation = 1.4). The
+#> uniform-grid interpolation may introduce artefacts.
 ```
 
 ![](ggpointless_files/figure-html/fourier-dates-irregular-spacing-1.png)

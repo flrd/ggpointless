@@ -13,8 +13,8 @@ geom_point_glow(
   stat = "identity",
   position = "identity",
   ...,
+  glow_alpha = 0.5,
   glow_colour = NA,
-  glow_alpha = NA,
   glow_size = NA,
   na.rm = FALSE,
   show.legend = NA,
@@ -128,15 +128,15 @@ geom_point_glow(
     glyphs](https://ggplot2.tidyverse.org/reference/draw_key.html), to
     change the display of the layer in the legend.
 
+- glow_alpha:
+
+  Transparency of the glow between 0 (fully transparent) and 1 (fully
+  opaque). Defaults to `0.5`.
+
 - glow_colour:
 
   colour of the glow. If `NA` (default), it inherits the colour of the
   point itself.
-
-- glow_alpha:
-
-  Transparency of the glow. If `NA` (default), it inherits the alpha
-  value of the point itself.
 
 - glow_size:
 

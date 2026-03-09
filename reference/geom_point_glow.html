@@ -54,8 +54,8 @@ that adds a glow (radial gradient) behind each point.</p>
 <span>  stat <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  glow_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  glow_colour <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  glow_alpha <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  glow_size <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
@@ -142,14 +142,14 @@ lists which parameters it can accept.</p></li>
 </ul></dd>
 
 
+<dt id="arg-glow-alpha">glow_alpha<a class="anchor" aria-label="anchor" href="#arg-glow-alpha"></a></dt>
+<dd><p>Transparency of the glow between 0 (fully transparent)
+and 1 (fully opaque). Defaults to <code>0.5</code>.</p></dd>
+
+
 <dt id="arg-glow-colour">glow_colour<a class="anchor" aria-label="anchor" href="#arg-glow-colour"></a></dt>
 <dd><p>colour of the glow. If <code>NA</code> (default), it inherits the
 colour of the point itself.</p></dd>
-
-
-<dt id="arg-glow-alpha">glow_alpha<a class="anchor" aria-label="anchor" href="#arg-glow-alpha"></a></dt>
-<dd><p>Transparency of the glow. If <code>NA</code> (default), it inherits
-the alpha value of the point itself.</p></dd>
 
 
 <dt id="arg-glow-size">glow_size<a class="anchor" aria-label="anchor" href="#arg-glow-size"></a></dt>

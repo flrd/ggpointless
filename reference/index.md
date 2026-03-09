@@ -20,8 +20,8 @@ Layer Functions
 - [`geom_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
   [`stat_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
   : Lexis diagrams
+- [`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
+  : Points that Glow
 - [`geom_pointless()`](https://flrd.github.io/ggpointless/reference/geom_pointless.md)
   [`stat_pointless()`](https://flrd.github.io/ggpointless/reference/geom_pointless.md)
   : Emphasize some observations with points
-- [`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
-  : Points that Glow
