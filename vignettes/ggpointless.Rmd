@@ -301,16 +301,11 @@ ggplot(triangle, aes(x, y)) +
 
 ### Effect of iterations
 
-Each call to `cut_corners()` halves the sharpness of every corner.
-The animation below steps through `iterations = 0` (original polygon) to
-`iterations = 10` (near-circular B-spline), applied to a five-pointed star:
-
-```{r chaikin-iterations-gif, echo=FALSE, out.width="60%", fig.align="center", fig.cap=""}
-knitr::include_graphics("../man/figures/chaikin_iterations.gif")
-```
-
-The source script that generates the animation is at
-`inst/scripts/gen_chaikin_gif.R`.
+Each call to `cut_corners()` halves the sharpness of every corner, stepping
+from `iterations = 0` (original polygon) towards a near-circular B-spline.
+An animated illustration applied to a five-pointed star is available on the
+[package website](https://flrd.github.io/ggpointless/articles/ggpointless.html).
+The source script that generates it is `inst/scripts/gen_chaikin_gif.R`.
 
 ### Smoothing a closed polygon with stat_chaikin
 
@@ -747,8 +742,7 @@ ggplot(df3, aes(x, y)) +
   stat_pointless(
     aes(yintercept = y, colour = after_stat(location)),
     location = c("minimum", "maximum"),
-    geom = "hline",
-    linetype = "dotted"
+    geom = "hline"
   ) +
   theme(legend.position = "bottom")
 ```

@@ -1,11 +1,11 @@
-# ggpointless (development version)
+# ggpointless 0.2.0
 
 ## New features
 
 * New `geom_fourier()` and `stat_fourier()` fit a truncated Fourier series
-  (via FFT) to `x`/`y` data and render the reconstructed curve.
+  (via `stats::fft()`) to `x`/`y` data and render the reconstructed curve.
   Supports optional detrending (`"lm"` or `"loess"`) and harmonic selection
-  via `n_harmonics`  (#7).
+  via `n_harmonics` (#7).
 
 * New `geom_arch()` and `stat_arch()` draw inverted catenary curves (arches)
   between successive points, complementing the existing `geom_catenary()` (#4).
@@ -15,14 +15,14 @@
   is controlled via `alpha_fade_to` (#3).
 
 * New `geom_point_glow()` draws points with a radial gradient glow behind
-  each point using `grid::radialGradient()`. The glow colour, alpha, and size
-  can be customised via `glow_colour`, `glow_alpha`, and `glow_size` (#6).
+  each point using `grid::radialGradient()`. The glow alpha, colour, and size
+  can be customised via `glow_alpha`, `glow_colour`, and `glow_size` (#6).
 
 ## Breaking changes
 
-* The bundled datasets `co2_ml`, `covid_vac`, and `female_leaders` have been
-  removed from the package. Users who relied on these datasets can obtain them
-  from their original sources: [Mauna Loa CO~2~](https://gml.noaa.gov/ccgg/trends/data.html),
+* The bundled (but outdated) datasets `co2_ml`, `covid_vac`, and `female_leaders` have been
+  removed from the package. These datasets can be obtained from their  
+  original sources: [Mauna Loa CO~2~](https://gml.noaa.gov/ccgg/trends/data.html),
   [CDC vaccination data](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status),
   and [Wikipedia female leaders](https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&oldid=1078024588),
   respectively. The `vignette("examples")` that showcased these datasets has

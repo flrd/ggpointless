@@ -45,10 +45,8 @@ without transforming it:
 **Data transformations** — geoms backed by a stat that fits or
 transforms data:
 
-- `geom_arch()` & `stat_arch()` – draws a [catenary
-  arch](https://en.wikipedia.org/wiki/Catenary_arch)
-- `geom_catenary()` & `stat_catenary()` – draws a [catenary
-  curve](https://en.wikipedia.org/wiki/Catenary)
+- `geom_arch()` & `stat_arch()` – draws a catenary arch
+- `geom_catenary()` & `stat_catenary()` – draws a catenary curve
 - `geom_chaikin()` & `stat_chaikin()` – smooths paths using Chaikin’s
   corner cutting algorithm
 - `geom_fourier()` & `stat_fourier()` – fits a Fourier series to `x`/`y`

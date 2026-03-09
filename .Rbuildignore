@@ -21,3 +21,5 @@
 ^figure$
 ^Rplots\.pdf$
 ^inst/scripts$
+^man/figures/chaikin_iterations\.gif$
+^man/figures/fourier_square_wave\.gif$
