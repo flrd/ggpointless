@@ -61,7 +61,7 @@ StatChaikin <- ggproto(
 
   setup_params = \(data, params) {
     # Handle deprecated `closed` (arrives via ... from geom_chaikin(closed = ...))
-    if (!is.null(params$closed)) {
+    if (!is.null(params$closed) && lifecycle::is_present(params$closed)) {
       lifecycle::deprecate_warn(
         "0.2.0",
         "geom_chaikin(closed)",

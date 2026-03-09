@@ -208,15 +208,6 @@ df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
 ggplot(df3, aes(x = x, xend = xend)) +
   geom_lexis()
 
-# Mixing Date and POSIXct in x/xend is not supported: scales cannot
-# transform across the two types and will throw an error.
-\donttest{
-ggplot(
-  data.frame(x = Sys.Date(), xend = Sys.time()),
-  aes(x = x, xend = xend)
-) +
-  geom_lexis()
-}
 }
 \section{Aesthetics}{
 

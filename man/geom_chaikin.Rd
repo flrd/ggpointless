@@ -11,10 +11,9 @@ geom_chaikin(
   stat = "chaikin",
   position = "identity",
   ...,
-  mode = NULL,
+  mode = "open",
   iterations = 5,
   ratio = 0.25,
-  closed = lifecycle::deprecated(),
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -114,8 +113,6 @@ removing the layer.}
 \item{ratio}{Numeric. Cutting ratio must be a number between \code{0} and \code{1}.
 If \code{ratio > 0.5}, then it will be flipped to \code{1 - ratio}.}
 
-\item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{mode} instead.}
-
 \item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
 
 \item{arrow.fill}{fill colour to use for the arrow head (if closed). \code{NULL}
@@ -145,6 +142,8 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 
 \item{geom, stat}{Use to override the default connection between
 \code{geom_chaikin()} and \code{stat_chaikin()}.}
+
+\item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{mode} instead.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.

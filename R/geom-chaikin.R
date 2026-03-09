@@ -91,8 +91,7 @@ GeomChaikin <- ggplot2::ggproto(
 geom_chaikin <- make_constructor(
   GeomChaikin,
   stat = "chaikin",
-  mode = NULL,
+  mode = "open",
   iterations = 5,
-  ratio = 0.25,
-  closed = lifecycle::deprecated()
+  ratio = 0.25
 )

@@ -230,15 +230,6 @@ GeomLexis <- ggproto(
 #' ggplot(df3, aes(x = x, xend = xend)) +
 #'   geom_lexis()
 #'
-#' # Mixing Date and POSIXct in x/xend is not supported: scales cannot
-#' # transform across the two types and will throw an error.
-#' \donttest{
-#' ggplot(
-#'   data.frame(x = Sys.Date(), xend = Sys.time()),
-#'   aes(x = x, xend = xend)
-#' ) +
-#'   geom_lexis()
-#' }
 geom_lexis <- make_constructor(
   GeomLexis,
   stat = "lexis",

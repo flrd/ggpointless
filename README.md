@@ -123,7 +123,7 @@ df_fade <- data.frame(
   y = cumsum(rnorm(60, sd = 0.35))
 )
 
-p <- ggplot(df_fade, aes(x, y - mean(y)))
+p <- ggplot(df_fade, aes(x, y))
 p + geom_area_fade()
 ```
 
@@ -150,14 +150,34 @@ horizontal area chart where the gradient fades from `x = 0` toward the
 data values.
 
 ``` r
-ggplot(df_fade, aes(y, x)) +
-  geom_area_fade(
-    orientation = "y",
-    colour = "#333333" # changes outline colour
-    )
+p + geom_area_fade(
+  aes(y, x),
+  orientation = "y",
+  colour = "#333333" # changes outline colour
+  )
 ```
 
 <img src="man/figures/README-geom-area-fade-orientation-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### 2D gradient
+
+Since [ggplot2 version
+4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
+was released both `geom_area()` and `geom_ribbon()` allow a varying
+`fill` aesthetic within a group. `geom_area_fade()` creates a
+2D-gradient in such cases which combines the vertical and horizontal
+gradients.
+
+``` r
+p + geom_area_fade(aes(fill = y), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
+```
+
+<img src="man/figures/README-geom-area-fade-2D-gradient-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+> **Note** – Not all graphic devices support this kind of gradient, see
+> [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+> for more details and examples.
 
 ### Multiple groups
 
@@ -213,27 +233,6 @@ p + geom_area_fade(
 ```
 
 <img src="man/figures/README-geom-area-fade-group-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-### 2D gradient
-
-Since [ggplot2 version
-4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
-was released both `geom_area()` and `geom_ribbon()` allow a varying
-`fill` aesthetic within a group. `geom_area_fade()` creates a
-2D-gradient in such cases which combines the vertical and horizontal
-gradients.
-
-``` r
-ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-<img src="man/figures/README-geom-area-fade-2D-gradient-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-> **Note** – Not all graphic devices support this kind of gradient, see
-> [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-> for more details and examples.
 
 ## geom_catenary
 
@@ -296,8 +295,6 @@ ggplot(mapping = aes(x, y)) +
   }, data = lst$data, color = lst$color, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
-#> `mode` wins over deprecated `closed`. Use `mode`.
-#> This message is displayed once every 8 hours.
 ```
 
 <img src="man/figures/README-geom-chaikin-1.png" alt="" width="100%" style="display: block; margin: auto;" />

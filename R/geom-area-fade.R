@@ -651,7 +651,7 @@ GeomAreaFade <- ggplot2::ggproto(
 #' a + geom_area_fade(outline.type = "full")
 #'
 #' # horizontal orientation
-#' a + geom_area_fade(orientation = "y")
+#' a + geom_area_fade(aes(y, x), orientation = "y")
 #'
 #' # disable stat alignment (useful when x values are already aligned)
 #' a + geom_area_fade(stat = "identity")
@@ -659,16 +659,37 @@ GeomAreaFade <- ggplot2::ggproto(
 #' # draw upper and lower outlines (no left/right edges)
 #' a + geom_area_fade(outline.type = "both", stat = "identity")
 #'
+#' # Use the "alpha_scope" argument to scale the alpha
+#' # value of the gradients separately for each group
+#' df2 <- data.frame(
+#'   g = c("a", "a", "a", "b", "b", "b"),
+#'   x = c(1, 3, 5, 2, 4, 6),
+#'   y = c(1, 2, 1, 9, 10, 8)
+#' )
+#' b <- ggplot(df2, aes(x, y, fill = g)) +
+#'   theme_minimal()
+#'
+#' # alpha_scope = "group": each group uses the alpha range independently
+#' b + geom_area_fade(
+#'   alpha_scope = "group",
+#'   position = "identity"
+#'   )
+#'
+#' # compare with the default where small groups appear washed out
+#' # next to dominant groups, especially when position = "identity"
+#' b + geom_area_fade(
+#'   alpha_scope = "global", # default
+#'   position = "identity"
+#'   )
+#'
 #' # geom_area_fade works with negative values too:
 #' # the gradient fades towards y = 0 from both sides
-#' set.seed(2)
-#' df2 <- data.frame(x = seq_len(20), y = cumsum(rnorm(20)))
-#' b <- ggplot(df2, aes(x, y - mean(y))) +
+#' d <- ggplot(df2, aes(x, y - mean(y))) +
 #'   theme_minimal()
-#' b + geom_area_fade()
+#' d + geom_area_fade()
 #'
 #' # overwrite both fill and colour
-#' b + geom_area_fade(
+#' d + geom_area_fade(
 #'   fill = "#0833F5",
 #'   colour = "#d77e7b",
 #'   outline.type = "lower"
@@ -676,34 +697,12 @@ GeomAreaFade <- ggplot2::ggproto(
 #'
 #' # a 2D-gradient is produced when fill is mapped to a variable
 #' # this may not work on all graphic devices, see vignette for details
-#' b + geom_area_fade(
+#' d + geom_area_fade(
 #'   aes(fill = y),
 #'   colour = "#333333",
 #'   outline.type = "both"
 #'   )
 #'
-#' # Use the "alpha_scope" argument to scale the alpha
-#' # value of the gradients separately for each group
-#' df3 <- data.frame(
-#'   g = c("a", "a", "a", "b", "b", "b"),
-#'   x = c(1, 3, 5, 2, 4, 6),
-#'   y = c(1, 2, 1, 9, 10, 8)
-#' )
-#' c <- ggplot(df3, aes(x, y, fill = g)) +
-#'   theme_minimal()
-#'
-#' # alpha_scope = "group": each group uses the alpha range independently
-#' c + geom_area_fade(
-#'   alpha_scope = "group",
-#'   position = "identity"
-#'   )
-#'
-#' # compare with the default where small groups appear washed out
-#' # next to dominant groups, especially when position = "identity"
-#' c + geom_area_fade(
-#'   alpha_scope = "global", # default
-#'   position = "identity"
-#'   )
 geom_area_fade <- make_constructor(
   GeomAreaFade,
   stat = "align",

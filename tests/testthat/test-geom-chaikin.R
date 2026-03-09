@@ -7,16 +7,16 @@ lst <- list(
     closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
   ),
   color = cols,
-  closed = c(TRUE, TRUE, FALSE, TRUE)
+  mode = c("closed", "closed", "open", "closed")
 )
 
 p1 <- ggplot(mapping = aes(x, y)) +
-  lapply(lst$data, function(i) {
+  lapply(lst$data, \(i) {
     geom_polygon(data = i, fill = NA, linetype = "12", color = "#777777")
   }) +
-  Map(f = \(data, color, closed) {
-    geom_chaikin(data = data, color = color, closed = closed)
-  }, data = lst$data, color = lst$color, closed = lst$closed) +
+  Map(f = \(data, color, mode) {
+    geom_chaikin(data = data, color = color, mode = mode)
+  }, data = lst$data, color = lst$color, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
 

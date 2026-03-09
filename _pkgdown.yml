@@ -33,9 +33,9 @@ reference:
   - stat_fourier
   - geom_lexis
   - stat_lexis
+  - geom_point_glow
   - geom_pointless
   - stat_pointless
-  - geom_point_glow
 
 figures:
   dev: ragg::agg_png

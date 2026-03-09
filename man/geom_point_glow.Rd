@@ -10,8 +10,8 @@ geom_point_glow(
   stat = "identity",
   position = "identity",
   ...,
+  glow_alpha = 0.5,
   glow_colour = NA,
-  glow_alpha = NA,
   glow_size = NA,
   na.rm = FALSE,
   show.legend = NA,
@@ -93,11 +93,11 @@ lists which parameters it can accept.
 \link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
 }}
 
+\item{glow_alpha}{Transparency of the glow between 0 (fully transparent)
+and 1 (fully opaque). Defaults to \code{0.5}.}
+
 \item{glow_colour}{colour of the glow. If \code{NA} (default), it inherits the
 colour of the point itself.}
-
-\item{glow_alpha}{Transparency of the glow. If \code{NA} (default), it inherits
-the alpha value of the point itself.}
 
 \item{glow_size}{Numerical value for the glow radius. If \code{NA} (default),
 it is calculated as three times the point size.}

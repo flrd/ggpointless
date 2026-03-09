@@ -118,7 +118,7 @@ df_fade <- data.frame(
   y = cumsum(rnorm(60, sd = 0.35))
 )
 
-p <- ggplot(df_fade, aes(x, y - mean(y)))
+p <- ggplot(df_fade, aes(x, y))
 p + geom_area_fade()
 ```
 By default, the gradient fully transparent at at `y = 0` (the baseline) and
@@ -138,12 +138,27 @@ p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
 where the gradient fades from `x = 0` toward the data values.
 
 ```{r geom-area-fade-orientation, warning=FALSE}
-ggplot(df_fade, aes(y, x)) +
-  geom_area_fade(
-    orientation = "y",
-    colour = "#333333" # changes outline colour
-    )
+p + geom_area_fade(
+  aes(y, x),
+  orientation = "y",
+  colour = "#333333" # changes outline colour
+  )
 ```
+
+### 2D gradient
+
+Since [ggplot2 version 4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
+was released both `geom_area()` and `geom_ribbon()` allow a varying `fill`
+aesthetic within a group. `geom_area_fade()` creates a 2D-gradient in such cases
+which combines the vertical and horizontal gradients.
+
+```{r geom-area-fade-2D-gradient, warning=FALSE}
+p + geom_area_fade(aes(fill = y), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
+```
+
+> **Note** -- Not all graphic devices support this kind of gradient, see [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html) for more details and examples.
+
 
 ### Multiple groups
 
@@ -193,21 +208,6 @@ p + geom_area_fade(
   )
 ```
 
-
-### 2D gradient
-
-Since [ggplot2 version 4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
-was released both `geom_area()` and `geom_ribbon()` allow a varying `fill`
-aesthetic within a group. `geom_area_fade()` creates a 2D-gradient in such cases
-which combines the vertical and horizontal gradients.
-
-```{r geom-area-fade-2D-gradient, warning=FALSE}
-ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-> **Note** -- Not all graphic devices support this kind of gradient, see [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html) for more details and examples.
 
 ## geom_catenary
 `geom_catenary()` draws a flexible curve that simulates a chain or rope hanging loosely between successive points. By default, the chain length is twice the Euclidean distance between each `x`/`y` pair. The shape can be controlled via `chain_length` or `sag`, i.e vertical drop below the _lowest_ endpoint of each segment.
@@ -269,8 +269,7 @@ the number of harmonics grows from `n = 1` to the Nyquist limit:
 knitr::include_graphics("man/figures/fourier_square_wave.gif")
 ```
 
-The source script that generates the animation is at
-`inst/scripts/gen_fourier_gif.R`.
+The source script that generates the animation is at `inst/scripts/gen_fourier_gif.R`.
 
 An optional `detrend` argument removes slow non-periodic trends before the transform; `detrend` accepts one of `"lm"` or `"loess"`.
 

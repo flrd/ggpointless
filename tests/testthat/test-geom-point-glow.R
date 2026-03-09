@@ -136,8 +136,8 @@ test_that("draw_key_point_glow: explicit glow_colour overrides data colour", {
   expect_false(grepl("311dfc", grad_col_opaque, ignore.case = TRUE))
 })
 
-test_that("draw_key_point_glow: glow_alpha is floored at 0.8", {
-  # glow_alpha = 0.2 < 0.8, so max(0.2, 0.8) = 0.8 is used
+test_that("draw_key_point_glow: glow_alpha is floored at 0.5", {
+  # glow_alpha = 0.2 < 0.5, so max(0.2, 0.5) = 0.5 is used
   params_low  <- list(glow_colour = NA_character_, glow_alpha = 0.2)
   params_high <- list(glow_colour = NA_character_, glow_alpha = 0.9)
   result_low  <- draw_key_point_glow(key_data, params_low,  grid::unit(c(1, 1), "cm"))

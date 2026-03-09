@@ -13,9 +13,9 @@ draw_key_point_glow <- function(data, params, size) {
   g_alpha <- if (is.null(params$glow_alpha) || isTRUE(is.na(params$glow_alpha))) {
     a <- data$alpha %||% 1
     if (is.na(a)) a <- 1
-    max(a, 0.8)
+    max(a, 0.5)
   } else {
-    max(params$glow_alpha, 0.8)
+    max(params$glow_alpha, 0.5)
   }
 
   # Create gradient for the legend box
@@ -55,8 +55,8 @@ GeomPointGlow <- ggplot2::ggproto(
     data,
     panel_params,
     coord,
+    glow_alpha = 0.5,
     glow_colour = NA,
-    glow_alpha = NA,
     glow_size = NA
   ) {
     coords <- coord$transform(data, panel_params)
@@ -142,10 +142,10 @@ GeomPointGlow <- ggplot2::ggproto(
 #' that adds a glow (radial gradient) behind each point.
 #'
 #' @inheritParams ggplot2::geom_point
+#' @param glow_alpha Transparency of the glow between 0 (fully transparent)
+#'   and 1 (fully opaque). Defaults to `0.5`.
 #' @param glow_colour colour of the glow. If `NA` (default), it inherits the
 #'   colour of the point itself.
-#' @param glow_alpha Transparency of the glow. If `NA` (default), it inherits
-#'   the alpha value of the point itself.
 #' @param glow_size Numerical value for the glow radius. If `NA` (default),
 #'   it is calculated as three times the point size.
 #'

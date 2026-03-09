@@ -44,6 +44,7 @@ library(ggpointless)
 cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
 theme_set(
   theme_minimal() + 
+    theme(legend.position = "bottom") +
     theme(geom = element_geom(fill = cols[1])) +
     theme(palette.fill.discrete = c(cols[1], cols[3])) +
     theme(palette.colour.discrete = cols)
@@ -53,22 +54,63 @@ theme_set(
 ## geom_area_fade
 
 `geom_area_fade()` behaves like `geom_area()` but fills each group with a
-linear gradient that fades from the fill colour to transparent at the baseline,
-drawing the eye to the signal rather than the area underneath.
+linear gradient that fades from the fill colour to transparent at the baseline at
+`y = 0`.
 
 ```{r area-fade-economics}
 ggplot(economics, aes(date, unemploy)) +
   geom_area_fade()
 ```
 
-Use `alpha` to set the starting opacity and `alpha_fade_to` to control where
-the gradient ends. The direction can be reversed — transparent at the top,
-opaque at the baseline — by swapping their values.
+Use `alpha` to set the starting opacity and `alpha_fade_to` to control at which 
+alpha value the gradient ends. 
 
 ```{r area-fade-alpha, fig.height = 3}
 ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(alpha = 0.5, alpha_fade_to = 0.2)
+  geom_area_fade(alpha = 0.75, alpha_fade_to = 0.1)
 ```
+
+The direction can be reversed — transparent at the top, opaque at the
+baseline — by swapping their values. The outline colour is unaffected from 
+the alpha logic.
+
+```{r geom-area-fade-reverse, warning=FALSE}
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(alpha = 0, alpha_fade_to = 1)
+```
+
+### 2D gradient
+
+When `fill` is mapped to a variable inside `aes()`, ggplot2 builds a
+**horizontal** colour gradient across each group. `geom_area_fade()` overlays
+its vertical alpha schedule on top, giving a true two-dimensional gradient:
+colour varies left-to-right while opacity fades from the data line down to
+the baseline.
+
+```{r area-fade-2d, fig.height = 3}
+set.seed(42)
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
+```
+
+### Device compatibility and the fallback
+
+The 2D gradient depends on **Porter-Duff compositing**^[See: https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html], a feature of R's graphics engine added in R 4.2. When the active graphics
+device does not support compositing (e.g. `grDevices::pdf()`), 
+`geom_area_fade()` falls back to a single-colour vertical fade: the
+horizontal colour gradient is lost, only the vertical alpha fade survives, and a one-time message is
+emitted:
+
+> ! `geom_area_fade()`: the graphics device does not support gradient fills.
+> The `fill` colour gradient is replaced by a single colour. Switch to a device that supports gradients (e.g. `ragg::agg_png()`, `svg()`, `cairo_pdf()`) for the full effect.
+> This message is displayed once per session.
+
+Most modern raster devices — including `ragg::agg_png()` and the
+Cairo-backed `png()` shipped on Linux and macOS — **do** support
+compositing, so the 2D gradient works out of the box. In RStudio, go to
+*Tools > Global Options > Graphics > Backend* and select *AGG* to ensure
+full support.
 
 ### Multiple groups
 
@@ -118,39 +160,6 @@ p + geom_area_fade(
   )
 ```
 
-### 2D gradient
-
-When `fill` is mapped to a variable inside `aes()`, ggplot2 builds a
-**horizontal** colour gradient across each group. `geom_area_fade()` overlays
-its vertical alpha schedule on top, giving a true two-dimensional gradient:
-colour varies left-to-right while opacity fades from the data line down to
-the baseline.
-
-```{r area-fade-2d, fig.height = 3}
-set.seed(42)
-ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-### Device compatibility and the fallback
-
-The 2D gradient depends on **Porter-Duff compositing**^[See: https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html], a feature of R's graphics engine added in R 4.2. When the active graphics
-device does not support compositing (e.g. `grDevices::pdf()`), 
-`geom_area_fade()` falls back to a single-colour vertical fade: the
-horizontal colour gradient is lost, only the vertical alpha fade survives, and a one-time message is
-emitted:
-
-> ! `geom_area_fade()`: the graphics device does not support gradient fills.
-> The `fill` colour gradient is replaced by a single colour. Switch to a device that supports gradients (e.g. `ragg::agg_png()`, `svg()`, `cairo_pdf()`) for the full effect.
-> This message is displayed once per session.
-
-Most modern raster devices — including `ragg::agg_png()` and the
-Cairo-backed `png()` shipped on Linux and macOS — **do** support
-compositing, so the 2D gradient works out of the box. In RStudio, go to
-*Tools > Global Options > Graphics > Backend* and select *AGG* to ensure
-full support.
-
 ## geom_arch & stat_arch
 
 ### Catenary curves and arches
@@ -177,10 +186,9 @@ different `arch_height` values between the same two endpoints:
 
 ```{r stat-arch-compare, fig.height = 3.5}
 ggplot(data.frame(x = c(0, 2), y = c(0, 0)), aes(x, y)) +
-  stat_arch(arch_height = 0.5, colour = cols[1]) +
-  stat_arch(arch_height = 1.5, colour = cols[2]) +
-  stat_arch(arch_height = 3.0, colour = cols[3]) +
-  labs(title = "arch_height = 0.5, 1.5, 3.0")
+  stat_arch(arch_height = 0.5, aes(colour = "arch_height = 0.5")) +
+  stat_arch(arch_height = 1.5, aes(colour = "arch_height = 1.5")) +
+  stat_arch(arch_height = 3.0, aes(colour = "arch_height = 3"))
 ```
 
 ### The Rice House
@@ -292,20 +300,52 @@ triangle <- data.frame(x = c(0, 0.5, 1), y = c(0, 1, 0))
 
 ggplot(triangle, aes(x, y)) +
   geom_polygon(fill = NA, colour = "grey70", linetype = "dashed") +
-  geom_chaikin(ratio = 0.10, mode = "closed", colour = cols[1]) +
-  geom_chaikin(ratio = 0.25, mode = "closed", colour = cols[2]) +
-  geom_chaikin(ratio = 0.50, mode = "closed", colour = cols[3]) +
-  coord_equal() +
-  labs(subtitle = "ratio = 0.10, 0.25, 0.50")
+  geom_chaikin(ratio = 0.10, mode = "closed", aes(colour = "ratio = 0.10")) +
+  geom_chaikin(ratio = 0.25, mode = "closed", aes(colour = "ratio = 0.25")) +
+  geom_chaikin(ratio = 0.50, mode = "closed", aes(colour = "ratio = 0.50")) +
+  coord_equal()
 ```
 
 ### Effect of iterations
 
-Each call to `cut_corners()` halves the sharpness of every corner, stepping
-from `iterations = 0` (original polygon) towards a near-circular B-spline.
-An animated illustration applied to a five-pointed star is available on the
-[package website](https://flrd.github.io/ggpointless/articles/ggpointless.html).
-The source script that generates it is `inst/scripts/gen_chaikin_gif.R`.
+Each iteration halves the sharpness of every corner. 
+The `r if (identical(Sys.getenv("IN_PKGDOWN"), "true")) "animation" else "plot"`
+below `r if (identical(Sys.getenv("IN_PKGDOWN"), "true")) "steps through iterations = 0, 1, 2, 3, 5, and 10" else "shows iterations = 3"`, applied to a five-pointed star. `r if (!identical(Sys.getenv("IN_PKGDOWN"), "true")) "See the [package website](https://flrd.github.io/ggpointless/articles/ggpointless.html#effect-of-iterations) for an animated version."`
+
+```{r chaikin-iterations-gif, echo=FALSE, out.width="60%", eval=identical(Sys.getenv("IN_PKGDOWN"), "true")}
+knitr::include_graphics("../man/figures/chaikin_iterations.gif")
+```
+
+```{r chaikin-iterations-static, echo=FALSE, fig.height = 3, fig.align="center", eval=!identical(Sys.getenv("IN_PKGDOWN"), "true")}
+n_pts   <- 5L
+outer_r <- 1
+inner_r <- 0.38
+ang_out <- seq(pi / 2, pi / 2 + 2 * pi, length.out = n_pts + 1L)[seq_len(n_pts)]
+ang_in  <- ang_out + pi / n_pts
+star <- data.frame(
+  x = c(rbind(outer_r * cos(ang_out), inner_r * cos(ang_in))),
+  y = c(rbind(outer_r * sin(ang_out), inner_r * sin(ang_in)))
+)
+
+ggplot(star, aes(x, y)) +
+  geom_polygon(
+    fill = NA, colour = "#333333", linetype = "dotted", linewidth = 0.55
+  ) +
+  stat_chaikin(
+    geom = "polygon", mode = "closed", iterations = 3,
+    fill = "#311dfc", alpha = 0.20, colour = "#311dfc", linewidth = 0.8
+  ) +
+  coord_equal(clip = "off") +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_line(linetype = "dotted"),
+    axis.text  = element_blank(),
+    axis.ticks = element_blank()
+  )
+```
+
+The source script that generates the animation is `inst/scripts/gen_chaikin_gif.R`.
 
 ### Smoothing a closed polygon with stat_chaikin
 

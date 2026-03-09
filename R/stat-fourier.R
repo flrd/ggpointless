@@ -98,8 +98,9 @@ StatFourier <- ggproto(
       cv_spacing <- stats::sd(x_diffs) / mean(x_diffs)
       if (cv_spacing > 0.5) {
         cli::cli_warn(
-          "Highly irregular x-spacing detected (CV = {signif(cv_spacing, 3)}). \\
-           The uniform-grid interpolation may introduce artefacts."
+          "Highly irregular x-spacing detected \\
+         (coefficient of variation = {signif(cv_spacing, 3)}). \\
+         The uniform-grid interpolation may introduce artefacts."
         )
       }
     }
