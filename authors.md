@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/flrd/ggpointless/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/flrd/ggpointless/blob/v0.2.0/DESCRIPTION)
 
 Döring M (2026). *ggpointless: Extra Geometries and Stats for
 'ggplot2'*. R package version 0.2.0,
