@@ -2,15 +2,18 @@
 
 ## ggpointless (development version)
 
+## ggpointless 0.2.0
+
 ### New features
 
 - New
   [`geom_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
   and
   [`stat_fourier()`](https://flrd.github.io/ggpointless/dev/reference/geom_fourier.md)
-  fit a truncated Fourier series (via FFT) to `x`/`y` data and render
-  the reconstructed curve. Supports optional detrending (`"lm"` or
-  `"loess"`) and harmonic selection via `n_harmonics`
+  fit a truncated Fourier series (via
+  [`stats::fft()`](https://rdrr.io/r/stats/fft.html)) to `x`/`y` data
+  and render the reconstructed curve. Supports optional detrending
+  (`"lm"` or `"loess"`) and harmonic selection via `n_harmonics`
   ([\#7](https://github.com/flrd/ggpointless/issues/7)).
 
 - New
@@ -34,15 +37,16 @@
   [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
   draws points with a radial gradient glow behind each point using
   [`grid::radialGradient()`](https://rdrr.io/r/grid/patterns.html). The
-  glow colour, alpha, and size can be customised via `glow_colour`,
-  `glow_alpha`, and `glow_size`
+  glow alpha, colour, and size can be customised via `glow_alpha`,
+  `glow_colour`, and `glow_size`
   ([\#6](https://github.com/flrd/ggpointless/issues/6)).
 
 ### Breaking changes
 
-- The bundled datasets `co2_ml`, `covid_vac`, and `female_leaders` have
-  been removed from the package. Users who relied on these datasets can
-  obtain them from their original sources: [Mauna Loa
+- The bundled (but outdated) datasets `co2_ml`, `covid_vac`, and
+  `female_leaders` have been removed from the package. These datasets
+  can be obtained from their  
+  original sources: [Mauna Loa
   CO₂](https://gml.noaa.gov/ccgg/trends/data.html), [CDC vaccination
   data](https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status),
   and [Wikipedia female

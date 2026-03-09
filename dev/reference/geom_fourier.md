@@ -336,7 +336,7 @@ df4 <- data.frame(
 
 ggplot(df4, aes(x, y)) +
   geom_fourier()
-#> Warning: Highly irregular x-spacing detected (CV = 1.4). The uniform-grid interpolation
-#> may introduce artefacts.
+#> Warning: Highly irregular x-spacing detected (coefficient of variation = 1.4). The
+#> uniform-grid interpolation may introduce artefacts.
 
 ```

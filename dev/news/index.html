@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ggpointless</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.2.0.990</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,19 +40,23 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="ggpointless-development-version">ggpointless (development version)<a class="anchor" aria-label="anchor" href="#ggpointless-development-version"></a></h2>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="ggpointless-020">ggpointless 0.2.0<a class="anchor" aria-label="anchor" href="#ggpointless-020"></a></h2>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
-<ul><li><p>New <code><a href="../reference/geom_fourier.html">geom_fourier()</a></code> and <code><a href="../reference/geom_fourier.html">stat_fourier()</a></code> fit a truncated Fourier series (via FFT) to <code>x</code>/<code>y</code> data and render the reconstructed curve. Supports optional detrending (<code>"lm"</code> or <code>"loess"</code>) and harmonic selection via <code>n_harmonics</code> (<a href="https://github.com/flrd/ggpointless/issues/7" class="external-link">#7</a>).</p></li>
+<h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
+<ul><li><p>New <code><a href="../reference/geom_fourier.html">geom_fourier()</a></code> and <code><a href="../reference/geom_fourier.html">stat_fourier()</a></code> fit a truncated Fourier series (via <code><a href="https://rdrr.io/r/stats/fft.html" class="external-link">stats::fft()</a></code>) to <code>x</code>/<code>y</code> data and render the reconstructed curve. Supports optional detrending (<code>"lm"</code> or <code>"loess"</code>) and harmonic selection via <code>n_harmonics</code> (<a href="https://github.com/flrd/ggpointless/issues/7" class="external-link">#7</a>).</p></li>
 <li><p>New <code><a href="../reference/geom_catenary.html">geom_arch()</a></code> and <code><a href="../reference/geom_catenary.html">stat_arch()</a></code> draw inverted catenary curves (arches) between successive points, complementing the existing <code><a href="../reference/geom_catenary.html">geom_catenary()</a></code> (<a href="https://github.com/flrd/ggpointless/issues/4" class="external-link">#4</a>).</p></li>
 <li><p>New <code><a href="../reference/geom_area_fade.html">geom_area_fade()</a></code> draws area charts where the fill colour fades from opaque to transparent using <code><a href="https://rdrr.io/r/grid/patterns.html" class="external-link">grid::linearGradient()</a></code>. The fade target alpha is controlled via <code>alpha_fade_to</code> (<a href="https://github.com/flrd/ggpointless/issues/3" class="external-link">#3</a>).</p></li>
-<li><p>New <code><a href="../reference/geom_point_glow.html">geom_point_glow()</a></code> draws points with a radial gradient glow behind each point using <code><a href="https://rdrr.io/r/grid/patterns.html" class="external-link">grid::radialGradient()</a></code>. The glow colour, alpha, and size can be customised via <code>glow_colour</code>, <code>glow_alpha</code>, and <code>glow_size</code> (<a href="https://github.com/flrd/ggpointless/issues/6" class="external-link">#6</a>).</p></li>
+<li><p>New <code><a href="../reference/geom_point_glow.html">geom_point_glow()</a></code> draws points with a radial gradient glow behind each point using <code><a href="https://rdrr.io/r/grid/patterns.html" class="external-link">grid::radialGradient()</a></code>. The glow alpha, colour, and size can be customised via <code>glow_alpha</code>, <code>glow_colour</code>, and <code>glow_size</code> (<a href="https://github.com/flrd/ggpointless/issues/6" class="external-link">#6</a>).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
-<ul><li>The bundled datasets <code>co2_ml</code>, <code>covid_vac</code>, and <code>female_leaders</code> have been removed from the package. Users who relied on these datasets can obtain them from their original sources: <a href="https://gml.noaa.gov/ccgg/trends/data.html" class="external-link">Mauna Loa CO<sub>2</sub></a>, <a href="https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status" class="external-link">CDC vaccination data</a>, and <a href="https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&amp;oldid=1078024588" class="external-link">Wikipedia female leaders</a>, respectively. The <code>vignette("examples")</code> that showcased these datasets has been removed alongside them.</li>
+<h3 id="breaking-changes-0-2-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-2-0"></a></h3>
+<ul><li>The bundled (but outdated) datasets <code>co2_ml</code>, <code>covid_vac</code>, and <code>female_leaders</code> have been removed from the package. These datasets can be obtained from their<br>
+original sources: <a href="https://gml.noaa.gov/ccgg/trends/data.html" class="external-link">Mauna Loa CO<sub>2</sub></a>, <a href="https://covid.cdc.gov/covid-data-tracker/#rates-by-vaccine-status" class="external-link">CDC vaccination data</a>, and <a href="https://en.wikipedia.org/w/index.php?title=List_of_elected_and_appointed_female_heads_of_state_and_government&amp;oldid=1078024588" class="external-link">Wikipedia female leaders</a>, respectively. The <code>vignette("examples")</code> that showcased these datasets has been removed alongside them.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<h3 id="improvements-0-2-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-2-0"></a></h3>
 <ul><li><p>The package now requires R &gt;= 4.2.0 and ggplot2 &gt;= 4.0.0. Several geoms take (mostly internal) advantage of new ggplot2 features such as <code><a href="https://ggplot2.tidyverse.org/reference/make_constructor.html" class="external-link">make_constructor()</a></code>, and <code><a href="https://ggplot2.tidyverse.org/reference/gg_par.html" class="external-link">gg_par()</a></code>.</p></li>
 <li><p>Messages and errors across the package have been migrated to the <code>cli</code> and <code>rlang</code> packages, giving consistent, hyperlink-aware output.</p></li>
 <li><p><code><a href="../reference/geom_catenary.html">geom_catenary()</a></code> gained a vectorized <code>chain_length</code> argument and deprecated <code>chainLength</code> instead (<a href="https://github.com/flrd/ggpointless/issues/4" class="external-link">#4</a>).</p></li>

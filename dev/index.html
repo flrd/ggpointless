@@ -36,7 +36,7 @@
 
     <a class="navbar-brand me-2" href="index.html">ggpointless</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.2.0.990</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,11 +94,9 @@
 <p><strong>Data transformations</strong> — geoms backed by a stat that fits or transforms data:</p>
 <ul>
 <li>
-<code><a href="reference/geom_catenary.html">geom_arch()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_arch()</a></code> – draws a <a href="https://en.wikipedia.org/wiki/Catenary_arch" class="external-link">catenary arch</a>
-</li>
+<code><a href="reference/geom_catenary.html">geom_arch()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_arch()</a></code> – draws a catenary arch</li>
 <li>
-<code><a href="reference/geom_catenary.html">geom_catenary()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_catenary()</a></code> – draws a <a href="https://en.wikipedia.org/wiki/Catenary" class="external-link">catenary curve</a>
-</li>
+<code><a href="reference/geom_catenary.html">geom_catenary()</a></code> &amp; <code><a href="reference/geom_catenary.html">stat_catenary()</a></code> – draws a catenary curve</li>
 <li>
 <code><a href="reference/geom_chaikin.html">geom_chaikin()</a></code> &amp; <code><a href="reference/geom_chaikin.html">stat_chaikin()</a></code> – smooths paths using Chaikin’s corner cutting algorithm</li>
 <li>
@@ -161,7 +159,7 @@
 <span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">60</span>, sd <span class="op">=</span> <span class="fl">0.35</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_fade</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_fade</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-area-fade-1.png" alt="" width="100%" style="display: block; margin: auto;"> By default, the gradient fully transparent at at <code>y = 0</code> (the baseline) and proportionally opaque at the data values. That is, opacity scales with absolute distance from zero, so e.g. <code>y = -1</code> and <code>y = +1</code> always receive the same alpha.</p>
 <p>You can control the alpha value the fill fades to using the <code>alpha_fade_to</code> argument. By that logic you can effectively reverse the direction of the gradient. The outline colour is unaffected from the alpha logic.</p>
@@ -170,17 +168,29 @@
 <p><img src="reference/figures/README-geom-area-fade-reverse-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 <p><code><a href="reference/geom_area_fade.html">geom_area_fade()</a></code> supports the <code>orientation</code> argument familiar from other <code>geom_*</code> functions. With <code>orientation = "y"</code>, you create a horizontal area chart where the gradient fades from <code>x = 0</code> toward the data values.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_fade</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span></span>
-<span>    orientation <span class="op">=</span> <span class="st">"y"</span>,</span>
-<span>    colour <span class="op">=</span> <span class="st">"#333333"</span> <span class="co"># changes outline colour</span></span>
-<span>    <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">x</span><span class="op">)</span>,</span>
+<span>  orientation <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  colour <span class="op">=</span> <span class="st">"#333333"</span> <span class="co"># changes outline colour</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-area-fade-orientation-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+<div class="section level3">
+<h3 id="id_2d-gradient">2D gradient<a class="anchor" aria-label="anchor" href="#id_2d-gradient"></a>
+</h3>
+<p>Since <a href="https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons" class="external-link">ggplot2 version 4.0.0</a> was released both <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_area()</a></code> and <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon()</a></code> allow a varying <code>fill</code> aesthetic within a group. <code><a href="reference/geom_area_fade.html">geom_area_fade()</a></code> creates a 2D-gradient in such cases which combines the vertical and horizontal gradients.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">y</span><span class="op">)</span>, colour <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html" class="external-link">scale_fill_continuous</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/colour_ramp.html" class="external-link">colour_ramp</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-geom-area-fade-2D-gradient-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
+<blockquote>
+<p><strong>Note</strong> – Not all graphic devices support this kind of gradient, see <a href="https://flrd.github.io/ggpointless/articles/ggpointless.html"><code>vignette("ggpointless")</code></a> for more details and examples.</p>
+</blockquote>
+</div>
 <div class="section level3">
 <h3 id="multiple-groups">Multiple groups<a class="anchor" aria-label="anchor" href="#multiple-groups"></a>
 </h3>
 <p>When your data contains multiple groups those are stacked (<code>position = "stack"</code>) and aligned (<code>stat = "align"</code>) – just like <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_area()</a></code> does it. By default, the alpha fade scales to the global maximum across <em>all</em> groups (<code>alpha_scope = "global"</code>), so equal <code>|y|</code> always maps to equal opacity.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"b"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
 <span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>,</span>
@@ -191,7 +201,7 @@
 <span>  <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-area-fade-multiple-groups-basic-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 <p>When groups have very different amplitudes or you may not use the default <code>position = "stack"</code> but <code>stat = "identity"</code> instead, this can make smaller groups nearly invisible next to dominant groups.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_alpha_scope</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"b"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
 <span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>,</span>
@@ -204,7 +214,7 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-area-fade-global-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 <p>Setting <code>alpha_scope = "group"</code> lets the algorithm calculate the alpha range for each group separately.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_alpha_scope</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">g</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># alpha_scope = "group": each group uses the alpha range independently</span></span>
@@ -213,19 +223,6 @@
 <span>  position <span class="op">=</span> <span class="st">"identity"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-area-fade-group-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
-</div>
-<div class="section level3">
-<h3 id="id_2d-gradient">2D gradient<a class="anchor" aria-label="anchor" href="#id_2d-gradient"></a>
-</h3>
-<p>Since <a href="https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons" class="external-link">ggplot2 version 4.0.0</a> was released both <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_area()</a></code> and <code><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon()</a></code> allow a varying <code>fill</code> aesthetic within a group. <code><a href="reference/geom_area_fade.html">geom_area_fade()</a></code> creates a 2D-gradient in such cases which combines the vertical and horizontal gradients.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">economics</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">date</span>, <span class="va">unemploy</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="reference/geom_area_fade.html">geom_area_fade</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">uempmed</span><span class="op">)</span>, colour <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html" class="external-link">scale_fill_continuous</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/colour_ramp.html" class="external-link">colour_ramp</a></span><span class="op">(</span><span class="va">cols</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-geom-area-fade-2D-gradient-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
-<blockquote>
-<p><strong>Note</strong> – Not all graphic devices support this kind of gradient, see <a href="https://flrd.github.io/ggpointless/articles/ggpointless.html"><code>vignette("ggpointless")</code></a> for more details and examples.</p>
-</blockquote>
 </div>
 </div>
 <div class="section level2">
@@ -274,9 +271,7 @@
 <span>    <span class="fu"><a href="reference/geom_chaikin.html">geom_chaikin</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>, color <span class="op">=</span> <span class="va">color</span>, mode <span class="op">=</span> <span class="va">mode</span><span class="op">)</span></span>
 <span>  <span class="op">}</span>, data <span class="op">=</span> <span class="va">lst</span><span class="op">$</span><span class="va">data</span>, color <span class="op">=</span> <span class="va">lst</span><span class="op">$</span><span class="va">color</span>, mode <span class="op">=</span> <span class="va">lst</span><span class="op">$</span><span class="va">mode</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1.5</span>, y <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; `mode` wins over deprecated `closed`. Use `mode`.</span></span>
-<span><span class="co">#&gt; This message is displayed once every 8 hours.</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-geom-chaikin-1.png" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">

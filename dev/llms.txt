@@ -37,11 +37,11 @@ transforms data:
 - [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
   &
   [`stat_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-  – draws a [catenary arch](https://en.wikipedia.org/wiki/Catenary_arch)
+  – draws a catenary arch
 - [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
   &
   [`stat_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-  – draws a [catenary curve](https://en.wikipedia.org/wiki/Catenary)
+  – draws a catenary curve
 - [`geom_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
   &
   [`stat_chaikin()`](https://flrd.github.io/ggpointless/dev/reference/geom_chaikin.md)
@@ -131,7 +131,7 @@ df_fade <- data.frame(
   y = cumsum(rnorm(60, sd = 0.35))
 )
 
-p <- ggplot(df_fade, aes(x, y - mean(y)))
+p <- ggplot(df_fade, aes(x, y))
 p + geom_area_fade()
 ```
 
@@ -158,14 +158,38 @@ functions. With `orientation = "y"`, you create a horizontal area chart
 where the gradient fades from `x = 0` toward the data values.
 
 ``` r
-ggplot(df_fade, aes(y, x)) +
-  geom_area_fade(
-    orientation = "y",
-    colour = "#333333" # changes outline colour
-    )
+p + geom_area_fade(
+  aes(y, x),
+  orientation = "y",
+  colour = "#333333" # changes outline colour
+  )
 ```
 
 ![](reference/figures/README-geom-area-fade-orientation-1.png)
+
+### 2D gradient
+
+Since [ggplot2 version
+4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
+was released both
+[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+and
+[`geom_ribbon()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
+allow a varying `fill` aesthetic within a group.
+[`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
+creates a 2D-gradient in such cases which combines the vertical and
+horizontal gradients.
+
+``` r
+p + geom_area_fade(aes(fill = y), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
+```
+
+![](reference/figures/README-geom-area-fade-2D-gradient-1.png)
+
+> **Note** – Not all graphic devices support this kind of gradient, see
+> [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+> for more details and examples.
 
 ### Multiple groups
 
@@ -222,31 +246,6 @@ p + geom_area_fade(
 ```
 
 ![](reference/figures/README-geom-area-fade-group-1.png)
-
-### 2D gradient
-
-Since [ggplot2 version
-4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
-was released both
-[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-and
-[`geom_ribbon()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-allow a varying `fill` aesthetic within a group.
-[`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
-creates a 2D-gradient in such cases which combines the vertical and
-horizontal gradients.
-
-``` r
-ggplot(economics, aes(date, unemploy)) +
-  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-![](reference/figures/README-geom-area-fade-2D-gradient-1.png)
-
-> **Note** – Not all graphic devices support this kind of gradient, see
-> [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-> for more details and examples.
 
 ## geom_catenary
 
@@ -311,8 +310,6 @@ ggplot(mapping = aes(x, y)) +
   }, data = lst$data, color = lst$color, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
-#> `mode` wins over deprecated `closed`. Use `mode`.
-#> This message is displayed once every 8 hours.
 ```
 
 ![](reference/figures/README-geom-chaikin-1.png)
@@ -466,11 +463,11 @@ Layer Functions
 - [`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
   [`stat_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
   : Lexis diagrams
+- [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
+  : Points that Glow
 - [`geom_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
   [`stat_pointless()`](https://flrd.github.io/ggpointless/dev/reference/geom_pointless.md)
   : Emphasize some observations with points
-- [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
-  : Points that Glow
 
 # Articles
 
