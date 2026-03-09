@@ -1,3 +1,5 @@
+# ggpointless (development version)
+
 # ggpointless 0.2.0
 
 ## New features
