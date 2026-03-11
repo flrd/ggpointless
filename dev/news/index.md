@@ -4,6 +4,8 @@
 
 ## ggpointless 0.2.0
 
+CRAN release: 2026-03-09
+
 ### New features
 
 - New
