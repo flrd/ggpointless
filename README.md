@@ -5,8 +5,7 @@
 
 <!-- badges: start -->
 
-[![CRAN
-status](https://www.r-pkg.org/badges/version/ggpointless)](https://CRAN.R-project.org/package=ggpointless)
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/ggpointless)](https://cran.r-project.org/package=ggpointless)
 [![R-CMD-check](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/flrd/ggpointless/actions/workflows/R-CMD-check.yaml)
 ![downloads](https://cranlogs.r-pkg.org/badges/grand-total/ggpointless)
 [![Codecov test
@@ -25,7 +24,7 @@ You can install ggpointless from CRAN with:
 install.packages("ggpointless")
 ```
 
-Or install development version from Github with
+Or install development version from GitHub with
 
 ``` r
 # install.packages("pak")
@@ -75,40 +74,6 @@ theme_set(
   )
 ```
 
-## geom_arch
-
-`geom_arch()` draws a catenary arch (inverted catenary curve) between
-successive points. Hence it’s mirroring `geom_catenary()`.
-
-``` r
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-p <- ggplot(df_arch, aes(x, y)) +
-    geom_point(size = 3) +
-  ylim(0, 3.5)
-
-p + geom_arch()
-```
-
-<img src="man/figures/README-geom-arch-basic-example-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-By default the arch length is twice the Euclidean distance. You can
-change that for each segment using the arguments `arch_length` or
-`arch_height` (vertical rise above the *highest* endpoint of each
-segment).
-
-``` r
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-ggplot(df_arch, aes(x, y)) +
-  geom_arch(
-    arch_height = c(1.5, NA, 0.5),
-    arch_length = c(NA, 6, NA)
-    ) +
-  geom_point(size = 3) +
-  ylim(0, 3.5)
-```
-
-<img src="man/figures/README-geom-arch-height-sag-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
 ## geom_area_fade
 
 `geom_area_fade()` behaves like
@@ -128,15 +93,15 @@ p + geom_area_fade()
 ```
 
 <img src="man/figures/README-geom-area-fade-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-By default, the gradient fully transparent at at `y = 0` (the baseline)
+By default, the gradient is fully transparent at `y = 0` (the baseline)
 and proportionally opaque at the data values. That is, opacity scales
 with absolute distance from zero, so e.g. `y = -1` and `y = +1` always
-receive the same alpha.
+receive the same alpha. The outline colour is unaffected by the alpha
+logic.
 
-You can control the alpha value the fill fades to using the
-`alpha_fade_to` argument. By that logic you can effectively reverse the
-direction of the gradient. The outline colour is unaffected from the
-alpha logic.
+You can control the alpha value the fill fades to using the `alpha` and
+`alpha_fade_to` arguments. You can effectively reverse the direction of
+the gradient like so:
 
 ``` r
 p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
@@ -201,8 +166,8 @@ ggplot(df1, aes(x, y, fill = g)) +
 <img src="man/figures/README-geom-area-fade-multiple-groups-basic-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 When groups have very different amplitudes or you may not use the
-default `position = "stack"` but `stat = "identity"` instead, this can
-make smaller groups nearly invisible next to dominant groups.
+default `position = "stack"` but `position = "identity"` instead, this
+can make smaller groups nearly invisible next to dominant groups.
 
 ``` r
 df_alpha_scope <- data.frame(
@@ -234,13 +199,68 @@ p + geom_area_fade(
 
 <img src="man/figures/README-geom-area-fade-group-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+## geom_point_glow
+
+`geom_point_glow()` is a drop-in replacement for
+[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
+that adds a radial gradient glow behind each point using
+[`grid::radialGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
+The glow colour, transparency (`glow_alpha`), and radius (`glow_size`)
+can be set independently of the point itself; by default the glow
+inherits the point colour and size.
+
+``` r
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point_glow(glow_size = 5, glow_alpha = .5) +
+  coord_cartesian(clip = "off")
+```
+
+<img src="man/figures/README-geom-point-glow-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+## geom_arch
+
+`geom_arch()` draws a [catenary
+arch](https://en.wikipedia.org/wiki/Catenary_arch) (inverted catenary
+curve) between successive points.
+
+``` r
+df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
+p <- ggplot(df_arch, aes(x, y)) +
+    geom_point(size = 3) +
+  ylim(0, 3.5)
+
+p + geom_arch()
+```
+
+<img src="man/figures/README-geom-arch-basic-example-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+By default the arch length is twice the Euclidean distance. You can
+change that for each segment using the arguments `arch_length` or
+`arch_height` (vertical rise above the *highest* endpoint of each
+segment).
+
+``` r
+df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
+ggplot(df_arch, aes(x, y)) +
+  geom_arch(
+    arch_height = c(1.5, NA, 0.5),
+    arch_length = c(NA, 6, NA)
+    ) +
+  geom_point(size = 3) +
+  ylim(0, 3.5)
+```
+
+<img src="man/figures/README-geom-arch-height-sag-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 ## geom_catenary
 
-`geom_catenary()` draws a flexible curve that simulates a chain or rope
-hanging loosely between successive points. By default, the chain length
-is twice the Euclidean distance between each `x`/`y` pair. The shape can
-be controlled via `chain_length` or `sag`, i.e vertical drop below the
-*lowest* endpoint of each segment.
+`geom_catenary()` draws a [catenary
+curve](https://en.wikipedia.org/wiki/Catenary_arch), i.e., a flexible
+curve that simulates a chain or rope hanging loosely between successive
+points. By default, the chain length is twice the Euclidean distance
+between each `x`/`y` pair. The shape can be controlled via
+`chain_length` or `sag`, i.e, vertical drop below the *lowest* endpoint
+of each segment.
 
 ``` r
 set.seed(5)
@@ -309,7 +329,9 @@ an exact interpolating fit; reducing `n_harmonics` progressively smooths
 the result.
 
 The animation below shows how `geom_fourier()` approximates a square
-wave as the number of harmonics grows from `n = 1` to the Nyquist limit:
+wave as the number of harmonics grows from `n = 1` to the Nyquist limit,
+where the [Gibbs
+phenomenon](https://en.wikipedia.org/wiki/Gibbs_phenomenon) is visible.
 
 <img src="man/figures/fourier_square_wave.gif" alt="" width="100%" style="display: block; margin: auto;" />
 
@@ -368,24 +390,6 @@ ggplot(df2, aes(x = x, xend = xend, color = key)) +
 
 See also the [`LexisPlotR`
 package](https://github.com/ottlngr/LexisPlotR).
-
-## geom_point_glow
-
-`geom_point_glow()` is a drop-in replacement for
-[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-that adds a radial gradient glow behind each point using
-[`grid::radialGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
-The glow colour, transparency (`glow_alpha`), and radius (`glow_size`)
-can be set independently of the point itself; by default the glow
-inherits the point colour and size.
-
-``` r
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point_glow(glow_size = 5, glow_alpha = .5) +
-  coord_cartesian(clip = "off")
-```
-
-<img src="man/figures/README-geom-point-glow-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## geom_pointless
 
