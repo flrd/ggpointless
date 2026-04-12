@@ -20,6 +20,11 @@ GeomChaikin <- ggplot2::ggproto(
 #' Chaikin's corner-cutting algorithm can be used to smooth sharp
 #' corners of a path.
 #'
+#' @concept path smoothing
+#' @concept corner cutting
+#' @concept smooth curve
+#' @concept curve fitting
+#'
 #' @details
 #' Chaikin's corner cutting algorithm iteratively turns a jagged path into
 #' a smooth path.

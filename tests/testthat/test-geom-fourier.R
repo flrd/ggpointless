@@ -28,9 +28,9 @@ test_that("invalid detrend value is rejected", {
   expect_error(ggplotGrob(p), "detrend")
 })
 
-test_that("non-positive n_harmonics triggers a warning and falls back to 1", {
+test_that("negative n_harmonics errors informatively", {
   p <- ggplot(df_sine, aes(x, y)) + geom_fourier(n_harmonics = -1)
-  expect_warning(ggplotGrob(p), "n_harmonics")
+  expect_error(ggplotGrob(p), "n_harmonics")
 })
 
 test_that("n_harmonics exceeding Nyquist limit triggers a warning", {
@@ -109,4 +109,149 @@ test_that("stat_fourier is equivalent to geom_fourier", {
     stat_fourier(geom = "line") +
     theme_minimal()
   vdiffr::expect_doppelganger("stat_fourier direct", p)
+})
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+test_that("GoG/data: empty dataset does not error", {
+  p <- ggplot(data.frame(x = numeric(), y = numeric()), aes(x, y)) +
+    geom_fourier()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: single point does not error", {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) + geom_fourier()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: two points does not error", {
+  p <- ggplot(data.frame(x = c(0, 1), y = c(0, 1)), aes(x, y)) +
+    geom_fourier()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: all-NA y values do not error", {
+  p <- ggplot(data.frame(x = 1:5, y = NA_real_), aes(x, y)) +
+    geom_fourier()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Mapping
+# ---------------------------------------------------------------------------
+
+test_that("GoG/mapping: colour aesthetic mapping per group does not error", {
+  p <- ggplot(df_two, aes(x, y, colour = g)) + geom_fourier()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/mapping: inherit.aes = FALSE isolates from plot mapping", {
+  p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+    geom_point() +
+    geom_fourier(data = df_sine, mapping = aes(x, y), inherit.aes = FALSE)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Layer
+# ---------------------------------------------------------------------------
+
+test_that("GoG/layer: multiple geom_fourier layers do not error", {
+  p <- ggplot(df_sine, aes(x, y)) +
+    geom_fourier(n_harmonics = 2, colour = "red") +
+    geom_fourier(n_harmonics = 10, colour = "blue")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/layer: geom_fourier standalone does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Scales
+# ---------------------------------------------------------------------------
+
+test_that("GoG/scales: scale_y_reverse does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + scale_y_reverse()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: explicit limits do not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() +
+    scale_y_continuous(limits = c(-5, 5))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: expand = c(0, 0) does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() +
+    scale_y_continuous(expand = c(0, 0))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Coord
+# ---------------------------------------------------------------------------
+
+test_that("GoG/coord: coord_cartesian zoom does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() +
+    coord_cartesian(ylim = c(-0.5, 0.5))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_fixed does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + coord_fixed()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_flip does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + coord_flip()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_polar does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + coord_polar()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Facets
+# ---------------------------------------------------------------------------
+
+test_that("GoG/facets: facet_wrap with free scales does not error", {
+  p <- ggplot(df_two, aes(x, y)) + geom_fourier() +
+    facet_wrap(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/facets: facet_grid with free scales does not error", {
+  p <- ggplot(df_two, aes(x, y)) + geom_fourier() +
+    facet_grid(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+
+test_that("GoG/theme: theme_void does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + theme_void()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_classic does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + theme_classic()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_bw does not error", {
+  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + theme_bw()
+  expect_no_error(ggplotGrob(p))
 })

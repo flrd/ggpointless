@@ -252,6 +252,11 @@ ggplot(df4, aes(x, y)) +
 \code{\link[=lm]{lm()}} and \code{\link[=loess]{loess()}} for the optional detrending fits,
 \code{\link[=geom_catenary]{geom_catenary()}} and \code{\link[=geom_chaikin]{geom_chaikin()}} for other curve-fitting geoms.
 }
+\concept{FFT}
+\concept{Fourier series}
+\concept{curve fitting}
+\concept{frequency analysis}
+\concept{smooth curve}
 \section{Aesthetics}{
 
 \code{geom_fourier()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

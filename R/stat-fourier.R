@@ -22,7 +22,13 @@ StatFourier <- ggproto(
     # Validate n_harmonics
     if (!is.null(params$n_harmonics)) {
       n_h <- params$n_harmonics
-      if (!rlang::is_integerish(n_h, n = 1L, finite = TRUE) || n_h < 1L) {
+      if (!is.numeric(n_h) || length(n_h) != 1L ||
+          !is.finite(n_h) || !rlang::is_integerish(n_h) || n_h < 0L) {
+        cli::cli_abort(
+          "{.arg n_harmonics} must be a non-negative integer, not {.obj_type_friendly {n_h}}."
+        )
+      }
+      if (n_h == 0L) {
         cli::cli_warn(
           "{.arg n_harmonics} must be a positive integer. Using {.val 1L}."
         )

@@ -4,8 +4,7 @@
 #' @export
 GeomFourier <- ggproto(
   "GeomFourier",
-  ggplot2::GeomLine,
-  stat = "fourier"
+  ggplot2::GeomLine
 )
 
 #' @title Fourier Series Smoothing
@@ -17,6 +16,12 @@ GeomFourier <- ggproto(
 #' `x` positions, interpolated to a uniform grid, optionally de-trended,
 #' transformed via [stats::fft()], and then reconstructed from the requested
 #' number of harmonics.
+#'
+#' @concept Fourier series
+#' @concept curve fitting
+#' @concept smooth curve
+#' @concept FFT
+#' @concept frequency analysis
 #'
 #' @section Period convention:
 #' The DFT treats the input as one period of an infinitely repeating signal.
