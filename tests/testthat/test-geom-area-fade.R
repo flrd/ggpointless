@@ -412,3 +412,149 @@ test_that(".draw_key_area_fade: alpha and alpha_fade_to are encoded in gradient 
   # Two colour stops; first should be more opaque than second
   expect_length(grad$colours, 2L)
 })
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+test_that("GoG/data: empty dataset does not error", {
+  p <- ggplot(data.frame(x = numeric(), y = numeric()), aes(x, y)) +
+    geom_area_fade()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: single point does not error", {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) + geom_area_fade()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: all-NA y values do not error", {
+  p <- ggplot(data.frame(x = 1:4, y = NA_real_), aes(x, y)) +
+    geom_area_fade()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: negative y values do not error", {
+  p <- ggplot(df_neg, aes(x, y)) + geom_area_fade()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Mapping
+# ---------------------------------------------------------------------------
+
+test_that("GoG/mapping: fill aesthetic mapping does not error", {
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      compositing = character(0L),
+      patterns = c("LinearGradient", "RadialGradient", "TilingPattern")
+    ),
+    .package = "grDevices"
+  )
+  p <- ggplot(df_groups, aes(x, y, fill = g)) + geom_area_fade()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/mapping: inherit.aes = FALSE isolates from plot mapping", {
+  p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+    geom_point() +
+    geom_area_fade(data = df_pos, mapping = aes(x, y), inherit.aes = FALSE)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Layer
+# ---------------------------------------------------------------------------
+
+test_that("GoG/layer: multiple geom_area_fade layers do not error", {
+  p <- ggplot(df_pos, aes(x, y)) +
+    geom_area_fade(fill = "red", alpha = 0.3) +
+    geom_area_fade(fill = "blue", alpha = 0.3, alpha_fade_to = 0.5)
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/layer: geom_area_fade standalone does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Scales
+# ---------------------------------------------------------------------------
+
+test_that("GoG/scales: scale_y_reverse does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + scale_y_reverse()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: explicit limits do not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() +
+    scale_y_continuous(limits = c(-5, 10))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: expand = c(0, 0) does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() +
+    scale_y_continuous(expand = c(0, 0))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Coord
+# ---------------------------------------------------------------------------
+
+test_that("GoG/coord: coord_cartesian zoom does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() +
+    coord_cartesian(ylim = c(0.5, 2))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_flip does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + coord_flip()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_polar does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + coord_polar()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Facets
+# ---------------------------------------------------------------------------
+
+test_that("GoG/facets: facet_wrap with free scales does not error", {
+  p <- ggplot(df_groups, aes(x, y)) + geom_area_fade() +
+    facet_wrap(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/facets: facet_grid with free scales does not error", {
+  p <- ggplot(df_groups, aes(x, y)) + geom_area_fade() +
+    facet_grid(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+
+test_that("GoG/theme: theme_void does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + theme_void()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_classic does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + theme_classic()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_bw does not error", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + theme_bw()
+  expect_no_error(ggplotGrob(p))
+})

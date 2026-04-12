@@ -261,6 +261,10 @@ Statistics, The University of Auckland. Version 3.
 \code{\link[ggplot2:geom_ribbon]{ggplot2::geom_area()}} for fully opaque area charts,
 the \href{https://ggfx.data-imaginist.com/}{ggfx package} for real magic.
 }
+\concept{area plot}
+\concept{fading gradient}
+\concept{stacked area}
+\concept{time series}
 \section{Aesthetics}{
 
 \code{geom_area_fade()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
