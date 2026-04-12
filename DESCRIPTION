@@ -32,23 +32,40 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 Collate:
     'aaa.R'
+    'geom-path-fade.R'
+    'geom-segment-fade.R'
+    'geom-abline-fade.R'
     'geom-area-fade.R'
+    'geom-bar-cells.R'
     'geom-catenary.R'
     'geom-chaikin.R'
+    'geom-col-fade.R'
+    'geom-curve-fade.R'
+    'geom-density-fade.R'
     'geom-fourier.R'
+    'geom-freqpoly-fade.R'
+    'geom-gridline.R'
+    'geom-histogram-fade.R'
     'geom-lexis.R'
+    'geom-line-fade.R'
+    'geom-pie-fade.R'
     'geom-point-glow.R'
     'geom-pointless.R'
+    'geom-rect-fade.R'
+    'geom-ridgeline-fade.R'
+    'geom-step-fade.R'
     'ggpointless-package.R'
+    'position-ridgeline.R'
+    'stat-bar-cells.R'
     'stat-catenary.R'
+    'stat-chaikin.R'
     'stat-fourier.R'
     'stat-lexis.R'
     'stat-pointless.R'
-    'stat-chaikin.R'
 Imports:
     cli,
     grid,
     lifecycle,
     rlang,
     stats
-Language: en-GB
+Language: en-US
