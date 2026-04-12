@@ -71,3 +71,155 @@ test_that("readme example works", {
     theme_minimal()
   vdiffr::expect_doppelganger("readme geom_pointless example", p)
 })
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+test_that("GoG/data: empty dataset does not error", {
+  p <- ggplot(data.frame(x = numeric(), y = numeric()), aes(x, y)) +
+    geom_line() + geom_pointless()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: single-row dataset does not error", {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
+    geom_pointless(location = "all")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/data: all-NA y values do not error", {
+  p <- ggplot(data.frame(x = 1:3, y = NA_real_), aes(x, y)) +
+    geom_pointless()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Mapping
+# ---------------------------------------------------------------------------
+
+test_that("GoG/mapping: after_stat(location) colour mapping works", {
+  p <- ggplot(data.frame(x = 1:5, y = c(3, 1, 5, 2, 4)), aes(x, y)) +
+    geom_pointless(aes(colour = after_stat(location)), location = "all")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/mapping: inherit.aes = FALSE isolates from plot mapping", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5, g = letters[1:5]),
+              aes(x, y, colour = g)) +
+    geom_line() +
+    geom_pointless(data = data.frame(x = 1:3, y = 1:3),
+                   inherit.aes = FALSE, mapping = aes(x, y))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Layer
+# ---------------------------------------------------------------------------
+
+test_that("GoG/layer: multiple geom_pointless layers do not error", {
+  p <- ggplot(data.frame(x = 1:5, y = c(3, 1, 5, 2, 4)), aes(x, y)) +
+    geom_line() +
+    geom_pointless(location = "first", colour = "red") +
+    geom_pointless(location = "last", colour = "blue")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/layer: geom_pointless before geom_line does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_pointless() + geom_line()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Scales
+# ---------------------------------------------------------------------------
+
+test_that("GoG/scales: scale_y_log10 does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = c(1, 10, 100, 10, 1)), aes(x, y)) +
+    geom_line() + geom_pointless(location = "all") + scale_y_log10()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: scale_y_reverse does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() + scale_y_reverse()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: explicit limits do not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() +
+    scale_y_continuous(limits = c(-10, 10))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Coord
+# ---------------------------------------------------------------------------
+
+test_that("GoG/coord: coord_cartesian zoom does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = c(3, 1, 5, 2, 4)), aes(x, y)) +
+    geom_line() + geom_pointless(location = "all") +
+    coord_cartesian(ylim = c(2, 4))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_flip does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() + coord_flip()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_polar does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() + coord_polar()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Facets
+# ---------------------------------------------------------------------------
+
+test_that("GoG/facets: facet_wrap with free scales does not error", {
+  df <- data.frame(x = rep(1:5, 2), y = c(1:5, 5:1), g = rep(c("a", "b"), each = 5))
+  p <- ggplot(df, aes(x, y)) +
+    geom_line() + geom_pointless(location = "all") +
+    facet_wrap(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/facets: facet_grid does not error", {
+  df <- data.frame(x = rep(1:5, 2), y = c(1:5, 5:1), g = rep(c("a", "b"), each = 5))
+  p <- ggplot(df, aes(x, y)) +
+    geom_line() + geom_pointless() +
+    facet_grid(~g)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+
+test_that("GoG/theme: theme_void does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() + theme_void()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_classic does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() + theme_classic()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_bw does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
+    geom_line() + geom_pointless() + theme_bw()
+  expect_no_error(ggplotGrob(p))
+})

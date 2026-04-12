@@ -15,6 +15,10 @@ GeomPointless <- ggproto(
 #' but is not particularly useful on its own - hence its name - but hopefully
 #' in conjunction with `geom_line()` and friends, see examples.
 #'
+#' @concept selective points
+#' @concept highlight observations
+#' @concept extreme points
+#'
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams ggplot2::layer
 #' @param location Position(s) to highlight: `"minimum"`, `"maximum"`,

@@ -250,6 +250,9 @@ p + geom_pointless(
 \seealso{
 \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}
 }
+\concept{extreme points}
+\concept{highlight observations}
+\concept{selective points}
 \section{Aesthetics}{
 
 \code{geom_pointless()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
