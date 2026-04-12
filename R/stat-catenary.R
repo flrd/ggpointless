@@ -306,20 +306,13 @@ StatCatenary <- ggproto(
   extra_params = c("na.rm", "chain_length", "chainLength"),
 
   setup_params = \(data, params) {
-    has_chainLength <- !is.null(params$chainLength)
-    has_chain_length <- !is.null(params$chain_length)
-
-    if (has_chainLength && has_chain_length) {
-      cli::cli_inform(
-        "Note that {.arg chain_length} wins over deprecated {.arg chainLength}. \\
-        Use {.arg chain_length}.",
-        .frequency = "regularly",
-        .frequency_id = "catenary_chain_length_wins"
+    if (!is.null(params$chainLength)) {
+      lifecycle::deprecate_stop(
+        "0.2.0",
+        "ggpointless::stat_catenary(chainLength)",
+        "ggpointless::stat_catenary(chain_length)"
       )
-      # drop chainLength
-      params$chainLength <- NULL
     }
-
     params
   },
 

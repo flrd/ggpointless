@@ -204,6 +204,10 @@ Computer Graphics and Image Processing 3 (1974), 346–349
 The \href{https://strimas.com/smoothr/}{smoothr} package offers tools to
 smooth and tidy spatial features
 }
+\concept{corner cutting}
+\concept{curve fitting}
+\concept{path smoothing}
+\concept{smooth curve}
 \section{Aesthetics}{
 
 \code{geom_chaikin()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
