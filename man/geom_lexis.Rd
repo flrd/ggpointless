@@ -218,14 +218,14 @@ ggplot(df3, aes(x = x, xend = xend)) +
  • \tab \strong{\code{\link[ggplot2:aes_position]{xend}}} \tab   \cr
  • \tab \strong{\code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
- • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → \code{"black"} \cr
- • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{fill}} \tab → \code{NA} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{fill}} \tab → via \code{theme()} \cr
  • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
- • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → \code{"solid"} \cr
- • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → \code{0.5} \cr
- • \tab \code{\link[ggplot2:aes_linetype_size_shape]{shape}} \tab → \code{19} \cr
- • \tab \code{\link[ggplot2:aes_linetype_size_shape]{size}} \tab → \code{1.5} \cr
- • \tab \code{stroke} \tab → \code{0.5} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{shape}} \tab → via \code{theme()} \cr
+ • \tab \code{\link[ggplot2:aes_linetype_size_shape]{size}} \tab → via \code{theme()} \cr
+ • \tab \code{stroke} \tab → via \code{theme()} \cr
 }
 
 Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.

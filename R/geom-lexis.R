@@ -87,14 +87,14 @@ GeomLexis <- ggproto(
     "linejoin"
   ),
   default_aes = aes(
-    shape = 19,
-    colour = "black",
-    linetype = "solid",
-    linewidth = 0.5,
-    size = 1.5,
-    fill = NA,
-    alpha = NA,
-    stroke = 0.5
+    shape     = from_theme(pointshape),
+    colour    = from_theme(colour %||% ink),
+    linetype  = from_theme(linetype),
+    linewidth = from_theme(linewidth),
+    size      = from_theme(pointsize),
+    fill      = from_theme(fill %||% NA),
+    alpha     = NA,
+    stroke    = from_theme(borderwidth)
   ),
 
   draw_group = \(
@@ -107,15 +107,15 @@ GeomLexis <- ggproto(
     point_show = TRUE,
     point_colour = NULL
   ) {
-    if (!is.logical(gap_filler)) {
+    if (!is.logical(gap_filler) || is.na(gap_filler)) {
       cli::cli_abort(
-        "{.arg gap_filler} must be a logical value, not {.cls {class(gap_filler)}}."
+        "{.arg gap_filler} must be {.val TRUE} or {.val FALSE}, not {.obj_type_friendly {gap_filler}}."
       )
     }
 
-    if (!is.logical(point_show)) {
+    if (!is.logical(point_show) || is.na(point_show)) {
       cli::cli_abort(
-        "{.arg point_show} must be a logical value, not {.cls {class(point_show)}}."
+        "{.arg point_show} must be {.val TRUE} or {.val FALSE}, not {.obj_type_friendly {point_show}}."
       )
     }
 

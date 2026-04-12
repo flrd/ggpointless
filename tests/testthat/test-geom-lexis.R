@@ -89,3 +89,148 @@ test_that("draw_key_lexis: point_show = FALSE returns the segment grob only (no 
   expect_false(inherits(result, "gTree"))
   expect_s3_class(result, "segments")
 })
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+test_that("GoG/data: empty dataset does not error", {
+  p <- ggplot(data.frame(x = numeric(), xend = numeric()), aes(x = x, xend = xend)) +
+    geom_lexis()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: single-row dataset does not error", {
+  p <- ggplot(data.frame(x = 0, xend = 5), aes(x = x, xend = xend)) +
+    geom_lexis()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/data: all-NA xend values do not error", {
+  p <- ggplot(data.frame(x = c(0, 1), xend = NA_real_), aes(x = x, xend = xend)) +
+    geom_lexis()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: zero-length segment (x == xend) does not error", {
+  p <- ggplot(data.frame(x = 1, xend = 1), aes(x = x, xend = xend)) +
+    geom_lexis()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Mapping
+# ---------------------------------------------------------------------------
+
+test_that("GoG/mapping: colour aesthetic does not error", {
+  p <- ggplot(df3, aes(x = x, xend = xend, colour = key)) + geom_lexis()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/mapping: after_stat(type) linetype mapping works", {
+  p <- ggplot(df3, aes(x = x, xend = xend, colour = key)) +
+    geom_lexis(aes(linetype = after_stat(type)))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Layer
+# ---------------------------------------------------------------------------
+
+test_that("GoG/layer: multiple geom_lexis layers do not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) +
+    geom_lexis(colour = "red") +
+    geom_lexis(colour = "blue", linewidth = 2)
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/layer: geom_lexis standalone does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Scales
+# ---------------------------------------------------------------------------
+
+test_that("GoG/scales: scale_x_reverse does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + scale_x_reverse()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: explicit limits do not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() +
+    scale_x_continuous(limits = c(-5, 10))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: expand = c(0, 0) does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() +
+    scale_x_continuous(expand = c(0, 0))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Coord
+# ---------------------------------------------------------------------------
+
+test_that("GoG/coord: coord_cartesian zoom does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() +
+    coord_cartesian(xlim = c(0, 2))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_fixed does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + coord_fixed()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_flip does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + coord_flip()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_polar does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + coord_polar()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Facets
+# ---------------------------------------------------------------------------
+
+test_that("GoG/facets: facet_wrap with free scales does not error", {
+  p <- ggplot(df3, aes(x = x, xend = xend, colour = key)) +
+    geom_lexis() + facet_wrap(~key, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/facets: facet_grid does not error", {
+  p <- ggplot(df3, aes(x = x, xend = xend)) +
+    geom_lexis() + facet_grid(~key)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+
+test_that("GoG/theme: theme_void does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_void()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_classic does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_classic()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_bw does not error", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_bw()
+  expect_no_error(ggplotGrob(p))
+})
