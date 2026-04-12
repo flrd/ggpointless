@@ -202,3 +202,143 @@ test_that("draw_panel: fixed glow_size is applied to all points", {
                                       glow_size   = 7)
   expect_s3_class(result, "gList")
 })
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+test_that("GoG/data: single point does not error", {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) + geom_point_glow()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/data: all-NA y values do not error", {
+  p <- ggplot(data.frame(x = 1:3, y = NA_real_), aes(x, y)) +
+    geom_point_glow()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: negative coordinates do not error", {
+  p <- ggplot(data.frame(x = c(-3, -1, 0), y = c(-2, 1, -4)), aes(x, y)) +
+    geom_point_glow()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Mapping
+# ---------------------------------------------------------------------------
+
+test_that("GoG/mapping: colour aesthetic mapping does not error", {
+  p <- ggplot(df, aes(x, y, colour = g)) + geom_point_glow()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/mapping: inherit.aes = FALSE isolates from plot mapping", {
+  p <- ggplot(df, aes(x, y, colour = g)) +
+    geom_point() +
+    geom_point_glow(data = data.frame(x = 3, y = 1),
+                    mapping = aes(x, y), inherit.aes = FALSE)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Layer
+# ---------------------------------------------------------------------------
+
+test_that("GoG/layer: multiple geom_point_glow layers do not error", {
+  p <- ggplot(df, aes(x, y)) +
+    geom_point_glow(glow_colour = "red") +
+    geom_point_glow(glow_colour = "blue", glow_size = 10)
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/layer: geom_point_glow with other geom layers does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_line() + geom_point_glow()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Scales
+# ---------------------------------------------------------------------------
+
+test_that("GoG/scales: scale_y_log10 does not error", {
+  p <- ggplot(data.frame(x = 1:5, y = c(1, 10, 100, 10, 1)), aes(x, y)) +
+    geom_point_glow() + scale_y_log10()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: scale_y_reverse does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + scale_y_reverse()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: explicit limits do not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() +
+    scale_y_continuous(limits = c(-10, 10))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Coord
+# ---------------------------------------------------------------------------
+
+test_that("GoG/coord: coord_cartesian zoom does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() +
+    coord_cartesian(ylim = c(1, 4))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_fixed does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + coord_fixed()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_flip does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + coord_flip()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_polar does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + coord_polar()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Facets
+# ---------------------------------------------------------------------------
+
+test_that("GoG/facets: facet_wrap with free scales does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() +
+    facet_wrap(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/facets: facet_grid does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() +
+    facet_grid(~g)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+
+test_that("GoG/theme: theme_void does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + theme_void()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_classic does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + theme_classic()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_bw does not error", {
+  p <- ggplot(df, aes(x, y)) + geom_point_glow() + theme_bw()
+  expect_no_error(ggplotGrob(p))
+})

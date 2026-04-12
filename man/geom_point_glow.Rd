@@ -156,6 +156,9 @@ Version 1.
 \seealso{
 \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}, \code{\link[grid:patterns]{grid::radialGradient()}}
 }
+\concept{glow effect}
+\concept{glowing points}
+\concept{radial gradient}
 \section{Aesthetics}{
 
 \code{geom_point_glow()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

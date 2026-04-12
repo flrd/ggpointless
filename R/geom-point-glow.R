@@ -50,6 +50,46 @@ GeomPointGlow <- ggplot2::ggproto(
   # Custom legend key that shows the glow
   draw_key = draw_key_point_glow,
 
+  setup_params = \(data, params) {
+    if (is.list(params$glow_colour)) {
+      cli::cli_abort(
+        "{.arg glow_colour} must be a scalar colour string, not a {.cls list}."
+      )
+    }
+    if (!is.null(params$glow_colour) &&
+        !isTRUE(is.na(params$glow_colour)) &&
+        !is.character(params$glow_colour)) {
+      cli::cli_warn(
+        "{.arg glow_colour} should be a character colour string, not {.obj_type_friendly {params$glow_colour}}."
+      )
+    }
+    g_alpha <- params$glow_alpha
+    if (!is.null(g_alpha) && !isTRUE(is.na(g_alpha))) {
+      if (!is.numeric(g_alpha) || length(g_alpha) != 1L) {
+        cli::cli_abort("{.arg glow_alpha} must be a single numeric value between 0 and 1.")
+      }
+      if (g_alpha < 0 || g_alpha > 1) {
+        cli::cli_warn(
+          "{.arg glow_alpha} must be between 0 and 1. Clamping {.val {g_alpha}}."
+        )
+        params$glow_alpha <- max(0, min(1, g_alpha))
+      }
+    }
+    g_size <- params$glow_size
+    if (!is.null(g_size) && !isTRUE(is.na(g_size))) {
+      if (!is.numeric(g_size) || length(g_size) != 1L) {
+        cli::cli_abort("{.arg glow_size} must be a single non-negative numeric value.")
+      }
+      if (g_size < 0) {
+        cli::cli_warn(
+          "{.arg glow_size} must be non-negative. Clamping {.val {g_size}} to 0."
+        )
+        params$glow_size <- 0
+      }
+    }
+    params
+  },
+
   draw_panel = \(
     self,
     data,
@@ -140,6 +180,10 @@ GeomPointGlow <- ggplot2::ggproto(
 #' @description
 #' geom_point_glow is a version of ([`geom_point()`][ggplot2::geom_point()])
 #' that adds a glow (radial gradient) behind each point.
+#'
+#' @concept glowing points
+#' @concept radial gradient
+#' @concept glow effect
 #'
 #' @inheritParams ggplot2::geom_point
 #' @param glow_alpha Transparency of the glow between 0 (fully transparent)
