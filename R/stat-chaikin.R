@@ -80,8 +80,12 @@ StatChaikin <- ggproto(
       params$closed <- NULL
     }
 
-    # Resolve NULL (= not explicitly set) to the default
-    params$mode <- params$mode %||% "open"
+    # Resolve NULLs (= not explicitly set) to defaults.
+    # These can be NULL when stat = "chaikin" is used from a geom that
+    # doesn't define these params (e.g. geom_ridgeline_fade(stat = "chaikin")).
+    params$mode       <- params$mode %||% "open"
+    params$iterations <- params$iterations %||% 5L
+    params$ratio      <- params$ratio %||% 0.25
 
     # Validate mode
     params$mode <- rlang::arg_match0(params$mode, values = c("open", "closed"))
@@ -134,17 +138,38 @@ StatChaikin <- ggproto(
     ratio = 0.25
   ) {
     closed <- mode == "closed"
-    data <- get_chaikin(
+    result <- get_chaikin(
       x = data$x,
       y = data$y,
       iterations = iterations,
       ratio = ratio,
       closed = closed
     )
-    if (closed) {
-      data <- rbind(data, data[1L, , drop = FALSE])
+
+    # When extra numeric columns are present (e.g. `height` from
+    # geom_ridgeline_fade), apply the same corner-cutting so they
+    # are interpolated at the new x-positions.
+    extra_cols <- setdiff(names(data), c("x", "y"))
+    for (col in extra_cols) {
+      if (is.numeric(data[[col]])) {
+        smoothed <- get_chaikin(
+          x = data$x,
+          y = data[[col]],
+          iterations = iterations,
+          ratio = ratio,
+          closed = closed
+        )
+        result[[col]] <- smoothed$y
+      } else {
+        # Constant discrete columns (group, fill, etc.) — replicate first value
+        result[[col]] <- data[[col]][1L]
+      }
     }
-    data
+
+    if (closed) {
+      result <- rbind(result, result[1L, , drop = FALSE])
+    }
+    result
   }
 )
 

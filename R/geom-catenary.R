@@ -18,6 +18,12 @@ GeomCatenary <- ggplot2::ggproto(
 #' The shape follows the catenary equation:
 #' \eqn{\ y = a\ \cosh \ \!\bigl(\frac{x - h}{a}\bigr) + v}.
 #'
+#' @concept catenary curve
+#' @concept hanging chain
+#' @concept arch curve
+#' @concept smooth curve
+#' @concept mathematical curve
+#'
 #' @param chain_length Numeric vector of physical chain lengths. Recycled to
 #'   the number of segments. If `NULL` and `sag` is also `NULL`, defaults to
 #'   twice the Euclidean distance per segment. Can be mixed with `sag` by
@@ -90,20 +96,11 @@ geom_catenary <- function(
   inherit.aes = TRUE
 ) {
   if (lifecycle::is_present(chainLength)) {
-    lifecycle::deprecate_warn(
+    lifecycle::deprecate_stop(
       "0.2.0",
       "ggpointless::geom_catenary(chainLength)",
       "ggpointless::geom_catenary(chain_length)"
     )
-    if (!is.null(chain_length)) {
-      cli::cli_inform(
-        "Note that {.arg chain_length} wins over deprecated {.arg chainLength}. \\
-        Use {.arg chain_length}.",
-        .frequency = "regularly",
-        .frequency_id = "catenary_chain_length_wins"
-      )
-    }
-    chain_length <- chain_length %||% chainLength
   }
 
   layer(
