@@ -38,7 +38,7 @@ GeomCatenary <- ggplot2::ggproto(
 #' @param arch_height Numeric vector giving the vertical rise of the arch
 #'   above the **highest endpoint** of each segment. Takes precedence
 #'   over `arch_length` when both are supplied for the same segment.
-#' @param chainLength `r lifecycle::badge("deprecated")` Use
+#' @param chainLength `r lifecycle::badge("superseded")` Use
 #'   `chain_length` instead.
 #' @inheritParams ggplot2::geom_path
 #'
@@ -97,7 +97,7 @@ geom_catenary <- function(
 ) {
   if (lifecycle::is_present(chainLength)) {
     lifecycle::deprecate_stop(
-      "0.2.0",
+      "0.3.0",
       "ggpointless::geom_catenary(chainLength)",
       "ggpointless::geom_catenary(chain_length)"
     )

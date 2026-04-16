@@ -2,8 +2,8 @@ df1 <- data.frame(x = c(1, 4, 4, 3, 2), y = c(1, 1, 1.5, .5, 3))
 
 p1 <- ggplot(df1, aes(x, y)) +
   geom_polygon(fill = NA, linetype = "12", color = "#777777") +
-  stat_chaikin(closed = TRUE, geom = "point", iterations = 1) +
-  stat_chaikin(closed = TRUE, iterations = 1)
+  stat_chaikin(mode = "closed", geom = "point", iterations = 1) +
+  stat_chaikin(mode = "closed", iterations = 1)
 
 test_that("user can change point apearance", {
   vdiffr::expect_doppelganger("cut corners 1 time", p1)
@@ -11,14 +11,9 @@ test_that("user can change point apearance", {
 
 # --- stat_chaikin deprecation branch: both closed and mode supplied ----------
 
-test_that("stat_chaikin: mode wins over closed when both are provided (no error)", {
-  # cli_inform at lines 20-24 fires at layer construction. The message is
-  # frequency-limited ("once per 8h"), so we test for no error rather than
-  # capturing the message, which may be throttled in repeated test runs.
-  expect_no_error(
-    suppressWarnings(suppressMessages(
-      ggplot(df1, aes(x, y)) + stat_chaikin(closed = TRUE, mode = "open")
-    ))
+test_that("stat_chaikin: closed parameter errors", {
+  expect_error(
+    stat_chaikin(closed = TRUE, mode = "open")
   )
 })
 

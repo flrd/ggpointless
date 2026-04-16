@@ -136,7 +136,7 @@ placing \code{NA} in the appropriate positions.}
 the \strong{lowest endpoint} of each segment. Takes precedence over
 \code{chain_length} when both are supplied for the same segment.}
 
-\item{chainLength}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use
+\item{chainLength}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} Use
 \code{chain_length} instead.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
@@ -223,6 +223,11 @@ ggplot(rice_house, aes(x, y)) +
 The catenary equation is described at
 \url{https://en.wikipedia.org/wiki/Catenary}.
 }
+\concept{arch curve}
+\concept{catenary curve}
+\concept{hanging chain}
+\concept{mathematical curve}
+\concept{smooth curve}
 \section{Aesthetics}{
 
 \code{geom_catenary()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

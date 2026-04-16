@@ -100,10 +100,18 @@ test_that("GoG/layer: geom_chaikin as standalone layer does not error", {
 # Scales
 # ---------------------------------------------------------------------------
 
-test_that("GoG/scales: scale_y_reverse does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
-  p <- ggplot(df, aes(x, y)) + geom_chaikin() + scale_y_reverse()
-  expect_no_error(ggplotGrob(p))
+test_that("GoG/scales: scale_y_reverse negates y values (chaikin)", {
+  df <- data.frame(x = c(1, 2, 3, 4, 5), y = c(1, 3, 2, 4, 2))
+  b_fwd <- ggplot_build(ggplot(df, aes(x, y)) + geom_chaikin())
+  b_rev <- ggplot_build(ggplot(df, aes(x, y)) + geom_chaikin() + scale_y_reverse())
+  expect_equal(b_rev$data[[1]]$y, -b_fwd$data[[1]]$y)
+})
+
+test_that("GoG/scales: scale_x_reverse negates x values (chaikin)", {
+  df <- data.frame(x = c(1, 2, 3, 4, 5), y = c(1, 3, 2, 4, 2))
+  b_fwd <- ggplot_build(ggplot(df, aes(x, y)) + geom_chaikin())
+  b_rev <- ggplot_build(ggplot(df, aes(x, y)) + geom_chaikin() + scale_x_reverse())
+  expect_equal(b_rev$data[[1]]$x, -b_fwd$data[[1]]$x)
 })
 
 test_that("GoG/scales: scale_y_sqrt does not error", {

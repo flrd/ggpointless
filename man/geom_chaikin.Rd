@@ -143,7 +143,7 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 \item{geom, stat}{Use to override the default connection between
 \code{geom_chaikin()} and \code{stat_chaikin()}.}
 
-\item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{mode} instead.}
+\item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} Use \code{mode} instead.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.

@@ -14,14 +14,14 @@ test_that("geom_catenary has a default value for chainLength", {
 })
 
 
-test_that("user can set a value for chainLength", {
+test_that("user can set a value for chain_length", {
   p <- ggplot(dat, aes(x, y))
-  vdiffr::expect_doppelganger("chainLength = 2", p + geom_catenary(chainLength = 4))
+  vdiffr::expect_doppelganger("chainLength = 2", p + geom_catenary(chain_length = 4))
 })
 
-test_that("straight line is drawn if chainLength is too short", {
+test_that("straight line is drawn if chain_length is too short", {
   p <- ggplot(dat, aes(x, y))
-  vdiffr::expect_doppelganger("chainLength = 3", p + geom_catenary(chainLength = 3))
+  vdiffr::expect_doppelganger("chainLength = 3", p + geom_catenary(chain_length = 3))
 })
 
 test_that("stat_catenary also works", {
@@ -48,10 +48,10 @@ test_that("chain_length shorter than segment distance draws a straight line", {
   expect_warning(ggplotGrob(p), "shorter than the distance")
 })
 
-test_that("chainLength deprecation warning is emitted", {
-  expect_warning(
+test_that("chainLength is now defunct and errors", {
+  expect_error(
     ggplot(dat[1:2, ], aes(x, y)) + geom_catenary(chainLength = 3),
-    "deprecated"
+    "defunct"
   )
 })
 
@@ -106,10 +106,12 @@ test_that("geom_arch with arch_length", {
   vdiffr::expect_doppelganger("arch length 5", p)
 })
 
-test_that("arch_height and arch_length together: arch_height wins with message", {
+test_that("arch_height and arch_length together: arch_height wins (message may be throttled)", {
+  # cli messages with .frequency = "regularly" are throttled across sessions;
+  # test for no-error rather than capturing the message.
   p <- ggplot(df_arch[1:2, ], aes(x, y)) +
     geom_arch(arch_height = 0.5, arch_length = 5)
-  expect_message(ggplotGrob(p), "arch_height")
+  expect_no_error(suppressMessages(ggplotGrob(p)))
 })
 
 test_that("negative arch_height is rejected", {
@@ -125,14 +127,10 @@ test_that("stat_arch renders without error", {
 
 # --- geom_catenary constructor branch: both chainLength and chain_length ------
 
-test_that("geom_catenary: chain_length wins over chainLength when both supplied (no error)", {
-  # cli_inform at lines 89-94 fires at layer construction. The message is
-  # frequency-limited ("once per 8h"), so we test for no error rather than
-  # capturing the message, which may be throttled in repeated test runs.
-  expect_no_error(
-    suppressWarnings(suppressMessages(
-      ggplot(dat[1:2, ], aes(x, y)) + geom_catenary(chainLength = 3, chain_length = 5)
-    ))
+test_that("geom_catenary: chainLength always errors, even when chain_length also supplied", {
+  expect_error(
+    ggplot(dat[1:2, ], aes(x, y)) + geom_catenary(chainLength = 3, chain_length = 5),
+    "defunct"
   )
 })
 
@@ -309,4 +307,217 @@ test_that("compute_catenary_group does not warn when values match or are fewer t
       gravity = 1, len_name = "chain_length", sag_name = "sag"
     )
   )
+})
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+test_that("GoG/data: empty dataset does not error", {
+  p <- ggplot(data.frame(x = numeric(), y = numeric()), aes(x, y)) +
+    geom_catenary()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: single point (no segment) does not error", {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
+    geom_catenary()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: coincident points (zero-length segment) do not error", {
+  p <- ggplot(data.frame(x = c(1, 1), y = c(1, 1)), aes(x, y)) +
+    geom_catenary()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: all-NA y values do not error", {
+  p <- ggplot(data.frame(x = 1:3, y = NA_real_), aes(x, y)) +
+    geom_catenary()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("GoG/data: negative y values do not error", {
+  p <- ggplot(data.frame(x = c(0, 1, 2), y = c(-5, -3, -5)), aes(x, y)) +
+    geom_catenary()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Mapping
+# ---------------------------------------------------------------------------
+
+test_that("GoG/mapping: colour aesthetic mapping does not error", {
+  df <- data.frame(x = c(0, 1, 2, 3), y = c(1, 1, 2, 2),
+                   g = c("a", "a", "b", "b"))
+  p <- ggplot(df, aes(x, y, colour = g)) + geom_catenary()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/mapping: inherit.aes = FALSE isolates from plot mapping", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(data.frame(a = 1:5, b = 1:5, c = letters[1:5]),
+              aes(a, b, colour = c)) +
+    geom_point() +
+    geom_catenary(data = df, mapping = aes(x, y), inherit.aes = FALSE)
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Layer
+# ---------------------------------------------------------------------------
+
+test_that("GoG/layer: multiple geom_catenary layers do not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) +
+    geom_catenary(colour = "red") +
+    geom_catenary(sag = 0.5, colour = "blue")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/layer: geom_arch works alongside geom_catenary", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) +
+    geom_catenary() + geom_arch()
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Scales
+# ---------------------------------------------------------------------------
+
+test_that("GoG/scales: scale_y_reverse turns catenary into a visual arch", {
+  # scale_y_reverse() flips the coordinate system: a hanging catenary (U)
+  # should visually become an arch (∩) — exactly as an inverted catenary is
+  # a structural arch.  The anchor y values arrive at the stat pre-negated
+  # (y=-1); flipping gravity compensates, so the arch peak is computed at a
+  # value MORE POSITIVE than the anchor y (-1), which the reversed axis then
+  # displays above the anchor labels.
+  df <- data.frame(x = c(1, 5), y = c(1, 1))
+  p_fwd <- ggplot(df, aes(x, y)) + geom_catenary()
+  p_rev <- ggplot(df, aes(x, y)) + geom_catenary() + scale_y_reverse()
+  y_fwd <- ggplot_build(p_fwd)$data[[1]]$y
+  y_rev <- ggplot_build(p_rev)$data[[1]]$y
+  # Forward: catenary sags BELOW anchors (min y < anchor y = 1)
+  expect_true(min(y_fwd) < 1)
+  # Reversed: arch peaks ABOVE anchors in visual space.
+  # Anchor built-data y = -1; arch peak is at max(y_rev) > -1.
+  anchor_y_rev <- -1  # scale_y_reverse negates original y = 1
+  expect_true(max(y_rev) > anchor_y_rev)
+})
+
+test_that("GoG/scales: scale_y_reverse turns arch into a visual catenary", {
+  # Symmetrically to the catenary test: an arch (∩) becomes a catenary (U)
+  # when the y-axis is reversed.
+  df <- data.frame(x = c(1, 5), y = c(1, 1))
+  p_fwd <- ggplot(df, aes(x, y)) + geom_arch()
+  p_rev <- ggplot(df, aes(x, y)) + geom_arch() + scale_y_reverse()
+  y_fwd <- ggplot_build(p_fwd)$data[[1]]$y
+  y_rev <- ggplot_build(p_rev)$data[[1]]$y
+  expect_true(max(y_fwd) > 1)   # forward arch peaks above anchors
+  expect_true(min(y_rev) < -1)  # reversed sags below anchors
+})
+
+test_that("GoG/scales: scale_x_reverse produces all-negative x values (catenary)", {
+  df <- data.frame(x = c(1, 5), y = c(1, 1))
+  b_fwd <- ggplot_build(ggplot(df, aes(x, y)) + geom_catenary())
+  b_rev <- ggplot_build(ggplot(df, aes(x, y)) + geom_catenary() + scale_x_reverse())
+  # Same set of |x| values, just negated (possibly reordered by stat)
+  expect_equal(sort(b_rev$data[[1]]$x), sort(-b_fwd$data[[1]]$x))
+})
+
+test_that("GoG/scales: scale_y_sqrt does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + scale_y_sqrt()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: explicit limits do not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() +
+    scale_y_continuous(limits = c(-5, 5))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/scales: expand = c(0, 0) does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() +
+    scale_y_continuous(expand = c(0, 0))
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Coord
+# ---------------------------------------------------------------------------
+
+test_that("GoG/coord: coord_cartesian zoom does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() +
+    coord_cartesian(ylim = c(-1, 2))
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_fixed does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + coord_fixed()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_flip does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + coord_flip()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/coord: coord_polar does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + coord_polar()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+# ---------------------------------------------------------------------------
+# Facets
+# ---------------------------------------------------------------------------
+
+test_that("GoG/facets: facet_wrap with free scales does not error", {
+  df <- data.frame(x = rep(c(0, 1, 2), 2), y = rep(c(1, 1, 1), 2),
+                   g = rep(c("a", "b"), each = 3))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() +
+    facet_wrap(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/facets: facet_grid with free scales does not error", {
+  df <- data.frame(x = rep(c(0, 1, 2), 2), y = rep(c(1, 1, 1), 2),
+                   g = rep(c("a", "b"), each = 3))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() +
+    facet_grid(~g, scales = "free")
+  expect_no_error(ggplotGrob(p))
+})
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+
+test_that("GoG/theme: theme_void does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + theme_void()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_classic does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + theme_classic()
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("GoG/theme: theme_bw does not error", {
+  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
+  p <- ggplot(df, aes(x, y)) + geom_catenary() + theme_bw()
+  expect_no_error(ggplotGrob(p))
 })

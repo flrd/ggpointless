@@ -11,7 +11,18 @@ GeomChaikin <- ggplot2::ggproto(
     "iterations",
     "ratio",
     "closed"
-  )
+  ),
+
+  setup_params = \(self, data, params) {
+    if (!is.null(params$closed) && lifecycle::is_present(params$closed)) {
+      lifecycle::deprecate_stop(
+        "0.3.0",
+        "geom_chaikin(closed)",
+        "geom_chaikin(mode)"
+      )
+    }
+    params
+  }
 )
 
 #' @title Apply Chaikin's corner cutting algorithm to smooth a path
@@ -53,7 +64,7 @@ GeomChaikin <- ggplot2::ggproto(
 #'   If `ratio > 0.5`, then it will be flipped to `1 - ratio`.
 #' @param mode Character. Should the geom draw a closed polygon or an open
 #'   path? Must be one of `"open"` (default) or `"closed"`.
-#' @param closed `r lifecycle::badge("deprecated")` Use `mode` instead.
+#' @param closed `r lifecycle::badge("superseded")` Use `mode` instead.
 #'
 #' @references Chaikin, G. An algorithm for high speed curve generation.
 #' Computer Graphics and Image Processing 3 (1974), 346–349
