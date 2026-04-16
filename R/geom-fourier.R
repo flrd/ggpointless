@@ -129,6 +129,7 @@ GeomFourier <- ggproto(
 #' )
 #'
 #' ggplot(df4, aes(x, y)) +
+#'   geom_point()
 #'   geom_fourier()
 #'
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].

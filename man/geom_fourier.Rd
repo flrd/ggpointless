@@ -244,6 +244,7 @@ df4 <- data.frame(
 )
 
 ggplot(df4, aes(x, y)) +
+  geom_point()
   geom_fourier()
 
 }

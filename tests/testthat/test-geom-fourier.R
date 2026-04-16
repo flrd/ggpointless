@@ -179,9 +179,16 @@ test_that("GoG/layer: geom_fourier standalone does not error", {
 # Scales
 # ---------------------------------------------------------------------------
 
-test_that("GoG/scales: scale_y_reverse does not error", {
-  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + scale_y_reverse()
-  expect_no_error(ggplotGrob(p))
+test_that("GoG/scales: scale_y_reverse negates y values (fourier)", {
+  b_fwd <- ggplot_build(ggplot(df_sine, aes(x, y)) + geom_fourier())
+  b_rev <- ggplot_build(ggplot(df_sine, aes(x, y)) + geom_fourier() + scale_y_reverse())
+  expect_equal(b_rev$data[[1]]$y, -b_fwd$data[[1]]$y)
+})
+
+test_that("GoG/scales: scale_x_reverse produces all-negative x values (fourier)", {
+  b_fwd <- ggplot_build(ggplot(df_sine, aes(x, y)) + geom_fourier())
+  b_rev <- ggplot_build(ggplot(df_sine, aes(x, y)) + geom_fourier() + scale_x_reverse())
+  expect_equal(sort(b_rev$data[[1]]$x), sort(-b_fwd$data[[1]]$x))
 })
 
 test_that("GoG/scales: explicit limits do not error", {
