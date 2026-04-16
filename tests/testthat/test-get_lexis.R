@@ -13,11 +13,15 @@ test_that("get_lexis works", {
 })
 
 
-test_that("xend must be NA or greater than x", {
-  expect_error(
-    get_lexis(c(-1, 0), c(-4, 5)),
-    "xend"
-  )
+test_that("rows where x > xend are swapped silently (handles scale_x_reverse)", {
+  # Previously an error; now get_lexis swaps the pair so the algorithm
+  # works correctly regardless of scale direction.
+  expect_no_error(get_lexis(c(-1, 0), c(-4, 5)))
+  # Row 1 is effectively swapped to x=-4, xend=-1; row 2 is unchanged.
+  # The result must still be a data frame with the correct columns.
+  out <- get_lexis(c(-1, 0), c(-4, 5))
+  expect_true(is.data.frame(out))
+  expect_named(out, c("x", "xend", "y", "yend", "type"))
 })
 
 test_that("works only for numeric input", {

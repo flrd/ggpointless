@@ -46,8 +46,13 @@ test_that("points can have different shape than 19", {
 # The direct calls below cover the untested branches.
 
 # Minimal key data for draw_key_pointless
-kd_pl <- data.frame(colour = "black", fill = NA_character_,
-                    size = 1, alpha = NA_real_, stroke = 0.5)
+kd_pl <- data.frame(
+  colour = "black",
+  fill = NA_character_,
+  size = 1,
+  alpha = NA_real_,
+  stroke = 0.5
+)
 
 test_that("draw_key_pointless: NULL shape defaults to pch 19", {
   # No 'shape' column → data$shape is NULL
@@ -66,8 +71,15 @@ test_that("draw_key_pointless: character shape is translated via translate_shape
 
 # --- draw_key_lexis ----------------------------------------------------------
 
-kd_lx <- data.frame(colour = "red", fill = NA_character_, alpha = NA_real_,
-                    linetype = 1L, linewidth = 0.5, size = 1, stroke = 0.5)
+kd_lx <- data.frame(
+  colour = "red",
+  fill = NA_character_,
+  alpha = NA_real_,
+  linetype = 1L,
+  linewidth = 0.5,
+  size = 1,
+  stroke = 0.5
+)
 
 test_that("character x/xend gives a clear warning, not a misleading geometry error", {
   df_bad <- data.frame(
@@ -100,7 +112,10 @@ test_that("draw_key_lexis: point_show = FALSE returns the segment grob only (no 
 # ---------------------------------------------------------------------------
 
 test_that("GoG/data: empty dataset does not error", {
-  p <- ggplot(data.frame(x = numeric(), xend = numeric()), aes(x = x, xend = xend)) +
+  p <- ggplot(
+    data.frame(x = numeric(), xend = numeric()),
+    aes(x = x, xend = xend)
+  ) +
     geom_lexis()
   expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
@@ -112,7 +127,10 @@ test_that("GoG/data: single-row dataset does not error", {
 })
 
 test_that("GoG/data: all-NA xend values do not error", {
-  p <- ggplot(data.frame(x = c(0, 1), xend = NA_real_), aes(x = x, xend = xend)) +
+  p <- ggplot(
+    data.frame(x = c(0, 1), xend = NA_real_),
+    aes(x = x, xend = xend)
+  ) +
     geom_lexis()
   expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
@@ -158,19 +176,51 @@ test_that("GoG/layer: geom_lexis standalone does not error", {
 # Scales
 # ---------------------------------------------------------------------------
 
-test_that("GoG/scales: scale_x_reverse does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + scale_x_reverse()
-  expect_no_error(ggplotGrob(p))
+test_that("GoG/scales: scale_x_reverse makes segments tilt upper-left", {
+  # Without reversal, a segment from x=0 to xend=3 goes lower-left → upper-right:
+  # the xend value in built data is greater than the x value.
+  # With scale_x_reverse() the scale negates x and xend, then get_lexis() is
+  # called on the original values and the output is re-negated.  This keeps
+  # the correct Lexis geometry: small original time (right side of reversed
+  # axis) gets y=0 and large original time (left side) gets the larger y.
+  # Concretely, in the built data all xend values must be LESS than the
+  # corresponding x values (both negative; xend is more-negative = further left).
+  p_rev <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + scale_x_reverse()
+  b_rev <- ggplot_build(p_rev)
+  d_rev <- b_rev$data[[1]]
+  # Every solid segment tilts left (or is vertical): x (right) >= xend (left).
+  # The 'type' column from the stat distinguishes diagonal/vertical segments
+  # ("solid") from horizontal gap-fillers ("dotted").
+  solid <- d_rev[d_rev$type != "dotted", ]
+  expect_true(all(solid$x >= solid$xend))
+  # y increases from start to end of each solid segment (age accumulates)
+  expect_true(all(solid$yend >= solid$y))
+})
+
+test_that("GoG/scales: scale_y_reverse flips the y-axis", {
+  # stat-computed y/yend must be negated when a reversing y scale is in use,
+  # because transform_df (which negates values for scale_y_reverse) runs
+  # before the stat and therefore never touches stat-produced columns.
+  p_fwd <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis()
+  p_rev <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + scale_y_reverse()
+  b_fwd <- ggplot_build(p_fwd)
+  b_rev <- ggplot_build(p_rev)
+  y_fwd <- b_fwd$data[[1]]$y
+  y_rev <- b_rev$data[[1]]$y
+  # y values in the reversed plot should be the negation of the forward plot
+  expect_equal(y_rev, -y_fwd)
 })
 
 test_that("GoG/scales: explicit limits do not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() +
+  p <- ggplot(df1, aes(x = x, xend = xend)) +
+    geom_lexis() +
     scale_x_continuous(limits = c(-5, 10))
   expect_no_error(ggplotGrob(p))
 })
 
 test_that("GoG/scales: expand = c(0, 0) does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() +
+  p <- ggplot(df1, aes(x = x, xend = xend)) +
+    geom_lexis() +
     scale_x_continuous(expand = c(0, 0))
   expect_no_error(ggplotGrob(p))
 })
@@ -180,7 +230,8 @@ test_that("GoG/scales: expand = c(0, 0) does not error", {
 # ---------------------------------------------------------------------------
 
 test_that("GoG/coord: coord_cartesian zoom does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() +
+  p <- ggplot(df1, aes(x = x, xend = xend)) +
+    geom_lexis() +
     coord_cartesian(xlim = c(0, 2))
   expect_no_error(ggplotGrob(p))
 })
@@ -206,13 +257,15 @@ test_that("GoG/coord: coord_polar does not error", {
 
 test_that("GoG/facets: facet_wrap with free scales does not error", {
   p <- ggplot(df3, aes(x = x, xend = xend, colour = key)) +
-    geom_lexis() + facet_wrap(~key, scales = "free")
+    geom_lexis() +
+    facet_wrap(~key, scales = "free")
   expect_no_error(ggplotGrob(p))
 })
 
 test_that("GoG/facets: facet_grid does not error", {
   p <- ggplot(df3, aes(x = x, xend = xend)) +
-    geom_lexis() + facet_grid(~key)
+    geom_lexis() +
+    facet_grid(~key)
   expect_no_error(ggplotGrob(p))
 })
 

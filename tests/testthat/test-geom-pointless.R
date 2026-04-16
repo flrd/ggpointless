@@ -146,10 +146,49 @@ test_that("GoG/scales: scale_y_log10 does not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/scales: scale_y_reverse does not error", {
-  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
-    geom_line() + geom_pointless() + scale_y_reverse()
-  expect_no_error(ggplotGrob(p))
+test_that("GoG/scales: scale_y_reverse negates y values (pointless)", {
+  df_p <- data.frame(x = 1:5, y = 1:5)
+  b_fwd <- ggplot_build(ggplot(df_p, aes(x, y)) + geom_line() + geom_pointless())
+  b_rev <- ggplot_build(ggplot(df_p, aes(x, y)) + geom_line() + geom_pointless() + scale_y_reverse())
+  expect_equal(b_rev$data[[2]]$y, -b_fwd$data[[2]]$y)
+})
+
+test_that("GoG/scales: scale_x_reverse negates x values (pointless)", {
+  df_p <- data.frame(x = 1:5, y = 1:5)
+  b_fwd <- ggplot_build(ggplot(df_p, aes(x, y)) + geom_line() + geom_pointless())
+  b_rev <- ggplot_build(ggplot(df_p, aes(x, y)) + geom_line() + geom_pointless() + scale_x_reverse())
+  expect_equal(b_rev$data[[2]]$x, -b_fwd$data[[2]]$x)
+})
+
+test_that("GoG/scales: scale_y_reverse keeps minimum/maximum labels on the correct data points", {
+  # scale_y_reverse() negates y before the stat runs.  Without compensation,
+  # location='minimum' would pick the data MAXIMUM (whose negated value is the
+  # smallest) and vice-versa.  After the fix, the labels must refer to the
+  # original data extremes regardless of axis direction.
+  df_p <- data.frame(x = 1:5, y = c(3, 1, 4, 1, 5))
+  b_fwd <- ggplot_build(
+    ggplot(df_p, aes(x, y)) + geom_line() + geom_pointless(location = "all")
+  )
+  b_rev <- ggplot_build(
+    ggplot(df_p, aes(x, y)) +
+      geom_line() + geom_pointless(location = "all") + scale_y_reverse()
+  )
+  locs_fwd <- b_fwd$data[[2]][, c("x", "y", "location")]
+  locs_rev <- b_rev$data[[2]][, c("x", "y", "location")]
+
+  # minimum: always at x = 2 and x = 4 (y = 1 in forward, y = -1 in reversed)
+  fwd_min <- locs_fwd[locs_fwd$location == "minimum", ]
+  rev_min <- locs_rev[locs_rev$location == "minimum", ]
+  expect_equal(sort(fwd_min$x), c(2L, 4L))
+  expect_equal(sort(rev_min$x), c(2L, 4L))   # same data points, just negated y
+  expect_equal(rev_min$y, -fwd_min$y)
+
+  # maximum: always at x = 5 (y = 5 in forward, y = -5 in reversed)
+  fwd_max <- locs_fwd[locs_fwd$location == "maximum", ]
+  rev_max <- locs_rev[locs_rev$location == "maximum", ]
+  expect_equal(fwd_max$x, 5L)
+  expect_equal(rev_max$x, 5L)
+  expect_equal(rev_max$y, -fwd_max$y)
 })
 
 test_that("GoG/scales: explicit limits do not error", {

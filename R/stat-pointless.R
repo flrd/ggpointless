@@ -41,6 +41,18 @@ StatPointless <- ggproto(
   extra_params = c("na.rm", "location"),
 
   compute_group = \(data, scales, location = "last") {
+    # scale_y_reverse() negates y before the stat runs, so the numerical
+    # minimum becomes the data maximum and vice-versa.  Temporarily un-negate
+    # to find the correct extremes, then restore the transformed y values so
+    # the points render at the right positions on the reversed axis.
+    if (!is.null(scales$y) && isTRUE(scales$y$trans$name == "reverse") &&
+        any(c("minimum", "maximum", "all") %in% location)) {
+      data_orig <- data
+      data_orig$y <- -data$y
+      result <- get_locations(data_orig, location = location)
+      result$y <- -result$y
+      return(result)
+    }
     get_locations(data, location = location)
   },
 

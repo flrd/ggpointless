@@ -25,7 +25,29 @@ StatLexis <- ggproto(
         )
       )
     }
-    get_lexis(data$x, data$xend)
+    # stat-computed columns bypass scales$transform_df (which runs before the
+    # stat), so reversing scales never touch them.  Both reversals need manual
+    # compensation.
+    #
+    # x-reverse: the scale has already negated data$x and data$xend.
+    # Un-negate, run get_lexis on the original values (so the algorithm assigns
+    # y correctly: small original time → small y), then re-negate the output x
+    # values so they live in the reversed transformed space ggplot2 expects.
+    # This makes segments tilt upper-LEFT (correct) instead of upper-RIGHT.
+    x_is_reversed <- !is.null(scales$x) && isTRUE(scales$x$trans$name == "reverse")
+    if (x_is_reversed) {
+      out      <- get_lexis(-data$x, -data$xend)
+      out$x    <- -out$x
+      out$xend <- -out$xend
+    } else {
+      out <- get_lexis(data$x, data$xend)
+    }
+    # y-reverse: same bypass issue for stat-computed y/yend.
+    if (!is.null(scales$y) && isTRUE(scales$y$trans$name == "reverse")) {
+      out$y    <- -out$y
+      out$yend <- -out$yend
+    }
+    out
   }
 )
 
@@ -39,10 +61,15 @@ get_lexis <- function(x, xend) {
     cli::cli_abort("{.arg x} and {.arg xend} must be continuous.")
   }
 
-  if (any(x > xend, na.rm = TRUE)) {
-    cli::cli_abort(
-      "Each {.arg xend} must be greater than or equal to its {.arg x}."
-    )
+  # Swap pairs where x > xend (e.g. a dataset where start > end) so cumsum
+  # always sees non-negative durations.  The scale_x_reverse() case is handled
+  # before get_lexis() is called (in compute_group), so x/xend arrive here
+  # in their original, un-negated form.
+  swap <- !is.na(x) & !is.na(xend) & (x > xend)
+  if (any(swap)) {
+    tmp       <- x[swap]
+    x[swap]   <- xend[swap]
+    xend[swap] <- tmp
   }
 
   # get all x-positions
