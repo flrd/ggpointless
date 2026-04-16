@@ -308,7 +308,7 @@ StatCatenary <- ggproto(
   setup_params = \(data, params) {
     if (!is.null(params$chainLength)) {
       lifecycle::deprecate_stop(
-        "0.2.0",
+        "0.3.0",
         "ggpointless::stat_catenary(chainLength)",
         "ggpointless::stat_catenary(chain_length)"
       )
@@ -317,11 +317,20 @@ StatCatenary <- ggproto(
   },
 
   compute_group = \(data, scales, chain_length = NULL, sag = NULL) {
+    # scale_y_reverse() negates y before the stat runs, which would otherwise
+    # produce a catenary that sags toward the visual bottom even on a flipped
+    # axis.  Reversing gravity makes the sag go the other way in the negated
+    # coordinate space, so the rendered result correctly becomes an arch.
+    g <- if (!is.null(scales$y) && isTRUE(scales$y$trans$name == "reverse")) {
+      -1L
+    } else {
+      1L
+    }
     compute_catenary_group(
       data,
       chain_length = chain_length,
       sag = sag,
-      gravity = 1,
+      gravity = g,
       len_name = "chain_length",
       sag_name = "sag"
     )
@@ -343,11 +352,18 @@ StatArch <- ggproto(
     arch_length = NULL,
     arch_height = NULL
   ) {
+    # Symmetric to StatCatenary: scale_y_reverse() flips a visual arch back
+    # into a visual catenary, so we flip gravity to compensate.
+    g <- if (!is.null(scales$y) && isTRUE(scales$y$trans$name == "reverse")) {
+      1L
+    } else {
+      -1L
+    }
     compute_catenary_group(
       data,
       chain_length = arch_length,
       sag = arch_height,
-      gravity = -1,
+      gravity = g,
       len_name = "arch_length",
       sag_name = "arch_height"
     )

@@ -15,20 +15,11 @@ stat_chaikin <- function(
   inherit.aes = TRUE
 ) {
   if (lifecycle::is_present(closed)) {
-    lifecycle::deprecate_warn(
-      "0.2.0",
+    lifecycle::deprecate_stop(
+      "0.3.0",
       "stat_chaikin(closed)",
       "stat_chaikin(mode)"
     )
-    if (missing(mode)) {
-      mode <- if (isTRUE(closed)) "closed" else "open"
-    } else {
-      cli::cli_inform(
-        "{.arg mode} wins over deprecated {.arg closed}. Use {.arg mode}.",
-        .frequency = "regularly",
-        .frequency_id = "chaikin_mode_wins"
-      )
-    }
   }
 
   ggplot2::layer(
@@ -62,22 +53,11 @@ StatChaikin <- ggproto(
   setup_params = \(data, params) {
     # Handle deprecated `closed` (arrives via ... from geom_chaikin(closed = ...))
     if (!is.null(params$closed) && lifecycle::is_present(params$closed)) {
-      lifecycle::deprecate_warn(
-        "0.2.0",
+      lifecycle::deprecate_stop(
+        "0.3.0",
         "geom_chaikin(closed)",
         "geom_chaikin(mode)"
       )
-      if (!is.null(params$mode)) {
-        # mode was explicitly set by the user — mode wins
-        cli::cli_inform(
-          "{.arg mode} wins over deprecated {.arg closed}. Use {.arg mode}.",
-          .frequency = "regularly",
-          .frequency_id = "chaikin_mode_wins"
-        )
-      } else {
-        params$mode <- if (isTRUE(params$closed)) "closed" else "open"
-      }
-      params$closed <- NULL
     }
 
     # Resolve NULLs (= not explicitly set) to defaults.
