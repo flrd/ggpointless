@@ -19,23 +19,58 @@ navbar:
     intro:
       text: Examples
       href: articles/ggpointless.html
-reference:
-- title: Geom, Stat
-  desc: |
-    Layer Functions
+articles:
+- title: Vignettes
   contents:
-  - geom_area_fade
+  - ggpointless
+  - doppelganger
+reference:
+
+- title: Layer Functions
+  desc: |
+    Geom + Stat
+  contents:
+  - geom_arch
+  - stat_arch
   - geom_catenary
   - stat_catenary
   - geom_chaikin
   - stat_chaikin
   - geom_fourier
   - stat_fourier
+  - geom_gridline
   - geom_lexis
   - stat_lexis
-  - geom_point_glow
   - geom_pointless
   - stat_pointless
+  - geom_unit_bar
+  - geom_unit_col
+  - geom_unit_histogram
+
+- title: Doppelgänger
+  contents:
+  - geom_abline_fade
+  - geom_area_fade
+  - geom_bar_fade
+  - geom_col_fade
+  - geom_curve_fade
+  - geom_density_fade
+  - geom_freqpoly_fade
+  - geom_line_fade
+  - geom_histogram_fade
+  - geom_hline_fade
+  - geom_path_fade
+  - geom_point_glow
+  - geom_rect_fade
+  - geom_ridgeline_fade
+  - geom_ridgeline_density_fade
+  - geom_segment_fade
+  - geom_step_fade
+  - geom_vline_fade
+
+- title: Positions
+  contents:
+  - position_ridgeline
 
 figures:
   dev: ragg::agg_png
