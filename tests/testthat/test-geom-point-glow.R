@@ -76,6 +76,27 @@ test_that("geom_point_glow with fixed glow_colour and large glow_size", {
   vdiffr::expect_doppelganger("point-glow fixed colour", p)
 })
 
+test_that("glow_size default renders at 9x the point's size aesthetic", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(size = 3) +
+    theme_minimal()
+  vdiffr::expect_doppelganger("point-glow size-default-9x", p)
+})
+
+test_that("glow_size scalar is taken at face value in size units", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(size = 3, glow_size = 12) +
+    theme_minimal()
+  vdiffr::expect_doppelganger("point-glow size-scalar-12", p)
+})
+
+test_that("glow_size vector renders per-point sizes", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(size = 3, glow_size = c(6, 10, 14)) +
+    theme_minimal()
+  vdiffr::expect_doppelganger("point-glow size-vector", p)
+})
+
 test_that("stat_pointless with PointGlow visual", {
   p <- ggplot(head(economics, 20L), aes(date, uempmed)) +
     geom_line() +
@@ -203,6 +224,104 @@ test_that("draw_panel: fixed glow_size is applied to all points", {
   expect_s3_class(result, "gList")
 })
 
+# ---------------------------------------------------------------------------
+# Vector-valued glow_* (length 1 or n rule + NA-filter alignment)
+# ---------------------------------------------------------------------------
+
+test_that("setup_data stamps vector glow_size as .glow_size column", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(glow_size = c(2, 4, 6))
+  built <- ggplot_build(p)
+  d <- built$data[[1]]
+  expect_equal(d$.glow_size, c(2, 4, 6))
+})
+
+test_that("vector glow_size stays aligned after NA-row filter", {
+  # Row 2 has NA in y → handle_na drops it → surviving glow fontsizes must
+  # reflect glow_size[1] and glow_size[3] = 1 and 3 (in mm), NOT [1] and [2]
+  # which would be the silent-misalignment bug.
+  p <- ggplot(data.frame(x = 1:3, y = c(1, NA, 3)), aes(x, y)) +
+    geom_point_glow(glow_size = c(1, 2, 3))
+
+  gt <- suppressWarnings(ggplotGrob(p))
+  panel <- gt$grobs[[which(gt$layout$name == "panel")]]
+  # The glow layer is an unnamed (auto-named) gTree child — find it.
+  idx <- which(
+    names(panel$children) == "" |
+      grepl("^GRID\\.gTree", names(panel$children))
+  )
+  glow <- panel$children[[idx[1L]]]
+
+  # grid uses pt; ggplot2's .pt ≈ 2.845 converts mm → pt.
+  fontsizes <- unname(vapply(glow$children, \(g) g$gp$fontsize, numeric(1L)))
+  expect_equal(
+    fontsizes,
+    c(1, 3) * ggplot2::.pt,
+    tolerance = 1e-3
+  )
+})
+
+test_that("vector glow_alpha and glow_colour also stamp and align", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(
+      glow_alpha  = c(0.2, 0.5, 0.8),
+      glow_colour = c("red", "green", "blue")
+    )
+  d <- ggplot_build(p)$data[[1]]
+  expect_equal(d$.glow_alpha, c(0.2, 0.5, 0.8))
+  expect_equal(d$.glow_colour, c("red", "green", "blue"))
+})
+
+test_that("validator rejects length-mismatched vectors (neither 1 nor n)", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(glow_size = 1:2)  # 2 != 1, 2 != 3
+  expect_error(ggplotGrob(p), "length 1 or the same length as the data")
+})
+
+test_that("validator accepts length-1 scalar (backward compat)", {
+  p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(glow_size = 5)
+  expect_no_error(ggplotGrob(p))
+  # No .glow_size column when scalar
+  d <- ggplot_build(p)$data[[1]]
+  expect_null(d$.glow_size)
+})
+
+test_that("draw-time info fires once when glow_size <= point size", {
+  # `.frequency = "once"` is in-session (env-based), so we reset before and
+  # after each test to get a clean slate.  `capture_messages()` is used
+  # instead of `expect_message()` because cli's message stream does not
+  # always propagate through expect_message() inside ggplotGrob().
+  rlang::reset_message_verbosity("geom_point_glow_size_covered")
+  withr::defer(
+    rlang::reset_message_verbosity("geom_point_glow_size_covered")
+  )
+
+  p_small <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow(glow_size = 1)   # 1 < default size 1.5
+
+  # First render: the hint fires.
+  msgs1 <- testthat::capture_messages(ggplotGrob(p_small))
+  expect_true(any(grepl("covered by the point", msgs1)))
+
+  # Second render in the same session: throttled, silent.
+  msgs2 <- testthat::capture_messages(ggplotGrob(p_small))
+  expect_false(any(grepl("covered by the point", msgs2)))
+})
+
+test_that("draw-time info stays silent when glow clearly exceeds point size", {
+  rlang::reset_message_verbosity("geom_point_glow_size_covered")
+  withr::defer(
+    rlang::reset_message_verbosity("geom_point_glow_size_covered")
+  )
+
+  p_ok <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+    geom_point_glow()                # default: 9 * size
+
+  msgs <- testthat::capture_messages(ggplotGrob(p_ok))
+  expect_false(any(grepl("covered by the point", msgs)))
+})
+
 
 # ===========================================================================
 # Grammar of Graphics adversarial stress tests
@@ -272,9 +391,16 @@ test_that("GoG/scales: scale_y_log10 does not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/scales: scale_y_reverse does not error", {
-  p <- ggplot(df, aes(x, y)) + geom_point_glow() + scale_y_reverse()
-  expect_no_error(ggplotGrob(p))
+test_that("GoG/scales: scale_y_reverse negates y values (point_glow)", {
+  b_fwd <- ggplot_build(ggplot(df, aes(x, y)) + geom_point_glow())
+  b_rev <- ggplot_build(ggplot(df, aes(x, y)) + geom_point_glow() + scale_y_reverse())
+  expect_equal(b_rev$data[[1]]$y, -b_fwd$data[[1]]$y)
+})
+
+test_that("GoG/scales: scale_x_reverse negates x values (point_glow)", {
+  b_fwd <- ggplot_build(ggplot(df, aes(x, y)) + geom_point_glow())
+  b_rev <- ggplot_build(ggplot(df, aes(x, y)) + geom_point_glow() + scale_x_reverse())
+  expect_equal(b_rev$data[[1]]$x, -b_fwd$data[[1]]$x)
 })
 
 test_that("GoG/scales: explicit limits do not error", {

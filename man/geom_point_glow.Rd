@@ -94,13 +94,17 @@ lists which parameters it can accept.
 }}
 
 \item{glow_alpha}{Transparency of the glow between 0 (fully transparent)
-and 1 (fully opaque). Defaults to \code{0.5}.}
+and 1 (fully opaque). Defaults to \code{0.5}. Either a scalar or a numeric
+vector whose length matches the number of points.}
 
-\item{glow_colour}{colour of the glow. If \code{NA} (default), it inherits the
-colour of the point itself.}
+\item{glow_colour}{Colour of the glow. If \code{NA} (default), it inherits the
+colour of the point itself. Either a scalar colour or a character
+vector whose length matches the number of points.}
 
-\item{glow_size}{Numerical value for the glow radius. If \code{NA} (default),
-it is calculated as three times the point size.}
+\item{glow_size}{Glow radius in ggplot2 size units (same scale as the
+\code{size} aesthetic in \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}). If \code{NA} (default), the
+glow is rendered at nine times the point's \code{size}. Either a scalar
+or a numeric vector whose length matches the number of points.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -122,20 +126,46 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-geom_point_glow is a version of (\code{\link[ggplot2:geom_point]{geom_point()}})
+\code{geom_point_glow()} is a version of \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}
 that adds a glow (radial gradient) behind each point.
 }
+\section{Coordinate systems}{
+
+\code{geom_point_glow()} works in all coordinate systems. The glow effect
+remains point-centric and circular in device space, even in non-linear
+coordinates like \code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}}.
+}
+
 \examples{
 library(ggplot2)
 
-# Basic usage
+# Basic usage — the default glow is 9× the point's `size` aesthetic,
+# so it's always visibly larger than the point itself.
 ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   geom_point_glow()
 
-# Customizing glow parameters (fixed for all points)
+# Customising the glow (fixed values, applied to every point)
 ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
   geom_point_glow(glow_colour = "#333", glow_alpha = 0.25, glow_size = 5) +
   theme_minimal()
+
+# Pitfall: glow_size is in the same units as `size`, and the default
+# point `size` is 1.5. If glow_size <= 1.5 the halo is covered by the
+# point itself — the gradient is drawn but invisible underneath.
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point_glow(glow_size = 1)   # ← glow < point size, no halo shows
+
+# Either shrink the point or grow the glow so the halo extends past it:
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point_glow(size = 0.5, glow_size = 1)   # shrink the point, or
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point_glow(glow_size = 4)               # grow the glow
+
+# Per-point glow (scalar or length matching nrow(data)): the vector is
+# aligned alongside the data, so any NA rows dropped by ggplot2 pull
+# their glow value with them.
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point_glow(glow_colour = rainbow(nrow(mtcars)), glow_size = 5)
 
 # use the Geom with another Stat
 ggplot(head(economics), aes(date, uempmed)) +
