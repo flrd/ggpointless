@@ -149,6 +149,14 @@ requires a device that supports Porter-Duff compositing
 geom falls back to a single-colour vertical fade and emits an informational
 message.
 }
+\section{Coordinate systems}{
+
+\code{geom_area_fade()} only supports linear gradients. When used with
+\code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}} or \code{\link[ggplot2:coord_radial]{ggplot2::coord_radial()}}, the geom falls back
+to standard area rendering (equivalent to \code{\link[ggplot2:geom_ribbon]{ggplot2::geom_area()}}), which
+means no gradient fill is added. The geom emits a warning in this case.
+}
+
 \section{Orientation}{
 
 
@@ -263,8 +271,6 @@ the \href{https://ggfx.data-imaginist.com/}{ggfx package} for real magic.
 }
 \concept{area plot}
 \concept{fading gradient}
-\concept{stacked area}
-\concept{time series}
 \section{Aesthetics}{
 
 \code{geom_area_fade()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
