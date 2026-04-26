@@ -2,9 +2,11 @@
 % Please edit documentation in R/geom-gridline.R
 \name{geom_gridline}
 \alias{geom_gridline}
-\title{Grid Lines Drawn on Top of Other Layers}
+\title{Lines Drawn on Top of Other Layers}
 \usage{
 geom_gridline(
+  mapping = NULL,
+  data = NULL,
   grids = "y",
   major = TRUE,
   minor = FALSE,
@@ -21,6 +23,16 @@ geom_gridline(
 )
 }
 \arguments{
+\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{ggplot2::aes()}}.
+Usually \code{NULL}: \code{geom_gridline()} reads break positions from the trained
+panel scales rather than from the layer's data, so no mapping is
+required.  Pass one only if you want to override a specific aesthetic
+(e.g. \code{aes(colour = ...)}) without setting it via \code{theme()}.}
+
+\item{data}{Optional data frame.  Same caveat as \code{mapping}: not needed in
+typical use because the geom derives its positions from the panel
+scales, but can be supplied for custom break sources.}
+
 \item{grids}{Character vector specifying which "grid" lines to draw:
 \code{"x"}, \code{"y"} (default), or \code{c("x", "y")} for both.}
 
@@ -51,32 +63,48 @@ Default \code{FALSE} (grid lines rarely need a legend entry).}
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 }
 \value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 When \code{suppress = TRUE} (default), a list of a \code{\link[ggplot2:layer]{ggplot2::layer()}}
 and one or more \code{\link[ggplot2:theme]{ggplot2::theme()}} calls that blank the corresponding
 theme grid elements. Otherwise a single layer.
 }
 \description{
-\code{geom_gridline()} draws (panel grid) lines as a regular ggplot2 layer, so
-they appear \emph{above} the other geoms in your plot instead of behind them.
-This is useful when bars, columns, or filled areas would otherwise
-obscure the grid.
+\code{geom_gridline()} draws horizontal and vertical lines where grid lines are
+as a regular ggplot2 layer, so they appear \emph{above} bar charts or any other
+geom in your plot.
 
-Inspired by Observable Plot's Grid mark:
-\url{https://observablehq.com/plot/marks/grid#grid-mark}.
-
-The grid-line positions are read directly from the trained scale (via
-\code{panel_params}), so they always match the axis ticks automatically.
+The line positions are read directly from the trained scale (via
+\code{panel_params}), and the line properties are read from the theme; so
+\code{geom_gridline()} always match the grid line positions and properties
+automatically; but you can overwrite these of course. All built-in ggplot2
+coordinate systems are supported, including \code{\link[ggplot2:coord_flip]{ggplot2::coord_flip()}},
+\code{\link[ggplot2:coord_fixed]{ggplot2::coord_fixed()}}, \code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}},
+\code{\link[ggplot2:coord_radial]{ggplot2::coord_radial()}}, and \code{\link[ggplot2:ggsf]{ggplot2::coord_sf()}}.
 By default the layer also suppresses the equivalent theme grid so the
 lines don't double up.
-}
-\section{Colour}{
 
-By default \code{geom_gridline()} inherits the colour of
+This was inspired by Observable Plot's Grid mark:
+\url{https://observablehq.com/plot/marks/grid#grid-mark}.
+}
+\section{Line properties}{
+
+By default \code{geom_gridline()} inherits properties from
 \code{theme(panel.grid.major)} (or \code{panel.grid.minor} when only minor lines are
 requested), so the on-top lines look exactly like the background grid would.
-Pass an explicit \code{colour} to override — e.g. \code{colour = "#FFFFFF"}. The geom
-creates a "bleed-through" effect where lines cut through e.g. bar fills
-without being visible against the panel background.
+Pass an explicit \code{colour} to override, see examples.
+}
+
+\section{Rendering order}{
+
+\code{geom_gridline()} follows a specific Z-order convention to ensure
+maximum visibility:
+\enumerate{
+\item Major grid lines are always drawn \strong{on top} of minor grid lines.
+\item Y-aesthetic grid lines are drawn \strong{on top} of X-aesthetic grid
+lines.
+}
+This means the final drawing sequence (from bottom to top) is: Minor X,
+Minor Y, Major X, Major Y.
 }
 
 \examples{
@@ -93,20 +121,21 @@ ggplot(mpg, aes(y = class)) +
   geom_bar() +
   geom_gridline(grids = "x")
 
-# Gridline properties are inherited from theme
+# Line properties are inherited from theme
+# their positions from the scale
 p +
-  geom_gridline(grids = c("x", "y"), minor = TRUE) +
-  theme(panel.grid = element_line(colour = "tomato", linetype = "dashed")) +
-  scale_y_continuous(breaks = c(10, 20))
+  geom_gridline() +
+  scale_y_continuous(breaks = c(10, 20)) +
+  theme_gray(paper = "cornsilk", ink = "navy")
 
-# Grid properties can be overwritten when you set them
-# explicitly in geom_gridlines()
+# When you explicitly set properties in geom_gridline
+# they will overwrite theme properties
 p +
-  geom_gridline(grids = c("x", "y"), colour = "black", minor = TRUE) +
-  theme(panel.grid = element_line(colour = "tomato")) +
-  scale_y_continuous(breaks = c(10, 20))
+  geom_gridline(colour = "tomato", major = FALSE, minor = TRUE) +
+  scale_y_continuous(breaks = c(10, 20)) +
+  theme_gray(paper = "cornsilk", ink = "navy")
 
-# polar coordinates
+# polar coordinates are supported too
 ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
   geom_bar(width = 1) +
   geom_gridline(grids = c("x", "y"), minor = TRUE) +
@@ -118,6 +147,4 @@ ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
 reference lines; \code{\link[ggplot2:theme]{ggplot2::theme()}} for controlling the underlying
 panel grid.
 }
-\concept{grid}
 \concept{gridline}
-\concept{reference lines}

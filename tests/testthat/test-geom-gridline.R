@@ -142,8 +142,8 @@ test_that("geom_gridline: major=TRUE, minor=TRUE: minor grob has no major positi
   co  <- b$layout$coord
   g   <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = TRUE)
 
-  # child 1 = major, child 2 = minor
-  minor_pos <- as.numeric(g$children[[2L]]$y0)
+  # child 1 = minor (drawn first, at bottom), child 2 = major (drawn on top)
+  minor_pos <- as.numeric(g$children[[1L]]$y0)
   maj_pos   <- pp$y$break_positions()
   maj_pos   <- maj_pos[!is.na(maj_pos)]
 
@@ -299,8 +299,8 @@ test_that("geom_gridline: no warning when setting lineend as fixed param", {
 test_that("geom_gridline: default colour inherits panel.grid.major (white in theme_gray)", {
   b  <- ggplot_build(base_p)
   ld <- b$data[[2L]]
-  # panel.grid.major colour in theme_gray() is white
-  expect_equal(ld$colour[1L], "white")
+  # panel.grid.major colour in theme_gray() is white; stamped into .mj_y_col
+  expect_equal(ld$.mj_y_col[1L], "white")
 })
 
 test_that("geom_gridline: colour inherits from theme(panel.grid)", {
@@ -309,7 +309,7 @@ test_that("geom_gridline: colour inherits from theme(panel.grid)", {
     geom_gridline(suppress = FALSE) +
     theme(panel.grid = element_line(colour = "tomato"))
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$colour[1L], "tomato")
+  expect_equal(ld$.mj_y_col[1L], "tomato")
 })
 
 test_that("geom_gridline: linetype inherits from theme(panel.grid)", {
@@ -318,7 +318,7 @@ test_that("geom_gridline: linetype inherits from theme(panel.grid)", {
     geom_gridline(suppress = FALSE) +
     theme(panel.grid = element_line(linetype = "dotted"))
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$linetype[1L], "dotted")
+  expect_equal(ld$.mj_y_lty[1L], "dotted")
 })
 
 test_that("geom_gridline: linewidth inherits from theme(panel.grid)", {
@@ -327,7 +327,7 @@ test_that("geom_gridline: linewidth inherits from theme(panel.grid)", {
     geom_gridline(suppress = FALSE) +
     theme(panel.grid = element_line(linewidth = 2))
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$linewidth[1L], 2)
+  expect_equal(ld$.mj_y_lwd[1L], 2)
 })
 
 test_that("geom_gridline: lineend inherits from theme(panel.grid)", {
@@ -336,7 +336,7 @@ test_that("geom_gridline: lineend inherits from theme(panel.grid)", {
     geom_gridline(suppress = FALSE) +
     theme(panel.grid = element_line(lineend = "round"))
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$lineend[1L], "round")
+  expect_equal(ld$.mj_y_end[1L], "round")
 })
 
 test_that("geom_gridline: explicit colour overrides theme, others still from theme", {
@@ -345,9 +345,9 @@ test_that("geom_gridline: explicit colour overrides theme, others still from the
     geom_gridline(colour = "steelblue", suppress = FALSE) +
     theme(panel.grid = element_line(linetype = "dotted", linewidth = 2))
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$colour[1L],   "steelblue")
-  expect_equal(ld$linetype[1L], "dotted")
-  expect_equal(ld$linewidth[1L], 2)
+  expect_equal(ld$.mj_y_col[1L], "steelblue")
+  expect_equal(ld$.mj_y_lty[1L], "dotted")
+  expect_equal(ld$.mj_y_lwd[1L], 2)
 })
 
 test_that("geom_gridline: explicit colour overrides theme default", {
@@ -355,7 +355,7 @@ test_that("geom_gridline: explicit colour overrides theme default", {
     geom_bar() +
     geom_gridline(colour = "grey80", suppress = FALSE)
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$colour[1L], "grey80")
+  expect_equal(ld$.mj_y_col[1L], "grey80")
 })
 
 # ---------------------------------------------------------------------------
@@ -451,15 +451,6 @@ test_that("geom_gridline: builds with coord_equal", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("geom_gridline: builds with coord_polar (no ViewScale — returns zeroGrob)", {
-  # coord_polar does not produce ViewScale objects in panel_params, so
-  # break_positions() is unavailable.  draw_panel must skip gracefully.
-  p <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
-    geom_bar(width = 1) +
-    coord_polar(theta = "y") +
-    geom_gridline()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Facets
@@ -542,6 +533,29 @@ test_that("geom_gridline: all-invalid grids falls back to 'y' with two warnings"
   th <- result[[2L]]
   expect_true(inherits(th$panel.grid.major.y, "element_blank"))
   expect_null(th$panel.grid.major.x)
+})
+
+test_that("geom_gridline: mapping= warns that it is ignored", {
+  expect_warning(
+    geom_gridline(mapping = aes(colour = displ)),
+    regexp = "Ignoring.*mapping.*panel scale"
+  )
+})
+
+test_that("geom_gridline: data= warns that it is ignored", {
+  expect_warning(
+    geom_gridline(data = data.frame(x = 1)),
+    regexp = "Ignoring.*data.*panel scale"
+  )
+})
+
+test_that("geom_gridline: aes() as first positional arg now warns via mapping= formal", {
+  # Previously, aes(colour=displ) fell into ... and was matched to `grids`,
+  # producing a confusing "Ignoring invalid grids value: ~displ" message.
+  # Now it is captured by the explicit mapping= formal and emits a clear warning.
+  w <- capture_warnings(geom_gridline(aes(colour = displ)))
+  expect_true(any(grepl("Ignoring.*mapping", w)))
+  expect_false(any(grepl("invalid.*grids", w)))
 })
 
 # ===========================================================================
@@ -645,10 +659,19 @@ test_that("GoG/scales: scale_y_log10 does not error", {
   expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
 
-test_that("GoG/scales: scale_y_reverse does not error", {
-  p <- ggplot(mpg, aes(class)) +
-    geom_bar() + scale_y_reverse() + geom_gridline()
-  expect_no_error(ggplotGrob(p))
+test_that("GoG/scales: scale_y_reverse negates bar y values (gridline)", {
+  df_g <- data.frame(x = c("A", "B", "C"), y = c(3, 5, 2))
+  b_fwd <- ggplot_build(ggplot(df_g, aes(x, y)) + geom_col() + geom_gridline())
+  b_rev <- ggplot_build(ggplot(df_g, aes(x, y)) + geom_col() + scale_y_reverse() +
+                          geom_gridline())
+  expect_equal(b_rev$data[[1]]$y, -b_fwd$data[[1]]$y)
+})
+
+test_that("GoG/scales: scale_x_reverse produces all-negative x values (gridline)", {
+  df_g <- data.frame(x = 1:5, y = 1:5)
+  b_rev <- ggplot_build(ggplot(df_g, aes(x, y)) + geom_line() + scale_x_reverse() +
+                          geom_gridline())
+  expect_true(all(b_rev$data[[1]]$x < 0))
 })
 
 test_that("GoG/scales: scale_y_sqrt does not error", {
@@ -800,8 +823,8 @@ test_that("GoG/theme: panel.grid=element_blank() falls back to ink colour", {
     theme(panel.grid = element_blank())
   b <- ggplot_build(p)
   ld <- b$data[[2L]]
-  # element_blank triggers ink fallback — result must be a non-NA colour string
-  expect_true(is.character(ld$colour[1L]) && !is.na(ld$colour[1L]))
+  # element_blank triggers ink fallback — .mj_y_col must be a non-NA colour string
+  expect_true(is.character(ld$.mj_y_col[1L]) && !is.na(ld$.mj_y_col[1L]))
 })
 
 test_that("GoG/theme: all panel.grid properties propagate to layer data", {
@@ -815,18 +838,18 @@ test_that("GoG/theme: all panel.grid properties propagate to layer data", {
       lineend  = "round"
     ))
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$colour[1L],    "tomato")
-  expect_equal(ld$linetype[1L],  "dotted")
-  expect_equal(ld$linewidth[1L], 2)
-  expect_equal(ld$lineend[1L],   "round")
+  expect_equal(ld$.mj_y_col[1L], "tomato")
+  expect_equal(ld$.mj_y_lty[1L], "dotted")
+  expect_equal(ld$.mj_y_lwd[1L], 2)
+  expect_equal(ld$.mj_y_end[1L], "round")
 })
 
 # ---------------------------------------------------------------------------
 # Regression: minor-only reads from panel.grid.minor, not panel.grid.major
-# Bug: major/minor are geom params (not aes params), so params$minor was
-# always NULL inside use_defaults(), causing el_name to always resolve to
-# "panel.grid.major".  Fixed by stamping .major/.minor onto data in
-# setup_data() so use_defaults() can read data$.minor[1L].
+# Bug: major/minor are geom params (not aes params) so they are absent from
+# aes_params inside use_defaults().  Fixed by pre-stamping all four
+# axis × major/minor property combos (.mj_x_col, .mn_y_lwd, …) in
+# use_defaults() so draw_panel can select the right one at render time.
 # ---------------------------------------------------------------------------
 
 test_that("GoG/theme: minor-only colour comes from panel.grid.minor", {
@@ -838,7 +861,7 @@ test_that("GoG/theme: minor-only colour comes from panel.grid.minor", {
       panel.grid.minor = element_line(colour = "red")
     )
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$colour[1L], "red")
+  expect_equal(ld$.mn_y_col[1L], "red")
 })
 
 test_that("GoG/theme: major+minor colour comes from panel.grid.major", {
@@ -850,7 +873,32 @@ test_that("GoG/theme: major+minor colour comes from panel.grid.major", {
       panel.grid.minor = element_line(colour = "red")
     )
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$colour[1L], "blue")
+  expect_equal(ld$.mj_y_col[1L], "blue")
+})
+
+test_that("%|NA|% falls back on NA and NULL but passes through any other value", {
+  # Covers the operator used to guard lineend/linewidth/linetype against NA.
+  expect_equal(NA      %|NA|% "butt",  "butt")
+  expect_equal(NULL    %|NA|% "butt",  "butt")
+  expect_equal("round" %|NA|% "butt",  "round")
+  expect_equal(0.5     %|NA|% 1,       0.5)
+  expect_equal(FALSE   %|NA|% TRUE,    FALSE)   # FALSE is not NA
+  expect_equal(0L      %|NA|% 99L,     0L)      # 0L is not NA
+})
+
+test_that("draw_panel: NA lineend in stamped data falls back to 'butt' via %|NA|%", {
+  # ggplot2 v4 element_line rejects NA at construction, so NA in stamped data
+  # can only arrive via unusual/external manipulation.  draw_panel must still
+  # not crash.  We inject NA directly into the layer data to trigger the guard.
+  b  <- ggplot_build(scatter_p)
+  ld <- b$data[[2L]]
+  pp <- b$layout$panel_params[[1L]]
+  co <- b$layout$coord
+
+  ld$.mj_y_end <- NA_character_   # inject NA
+  expect_no_error(
+    GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+  )
 })
 
 test_that("GoG/theme: minor-only linewidth comes from panel.grid.minor", {
@@ -862,7 +910,7 @@ test_that("GoG/theme: minor-only linewidth comes from panel.grid.minor", {
       panel.grid.minor = element_line(linewidth = 0.5)
     )
   ld <- ggplot_build(p)$data[[2L]]
-  expect_equal(ld$linewidth[1L], 0.5)
+  expect_equal(ld$.mn_y_lwd[1L], 0.5)
 })
 
 # ---------------------------------------------------------------------------
@@ -1226,4 +1274,468 @@ test_that("duplicate breaks draw each position once", {
     scale_y_continuous(breaks = c(8000, 8000, 12000))
 
   expect_no_error(ggplotGrob(p))
+})
+
+# ===========================================================================
+# Rendering correctness — grob structure (not just "no error")
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Section A: Polar grob structure
+# ---------------------------------------------------------------------------
+
+test_that("polar grids='x' (spokes) produces non-trivial gTree with 1 child", {
+  pie <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1) +
+    geom_gridline(grids = "x", suppress = FALSE) +
+    coord_polar(theta = "y")
+  b  <- ggplot_build(pie)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "x", major = TRUE, minor = FALSE)
+  
+  expect_false(inherits(g, "zeroGrob"))
+  expect_true(inherits(g, "gTree"))
+  expect_equal(length(g$children), 1L)
+})
+
+test_that("polar grids=c('x','y') produces gTree with 2 children (one per axis)", {
+  pie <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1) +
+    geom_gridline(grids = c("x", "y"), suppress = FALSE) +
+    coord_polar(theta = "y")
+  b  <- ggplot_build(pie)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = c("x", "y"), major = TRUE, minor = FALSE)
+
+  expect_true(inherits(g, "gTree"))
+  expect_equal(length(g$children), 2L)
+})
+
+test_that("polar minor=TRUE produces 2 children (major + minor)", {
+  pie <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1) +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    coord_polar(theta = "y")
+  b  <- ggplot_build(pie)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = TRUE)
+
+  expect_equal(length(g$children), 2L)
+})
+
+test_that("polar child grob is NOT a segments grob (non-linear → GeomPath)", {
+  pie <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1) +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    coord_polar(theta = "y")
+  b  <- ggplot_build(pie)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+
+  child <- g$children[[1L]]
+  # In polar, GeomSegment delegates to GeomPath → polyline, not segments
+  expect_false(inherits(child, "segments"))
+})
+
+# ---------------------------------------------------------------------------
+# Critical regression: minor lines must NOT appear when minor=FALSE
+# even when ggplot2 auto-computes minor breaks (≥2 major breaks)
+# ---------------------------------------------------------------------------
+
+test_that("REGRESSION: minor=FALSE with 2+ breaks draws major only, never minor", {
+  # This bug occurred when minor=FALSE but ≥2 major breaks existed.
+  # ggplot2 auto-computes minor break positions; the theme would draw them.
+  # The fix: always blank panel.grid.minor.{ax} when drawing, regardless of minor param.
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_continuous(breaks = c(8000, 12000))  # 2 breaks → auto minor breaks
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+
+  # With the bug: would see 2 children (major + minor that bled through)
+  # With the fix: exactly 1 child (major only)
+  expect_equal(length(g$children), 1L)
+
+  # Drawn positions should be ONLY major positions (2 lines)
+  drawn_y <- as.numeric(g$children[[1L]]$y0)
+  expect_equal(length(drawn_y), 2L)
+
+  # Verify they match the major break positions, not minor
+  major_pos <- pp$y$break_positions()
+  minor_pos <- pp$y$break_positions_minor()
+  major_pos <- major_pos[!is.na(major_pos)]
+  minor_pos <- minor_pos[!is.na(minor_pos)]
+
+  # Drawn should match major (2 positions)
+  expect_equal(sort(drawn_y), sort(major_pos))
+
+  # Drawn should NOT include any positions unique to minor
+  minor_only <- minor_pos[!vapply(minor_pos, function(p) any(abs(p - major_pos) < 1e-9), logical(1L))]
+  if (length(minor_only) > 0L) {
+    expect_false(any(vapply(drawn_y, function(d) any(abs(d - minor_only) < 1e-9), logical(1L))))
+  }
+})
+
+# ---------------------------------------------------------------------------
+# Section B3: Break count correctness
+# ---------------------------------------------------------------------------
+
+test_that("exact break count matches number of non-NA breaks", {
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_continuous(breaks = c(3000, 6000, 9000, 12000))
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+  
+  n_breaks <- sum(!is.na(pp$y$breaks))
+  n_drawn  <- length(as.numeric(g$children[[1L]]$y0))
+  expect_equal(n_drawn, n_breaks)
+})
+
+# ---------------------------------------------------------------------------
+# Section B5: Limits excluding breaks
+# ---------------------------------------------------------------------------
+
+test_that("limits that exclude breaks: only in-range breaks drawn", {
+  # breaks c(4000, 8000, 12000); limits c(6000, 10000) → only 8000 in range
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_continuous(breaks = c(4000, 8000, 12000), limits = c(6000, 10000))
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+  
+  # Only 8000 is in [6000, 10000] → 1 line
+  expect_equal(length(as.numeric(g$children[[1L]]$y0)), 1L)
+})
+
+# ---------------------------------------------------------------------------
+# Section C: Discrete axis positions
+# ---------------------------------------------------------------------------
+
+test_that("discrete x scale grids='x': count matches number of levels", {
+  p <- ggplot(mpg, aes(class, hwy)) +
+    geom_point() +
+    geom_gridline(grids = "x", suppress = FALSE)
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "x", major = TRUE, minor = FALSE)
+  
+  # class has 7 levels
+  expect_equal(length(as.numeric(g$children[[1L]]$x0)), 7L)
+})
+
+test_that("discrete x positions match break_positions() values", {
+  p <- ggplot(mpg, aes(class, hwy)) +
+    geom_point() +
+    geom_gridline(grids = "x", suppress = FALSE)
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "x", major = TRUE, minor = FALSE)
+  
+  drawn <- sort(as.numeric(g$children[[1L]]$x0))
+  expected <- sort(pp$x$break_positions())
+  expect_equal(drawn, expected)
+})
+
+# ---------------------------------------------------------------------------
+# Scale family interactions — verify gridline positions track scale transforms
+# ---------------------------------------------------------------------------
+
+test_that("scale_y_log10: gridline positions match log-transformed break_positions()", {
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_log10(breaks = c(2000, 5000, 12000))
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+
+  # In log scale, break_positions() are pre-transformed to NPC
+  expected <- pp$y$break_positions()
+  expected <- expected[!is.na(expected)]
+  drawn <- sort(as.numeric(g$children[[1L]]$y0))
+  # Should match exactly (log positions)
+  expect_equal(drawn, sort(expected), tolerance = 1e-6)
+})
+
+test_that("scale_y_sqrt: gridline positions match sqrt-transformed break_positions()", {
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_sqrt(breaks = c(2000, 6000, 10000))
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+
+  expected <- pp$y$break_positions()
+  expected <- expected[!is.na(expected)]
+  drawn <- sort(as.numeric(g$children[[1L]]$y0))
+  expect_equal(drawn, sort(expected), tolerance = 1e-6)
+})
+
+test_that("scale_y_reverse: gridline y-positions are inverted correctly", {
+  # Reversed scale: high y-values map to low NPC, low y-values to high NPC
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_reverse(breaks = c(14000, 10000, 4000))
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+
+  expected <- pp$y$break_positions()
+  expected <- expected[!is.na(expected)]
+  drawn <- sort(as.numeric(g$children[[1L]]$y0))
+  # In reversed scale, positions should still be ordered 0 < pos < 1
+  expect_equal(drawn, sort(expected), tolerance = 1e-6)
+})
+
+test_that("scale_x_date: gridline x-positions align with date breaks", {
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "x", suppress = FALSE) +
+    scale_x_date(breaks = "10 years")
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "x", major = TRUE, minor = FALSE)
+
+  expected <- pp$x$break_positions()
+  expected <- expected[!is.na(expected)]
+  drawn <- sort(as.numeric(g$children[[1L]]$x0))
+  expect_equal(drawn, sort(expected), tolerance = 1e-6)
+})
+
+test_that("explicit breaks + minor_breaks: count includes both, no overlap", {
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", major = TRUE, minor = TRUE, suppress = FALSE) +
+    scale_y_continuous(breaks = c(4000, 8000, 12000), minor_breaks = c(2000, 6000, 10000, 14000))
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = TRUE)
+
+  # Should have 2 children: major (3 lines) + minor (3 pure minor lines, since 1 overlaps)
+  expect_equal(length(g$children), 2L)
+
+  major_drawn <- as.numeric(g$children[[1L]]$y0)
+  minor_drawn <- as.numeric(g$children[[2L]]$y0)
+
+  # Major: 3 lines
+  expect_equal(length(major_drawn), 3L)
+  # Minor: ggplot2 filters out-of-range breaks (2000 dropped)
+  # minor_breaks after filter = [6000, 10000, 14000] = 3 lines
+  expect_equal(length(minor_drawn), 3L)
+
+  # No overlap: major and minor positions should be disjoint
+  overlaps <- sapply(minor_drawn, function(m) any(abs(m - major_drawn) < 1e-9))
+  expect_false(any(overlaps))
+})
+
+test_that("breaks = NULL auto-computed: gridline still correct", {
+  # ggplot2 auto-computes pretty breaks; gridline should follow
+  p <- ggplot(economics, aes(date, unemploy)) +
+    geom_line() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    scale_y_continuous(breaks = NULL)
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]; pp <- b$layout$panel_params[[1L]]; co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+
+  expected <- pp$y$break_positions()
+  expected <- expected[!is.na(expected)]
+  drawn <- as.numeric(g$children[[1L]]$y0)
+  # Just verify count matches and positions are in [0,1]
+  expect_equal(length(drawn), length(expected))
+  expect_true(all(drawn >= 0 & drawn <= 1))
+})
+
+# ---------------------------------------------------------------------------
+# Section G: vdiffr snapshots
+# ---------------------------------------------------------------------------
+
+test_that("vdiffr: geom_gridline basic (y-grid on bar chart)", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mpg, aes(class)) +
+    geom_bar(aes(fill = drv)) +
+    geom_gridline(colour = "grey80")
+  vdiffr::expect_doppelganger("gridline-basic", p)
+})
+
+test_that("vdiffr: geom_gridline both axes with minor lines", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mpg, aes(displ, hwy)) +
+    geom_point() +
+    geom_gridline(grids = c("x", "y"), minor = TRUE, colour = "grey90")
+  vdiffr::expect_doppelganger("gridline-both-axes-minor", p)
+})
+
+test_that("vdiffr: geom_gridline in coord_polar", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1) +
+    geom_gridline(grids = c("x", "y"), minor = FALSE, colour = "black") +
+    coord_polar(theta = "y")
+  vdiffr::expect_doppelganger("gridline-polar", p)
+})
+
+# ---------------------------------------------------------------------------
+# coord_polar: geom_gridline should reproduce the theme grid
+#
+# The baseline plot (no geom_gridline layer) renders the polar background via
+# CoordPolar$render_bg, which extends rays to npc 0.45 and appends an outer
+# boundary circle.  Layering geom_gridline on top (with the theme grid
+# suppressed) must match that output 1:1 — same rays to the same outer
+# radius, same boundary circle.  The two snapshots below pin the equivalence.
+# ---------------------------------------------------------------------------
+
+test_that("vdiffr: polar baseline (no gridline layer) — theme grid only", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1, alpha = 0) +
+    coord_polar(theta = "y")
+  vdiffr::expect_doppelganger("gridline-polar-baseline-no-layer", p)
+})
+
+test_that("vdiffr: polar layered — geom_gridline matches the theme grid", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
+    geom_bar(width = 1, alpha = 0) +
+    geom_gridline(grids = c("x", "y"), minor = TRUE) +
+    coord_polar(theta = "y")
+  vdiffr::expect_doppelganger("gridline-polar-layered", p)
+})
+
+test_that("vdiffr: geom_gridline in coord_flip (both axes)", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mpg, aes(displ, cty)) +
+    geom_point() +
+    suppressMessages(geom_smooth()) +
+    geom_gridline(grids = c("x", "y")) +
+    coord_flip()
+  suppressMessages(
+    vdiffr::expect_doppelganger("gridline-coord-flip", p)
+  )
+})
+
+# ---------------------------------------------------------------------------
+# coord_flip position correctness
+#
+# aes(displ, cty) + coord_flip() displays cty on the horizontal axis and
+# displ on the vertical axis — exactly the same layout as aes(cty, displ).
+# Both must produce gridlines at the same NPC positions.
+# This catches any double-flip in the is_flipped + draw_horizontal logic.
+# ---------------------------------------------------------------------------
+
+test_that("coord_flip: x-gridline positions equal flipped-aes x-gridline positions", {
+  p_coord <- ggplot(mpg, aes(displ, cty)) +
+    geom_point() +
+    geom_gridline(grids = "x", suppress = FALSE) +
+    coord_flip()
+
+  p_aes <- ggplot(mpg, aes(cty, displ)) +
+    geom_point() +
+    geom_gridline(grids = "x", suppress = FALSE)
+
+  grob_positions <- function(p) {
+    b  <- ggplot_build(p)
+    ld <- b$data[[2L]]
+    pp <- b$layout$panel_params[[1L]]
+    co <- b$layout$coord
+    g  <- GeomGridline$draw_panel(ld, pp, co, grids = "x", major = TRUE, minor = FALSE)
+    sort(as.numeric(g$children[[1L]]$x0))
+  }
+
+  expect_equal(grob_positions(p_coord), grob_positions(p_aes), tolerance = 1e-6)
+})
+
+test_that("coord_flip: y-gridline positions equal flipped-aes y-gridline positions", {
+  p_coord <- ggplot(mpg, aes(displ, cty)) +
+    geom_point() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    coord_flip()
+
+  p_aes <- ggplot(mpg, aes(cty, displ)) +
+    geom_point() +
+    geom_gridline(grids = "y", suppress = FALSE)
+
+  grob_positions <- function(p) {
+    b  <- ggplot_build(p)
+    ld <- b$data[[2L]]
+    pp <- b$layout$panel_params[[1L]]
+    co <- b$layout$coord
+    g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+    sort(as.numeric(g$children[[1L]]$y0))
+  }
+
+  expect_equal(grob_positions(p_coord), grob_positions(p_aes), tolerance = 1e-6)
+})
+
+test_that("coord_flip: x-gridlines are vertical (x0 == x1, y spans full panel)", {
+  p <- ggplot(mpg, aes(displ, cty)) +
+    geom_point() +
+    geom_gridline(grids = "x", suppress = FALSE) +
+    coord_flip()
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]
+  pp <- b$layout$panel_params[[1L]]
+  co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "x", major = TRUE, minor = FALSE)
+  seg <- g$children[[1L]]
+  expect_equal(as.numeric(seg$x0), as.numeric(seg$x1), tolerance = 1e-9)
+  expect_true(all(as.numeric(seg$y0) == 0))
+  expect_true(all(as.numeric(seg$y1) == 1))
+})
+
+test_that("coord_flip: y-gridlines are horizontal (y0 == y1, x spans full panel)", {
+  p <- ggplot(mpg, aes(displ, cty)) +
+    geom_point() +
+    geom_gridline(grids = "y", suppress = FALSE) +
+    coord_flip()
+  b  <- ggplot_build(p)
+  ld <- b$data[[2L]]
+  pp <- b$layout$panel_params[[1L]]
+  co <- b$layout$coord
+  g  <- GeomGridline$draw_panel(ld, pp, co, grids = "y", major = TRUE, minor = FALSE)
+  seg <- g$children[[1L]]
+  expect_equal(as.numeric(seg$y0), as.numeric(seg$y1), tolerance = 1e-9)
+  expect_true(all(as.numeric(seg$x0) == 0))
+  expect_true(all(as.numeric(seg$x1) == 1))
+})
+
+# ---------------------------------------------------------------------------
+# colour validation (delegated to farver via .check_colour_arg)
+# ---------------------------------------------------------------------------
+
+test_that("colour: NULL default inherits from theme (no error)", {
+  p <- ggplot(mpg, aes(class)) + geom_bar() + geom_gridline(colour = NULL)
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("colour: valid scalar colour accepted", {
+  p <- ggplot(mpg, aes(class)) + geom_bar() + geom_gridline(colour = "red")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("colour: unknown colour name errors via farver", {
+  expect_error(
+    geom_gridline(colour = "flurble"),
+    "colour"
+  )
+  expect_error(
+    geom_gridline(colour = "flurble"),
+    "Unknown colour name"
+  )
+})
+
+test_that("colour: length-2 vector errors (scalar only)", {
+  expect_error(
+    geom_gridline(colour = c("red", "blue")),
+    "length 1 or the same length as the data"
+  )
 })
