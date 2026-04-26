@@ -26,7 +26,7 @@ geom_fourier(
 stat_fourier(
   mapping = NULL,
   data = NULL,
-  geom = "line",
+  geom = "fourier",
   position = "identity",
   ...,
   n_harmonics = NULL,
@@ -138,6 +138,8 @@ and \code{stat_fourier()}.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 \code{geom_fourier()} and \code{stat_fourier()} fit a truncated Fourier (discrete
@@ -237,14 +239,30 @@ ggplot(df3, aes(x, y, colour = grp)) +
   geom_fourier()
 
 # when the data is not uniformly-spaced, the Fourier
-# curve will not pass through every data point
+# curve will not hit every data point exactly
+ggplot(head(economics, 25), aes(date, unemploy)) +
+  geom_fourier() +
+  geom_point()  +
+  geom_curve_fade(
+    data = data.frame(
+      x    = as.Date("1967-10-01"),
+      xend = as.Date("1968-01-01"),
+      y    = 2750,
+      yend = 2850
+    ),
+    aes(x = x, xend = xend, y = y, yend = yend),
+    arrow = arrow(),
+    colour = "tomato"
+    )
+
+# ... in extreme cases a warning is emitted
 df4 <- data.frame(
   x = c(1:10, 19:20),
   y = sin(seq_len(12))
 )
 
 ggplot(df4, aes(x, y)) +
-  geom_point()
+  geom_point() +
   geom_fourier()
 
 }
@@ -253,11 +271,8 @@ ggplot(df4, aes(x, y)) +
 \code{\link[=lm]{lm()}} and \code{\link[=loess]{loess()}} for the optional detrending fits,
 \code{\link[=geom_catenary]{geom_catenary()}} and \code{\link[=geom_chaikin]{geom_chaikin()}} for other curve-fitting geoms.
 }
-\concept{FFT}
 \concept{Fourier series}
 \concept{curve fitting}
-\concept{frequency analysis}
-\concept{smooth curve}
 \section{Aesthetics}{
 
 \code{geom_fourier()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

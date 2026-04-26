@@ -1,10 +1,42 @@
+#' @title Key glyphs for legends
+#'
+#' @description
+#' Each geom has an associated function that draws the key when the geom needs
+#' to be displayed in a legend. These functions are called `draw_key_*()`, where
+#' `*` stands for the name of the respective key glyph. The key glyphs can be
+#' customized for individual geoms by providing a geom with the `key_glyph`
+#' argument (see [`layer()`] or examples below.)
+#'
+#' @return A grid grob.
+#' @inheritParams ggplot2::draw_key
+#'
+#' @export
+#' @keywords internal
+draw_key_fourier <- function(data, params, size) {
+  x <- seq(0.1, 0.9, length.out = 30)
+  # Sine wave: one full period, centered vertically at 0.5 NPC
+  y <- 0.5 + 0.35 * sin(2 * pi * (x - 0.1) / 0.8)
+
+  grid::linesGrob(
+    x,
+    y,
+    gp = ggplot2::gg_par(
+      col = alpha(data$colour %||% "black", data$alpha),
+      lwd = data$linewidth %||% 0.5,
+      lty = data$linetype %||% 1,
+      lineend = "round"
+    )
+  )
+}
+
 #' @rdname ggpointless-ggproto
 #' @format NULL
 #' @usage NULL
 #' @export
 GeomFourier <- ggproto(
   "GeomFourier",
-  ggplot2::GeomLine
+  ggplot2::GeomLine,
+  draw_key = draw_key_fourier
 )
 
 #' @title Fourier Series Smoothing
@@ -19,9 +51,6 @@ GeomFourier <- ggproto(
 #'
 #' @concept Fourier series
 #' @concept curve fitting
-#' @concept smooth curve
-#' @concept FFT
-#' @concept frequency analysis
 #'
 #' @section Period convention:
 #' The DFT treats the input as one period of an infinitely repeating signal.
@@ -68,6 +97,8 @@ GeomFourier <- ggproto(
 #' @aesthetics GeomFourier
 #' @param geom,stat Override the default connection between `geom_fourier()`
 #'   and `stat_fourier()`.
+#'
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #'
 #' @seealso
 #'   [stats::fft()] for the underlying Fast Fourier Transform,
@@ -122,18 +153,32 @@ GeomFourier <- ggproto(
 #'   geom_fourier()
 #'
 #' # when the data is not uniformly-spaced, the Fourier
-#' # curve will not pass through every data point
+#' # curve will not hit every data point exactly
+#' ggplot(head(economics, 25), aes(date, unemploy)) +
+#'   geom_fourier() +
+#'   geom_point()  +
+#'   geom_curve_fade(
+#'     data = data.frame(
+#'       x    = as.Date("1967-10-01"),
+#'       xend = as.Date("1968-01-01"),
+#'       y    = 2750,
+#'       yend = 2850
+#'     ),
+#'     aes(x = x, xend = xend, y = y, yend = yend),
+#'     arrow = arrow(),
+#'     colour = "tomato"
+#'     )
+#'
+#' # ... in extreme cases a warning is emitted
 #' df4 <- data.frame(
 #'   x = c(1:10, 19:20),
 #'   y = sin(seq_len(12))
 #' )
 #'
 #' ggplot(df4, aes(x, y)) +
-#'   geom_point()
+#'   geom_point() +
 #'   geom_fourier()
 #'
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
-#' @rdname geom_fourier
 #' @export
 geom_fourier <- make_constructor(
   GeomFourier,

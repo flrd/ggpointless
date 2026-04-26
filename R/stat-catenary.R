@@ -303,18 +303,7 @@ StatCatenary <- ggproto(
   Stat,
   required_aes = c("x", "y"),
 
-  extra_params = c("na.rm", "chain_length", "chainLength"),
-
-  setup_params = \(data, params) {
-    if (!is.null(params$chainLength)) {
-      lifecycle::deprecate_stop(
-        "0.3.0",
-        "ggpointless::stat_catenary(chainLength)",
-        "ggpointless::stat_catenary(chain_length)"
-      )
-    }
-    params
-  },
+  extra_params = c("na.rm", "chain_length", "sag"),
 
   compute_group = \(data, scales, chain_length = NULL, sag = NULL) {
     # scale_y_reverse() negates y before the stat runs, which would otherwise
@@ -346,6 +335,8 @@ StatArch <- ggproto(
   Stat,
   required_aes = c("x", "y"),
 
+  extra_params = c("na.rm", "arch_length", "arch_height"),
+
   compute_group = \(
     data,
     scales,
@@ -370,10 +361,14 @@ StatArch <- ggproto(
   }
 )
 
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @rdname geom_catenary
 #' @export
 stat_catenary <- make_constructor(StatCatenary, geom = "catenary")
 
 #' @rdname geom_catenary
 #' @export
-stat_arch <- make_constructor(StatArch, geom = "line")
+# `geom = "catenary"` resolves to `GeomCatenary`, whose `draw_key` is the
+# catenary glyph; `key_glyph = "arch"` overrides that with `draw_key_arch`
+# so the legend correctly shows an arch instead of a hanging chain.
+stat_arch <- make_constructor(StatArch, geom = "catenary", key_glyph = "arch")

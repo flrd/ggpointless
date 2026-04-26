@@ -1,3 +1,53 @@
+#' @title Key glyphs for legends
+#'
+#' @description
+#' Each geom has an associated function that draws the key when the geom needs
+#' to be displayed in a legend. These functions are called `draw_key_*()`, where
+#' `*` stands for the name of the respective key glyph. The key glyphs can be
+#' customized for individual geoms by providing a geom with the `key_glyph`
+#' argument (see [`layer()`] or examples below.)
+#'
+#' @return A grid grob.
+#' @inheritParams ggplot2::draw_key
+#'
+#' @export
+#' @keywords internal
+draw_key_catenary <- function(data, params, size) {
+  x <- seq(0.1, 0.9, length.out = 30)
+  # Simple catenary approximation: y = a * cosh((x-h)/a) + v
+  # Hanging curve
+  y <- 0.8 - 0.5 * (cosh((x - 0.5) / 0.3) - 1)
+
+  grid::linesGrob(
+    x, y,
+    gp = ggplot2::gg_par(
+      col = alpha(data$colour %||% "black", data$alpha),
+      lwd = data$linewidth %||% 0.5,
+      lty = data$linetype %||% 1,
+      lineend = "round"
+    )
+  )
+}
+
+#' @rdname draw_key_catenary
+#' @export
+#' @keywords internal
+draw_key_arch <- function(data, params, size) {
+  x <- seq(0.1, 0.9, length.out = 30)
+  # Simple arch approximation: inverted catenary
+  y <- 0.2 + 0.5 * (cosh((x - 0.5) / 0.3) - 1)
+
+  grid::linesGrob(
+    x, y,
+    gp = ggplot2::gg_par(
+      col = alpha(data$colour %||% "black", data$alpha),
+      lwd = data$linewidth %||% 0.5,
+      lty = data$linetype %||% 1,
+      lineend = "round"
+    )
+  )
+}
+
 #' @rdname ggpointless-ggproto
 #' @format NULL
 #' @usage NULL
@@ -5,7 +55,8 @@
 GeomCatenary <- ggplot2::ggproto(
   "GeomCatenary",
   ggplot2::GeomLine,
-  stat = "catenary"
+  stat = "catenary",
+  draw_key = draw_key_catenary
 )
 
 #' @title Catenary Curves and Arches
@@ -19,10 +70,7 @@ GeomCatenary <- ggplot2::ggproto(
 #' \eqn{\ y = a\ \cosh \ \!\bigl(\frac{x - h}{a}\bigr) + v}.
 #'
 #' @concept catenary curve
-#' @concept hanging chain
 #' @concept arch curve
-#' @concept smooth curve
-#' @concept mathematical curve
 #'
 #' @param chain_length Numeric vector of physical chain lengths. Recycled to
 #'   the number of segments. If `NULL` and `sag` is also `NULL`, defaults to
@@ -45,6 +93,9 @@ GeomCatenary <- ggplot2::ggproto(
 #' @aesthetics GeomCatenary
 #' @param geom,stat Override the default connection between `geom_catenary()`
 #'   and `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
+#' @param key_glyph A legend key drawing function or a string that names one
+#'   (e.g. `"arch"` uses [draw_key_arch()]).  `geom_arch()` sets this to
+#'   `"arch"` by default; pass a different value to override.
 #'
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #'
@@ -126,5 +177,6 @@ geom_arch <- make_constructor(
   GeomCatenary,
   stat = "arch",
   arch_length = NULL,
-  arch_height = NULL
+  arch_height = NULL,
+  key_glyph = "arch"
 )

@@ -173,6 +173,32 @@ p + scale_x_reverse() +
   geom_hline_fade(yintercept = 20, fade_direction = "end")
 }\if{html}{\out{</div>}}
 }
+
+\subsection{Non-linear coordinate systems (coord_polar / coord_radial)}{
+
+Under non-linear coordinate systems the "line" is conceptually a curve
+in device space:
+\itemize{
+\item \code{geom_hline_fade()} traces a \strong{circle} at the given \code{yintercept}
+(constant radius).
+\item \code{geom_vline_fade()} traces a \strong{ray} at the given \code{xintercept}
+(constant angle).
+\item \code{geom_abline_fade()} traces a \strong{curve} that spirals or arcs based on
+the slope/intercept.
+}
+
+The fade is applied along the \strong{path length} of that curve, so
+\code{fade_direction = "start"} fades the beginning of the traced path. For an
+\code{hline_fade()} circle the "start" is the first vertex of the traced
+circle (at the leftmost angle of the coord system, 12 o'clock by default),
+which may not match intuition from cartesian use — pass
+\code{fade_direction = "end"} to reverse.
+
+Internally, the line is subdivided into a dense set of vertices in data
+space before the coord transform so the curve appears smooth. This is
+transparent to the user but explains why the grob carries more vertices
+than in the linear case.
+}
 }
 \examples{
 library(ggplot2)
@@ -208,9 +234,7 @@ endpoints, \code{\link[=geom_path_fade]{geom_path_fade()}} and \code{\link[=geom
 \code{\link[ggplot2:geom_abline]{ggplot2::geom_abline()}}, \code{\link[ggplot2:geom_abline]{ggplot2::geom_hline()}}, and \code{\link[ggplot2:geom_abline]{ggplot2::geom_vline()}}
 for their ggplot2 originals.
 }
-\concept{annotation}
-\concept{fading line}
-\concept{gradient line}
+\concept{fading gradient}
 \concept{reference line}
 \section{Aesthetics}{
 

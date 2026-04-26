@@ -28,14 +28,7 @@ StatFourier <- ggproto(
           "{.arg n_harmonics} must be a non-negative integer, not {.obj_type_friendly {n_h}}."
         )
       }
-      if (n_h == 0L) {
-        cli::cli_warn(
-          "{.arg n_harmonics} must be a positive integer. Using {.val 1L}."
-        )
-        params$n_harmonics <- 1L
-      } else {
-        params$n_harmonics <- as.integer(n_h)
-      }
+      params$n_harmonics <- as.integer(n_h)
     }
 
     params
@@ -67,6 +60,13 @@ StatFourier <- ggproto(
 
     if (nrow(data) == 0L) {
       return(data.frame(x = numeric(0L), y = numeric(0L)))
+    }
+
+    # Fourier transform requires a numeric y-axis.
+    if (!is.numeric(data$y)) {
+      cli::cli_abort(
+        "{.fn stat_fourier} requires a numeric y-axis, not {.obj_type_friendly {data$y}}."
+      )
     }
 
     # 2. Sort and aggregate duplicate x values (mean y)
@@ -229,7 +229,7 @@ StatFourier <- ggproto(
     # (n_points x k_paired), avoiding any scalar loop over t.
 
     # Guard against very large matrix allocations
-    if (!is.null(k_vec) && as.double(n_points) * k_paired > 1e8) {
+    if (!is.null(k_vec) && as.double(n_points) * k_paired > 5e7) {
       cli::cli_warn(
         "Large reconstruction matrix ({n_points} x {k_paired}). \\
          Consider reducing {.arg n_harmonics}."
@@ -298,11 +298,12 @@ StatFourier <- ggproto(
   }
 )
 
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @rdname geom_fourier
 #' @export
 stat_fourier <- make_constructor(
   StatFourier,
-  geom = "line",
+  geom = "fourier",
   n_harmonics = NULL,
   detrend = NULL
 )

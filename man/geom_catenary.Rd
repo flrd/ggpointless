@@ -29,6 +29,7 @@ geom_arch(
   ...,
   arch_length = NULL,
   arch_height = NULL,
+  key_glyph = "arch",
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -55,9 +56,10 @@ stat_catenary(
 stat_arch(
   mapping = NULL,
   data = NULL,
-  geom = "line",
+  geom = "catenary",
   position = "identity",
   ...,
+  key_glyph = "arch",
   arch_length = NULL,
   arch_height = NULL,
   na.rm = FALSE,
@@ -164,6 +166,10 @@ twice the Euclidean distance per segment. Can be mixed with
 above the \strong{highest endpoint} of each segment. Takes precedence
 over \code{arch_length} when both are supplied for the same segment.}
 
+\item{key_glyph}{A legend key drawing function or a string that names one
+(e.g. \code{"arch"} uses \code{\link[=draw_key_arch]{draw_key_arch()}}).  \code{geom_arch()} sets this to
+\code{"arch"} by default; pass a different value to override.}
+
 \item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
 
 \item{arrow.fill}{fill colour to use for the arrow head (if closed). \code{NULL}
@@ -179,6 +185,8 @@ means use \code{colour} aesthetic.}
 and \code{stat_catenary()}, or between \code{geom_arch()} and \code{stat_arch()}.}
 }
 \value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
@@ -225,9 +233,6 @@ The catenary equation is described at
 }
 \concept{arch curve}
 \concept{catenary curve}
-\concept{hanging chain}
-\concept{mathematical curve}
-\concept{smooth curve}
 \section{Aesthetics}{
 
 \code{geom_catenary()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
