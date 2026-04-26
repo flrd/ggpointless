@@ -1,22 +1,24 @@
 library(ggplot2)
 
-# Helper: extract the mask gradient from the first segment in a segment_fade_grob.
-# GeomAblineFade -> GeomSegmentFade -> .segment_fade_grob whose mask_glist[[1]]
-# is a rectGrob with a linearGradient fill encoding the fade direction.
-.abline_mask_grad <- function(p) {
+# Helper: extract the first group's vertex data from a path_fade_grob.
+# GeomAblineFade -> GeomSegmentFade reshapes each segment into a 2-point
+# (or 3-point when fade_direction = c("start","end")) path and delegates to
+# GeomPathFade. The resulting grob carries per-group vertex data:
+#   $x, $y          — NPC-space coordinates of each vertex
+#   $alpha_vert     — per-vertex alpha encoding the fade (0 = transparent)
+.abline_fade_probe <- function(p) {
   b     <- ggplot_build(p)
   pp    <- b$layout$panel_params[[1]]
   coord <- b$layout$coord
-  # Locate the GeomAblineFade layer (may not be the first layer)
   idx   <- which(vapply(p$layers, \(l) inherits(l$geom, "GeomAblineFade"), logical(1L)))
   data  <- b$data[[idx]]
   layer <- p$layers[[idx]]
   grob  <- GeomAblineFade$draw_panel(
     data, pp, coord,
     alpha_fade_to  = layer$geom_params$alpha_fade_to  %||% 0,
-    fade_direction = layer$geom_params$fade_direction %||% "end"
+    fade_direction = layer$geom_params$fade_direction %||% "start"
   )
-  grob$mask_glist[[1]]$gp$fill
+  grob$groups_data[[1]]
 }
 
 base_p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
@@ -55,57 +57,53 @@ test_that("geom_abline_fade: fade_direction warns and falls back for invalid val
 # pushing gradient anchors to NPC ≈ -1 and 2, making the fade invisible)
 # ---------------------------------------------------------------------------
 
-test_that("geom_abline_fade: gradient anchors are within panel NPC [0, 1]", {
-  p   <- base_p + geom_abline_fade(intercept = 37.285126, slope = -5.344472)
-  grad <- .abline_mask_grad(p)
-  expect_true(as.numeric(grad$x1) >= -0.01 && as.numeric(grad$x1) <= 1.01,
-    label = paste("x1 in range, got", grad$x1))
-  expect_true(as.numeric(grad$y1) >= -0.01 && as.numeric(grad$y1) <= 1.01,
-    label = paste("y1 in range, got", grad$y1))
-  expect_true(as.numeric(grad$x2) >= -0.01 && as.numeric(grad$x2) <= 1.01,
-    label = paste("x2 in range, got", grad$x2))
-  expect_true(as.numeric(grad$y2) >= -0.01 && as.numeric(grad$y2) <= 1.01,
-    label = paste("y2 in range, got", grad$y2))
+test_that("geom_abline_fade: vertex coords are within panel NPC [0, 1]", {
+  p    <- base_p + geom_abline_fade(intercept = 37.285126, slope = -5.344472)
+  info <- .abline_fade_probe(p)
+  expect_true(all(info$x >= -0.01 & info$x <= 1.01),
+    label = paste("x in range, got", paste(info$x, collapse = ", ")))
+  expect_true(all(info$y >= -0.01 & info$y <= 1.01),
+    label = paste("y in range, got", paste(info$y, collapse = ", ")))
 })
 
-test_that("geom_abline_fade: gradient spans the full panel (anchors near opposite edges)", {
+test_that("geom_abline_fade: line spans the full panel (endpoints near opposite edges)", {
   p    <- base_p + geom_abline_fade(intercept = 37.285126, slope = -5.344472)
-  grad <- .abline_mask_grad(p)
-  # The line enters near the left edge (x1 ≈ 0) and exits near the bottom
-  # (y2 ≈ 0). Neither should sit in the interior of the panel.
-  span_x <- abs(as.numeric(grad$x2) - as.numeric(grad$x1))
-  span_y <- abs(as.numeric(grad$y2) - as.numeric(grad$y1))
-  expect_gt(span_x, 0.5)  # anchors are well apart
+  info <- .abline_fade_probe(p)
+  # The line enters near the left edge (x[1] ≈ 0) and exits near the bottom
+  # (y[last] ≈ 0). Neither endpoint should sit in the interior of the panel.
+  span_x <- abs(info$x[length(info$x)] - info$x[1])
+  span_y <- abs(info$y[length(info$y)] - info$y[1])
+  expect_gt(span_x, 0.5)
   expect_gt(span_y, 0.5)
 })
 
 # ---------------------------------------------------------------------------
-# fade_direction = "end" encodes the correct alpha stops
+# fade_direction encodes the correct per-vertex alpha stops
 # ---------------------------------------------------------------------------
 
 test_that("geom_abline_fade: fade_direction = 'end' is opaque at start, transparent at end", {
   p    <- base_p + geom_abline_fade(intercept = 37.285126, slope = -5.344472,
                                      alpha_fade_to = 0, fade_direction = "end")
-  grad <- .abline_mask_grad(p)
-  a    <- grDevices::col2rgb(grad$colours, alpha = TRUE)["alpha", ] / 255
-  expect_equal(a[1], 1, tolerance = 0.01)  # start: fully opaque
-  expect_equal(a[2], 0, tolerance = 0.01)  # end:   fully transparent
+  info <- .abline_fade_probe(p)
+  a    <- info$alpha_vert
+  expect_equal(a[1],           1, tolerance = 0.01)  # start: fully opaque
+  expect_equal(a[length(a)],   0, tolerance = 0.01)  # end:   fully transparent
 })
 
 test_that("geom_abline_fade: fade_direction = 'start' reverses the gradient", {
   p    <- base_p + geom_abline_fade(intercept = 37.285126, slope = -5.344472,
                                      alpha_fade_to = 0, fade_direction = "start")
-  grad <- .abline_mask_grad(p)
-  a    <- grDevices::col2rgb(grad$colours, alpha = TRUE)["alpha", ] / 255
-  expect_equal(a[1], 0, tolerance = 0.01)
-  expect_equal(a[2], 1, tolerance = 0.01)
+  info <- .abline_fade_probe(p)
+  a    <- info$alpha_vert
+  expect_equal(a[1],           0, tolerance = 0.01)
+  expect_equal(a[length(a)],   1, tolerance = 0.01)
 })
 
-test_that("geom_abline_fade: alpha_fade_to is encoded in gradient stops", {
+test_that("geom_abline_fade: alpha_fade_to is encoded in per-vertex alpha", {
   p    <- base_p + geom_abline_fade(intercept = 37.285126, slope = -5.344472,
                                      alpha_fade_to = 0.4)
-  grad <- .abline_mask_grad(p)
-  a    <- grDevices::col2rgb(grad$colours, alpha = TRUE)["alpha", ] / 255
+  info <- .abline_fade_probe(p)
+  a    <- info$alpha_vert
   expect_equal(min(a), 0.4, tolerance = 0.01)
   expect_equal(max(a), 1.0, tolerance = 0.01)
 })
@@ -114,7 +112,7 @@ test_that("geom_abline_fade: alpha_fade_to is encoded in gradient stops", {
 # Multiple ablines
 # ---------------------------------------------------------------------------
 
-test_that("geom_abline_fade: multiple lines produce one mask per line", {
+test_that("geom_abline_fade: multiple lines produce one group per line", {
   p <- base_p + geom_abline_fade(
     intercept = c(37, 30), slope = c(-5, -4)
   )
@@ -124,7 +122,7 @@ test_that("geom_abline_fade: multiple lines produce one mask per line", {
   idx   <- which(vapply(p$layers, \(l) inherits(l$geom, "GeomAblineFade"), logical(1L)))
   data  <- b$data[[idx]]
   grob  <- GeomAblineFade$draw_panel(data, pp, coord)
-  expect_equal(length(grob$mask_glist), 2L)
+  expect_equal(length(grob$groups_data), 2L)
 })
 
 # ---------------------------------------------------------------------------
@@ -287,6 +285,35 @@ test_that("GoG/coord: coord_polar does not error", {
   expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
 
+test_that("GoG/coord: coord_radial does not error (hline / vline / abline)", {
+  expect_no_error(suppressWarnings(ggplotGrob(
+    base_p + geom_hline_fade(yintercept = 20) + coord_radial()
+  )))
+  expect_no_error(suppressWarnings(ggplotGrob(
+    base_p + geom_vline_fade(xintercept = 3) + coord_radial()
+  )))
+  expect_no_error(suppressWarnings(ggplotGrob(
+    base_p + geom_abline_fade(slope = -5, intercept = 37) + coord_radial()
+  )))
+})
+
+test_that("coord_radial subdivides the line so the path has many vertices", {
+  # Regression: linear coord produces a 2-vertex group; polar must subdivide
+  # (>> 2 vertices) so the fade follows the curve rather than a chord.
+  p <- base_p + geom_hline_fade(yintercept = 30) + coord_radial()
+  b <- ggplot_build(p)
+  pp <- b$layout$panel_params[[1]]
+  co <- b$layout$coord
+  idx <- which(vapply(p$layers, \(l) inherits(l$geom, "GeomHlineFade"), logical(1L)))
+  data <- b$data[[idx]]
+  grob <- GeomHlineFade$draw_panel(
+    data, pp, co,
+    alpha_fade_to = 0, fade_direction = "start"
+  )
+  # Dense subdivision (>> 2 vertices) confirms we took the non-linear branch.
+  expect_gt(length(grob$groups_data[[1]]$x), 10L)
+})
+
 # ---------------------------------------------------------------------------
 # Facets
 # ---------------------------------------------------------------------------
@@ -383,16 +410,11 @@ test_that("geom_abline_fade: slope = 0 (intercept outside range) does not warn o
   expect_no_warning(expect_no_error(ggplotGrob(p)))
 })
 
-test_that("geom_abline_fade: slope = 0 gradient spans full panel width", {
+test_that("geom_abline_fade: slope = 0 spans full panel width", {
   p   <- base_p + geom_abline_fade(slope = 0, intercept = 20)
-  b   <- ggplot_build(p)
-  pp  <- b$layout$panel_params[[1]]
-  co  <- b$layout$coord
-  idx <- which(vapply(p$layers, \(l) inherits(l$geom, "GeomAblineFade"), logical(1L)))
-  grob <- GeomAblineFade$draw_panel(b$data[[idx]], pp, co)
-  grad <- grob$mask_glist[[1]]$gp$fill
-  expect_equal(as.numeric(grad$x1), 0, tolerance = 0.01)
-  expect_equal(as.numeric(grad$x2), 1, tolerance = 0.01)
+  info <- .abline_fade_probe(p)
+  expect_equal(info$x[1],              0, tolerance = 0.01)
+  expect_equal(info$x[length(info$x)], 1, tolerance = 0.01)
 })
 
 # ---------------------------------------------------------------------------
@@ -435,6 +457,62 @@ test_that("vdiffr: geom_vline_fade both ends fading", {
                     fade_direction = c("start", "end")) +
     theme_minimal()
   vdiffr::expect_doppelganger("vline-fade-both-ends", p)
+})
+
+test_that("vdiffr: geom_hline_fade under coord_radial", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mtcars, aes(wt, mpg)) +
+    geom_point() +
+    geom_hline_fade(yintercept = 30, colour = "tomato", linewidth = 1.5) +
+    coord_radial() +
+    theme_minimal()
+  vdiffr::expect_doppelganger("hline-fade-coord-radial", p)
+})
+
+test_that("vdiffr: geom_vline_fade under coord_radial", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mtcars, aes(wt, mpg)) +
+    geom_point() +
+    geom_vline_fade(xintercept = 5, linewidth = 1.5) +
+    coord_radial() +
+    theme_minimal()
+  vdiffr::expect_doppelganger("vline-fade-coord-radial", p)
+})
+
+test_that("vdiffr: geom_abline_fade under coord_radial", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mtcars, aes(wt, mpg)) +
+    geom_point() +
+    geom_abline_fade(slope = -5, intercept = 37, linewidth = 1.5) +
+    coord_radial() +
+    theme_minimal()
+  vdiffr::expect_doppelganger("abline-fade-coord-radial", p)
+})
+
+test_that("vdiffr: geom_vline_fade under coord_radial (bare defaults)", {
+  skip_if_not_installed("vdiffr")
+  # User-reported example — keeps default linewidth / colour / theme so the
+  # snapshot acts as a regression on the bare-bones render path.
+  p <- ggplot(mtcars, aes(wt, mpg)) +
+    geom_point() +
+    geom_vline_fade(xintercept = 5) +
+    coord_radial()
+  vdiffr::expect_doppelganger("vline-fade-coord-radial-defaults", p)
+})
+
+test_that("vdiffr: all three reference-line fades together under coord_radial", {
+  skip_if_not_installed("vdiffr")
+  # Note: ggplot2::geom_abline() draws a straight line under coord_radial()
+  # (it does not follow the coord curve). Our geom_abline_fade() subdivides
+  # in data space so the line bends with the coord — this snapshot pins that
+  # behaviour.
+  p <- ggplot(mtcars, aes(wt, mpg)) +
+    geom_point() +
+    geom_abline_fade(slope = 1, colour = "black") +
+    geom_hline_fade(yintercept = 30, colour = "forestgreen") +
+    geom_vline_fade(xintercept = 5, colour = "tomato") +
+    coord_radial()
+  vdiffr::expect_doppelganger("refline-fades-coord-radial-combined", p)
 })
 
 test_that("vdiffr: geom_abline_fade with alpha_fade_to", {
