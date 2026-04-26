@@ -12,6 +12,28 @@
 NULL
 
 
+# Shared numerical constants. Keep definitions here so the intent is named
+# once and all call sites tune the same knob.
+#
+# `.EPS_ZERO` — treat any scalar (slope, segment length, cross-product,
+# normalising factor) whose absolute value is below this as zero. Used by
+# path-fade's bisector geometry and abline-fade's horizontal-line branch.
+# Not a Newton-solver tolerance (those stay local to stat-catenary.R) and not
+# the catenary coordinate dedup tolerance (`.cat_tol`, which is coarser).
+#' @noRd
+#' @keywords internal
+.EPS_ZERO <- 1e-10
+
+
+# Like `%||%` but also replaces length-1 `NA` values.  Used for theme
+# properties that must be concrete (lineend, linetype, linewidth) where `NA`
+# would crash grid. `colour` is intentionally NOT a consumer — `NA` colour is
+# valid (transparent) in grid.
+#' @noRd
+`%|NA|%` <- function(x, y) {
+  if (is.null(x) || (length(x) == 1L && is.na(x))) y else x
+}
+
 
 # Validate and normalise `fade_direction`.
 #
@@ -44,6 +66,185 @@ NULL
 }
 
 
+# Build the gradient colour/stop vectors for a Porter-Duff alpha mask.
+#
+# Returns a list(colours, stops) suitable for `grid::linearGradient()`.
+# The dst grob must be drawn FULLY OPAQUE; all alpha comes from this mask.
+# Under dest.in compositing the final alpha at each end is exactly the
+# corresponding stop alpha — direct interpolation, not multiplicative.
+#
+# @param fade_direction Character vector: "start", "end", or both.
+# @param alpha_fade_to  Numeric scalar in [0, 1] — alpha at the faded end(s).
+# @param a_opaque       Numeric scalar in [0, 1] — alpha at the opaque end
+#                       (the aes alpha of the row). Defaults to 1.
+# @return Named list with elements `colours` and `stops`.
+#' @noRd
+#' @keywords internal
+.fade_mask_colours <- function(fade_direction, alpha_fade_to, a_opaque = 1) {
+  fade_start <- "start" %in% fade_direction
+  fade_end   <- "end"   %in% fade_direction
+  if (fade_start && fade_end) {
+    list(
+      colours = ggplot2::alpha("black", c(alpha_fade_to, a_opaque, alpha_fade_to)),
+      stops   = c(0, 0.5, 1)
+    )
+  } else if (fade_start) {
+    list(
+      colours = ggplot2::alpha("black", c(alpha_fade_to, a_opaque)),
+      stops   = c(0, 1)
+    )
+  } else {
+    list(
+      colours = ggplot2::alpha("black", c(a_opaque, alpha_fade_to)),
+      stops   = c(0, 1)
+    )
+  }
+}
+
+
+# Retrieve the scale transformer for one axis from panel_params.
+#
+# Returns a named list with three elements:
+#   fwd  — the forward transform function (e.g. `function(x) -x` for reverse)
+#   inv  — the inverse transform function
+#   name — the transformer name string (e.g. "identity", "reverse", "log-10")
+#
+# Falls back to identity when panel_params does not expose `get_transformation`
+# (should not happen with ggplot2 >= 4.0.0, but kept for safety).
+#
+# @param panel_params Panel parameters list from `ggplot_build()$layout$panel_params`.
+# @param axis `"x"` or `"y"`.
+# @return Named list with `fwd`, `inv`, and `name`.
+#' @noRd
+#' @keywords internal
+.get_scale_transformer <- function(panel_params, axis = "x") {
+  fn <- panel_params[[axis]]$get_transformation
+  if (!is.function(fn)) {
+    return(list(fwd = identity, inv = identity, name = "identity"))
+  }
+  tr <- fn()
+  list(fwd = tr$transform, inv = tr$inverse, name = tr$name)
+}
+
+
+# Shared setup_params logic for all fade geoms that carry alpha_fade_to and
+# fade_direction.  Calls the parent's setup_params first, then sets defaults
+# and validates both fade params.
+#
+# @param self     The ggproto self object (passed through from the caller).
+# @param parent_geom The immediate ggplot2 parent class (e.g. GeomSegment).
+# @param data     Layer data (forwarded to parent setup_params).
+# @param params   Layer params (forwarded to parent setup_params).
+# @return Modified params list.
+#' @noRd
+#' @keywords internal
+.setup_fade_params <- function(self, parent_geom, data, params) {
+  params <- ggplot2::ggproto_parent(parent_geom, self)$setup_params(data, params)
+  params$alpha_fade_to  <- params$alpha_fade_to  %||% 0
+  params$fade_direction <- params$fade_direction %||% "start"
+  .check_alpha_fade_to(params$alpha_fade_to)
+  params$fade_direction <- .validate_fade_direction(params$fade_direction)
+  params
+}
+
+
+# Dispatch for reference-line fade geoms (abline / hline / vline).
+#
+# Takes segment-form data (x, y, xend, yend) already computed by the caller
+# and decides whether to delegate to the normal linear pipeline or to
+# subdivide the line in data space first.
+#
+# * Linear coord → `GeomSegmentFade$draw_panel()` unchanged (chord / straight
+#   segment with fade).
+# * Non-linear coord → subdivide each line in data space into `n_subdivide`
+#   equally-spaced vertices, then delegate to `GeomPathFade$draw_panel()` with
+#   `alpha_mode = "gradient"` so the fade follows the curve that the coord
+#   transform produces (arc for `hline`, ray for `vline`, curve for `abline`).
+#
+# Guards:
+#   * Rows with non-finite x/y/xend/yend are dropped with a throttled
+#     warning so silent NaN propagation through `coord$transform` is visible.
+#   * Empty data returns `zeroGrob()`.
+#   * `n_subdivide` is floored to 3 (< 3 degenerates to a chord, defeating
+#     the point) and capped at 512 to keep grob size sane.
+#' @noRd
+#' @keywords internal
+.draw_refline_fade <- function(
+  data, panel_params, coord,
+  lineend = "butt", na.rm = FALSE,
+  alpha_fade_to = 0, fade_direction = "start",
+  n_subdivide = 128L
+) {
+  if (nrow(data) == 0L) return(ggplot2::zeroGrob())
+
+  if (coord$is_linear()) {
+    return(GeomSegmentFade$draw_panel(
+      data, panel_params, coord,
+      lineend = lineend, na.rm = na.rm,
+      alpha_fade_to = alpha_fade_to,
+      fade_direction = fade_direction
+    ))
+  }
+
+  n_subdivide <- as.integer(n_subdivide)
+  if (!is.finite(n_subdivide) || n_subdivide < 3L) n_subdivide <- 3L
+  if (n_subdivide > 512L) n_subdivide <- 512L
+
+  finite <- is.finite(data$x) & is.finite(data$y) &
+            is.finite(data$xend) & is.finite(data$yend)
+  if (!all(finite)) {
+    cli::cli_warn(
+      c("!" = "Dropping {sum(!finite)} reference line row{?s} with \\
+             non-finite coordinates before polar subdivision."),
+      .frequency = "once",
+      .frequency_id = "refline_fade_nonfinite"
+    )
+    data <- data[finite, , drop = FALSE]
+    if (nrow(data) == 0L) return(ggplot2::zeroGrob())
+  }
+
+  parts <- vector("list", nrow(data))
+  for (i in seq_len(nrow(data))) {
+    tt <- seq(0, 1, length.out = n_subdivide)
+    rep <- data[rep(i, n_subdivide), , drop = FALSE]
+    rep$x     <- data$x[i] + tt * (data$xend[i] - data$x[i])
+    rep$y     <- data$y[i] + tt * (data$yend[i] - data$y[i])
+    rep$xend  <- NULL
+    rep$yend  <- NULL
+    rep$group <- i
+    parts[[i]] <- rep
+  }
+  dense <- do.call(rbind, parts)
+  rownames(dense) <- NULL
+
+  GeomPathFade$draw_panel(
+    dense, panel_params, coord,
+    arrow = NULL, arrow.fill = NULL,
+    lineend = lineend, linejoin = "round",
+    na.rm = TRUE,
+    alpha_fade_to = alpha_fade_to,
+    fade_direction = fade_direction,
+    alpha_mode = "gradient"
+  )
+}
+
+
+# Check whether every row's effective alpha equals alpha_fade_to — if so
+# the fade has no visual effect and draw_panel can delegate to the parent.
+# NA alpha is treated as 1 (the ggplot2 convention for "no alpha mapping").
+#
+# @param data   Layer data frame containing an `alpha` column.
+# @param alpha_fade_to  Numeric scalar in [0, 1].
+# @return Logical scalar.
+#' @noRd
+#' @keywords internal
+.is_uniform_alpha <- function(data, alpha_fade_to) {
+  a <- data$alpha
+  a[is.na(a)] <- 1
+  isTRUE(all(a == alpha_fade_to))
+}
+
+
 # Validate `alpha_fade_to` inside setup_params.
 #
 # Accepts integer and double scalars in [0, 1].  Aborts with a
@@ -69,3 +270,137 @@ NULL
   }
   invisible(value)
 }
+
+
+# Shared gate for glow_* layer parameters.
+#
+# Returns NULL when the caller should fall back to the parameter's default
+# (input was NULL or a scalar NA), otherwise returns `value` after checking
+# that its length is either 1 or `n` (mirroring ggplot2's aesthetic length
+# rule: "Aesthetics must be either length 1 or the same as the data").
+#
+# @param value Raw user-supplied value.
+# @param arg   String naming the argument, for error messages.
+# @param n     Expected data length for length-n vectors; default 1L keeps
+#              the helper usable outside setup_params (e.g. direct validator
+#              calls from tests).
+#' @noRd
+#' @keywords internal
+.glow_precheck <- function(value, arg, n = 1L) {
+  if (is.null(value) || (length(value) == 1L && is.na(value))) {
+    return(NULL)
+  }
+  if (length(value) != 1L && length(value) != n) {
+    cli::cli_abort(c(
+      "{.arg {arg}} must be length 1 or the same length as the data ({n}).",
+      "x" = "Got length {length(value)}."
+    ))
+  }
+  value
+}
+
+
+# Validate `glow_alpha` for geom_point_glow.  Accepts NA (→ inherit from aes
+# alpha), a scalar, or a length-n numeric vector.  Non-numeric or non-finite
+# values abort; values outside [0, 1] warn and are clamped (element-wise).
+#' @noRd
+#' @keywords internal
+.check_glow_alpha <- function(value, n = 1L) {
+  v <- .glow_precheck(value, "glow_alpha", n)
+  if (is.null(v)) return(NA_real_)
+  if (!is.numeric(v) || !all(is.finite(v))) {
+    cli::cli_abort(c(
+      "{.arg glow_alpha} must be finite numeric in {.code [0, 1]} \\
+       or {.code NA}.",
+      "x" = "Got {.val {value}} instead."
+    ))
+  }
+  out_of_range <- v < 0 | v > 1
+  if (any(out_of_range)) {
+    bad <- v[which(out_of_range)[1L]]
+    cli::cli_warn(c(
+      "!" = "{.arg glow_alpha} must be in {.code [0, 1]}; got {.val {bad}}.",
+      "i" = "Clamping to the nearest valid value."
+    ))
+    v <- pmax(0, pmin(1, v))
+  }
+  v
+}
+
+
+# Validate `glow_size` for geom_point_glow.  Accepts NA (→ 9× point size),
+# a scalar, or a length-n non-negative numeric vector.  Non-numeric or
+# non-finite values abort; any negative element warns and the whole
+# parameter falls back to NA (default) to keep semantics simple.
+#' @noRd
+#' @keywords internal
+.check_glow_size <- function(value, n = 1L) {
+  v <- .glow_precheck(value, "glow_size", n)
+  if (is.null(v)) return(NA_real_)
+  if (!is.numeric(v) || !all(is.finite(v))) {
+    cli::cli_abort(c(
+      "{.arg glow_size} must be finite non-negative numeric or {.code NA}.",
+      "x" = "Got {.val {value}} instead."
+    ))
+  }
+  if (any(v < 0)) {
+    bad <- v[which(v < 0)[1L]]
+    cli::cli_warn(c(
+      "!" = "{.arg glow_size} must be non-negative; got {.val {bad}}.",
+      "i" = "Falling back to the default (9x the point size)."
+    ))
+    v <- NA_real_
+  }
+  v
+}
+
+
+# Generic colour-argument validator used by layer params that accept a
+# single colour or a length-n vector of colours (geom_point_glow's
+# glow_colour, geom_lexis's point_colour, geom_gridline's colour, …).
+#
+# Semantics:
+#   * NULL or scalar NA  -> returns NULL (caller decides the "inherit"
+#     default; cf. NA_character_ for glow, NULL for gridline, etc.).
+#   * scalar or length-n -> each element is validated via
+#     `farver::decode_colour`, the same path ggplot2 itself uses for
+#     colour parsing.  Character names, hex, numeric palette indices and
+#     lists unwrappable to character all pass; unknown colour names
+#     (e.g. "lorem") abort with a cli error carrying the farver
+#     diagnostic as parent.
+#   * any other length   -> abort with the length-1-or-n rule message.
+#
+# @param value  User-supplied value.
+# @param arg    Argument name (string), used in error messages.
+# @param n      Expected length for length-n vectors; default 1L (scalar).
+#' @noRd
+#' @keywords internal
+.check_colour_arg <- function(value, arg, n = 1L) {
+  v <- .glow_precheck(value, arg, n)
+  if (is.null(v)) return(NULL)
+  tryCatch(
+    farver::decode_colour(v),
+    error = function(e) {
+      cli::cli_abort(
+        c(
+          "{.arg {arg}} is not a valid colour specification.",
+          "x" = conditionMessage(e)
+        ),
+        parent = e
+      )
+    }
+  )
+  v
+}
+
+
+# Thin wrapper around `.check_colour_arg` that preserves the historical
+# `NA_character_` return contract for `GeomPointGlow$setup_params`, which
+# treats NA as "inherit the point colour" at draw time.
+#' @noRd
+#' @keywords internal
+.check_glow_colour <- function(value, n = 1L) {
+  .check_colour_arg(value, "glow_colour", n) %||% NA_character_
+}
+
+
