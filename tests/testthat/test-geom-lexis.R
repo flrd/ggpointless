@@ -287,3 +287,30 @@ test_that("GoG/theme: theme_bw does not error", {
   p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_bw()
   expect_no_error(ggplotGrob(p))
 })
+
+# ---------------------------------------------------------------------------
+# point_colour validation (delegated to farver via .check_colour_arg)
+# ---------------------------------------------------------------------------
+
+test_that("point_colour: NULL default inherits (no error)", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis(point_colour = NULL)
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("point_colour: valid scalar colour accepted", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis(point_colour = "blue")
+  expect_no_error(ggplotGrob(p))
+})
+
+test_that("point_colour: unknown colour name errors via farver", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis(point_colour = "flurble")
+  expect_error(ggplotGrob(p), "point_colour")
+  expect_error(ggplotGrob(p), "Unknown colour name")
+})
+
+test_that("point_colour: length-2 vector errors (scalar only)", {
+  p <- ggplot(df1, aes(x = x, xend = xend)) +
+    geom_lexis(point_colour = c("red", "blue"))
+  expect_error(ggplotGrob(p), "point_colour")
+  expect_error(ggplotGrob(p), "length 1 or the same length as the data")
+})

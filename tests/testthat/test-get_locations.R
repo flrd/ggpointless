@@ -1,4 +1,4 @@
-test_that("get_locations(..., c('all')) returns 4 rows", {
+test_that("get_locations(..., c('all')) returns composite label on collision", {
 
   # generate data
   tmp <- seq(5, -1, length.out = 100) * pi
@@ -7,12 +7,18 @@ test_that("get_locations(..., c('all')) returns 4 rows", {
     y = round(cos(tmp) * 1:100, 4)
   )
 
-  # minimum coincides with last (both at row 100, y = -100):
-  # deduplication means it is only labelled "last", not also "minimum"
+  # minimum coincides with last (both at row 100, y = -100): the colliding
+  # point is emitted once with a composite label "last, minimum".
   res <- get_locations(spiral, location = c("all"))
   expect_equal(nrow(res), 3L)
-  expect_equal(as.character(res$location), c("first", "last", "maximum"))
-  expect_equal(levels(res$location), c("first", "last", "minimum", "maximum"))
+  expect_equal(
+    as.character(res$location),
+    c("first", "last, minimum", "maximum")
+  )
+  expect_equal(
+    levels(res$location),
+    c("first", "last, minimum", "maximum")
+  )
 })
 
 test_that("emtpy data argument, or non-data.frame gives error", {

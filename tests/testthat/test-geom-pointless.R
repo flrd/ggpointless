@@ -109,6 +109,21 @@ test_that("GoG/mapping: after_stat(location) colour mapping works", {
   expect_no_error(ggplotGrob(p))
 })
 
+test_that("after_stat(location) carries composite labels on collisions", {
+  # y = c(5, 3, 1, 3, 5): idx 1 is first + maximum, idx 5 is last + maximum,
+  # idx 3 is minimum. Three rows, three distinct composite labels.
+  df <- data.frame(x = 1:5, y = c(5, 3, 1, 3, 5))
+  p <- ggplot(df, aes(x, y)) +
+    geom_line() +
+    geom_pointless(
+      aes(colour = after_stat(location)),
+      location = "all",
+      size = 3
+    ) +
+    theme_minimal()
+  vdiffr::expect_doppelganger("pointless composite location labels", p)
+})
+
 test_that("GoG/mapping: inherit.aes = FALSE isolates from plot mapping", {
   p <- ggplot(data.frame(x = 1:5, y = 1:5, g = letters[1:5]),
               aes(x, y, colour = g)) +
@@ -176,16 +191,23 @@ test_that("GoG/scales: scale_y_reverse keeps minimum/maximum labels on the corre
   locs_fwd <- b_fwd$data[[2]][, c("x", "y", "location")]
   locs_rev <- b_rev$data[[2]][, c("x", "y", "location")]
 
+  # Composite labels (e.g. "last, maximum" at x = 5) can carry multiple
+  # tags per row; grepl on the label string picks up both singleton and
+  # composite occurrences.
+  has <- function(df, tag) df[grepl(tag, df$location, fixed = TRUE), ]
+
   # minimum: always at x = 2 and x = 4 (y = 1 in forward, y = -1 in reversed)
-  fwd_min <- locs_fwd[locs_fwd$location == "minimum", ]
-  rev_min <- locs_rev[locs_rev$location == "minimum", ]
+  fwd_min <- has(locs_fwd, "minimum")
+  rev_min <- has(locs_rev, "minimum")
   expect_equal(sort(fwd_min$x), c(2L, 4L))
   expect_equal(sort(rev_min$x), c(2L, 4L))   # same data points, just negated y
   expect_equal(rev_min$y, -fwd_min$y)
 
-  # maximum: always at x = 5 (y = 5 in forward, y = -5 in reversed)
-  fwd_max <- locs_fwd[locs_fwd$location == "maximum", ]
-  rev_max <- locs_rev[locs_rev$location == "maximum", ]
+  # maximum: always at x = 5 (y = 5 in forward, y = -5 in reversed);
+  # on this dataset x = 5 is also the last point, so the label is the
+  # composite "last, maximum".
+  fwd_max <- has(locs_fwd, "maximum")
+  rev_max <- has(locs_rev, "maximum")
   expect_equal(fwd_max$x, 5L)
   expect_equal(rev_max$x, 5L)
   expect_equal(rev_max$y, -fwd_max$y)

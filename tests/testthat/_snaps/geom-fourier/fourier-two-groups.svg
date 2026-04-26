@@ -100,9 +100,9 @@
 <text transform='translate(13.05,283.95) rotate(-90)' text-anchor='middle' style='font-size: 11.00px; font-family: sans;' textLength='5.50px' lengthAdjust='spacingAndGlyphs'>y</text>
 <text x='660.84' y='267.71' style='font-size: 11.00px; font-family: sans;' textLength='6.12px' lengthAdjust='spacingAndGlyphs'>g</text>
 <circle cx='669.48' cy='282.97' r='1.95' style='stroke-width: 0.71; stroke: #F8766D; stroke-opacity: 0.40; fill: #F8766D; fill-opacity: 0.40;' />
-<line x1='662.57' y1='282.97' x2='676.39' y2='282.97' style='stroke-width: 1.07; stroke: #F8766D; stroke-linecap: butt;' />
+<polyline points='662.57,282.97 663.04,281.67 663.52,280.44 664.00,279.31 664.47,278.37 664.95,277.63 665.43,277.15 665.90,276.94 666.38,277.01 666.86,277.36 667.33,277.97 667.81,278.82 668.29,279.86 668.76,281.04 669.24,282.32 669.72,283.63 670.19,284.91 670.67,286.09 671.15,287.13 671.62,287.98 672.10,288.59 672.58,288.94 673.05,289.01 673.53,288.80 674.01,288.32 674.48,287.58 674.96,286.63 675.44,285.51 675.91,284.27 676.39,282.97 ' style='stroke-width: 1.07; stroke: #F8766D;' />
 <circle cx='669.48' cy='300.25' r='1.95' style='stroke-width: 0.71; stroke: #00BFC4; stroke-opacity: 0.40; fill: #00BFC4; fill-opacity: 0.40;' />
-<line x1='662.57' y1='300.25' x2='676.39' y2='300.25' style='stroke-width: 1.07; stroke: #00BFC4; stroke-linecap: butt;' />
+<polyline points='662.57,300.25 663.04,298.95 663.52,297.72 664.00,296.59 664.47,295.65 664.95,294.91 665.43,294.43 665.90,294.22 666.38,294.29 666.86,294.64 667.33,295.25 667.81,296.10 668.29,297.14 668.76,298.32 669.24,299.60 669.72,300.91 670.19,302.19 670.67,303.37 671.15,304.41 671.62,305.26 672.10,305.87 672.58,306.22 673.05,306.29 673.53,306.08 674.01,305.60 674.48,304.86 674.96,303.91 675.44,302.79 675.91,301.55 676.39,300.25 ' style='stroke-width: 1.07; stroke: #00BFC4;' />
 <text x='683.60' y='286.00' style='font-size: 8.80px; font-family: sans;' textLength='25.44px' lengthAdjust='spacingAndGlyphs'>cosine</text>
 <text x='683.60' y='303.28' style='font-size: 8.80px; font-family: sans;' textLength='16.15px' lengthAdjust='spacingAndGlyphs'>sine</text>
 <text x='38.17' y='14.56' style='font-size: 13.20px; font-family: sans;' textLength='105.66px' lengthAdjust='spacingAndGlyphs'>fourier two groups</text>
