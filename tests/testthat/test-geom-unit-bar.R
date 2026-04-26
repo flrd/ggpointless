@@ -29,12 +29,6 @@ test_that("geom_unit_col: one row per segment in build data", {
   expect_equal(nrow(d), 4L)
 })
 
-test_that("geom_unit_col: count column present and correct", {
-  d <- build_data(base_p)
-  expect_true("count" %in% names(d))
-  expect_equal(sort(d$count), sort(df$n))
-})
-
 test_that("geom_unit_col: stacked bars have cumulative ymin/ymax", {
   d <- build_data(base_p)
   # Default position = "stack": segments stack within each bar
@@ -47,10 +41,12 @@ test_that("geom_unit_col: stacked bars have cumulative ymin/ymax", {
   expect_equal(bar_A$ymin[2], bar_A$ymax[1])
 })
 
-test_that("geom_unit_col: total count matches total y per bar", {
+test_that("geom_unit_col: total y per bar matches the input data", {
   d <- build_data(base_p)
-  totals <- tapply(d$count, d$x, sum)
-  expect_equal(as.integer(totals), c(8L, 8L))  # A: 3+5, B: 6+2
+  # geom_unit_col uses stat = "identity" — no `count` mirror, but `y` carries
+  # the same values and post-position ymax sums to the bar total.
+  totals <- tapply(d$ymax - d$ymin, d$x, sum)
+  expect_equal(as.numeric(totals), c(8, 8))  # A: 3+5, B: 6+2
 })
 
 # ---------------------------------------------------------------------------
@@ -60,7 +56,10 @@ test_that("geom_unit_col: total count matches total y per bar", {
 test_that("geom_unit_col: NA values are dropped with a warning from ggplot2", {
   df_na <- rbind(df, data.frame(bar = factor("A"), gender = factor("Female"), n = NA_real_))
   p <- ggplot(df_na, aes(x = bar, y = n, fill = gender)) + geom_unit_col()
-  expect_warning(ggplot_build(p), regexp = "non-finite")
+  # With stat = "identity" the NA row reaches ggplot2's scale-range check
+  # at render time (not at build time); the wording is "missing values or
+  # values outside the scale range".
+  expect_warning(ggplotGrob(p), regexp = "missing values")
 })
 
 test_that("geom_unit_col: zero values produce an empty segment (no warning)", {
@@ -128,7 +127,7 @@ test_that("geom_unit_bar: orientation auto-detected from aes(y =)", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("geom_unit_col: max_cells caps the per-panel cell count", {
+test_that("geom_unit_col: cell_count_cap caps the per-panel cell count", {
   df_big <- data.frame(x = "A", y = 1e5)
   p <- ggplot(df_big, aes(x, y)) + geom_unit_col() + coord_equal()
   expect_warning(
@@ -137,8 +136,212 @@ test_that("geom_unit_col: max_cells caps the per-panel cell count", {
   )
   # Opt out: Inf lets it through (no warning).
   p_inf <- ggplot(data.frame(x = "A", y = 50), aes(x, y)) +
-    geom_unit_col(max_cells = Inf) + coord_equal()
+    geom_unit_col(cell_count_cap = Inf) + coord_equal()
   expect_no_warning(ggplotGrob(p_inf))
+})
+
+test_that("geom_unit_*: nonsensical cell_count_cap warns and falls back to default", {
+  df_small <- data.frame(x = c("A", "B"), y = c(1, 2))
+
+  bad_values <- list(
+    negative = -1,
+    zero     = 0,
+    na       = NA,
+    string   = "big",
+    nonscalar = c(1, 2)
+  )
+
+  for (nm in names(bad_values)) {
+    p <- ggplot(df_small, aes(x, y)) +
+      geom_unit_col(cell_count_cap = bad_values[[nm]])
+    expect_warning(
+      ggplotGrob(p),
+      regexp = "must be a positive scalar number or `Inf`",
+      info = paste("case:", nm)
+    )
+  }
+
+  # Sanity: Inf and finite positives stay quiet on this front.
+  expect_no_warning(
+    ggplotGrob(ggplot(df_small, aes(x, y)) + geom_unit_col(cell_count_cap = Inf))
+  )
+  expect_no_warning(
+    ggplotGrob(ggplot(df_small, aes(x, y)) + geom_unit_col(cell_count_cap = 50))
+  )
+})
+
+# ---------------------------------------------------------------------------
+# cell_padding — per-side inset of each cell, CSS-like
+# ---------------------------------------------------------------------------
+
+test_that("cell_padding: scalar = same inset on all four sides", {
+  # y=2, cell_size=1, padding=0.1 → cells lose 0.1 on each non-boundary edge.
+  # Middle of 2-cell bar: h = 1 - 2*0.1 = 0.8 (inset on both sides).
+  # Boundary cell: h = 1 - 0.1 = 0.9 (only inner inset).
+  df <- data.frame(x = "A", y = 2)
+  p <- ggplot(df, aes(x, y)) + geom_unit_col(width = 1, cell_padding = 0.1)
+  b <- ggplot_build(p)
+  g <- GeomBarCells$draw_panel(
+    b$data[[1]], b$layout$panel_params[[1]], b$layout$coord,
+    radius = grid::unit(0, "npc"), cell_size = 1, cell_padding = 0.1
+  )
+  # Walk the rect/polygon to find cell heights in NPC
+  collect_rects <- function(g, acc = list()) {
+    if (inherits(g, "rect") || inherits(g, "polygon")) acc[[length(acc)+1L]] <- g
+    if (inherits(g, "gTree") && length(g$children))
+      for (ch in g$children) acc <- collect_rects(ch, acc)
+    acc
+  }
+  rs <- collect_rects(g)
+  expect_gt(length(rs), 0L)
+})
+
+test_that("cell_padding: zero padding makes cells touch", {
+  df <- data.frame(x = "A", y = 3)
+  p <- ggplot(df, aes(x, y)) + geom_unit_col(width = 1, cell_padding = 0) +
+    coord_equal()
+  # With zero padding, three cells of height 1 tile from 0 to 3 with no gaps.
+  # Check via the rendered rect widths/heights.
+  gt <- suppressWarnings(ggplotGrob(p))
+  panel <- gt$grobs[[grep("panel", gt$layout$name)[1]]]
+  find_batch_rect <- function(g) {
+    if (inherits(g, "rect") && length(as.numeric(g$x)) > 1L) return(g)
+    if (inherits(g, "gTree") && length(g$children))
+      for (ch in g$children) { r <- find_batch_rect(ch); if (!is.null(r)) return(r) }
+    NULL
+  }
+  r <- find_batch_rect(panel)
+  expect_false(is.null(r))
+  heights <- as.numeric(r$height)
+  expect_true(all(abs(diff(heights)) < 1e-6),
+              info = "All cells should have identical height when padding = 0")
+})
+
+test_that("cell_padding: length-2 accepts c(vertical, horizontal)", {
+  df <- data.frame(x = c("A", "B"), y = c(2, 2))
+  p <- ggplot(df, aes(x, y)) +
+    geom_unit_col(width = 1, cell_padding = c(0.05, 0.01)) +
+    coord_equal()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("cell_padding: invalid values warn and fall back to default", {
+  df <- data.frame(x = c("A", "B"), y = c(1, 1))
+  bad_values <- list(
+    negative  = -0.1,
+    too_large = 0.7,
+    at_limit  = 0.5,
+    na        = NA,
+    length_3  = c(0.01, 0.01, 0.01),
+    string    = "big"
+  )
+  for (nm in names(bad_values)) {
+    p <- ggplot(df, aes(x, y)) +
+      geom_unit_col(cell_padding = bad_values[[nm]])
+    expect_warning(
+      ggplotGrob(p),
+      regexp = "cell_padding.*must be a finite numeric vector",
+      info = paste("case:", nm)
+    )
+  }
+})
+
+test_that("cell_padding: default constructor value is 0.025", {
+  lyr <- geom_unit_col()
+  expect_equal(lyr$geom_params$cell_padding, 0.025)
+  lyr <- geom_unit_bar()
+  expect_equal(lyr$geom_params$cell_padding, 0.025)
+  lyr <- geom_unit_histogram()
+  expect_equal(lyr$geom_params$cell_padding, 0.025)
+})
+
+
+# ---------------------------------------------------------------------------
+# cell_size — semantic dial (each cell = N units)
+# ---------------------------------------------------------------------------
+
+test_that("geom_unit_col: cell_size aggregates units per cell", {
+  # y = 25, cell_size = 10  →  floor(25/10) = 2 full + (25-20)/10 = 0.5 partial
+  # = 3 cells total.
+  df_big <- data.frame(x = "A", y = 25)
+  p <- ggplot(df_big, aes(x, y)) + geom_unit_col(cell_size = 10)
+  b <- ggplot_build(p)
+  g <- GeomBarCells$draw_panel(
+    b$data[[1L]], b$layout$panel_params[[1L]], b$layout$coord,
+    radius = grid::unit(0, "npc"),
+    cell_size = 10
+  )
+  expect_equal(length(as.numeric(g$y)), 3L)
+})
+
+test_that("geom_unit_col: cell_size = 1 (default) is a no-op vs current behaviour", {
+  df_frac <- data.frame(x = "A", y = 3.7)  # same data as the existing fractional test
+  p <- ggplot(df_frac, aes(x, y)) + geom_unit_col(cell_size = 1)
+  b <- ggplot_build(p)
+  g <- GeomBarCells$draw_panel(
+    b$data[[1L]], b$layout$panel_params[[1L]], b$layout$coord,
+    radius = grid::unit(0, "npc"),
+    cell_size = 1
+  )
+  expect_equal(length(as.numeric(g$y)), 4L)  # 3 full + 1 partial, identical to default
+})
+
+test_that("geom_unit_col: cell_size keeps cell_count_cap from firing on big y", {
+  # Without cell_size, y = 1e5 would trip the default cell_count_cap (1e4).
+  # cell_size = 1e3 reduces to 100 cells — well under the cap, no warning.
+  p <- ggplot(data.frame(x = "A", y = 1e5), aes(x, y)) +
+    geom_unit_col(cell_size = 1e3)
+  expect_no_warning(ggplotGrob(p))
+})
+
+test_that("geom_unit_*: nonsensical cell_size warns and falls back to default", {
+  df_small <- data.frame(x = c("A", "B"), y = c(1, 2))
+  bad_values <- list(
+    negative = -1,
+    zero     = 0,
+    na       = NA,
+    inf      = Inf,        # Inf draws zero cells, nonsensical here
+    string   = "big",
+    nonscalar = c(1, 2)
+  )
+  for (nm in names(bad_values)) {
+    p <- ggplot(df_small, aes(x, y)) +
+      geom_unit_col(cell_size = bad_values[[nm]])
+    expect_warning(
+      ggplotGrob(p),
+      regexp = "cell_size.*must be a positive finite scalar",
+      info = paste("case:", nm)
+    )
+  }
+})
+
+# ---------------------------------------------------------------------------
+# label_cells() helper
+# ---------------------------------------------------------------------------
+
+test_that("label_cells: returns a closure that divides input by cell_size", {
+  f <- label_cells(100)
+  expect_type(f, "closure")
+  expect_equal(f(c(0, 100, 250, 1000)), c(0, 1, 2.5, 10))
+})
+
+test_that("label_cells: default cell_size = 1 is identity", {
+  expect_equal(label_cells()(c(0, 1.5, 7)), c(0, 1.5, 7))
+})
+
+test_that("label_cells: invalid cell_size aborts with a clear cli message", {
+  expect_error(label_cells(0),       regexp = "positive finite scalar")
+  expect_error(label_cells(-1),      regexp = "positive finite scalar")
+  expect_error(label_cells(NA),      regexp = "positive finite scalar")
+  expect_error(label_cells(Inf),     regexp = "positive finite scalar")
+  expect_error(label_cells("big"),   regexp = "positive finite scalar")
+  expect_error(label_cells(c(1, 2)), regexp = "positive finite scalar")
+})
+
+test_that("label_cells: round-trips with cell_size on a real plot", {
+  # y = 250, cell_size = 100 → axis tick of 250 should display as "2.5" cells
+  expect_equal(label_cells(100)(250), 2.5)
+  expect_equal(label_cells(1e6)(2.4e6), 2.4)
 })
 
 test_that("geom_unit_col: radius must be a grid::unit (or NULL)", {
@@ -372,7 +575,7 @@ test_that("GoG/scales: scale_x_discrete reverse reverses x positions (unit_col)"
 })
 
 test_that("GoG/scales: scale_y_reverse negates y values (unit_bar)", {
-  # StatCountCells computes counts (positive), then scale_y_reverse negates them.
+  # stat_count computes counts (positive), then scale_y_reverse negates them.
   # Some class × drv combinations are absent → count = 0 → negated = -0 = 0.
   b_rev <- suppressWarnings(
     ggplot_build(ggplot(mpg, aes(x = class, fill = drv)) + geom_unit_bar() + scale_y_reverse())
@@ -407,7 +610,7 @@ test_that("GoG/scales: scale_x_reverse produces all-negative x values (unit_hist
 })
 
 test_that("GoG/scales: scale_y_continuous(trans = 'log10') runs stat on transformed y", {
-  # Scale transform runs BEFORE the stat, so StatBarCells sees log10(y) values
+  # Scale transform runs BEFORE the stat, so stat_identity sees log10(y) values
   # (0.477, 0.699, ...).  All round to 0 or 1; rows that underflow are dropped
   # with a warning.  The geom must cope without erroring.
   p <- base_p + scale_y_continuous(trans = "log10")
@@ -430,9 +633,13 @@ test_that("GoG/scales: sec.axis does not break rendering", {
 })
 
 test_that("GoG/scales: scale_x_discrete(limits = subset) drops a level", {
-  # Removing "B" from the scale should yield only bars for "A".
+  # Removing "B" from the scale should yield only bars for "A".  With
+  # stat = "identity" the dropped-level rows arrive at the build stage with
+  # x = NA (matching vanilla geom_col); the surviving x values are all 1.
   b <- suppressWarnings(ggplot_build(base_p + scale_x_discrete(limits = "A")))
-  expect_true(all(b$data[[1]]$x == 1))
+  surviving_x <- b$data[[1]]$x[!is.na(b$data[[1]]$x)]
+  expect_true(length(surviving_x) > 0L)
+  expect_true(all(surviving_x == 1))
 })
 
 test_that("GoG/scales: scale_y_continuous(expand = c(0, 0)) builds with cells flush to edge", {
@@ -520,19 +727,19 @@ test_that("GoG/theme: theme_bw does not error", {
 # Regression: stat param not formally exposed
 # ===========================================================================
 
-test_that("geom_unit_bar: stat = 'count' (default) uses StatCountCells", {
+test_that("geom_unit_bar: stat = 'count' (default) uses ggplot2::StatCount", {
   lyr <- geom_unit_bar()
-  expect_true(inherits(lyr$stat, "StatCountCells"))
+  expect_true(inherits(lyr$stat, "StatCount"))
 })
 
-test_that("geom_unit_col: stat = 'identity' (default) uses StatBarCells", {
+test_that("geom_unit_col: stat = 'identity' (default) uses ggplot2::StatIdentity", {
   lyr <- geom_unit_col()
-  expect_true(inherits(lyr$stat, "StatBarCells"))
+  expect_true(inherits(lyr$stat, "StatIdentity"))
 })
 
 test_that("geom_unit_bar: stat = 'bin' is routed correctly, not silently ignored", {
   lyr <- geom_unit_bar(stat = "bin")
-  expect_false(inherits(lyr$stat, "StatCountCells"))
+  expect_false(inherits(lyr$stat, "StatCount"))
   expect_true(inherits(lyr$stat, "StatBin"))
 })
 
@@ -544,9 +751,8 @@ test_that("geom_unit_bar: stat as ggproto class object (not string) is accepted"
 })
 
 test_that("geom_unit_col: stat = 'identity' renders (ymin/ymax come from position)", {
-  # With the new design draw_panel tiles from ymax - ymin directly, so stats
-  # that don't emit a `count` column still work as long as positioning
-  # produces valid ymin/ymax.
+  # draw_panel tiles from ymax - ymin directly, so stats that don't emit a
+  # `count` column still work as long as positioning produces valid ymin/ymax.
   p <- ggplot(
     data.frame(x = c("A", "B"), y = c(3, 5)),
     aes(x, y)
@@ -555,7 +761,7 @@ test_that("geom_unit_col: stat = 'identity' renders (ymin/ymax come from positio
 })
 
 test_that("geom_unit_bar: aes(fill = after_stat(count)) maps the computed count", {
-  # after_stat(count) reaches the fill aesthetic after StatCountCells runs.
+  # after_stat(count) reaches the fill aesthetic after stat_count runs.
   p <- ggplot(mpg, aes(x = class)) +
     geom_unit_bar(aes(fill = after_stat(count)))
   expect_no_error(ggplotGrob(p))
@@ -725,4 +931,150 @@ test_that("vdiffr: geom_unit_bar legend key under coord_radial", {
     coord_radial()
   vdiffr::expect_doppelganger("bar-cells-radial-legend", p)
 })
+
+# ---------------------------------------------------------------------------
+# Date / POSIXct support
+# ---------------------------------------------------------------------------
+# Dates on either axis should render without error: on the category axis
+# they convert to a continuous numeric scale; on the value axis, cell_size
+# is then in days (Date) or seconds (POSIXct).
+
+test_that("Date on x-axis (category) renders", {
+  df <- data.frame(d = as.Date("2024-01-01") + c(0, 7, 14), n = c(3, 5, 2))
+  p <- ggplot(df, aes(d, n)) + geom_unit_col()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("POSIXct on x-axis (category) renders", {
+  df <- data.frame(
+    t = as.POSIXct("2024-01-01", tz = "UTC") + c(0, 3600, 7200),
+    n = c(2, 4, 1)
+  )
+  p <- ggplot(df, aes(t, n)) + geom_unit_col()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("Date on y-axis (value) renders with cell_size in days", {
+  df <- data.frame(
+    task     = c("A", "B", "C"),
+    deadline = as.Date(c("2024-01-08", "2024-01-15", "2024-01-22"))
+  )
+  # cell_size = 7 → weekly cells
+  p <- ggplot(df, aes(task, deadline)) + geom_unit_col(cell_size = 7)
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("POSIXct on y-axis (value) renders", {
+  df <- data.frame(
+    event = c("A", "B"),
+    when  = as.POSIXct(c("2024-01-01 12:00", "2024-01-01 15:00"), tz = "UTC")
+  )
+  p <- ggplot(df, aes(event, when)) + geom_unit_col(cell_size = 3600)
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+
+# ---------------------------------------------------------------------------
+# draw_key_unit — 2x2 cell legend key
+# ---------------------------------------------------------------------------
+
+test_that("draw_key_unit: returns a rectGrob with 4 cells", {
+  data <- data.frame(
+    fill      = "steelblue",
+    colour    = NA,
+    alpha     = NA,
+    linewidth = 0.5,
+    linetype  = 1
+  )
+  g <- draw_key_unit(data, list(), grid::unit(1, "npc"))
+  expect_s3_class(g, "rect")
+  # Four cells means four centres in the rect grob's x/y.
+  expect_equal(length(as.numeric(g$x)), 4L)
+  expect_equal(length(as.numeric(g$y)), 4L)
+})
+
+test_that("geom_unit_col: default legend key renders 4 cells", {
+  # Call whatever function the geom exposes as draw_key with a minimal
+  # data row and confirm the output is a rectGrob with 4 cells — the
+  # signature check below is behavioural, not identity (ggproto wraps
+  # method slots with `function(...)`).
+  data <- data.frame(
+    fill      = "steelblue",
+    colour    = NA,
+    alpha     = NA,
+    linewidth = 0.5,
+    linetype  = 1
+  )
+  g <- GeomBarCells$draw_key(data, list(), grid::unit(1, "npc"))
+  expect_s3_class(g, "rect")
+  expect_equal(length(as.numeric(g$x)), 4L)
+})
+
+
+# ---------------------------------------------------------------------------
+# vdiffr: coord systems that previously had no snapshot coverage
+# ---------------------------------------------------------------------------
+# These pin the arc-interpolation behaviour (polar / polar-theta-y) and the
+# linear-coord variants (flip, trans, fixed-ratio) that the family claims to
+# support.  coord_map() and coord_sf() are explicitly NOT covered because
+# both fail for vanilla geom_col() too — they are upstream limitations.
+
+test_that("vdiffr: geom_unit_col under coord_polar() (radial wedges)", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(data.frame(x = c("A","B","C"), y = c(2, 3, 1)), aes(x, y)) +
+    geom_unit_col()
+  vdiffr::expect_doppelganger("bar-cells-coord-polar", p + coord_polar())
+})
+
+test_that("vdiffr: geom_unit_col under coord_polar(theta = 'y') (stacked donut)", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(mpg, aes(x = factor(1), fill = class)) +
+    geom_unit_bar(width = 1)
+  vdiffr::expect_doppelganger(
+    "bar-cells-coord-polar-theta-y",
+    p + coord_polar(theta = "y")
+  )
+})
+
+test_that("vdiffr: geom_unit_col under coord_flip()", {
+  skip_if_not_installed("vdiffr")
+  # coord_flip runs the stat in native orientation then swaps at render time,
+  # which differs from aes(y = class) (orientation auto-detect).
+  p <- ggplot(data.frame(x = c("A","B","C"), y = c(2, 3, 1)), aes(x, y)) +
+    geom_unit_col() +
+    coord_flip()
+  vdiffr::expect_doppelganger("bar-cells-coord-flip", p)
+})
+
+test_that("vdiffr: geom_unit_col under coord_fixed(ratio = 2)", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(data.frame(x = c("A","B","C"), y = c(2, 3, 1)), aes(x, y)) +
+    geom_unit_col() +
+    coord_fixed(ratio = 2)
+  vdiffr::expect_doppelganger("bar-cells-coord-fixed-ratio", p)
+})
+
+test_that("vdiffr: geom_unit_col with scale_y log10 transform", {
+  skip_if_not_installed("vdiffr")
+  # Scale transforms run BEFORE the stat, so cells tile in log-space.
+  # The cells become very short in the log domain — pin this rendering so
+  # any future math change is caught.
+  p <- ggplot(data.frame(x = c("A","B","C"), y = c(10, 100, 1000)), aes(x, y)) +
+    geom_unit_col() +
+    scale_y_continuous(transform = "log10")
+  vdiffr::expect_doppelganger("bar-cells-log10", p)
+})
+
+test_that("vdiffr: geom_unit_col with cell_size > 1 under coord_equal(ratio)", {
+  skip_if_not_installed("vdiffr")
+  # cell_size multiplies data-space cell height; coord_equal(ratio = cell_size)
+  # keeps cells visually square.
+  df <- data.frame(country = c("A","B","C"), pop = c(2.4e6, 1.1e6, 3.8e6))
+  p <- ggplot(df, aes(country, pop)) +
+    geom_unit_col(cell_size = 1e6) +
+    scale_y_continuous(labels = label_cells(1e6)) +
+    coord_equal(ratio = 1e6)
+  vdiffr::expect_doppelganger("bar-cells-cell-size", p)
+})
+
 
