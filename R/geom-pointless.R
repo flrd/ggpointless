@@ -15,9 +15,7 @@ GeomPointless <- ggproto(
 #' but is not particularly useful on its own - hence its name - but hopefully
 #' in conjunction with `geom_line()` and friends, see examples.
 #'
-#' @concept selective points
 #' @concept highlight observations
-#' @concept extreme points
 #'
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams ggplot2::layer
@@ -31,11 +29,12 @@ GeomPointless <- ggproto(
 #' The locations are determined in the order in which they appear in
 #' the data -- like [ggplot2::geom_path()] does compared to [ggplot2::geom_line()].
 #'
-#' Points may be plotted on top of one another; if `location` is set
-#' to `"all"`, then the order in which points are plotted from top to
-#' bottom is: `"first"` > `"last"` > `"minimum"` > `"maximum"`.
-#' Otherwise, the order is determined as specified in the `location` argument,
-#' which also then applies to the order legend key labels, see
+#' When a single observation matches multiple `location` criteria — for
+#' example, the last point is also the maximum — it is emitted once with a
+#' composite label joined by `", "` (e.g. `"last, maximum"`). The row order
+#' in the output — which drives draw order and legend order — follows the
+#' order given in `location`; for `"all"` the canonical order is
+#' `"first"`, `"last"`, `"minimum"`, `"maximum"`. See
 #' `vignette("ggpointless")` for more details.
 #'
 #' @aesthetics GeomPointless

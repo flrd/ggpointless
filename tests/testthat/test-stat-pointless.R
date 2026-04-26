@@ -1,4 +1,4 @@
-test_that("order of ploting is first > last > minimum > maximum", {
+test_that("collisions produce composite location labels", {
   df1 <- data.frame(
     x = c(1, 2, 3, 4, 5),
     y = c(1, 2, 1, 4, 1)
@@ -7,12 +7,14 @@ test_that("order of ploting is first > last > minimum > maximum", {
   p <- ggplot(df1, aes(x, y)) +
     stat_pointless(aes(colour = after_stat(location)), location = "all")
   x <- layer_data(p)
-  # Deduplication: first (x=1, y=1) and last (x=5, y=1) are both minimum,
-  # so x=1 is labelled "first", x=5 "last", and only x=3 gets "minimum".
+  # x=1 is first AND minimum; x=5 is last AND minimum; x=3 is minimum only;
+  # x=4 is maximum only. Row order follows the canonical iteration order:
+  # first, last, minimum, maximum.
   expect_equal(
     x$location,
-    factor(c("first", "last", "minimum", "maximum"),
-      levels = c("first", "last", "minimum", "maximum")
+    factor(
+      c("first, minimum", "last, minimum", "minimum", "maximum"),
+      levels = c("first, minimum", "last, minimum", "minimum", "maximum")
     )
   )
 })
