@@ -1,3 +1,4 @@
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_chaikin
 stat_chaikin <- function(
@@ -99,11 +100,15 @@ StatChaikin <- ggproto(
       )
     }
     if (params$ratio > 0.5) {
-      cli::cli_warn(
-        "{.arg ratio} = {params$ratio} is converted to its complement \\
-         {1 - params$ratio}: for closed paths the shape is identical; \\
-         for open paths the curve near the endpoints may differ slightly."
-      )
+      cli::cli_warn(c(
+        "!" = "{.arg ratio} = {params$ratio} is outside the conventional \\
+               Chaikin range {.code [0, 0.5]}; flipping to its complement \\
+               {.val {1 - params$ratio}}.",
+        "i" = "For closed paths the resulting vertex set is the same (with a \\
+               cyclic shift); for open paths the curve differs from the one \\
+               implied by {.code ratio = {params$ratio}}.",
+        "i" = "For stronger smoothing, increase {.arg iterations} instead."
+      ))
       params$ratio <- 1 - params$ratio
     }
 

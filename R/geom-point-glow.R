@@ -220,7 +220,6 @@ GeomPointGlow <- ggplot2::ggproto(
 #'
 #' @concept glowing points
 #' @concept radial gradient
-#' @concept glow effect
 #'
 #' @inheritParams ggplot2::geom_point
 #' @param glow_alpha Transparency of the glow between 0 (fully transparent)
@@ -262,41 +261,37 @@ GeomPointGlow <- ggplot2::ggproto(
 #' @examples
 #' library(ggplot2)
 #'
-#' # Basic usage — the default glow is 9× the point's `size` aesthetic,
+#' # Tiny dataset on purpose: each glow point becomes its own
+#' # `grid::radialGradient` pattern, and the example runner accumulates
+#' # patterns from every package example into a single pdf() device.  On
+#' # large pdf runs that pattern cache can trigger an upstream R bug at
+#' # `dev.off()` — unrelated to your real plots.
+#' df <- head(mtcars, 5)
+#'
+#' # Basic usage — the default glow is 9x the point's `size` aesthetic,
 #' # so it's always visibly larger than the point itself.
-#' ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+#' ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
 #'   geom_point_glow()
 #'
-#' # Customising the glow (fixed values, applied to every point)
-#' ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-#'   geom_point_glow(glow_colour = "#333", glow_alpha = 0.25, glow_size = 5) +
-#'   theme_minimal()
+#' \donttest{
+#'   # Customising the glow (fixed values applied to every point)
+#'   ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
+#'     geom_point_glow(glow_colour = "#333", glow_alpha = 0.25, glow_size = 5) +
+#'     theme_minimal()
 #'
-#' # Pitfall: glow_size is in the same units as `size`, and the default
-#' # point `size` is 1.5. If glow_size <= 1.5 the halo is covered by the
-#' # point itself — the gradient is drawn but invisible underneath.
-#' ggplot(mtcars, aes(wt, mpg)) +
-#'   geom_point_glow(glow_size = 1)   # ← glow < point size, no halo shows
+#'   # Per-point glow: pass a length-N vector for `glow_colour`, `glow_alpha`,
+#'   # or `glow_size`.
+#'   ggplot(df, aes(wt, mpg)) +
+#'     geom_point_glow(glow_colour = rainbow(nrow(df)), glow_size = 5)
 #'
-#' # Either shrink the point or grow the glow so the halo extends past it:
-#' ggplot(mtcars, aes(wt, mpg)) +
-#'   geom_point_glow(size = 0.5, glow_size = 1)   # shrink the point, or
-#' ggplot(mtcars, aes(wt, mpg)) +
-#'   geom_point_glow(glow_size = 4)               # grow the glow
-#'
-#' # Per-point glow (scalar or length matching nrow(data)): the vector is
-#' # aligned alongside the data, so any NA rows dropped by ggplot2 pull
-#' # their glow value with them.
-#' ggplot(mtcars, aes(wt, mpg)) +
-#'   geom_point_glow(glow_colour = rainbow(nrow(mtcars)), glow_size = 5)
-#'
-#' # use the Geom with another Stat
-#' ggplot(head(economics), aes(date, uempmed)) +
-#'   geom_line() +
-#'   stat_pointless(
-#'     geom = "PointGlow",
-#'     glow_colour = "tomato",
-#'     glow_size = 10,
-#'     location = c("first", "last")
-#' )
+#'   # Use the Geom with another Stat to glow only specific observations:
+#'   ggplot(head(economics), aes(date, uempmed)) +
+#'     geom_line() +
+#'     stat_pointless(
+#'       geom = "PointGlow",
+#'       glow_colour = "tomato",
+#'       glow_size = 10,
+#'       location = c("first", "last")
+#'     )
+#' }
 geom_point_glow <- make_constructor(GeomPointGlow)

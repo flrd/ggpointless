@@ -110,8 +110,14 @@ this is the same as calling \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}
 be useful when you want to toggle smoothing on/off programmatically without
 removing the layer.}
 
-\item{ratio}{Numeric. Cutting ratio must be a number between \code{0} and \code{1}.
-If \code{ratio > 0.5}, then it will be flipped to \code{1 - ratio}.}
+\item{ratio}{Numeric. Cutting ratio, a number in \verb{[0, 1]}. The
+conventional Chaikin range is \verb{[0, 0.5]}: values outside that range
+are flipped to \code{1 - ratio} with a warning, because ratios above \code{0.5}
+are not geometrically meaningful in the usual corner-cutting sense.
+For \strong{closed} paths the flipped result has the same vertex set as the
+input ratio (with a cyclic shift). For \strong{open} paths it is a
+different curve — prefer increasing \code{iterations} if you want stronger
+smoothing.}
 
 \item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
 
@@ -146,6 +152,8 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 \item{closed}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}} Use \code{mode} instead.}
 }
 \value{
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
@@ -205,9 +213,7 @@ The \href{https://strimas.com/smoothr/}{smoothr} package offers tools to
 smooth and tidy spatial features
 }
 \concept{corner cutting}
-\concept{curve fitting}
 \concept{path smoothing}
-\concept{smooth curve}
 \section{Aesthetics}{
 
 \code{geom_chaikin()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

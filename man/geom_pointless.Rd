@@ -138,6 +138,8 @@ give the geom as \code{"point"}.
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 This is a wrapper around \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}} with the one
@@ -153,11 +155,12 @@ single point will be plotted at the last non-missing observation.
 The locations are determined in the order in which they appear in
 the data -- like \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}} does compared to \code{\link[ggplot2:geom_path]{ggplot2::geom_line()}}.
 
-Points may be plotted on top of one another; if \code{location} is set
-to \code{"all"}, then the order in which points are plotted from top to
-bottom is: \code{"first"} > \code{"last"} > \code{"minimum"} > \code{"maximum"}.
-Otherwise, the order is determined as specified in the \code{location} argument,
-which also then applies to the order legend key labels, see
+When a single observation matches multiple \code{location} criteria — for
+example, the last point is also the maximum — it is emitted once with a
+composite label joined by \code{", "} (e.g. \code{"last, maximum"}). The row order
+in the output — which drives draw order and legend order — follows the
+order given in \code{location}; for \code{"all"} the canonical order is
+\code{"first"}, \code{"last"}, \code{"minimum"}, \code{"maximum"}. See
 \code{vignette("ggpointless")} for more details.
 }
 
@@ -250,9 +253,7 @@ p + geom_pointless(
 \seealso{
 \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}
 }
-\concept{extreme points}
 \concept{highlight observations}
-\concept{selective points}
 \section{Aesthetics}{
 
 \code{geom_pointless()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

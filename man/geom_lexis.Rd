@@ -151,6 +151,8 @@ give the geom as \code{"point"}.
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
+
+A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 This geom can be used to plot 45° lifelines for a cohort.

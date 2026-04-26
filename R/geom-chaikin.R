@@ -33,8 +33,6 @@ GeomChaikin <- ggplot2::ggproto(
 #'
 #' @concept path smoothing
 #' @concept corner cutting
-#' @concept smooth curve
-#' @concept curve fitting
 #'
 #' @details
 #' Chaikin's corner cutting algorithm iteratively turns a jagged path into
@@ -60,8 +58,14 @@ GeomChaikin <- ggplot2::ggproto(
 #'   this is the same as calling [`ggplot2::geom_path()`]; however this might
 #'   be useful when you want to toggle smoothing on/off programmatically without
 #'   removing the layer.
-#' @param ratio Numeric. Cutting ratio must be a number between `0` and `1`.
-#'   If `ratio > 0.5`, then it will be flipped to `1 - ratio`.
+#' @param ratio Numeric. Cutting ratio, a number in `[0, 1]`. The
+#'   conventional Chaikin range is `[0, 0.5]`: values outside that range
+#'   are flipped to `1 - ratio` with a warning, because ratios above `0.5`
+#'   are not geometrically meaningful in the usual corner-cutting sense.
+#'   For **closed** paths the flipped result has the same vertex set as the
+#'   input ratio (with a cyclic shift). For **open** paths it is a
+#'   different curve — prefer increasing `iterations` if you want stronger
+#'   smoothing.
 #' @param mode Character. Should the geom draw a closed polygon or an open
 #'   path? Must be one of `"open"` (default) or `"closed"`.
 #' @param closed `r lifecycle::badge("superseded")` Use `mode` instead.

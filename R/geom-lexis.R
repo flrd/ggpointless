@@ -97,6 +97,23 @@ GeomLexis <- ggproto(
     stroke    = from_theme(borderwidth)
   ),
 
+  setup_params = function(self, data, params) {
+    params <- ggplot2::ggproto_parent(ggplot2::Geom, self)$setup_params(
+      data,
+      params
+    )
+    # point_colour is a scalar "apply to every endpoint" layer arg; NULL =
+    # inherit the group's colour aesthetic.  Delegate to the shared helper
+    # so invalid colour specs fail fast with a clean cli error instead of
+    # propagating into grid at draw time.
+    params$point_colour <- .check_colour_arg(
+      params$point_colour,
+      "point_colour",
+      n = 1L
+    )
+    params
+  },
+
   draw_group = \(
     data,
     panel_params,

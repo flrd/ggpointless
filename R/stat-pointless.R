@@ -20,13 +20,11 @@ StatPointless <- ggproto(
       }
     }
 
-    # Check for single-observation groups
-    if (nrow(data) > 0L && !anyDuplicated(data$group)) {
-      cli::cli_warn(
-        "Each group consists of only one observation. \\
-         Do you need to adjust the {.field group} aesthetic?"
-      )
-    }
+    # Note: previously emitted a "single-observation groups" warning here.
+    # Removed: a lone point that simultaneously matches first/last/min/max
+    # is a perfectly valid use case (and the composite-label feature was
+    # designed for it), so the warning was actively misleading on minimal
+    # example data.
 
     params
   },
@@ -59,6 +57,7 @@ StatPointless <- ggproto(
   required_aes = c("x", "y")
 )
 
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_pointless
 stat_pointless <- make_constructor(StatPointless, geom = "point")
@@ -100,24 +99,35 @@ get_locations <- function(data, location = "last") {
     maximum = non_na_idx[y_non_na == y_max]
   )
 
-  # Build result by iterating through requested locations
-  # This preserves user-specified order and handles duplicates correctly
+  # Collect every location label that applies to each observation, so a
+  # point that matches multiple criteria (e.g. the last point that is also
+  # the maximum) is emitted once with a composite label like "last, maximum".
+  # Row order follows the order of `locations`, which drives draw order and
+  # legend order.
   result_rows <- integer(0L)
-  result_locations <- character(0L)
+  labels_per_row <- list()
 
   for (loc in locations) {
-    indices <- location_map[[loc]]
-    # Only add indices we haven't seen yet (prevents overplotting)
-    new_indices <- setdiff(indices, result_rows)
-    if (length(new_indices) > 0L) {
-      result_rows <- c(result_rows, new_indices)
-      result_locations <- c(result_locations, rep(loc, length(new_indices)))
+    for (idx in location_map[[loc]]) {
+      pos <- match(idx, result_rows)
+      if (is.na(pos)) {
+        result_rows <- c(result_rows, idx)
+        labels_per_row <- c(labels_per_row, list(loc))
+      } else {
+        labels_per_row[[pos]] <- c(labels_per_row[[pos]], loc)
+      }
     }
   }
 
+  result_locations <- vapply(
+    labels_per_row,
+    \(x) paste(x, collapse = ", "),
+    character(1L)
+  )
+
   # Build result data frame
   result <- data[result_rows, , drop = FALSE]
-  result$location <- factor(result_locations, levels = locations)
+  result$location <- factor(result_locations, levels = unique(result_locations))
   rownames(result) <- NULL
 
   result

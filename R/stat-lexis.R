@@ -51,6 +51,7 @@ StatLexis <- ggproto(
   }
 )
 
+#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_lexis
 stat_lexis <- make_constructor(StatLexis, geom = "lexis")
