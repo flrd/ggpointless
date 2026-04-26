@@ -58,7 +58,7 @@ GeomAblineFade <- ggplot2::ggproto(
     # Guard against slope = 0: dividing by zero gives ±Inf which produces NaN
     # when later multiplied back by slope.  For horizontal lines clamp x to the
     # full panel width directly.
-    horizontal <- abs(data$slope) < 1e-10
+    horizontal <- abs(data$slope) < .EPS_ZERO
     x_at_y_orig <- sweep(
       outer(ranges$y, data$intercept, FUN = "-"),
       2,
@@ -72,12 +72,9 @@ GeomAblineFade <- ggplot2::ggproto(
     data$y    <- x_inv(data$x)    * data$slope + data$intercept
     data$yend <- x_inv(data$xend) * data$slope + data$intercept
 
-    GeomSegmentFade$draw_panel(
-      unique(data),
-      panel_params,
-      coord,
-      lineend = lineend,
-      na.rm = na.rm,
+    .draw_refline_fade(
+      unique(data), panel_params, coord,
+      lineend = lineend, na.rm = na.rm,
       alpha_fade_to = alpha_fade_to,
       fade_direction = fade_direction
     )
@@ -122,12 +119,9 @@ GeomHlineFade <- ggplot2::ggproto(
     data$y    <- data$yintercept
     data$yend <- data$yintercept
 
-    GeomSegmentFade$draw_panel(
-      unique(data),
-      panel_params,
-      coord,
-      lineend = lineend,
-      na.rm = na.rm,
+    .draw_refline_fade(
+      unique(data), panel_params, coord,
+      lineend = lineend, na.rm = na.rm,
       alpha_fade_to = alpha_fade_to,
       fade_direction = fade_direction
     )
@@ -172,12 +166,9 @@ GeomVlineFade <- ggplot2::ggproto(
     data$y    <- ranges$y[1]
     data$yend <- ranges$y[2]
 
-    GeomSegmentFade$draw_panel(
-      unique(data),
-      panel_params,
-      coord,
-      lineend = lineend,
-      na.rm = na.rm,
+    .draw_refline_fade(
+      unique(data), panel_params, coord,
+      lineend = lineend, na.rm = na.rm,
       alpha_fade_to = alpha_fade_to,
       fade_direction = fade_direction
     )
@@ -220,10 +211,32 @@ GeomVlineFade <- ggplot2::ggproto(
 #'   geom_hline_fade(yintercept = 20, fade_direction = "end")
 #' ```
 #'
-#' @concept fading line
+#' ## Non-linear coordinate systems (coord_polar / coord_radial)
+#'
+#' Under non-linear coordinate systems the "line" is conceptually a curve
+#' in device space:
+#'
+#' * `geom_hline_fade()` traces a **circle** at the given `yintercept`
+#'   (constant radius).
+#' * `geom_vline_fade()` traces a **ray** at the given `xintercept`
+#'   (constant angle).
+#' * `geom_abline_fade()` traces a **curve** that spirals or arcs based on
+#'   the slope/intercept.
+#'
+#' The fade is applied along the **path length** of that curve, so
+#' `fade_direction = "start"` fades the beginning of the traced path. For an
+#' `hline_fade()` circle the "start" is the first vertex of the traced
+#' circle (at the leftmost angle of the coord system, 12 o'clock by default),
+#' which may not match intuition from cartesian use — pass
+#' `fade_direction = "end"` to reverse.
+#'
+#' Internally, the line is subdivided into a dense set of vertices in data
+#' space before the coord transform so the curve appears smooth. This is
+#' transparent to the user but explains why the grob carries more vertices
+#' than in the linear case.
+#'
 #' @concept reference line
-#' @concept gradient line
-#' @concept annotation
+#' @concept fading gradient
 #'
 #' @aesthetics GeomSegmentFade
 #'
