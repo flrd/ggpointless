@@ -15,7 +15,7 @@ NULL
 # Shared numerical constants. Keep definitions here so the intent is named
 # once and all call sites tune the same knob.
 #
-# `.EPS_ZERO` — treat any scalar (slope, segment length, cross-product,
+# `.EPS_ZERO` -- treat any scalar (slope, segment length, cross-product,
 # normalising factor) whose absolute value is below this as zero. Used by
 # path-fade's bisector geometry and abline-fade's horizontal-line branch.
 # Not a Newton-solver tolerance (those stay local to stat-catenary.R) and not
@@ -27,7 +27,7 @@ NULL
 
 # Like `%||%` but also replaces length-1 `NA` values.  Used for theme
 # properties that must be concrete (lineend, linetype, linewidth) where `NA`
-# would crash grid. `colour` is intentionally NOT a consumer — `NA` colour is
+# would crash grid. `colour` is intentionally NOT a consumer -- `NA` colour is
 # valid (transparent) in grid.
 #' @noRd
 `%|NA|%` <- function(x, y) {
@@ -71,11 +71,11 @@ NULL
 # Returns a list(colours, stops) suitable for `grid::linearGradient()`.
 # The dst grob must be drawn FULLY OPAQUE; all alpha comes from this mask.
 # Under dest.in compositing the final alpha at each end is exactly the
-# corresponding stop alpha — direct interpolation, not multiplicative.
+# corresponding stop alpha -- direct interpolation, not multiplicative.
 #
 # @param fade_direction Character vector: "start", "end", or both.
-# @param alpha_fade_to  Numeric scalar in [0, 1] — alpha at the faded end(s).
-# @param a_opaque       Numeric scalar in [0, 1] — alpha at the opaque end
+# @param alpha_fade_to  Numeric scalar in [0, 1] -- alpha at the faded end(s).
+# @param a_opaque       Numeric scalar in [0, 1] -- alpha at the opaque end
 #                       (the aes alpha of the row). Defaults to 1.
 # @return Named list with elements `colours` and `stops`.
 #' @noRd
@@ -105,9 +105,9 @@ NULL
 # Retrieve the scale transformer for one axis from panel_params.
 #
 # Returns a named list with three elements:
-#   fwd  — the forward transform function (e.g. `function(x) -x` for reverse)
-#   inv  — the inverse transform function
-#   name — the transformer name string (e.g. "identity", "reverse", "log-10")
+#   fwd  -- the forward transform function (e.g. `function(x) -x` for reverse)
+#   inv  -- the inverse transform function
+#   name -- the transformer name string (e.g. "identity", "reverse", "log-10")
 #
 # Falls back to identity when panel_params does not expose `get_transformation`
 # (should not happen with ggplot2 >= 4.0.0, but kept for safety).
@@ -154,9 +154,9 @@ NULL
 # and decides whether to delegate to the normal linear pipeline or to
 # subdivide the line in data space first.
 #
-# * Linear coord → `GeomSegmentFade$draw_panel()` unchanged (chord / straight
+# * Linear coord -> `GeomSegmentFade$draw_panel()` unchanged (chord / straight
 #   segment with fade).
-# * Non-linear coord → subdivide each line in data space into `n_subdivide`
+# * Non-linear coord -> subdivide each line in data space into `n_subdivide`
 #   equally-spaced vertices, then delegate to `GeomPathFade$draw_panel()` with
 #   `alpha_mode = "gradient"` so the fade follows the curve that the coord
 #   transform produces (arc for `hline`, ray for `vline`, curve for `abline`).
@@ -229,7 +229,7 @@ NULL
 }
 
 
-# Check whether every row's effective alpha equals alpha_fade_to — if so
+# Check whether every row's effective alpha equals alpha_fade_to -- if so
 # the fade has no visual effect and draw_panel can delegate to the parent.
 # NA alpha is treated as 1 (the ggplot2 convention for "no alpha mapping").
 #
@@ -300,7 +300,7 @@ NULL
 }
 
 
-# Validate `glow_alpha` for geom_point_glow.  Accepts NA (→ inherit from aes
+# Validate `glow_alpha` for geom_point_glow.  Accepts NA (-> inherit from aes
 # alpha), a scalar, or a length-n numeric vector.  Non-numeric or non-finite
 # values abort; values outside [0, 1] warn and are clamped (element-wise).
 #' @noRd
@@ -328,7 +328,7 @@ NULL
 }
 
 
-# Validate `glow_size` for geom_point_glow.  Accepts NA (→ 9× point size),
+# Validate `glow_size` for geom_point_glow.  Accepts NA (-> 9x point size),
 # a scalar, or a length-n non-negative numeric vector.  Non-numeric or
 # non-finite values abort; any negative element warns and the whole
 # parameter falls back to NA (default) to keep semantics simple.
@@ -355,9 +355,144 @@ NULL
 }
 
 
+# Layer-wide `max(abs(values))` with Date/POSIXct coercion and zero/NA
+# fallback. Used by every fade geom's `draw_layer` override to compute
+# the cross-panel reference for `alpha_scope = "global"`.  Centralised
+# here so the same fallback semantics (Date column -> as.numeric, no
+# finite values -> 1, max == 0 -> 1) cannot drift between geoms.
+#' @noRd
+#' @keywords internal
+.layer_max_abs <- function(values) {
+  v <- suppressWarnings(tryCatch(as.numeric(values), error = \(e) NULL))
+  if (!is.numeric(v)) return(1)
+  v <- v[is.finite(v)]
+  if (length(v) == 0L) return(1)
+  mx <- max(abs(v))
+  if (mx > 0) mx else 1
+}
+
+
+# Compute the per-row scope reference for `alpha_scope` (bar-fade family).
+#
+# Given a data frame with at least `xmin`/`xmax`/`ymin`/`ymax` (and
+# `group`, `fill`, `colour` for the matching scopes), returns a numeric
+# vector the same length as the data, where each entry is the maximum
+# `peak_abs` (the larger of `|ymin|` and `|ymax|`, or `|xmin|`/`|xmax|`
+# when flipped) within that row's scope group.
+#
+# Scopes:
+#   "global" -- one max for the whole data frame
+#   "x"      -- grouped by `round(data$x)` (the discrete position-axis
+#              category; round() recovers pre-dodge integer position)
+#   "y"      -- grouped by `round(data$y)` (only valid when flipped)
+#   "group"  -- grouped by `data$group` (ggplot2's interaction of all
+#              discrete aesthetics)
+#   "fill"   -- grouped by `as.character(data$fill)` (resolved hex)
+#   "colour" -- grouped by `as.character(data$colour)` (resolved hex)
+#
+# Used by `GeomColFade$draw_layer` to stamp the reference once across
+# all panels; also used as a fallback inside both `draw_panel` paths
+# (linear + polar) when called directly with un-stamped data.
+#' @noRd
+#' @keywords internal
+.scope_max_abs_vec <- function(data, scope, flipped_aes = FALSE) {
+  flipped <- isTRUE(flipped_aes) ||
+    isTRUE(any(data$flipped_aes %||% FALSE))
+  peak_abs <- if (flipped) {
+    pmax(abs(data$xmin), abs(data$xmax))
+  } else {
+    pmax(abs(data$ymin), abs(data$ymax))
+  }
+  safe_max <- function(v) {
+    mx <- suppressWarnings(max(v, na.rm = TRUE))
+    if (!is.finite(mx) || mx == 0) 1 else mx
+  }
+  switch(
+    scope,
+    "global" = rep(safe_max(peak_abs), length(peak_abs)),
+    "x"      = stats::ave(peak_abs, round(data$x), FUN = safe_max),
+    "y"      = stats::ave(peak_abs, round(data$y), FUN = safe_max),
+    "group"  = stats::ave(peak_abs, data$group,    FUN = safe_max),
+    "fill"   = stats::ave(peak_abs, as.character(data$fill),   FUN = safe_max),
+    "colour" = stats::ave(peak_abs, as.character(data$colour), FUN = safe_max),
+    rep(safe_max(peak_abs), length(peak_abs))   # unknown scope -> "global"
+  )
+}
+
+
+# Drop stat-output rows whose `x`/`y` (and `xend`/`yend`, when present) fall
+# outside the coord transform's valid domain.
+#
+# Stats that legitimately produce output beyond the input data range --
+# `stat_fourier()` (Gibbs / harmonic-truncation overshoot) and
+# `stat_catenary()` (sag below the endpoints) -- would otherwise crash inside
+# `expand_limits_continuous_trans()` when paired with `coord_transform(y =
+# "log10")` and similar restricted-domain coord transforms: the transformed
+# limits become NaN and `expand_range4()` aborts with a cryptic
+# "missing value where TRUE/FALSE needed" error.
+#
+# The helper is a no-op for any coord that is not a `CoordTransform`, and for
+# `coord_transform()` instances whose per-axis transformer has no domain
+# restriction (e.g. the default identity on the unused axis).  Filtered rows
+# emit a single throttled warning per layer with a pointer to
+# `scale_y_log10()` (or similar), which transforms BEFORE the stat runs and
+# avoids the issue entirely.
+#
+# @param data Data frame returned by the stat (post-`compute_layer`).
+# @param coord A Coord object (typically `layout$coord`).
+# @param stat_name String for the warning message (e.g. `"stat_fourier"`).
+# @return Data frame with offending rows removed.
+#' @noRd
+#' @keywords internal
+.crop_to_coord_domain <- function(data, coord, stat_name) {
+  if (!inherits(coord, "CoordTransform") || nrow(data) == 0L) {
+    return(data)
+  }
+  trans <- coord$trans
+  if (!is.list(trans)) {
+    return(data)
+  }
+
+  # Each x*/y* column inherits its axis's domain restriction.
+  axis_for <- c(x = "x", xend = "x", y = "y", yend = "y")
+  cols <- intersect(names(axis_for), names(data))
+
+  is_outside <- function(col) {
+    dom <- trans[[axis_for[[col]]]]$domain
+    if (length(dom) != 2L || all(is.infinite(dom))) {
+      return(logical(nrow(data)))
+    }
+    v <- data[[col]]
+    !is.na(v) & (v < dom[1L] | v > dom[2L])
+  }
+
+  bad <- Reduce(`|`, lapply(cols, is_outside), init = logical(nrow(data)))
+
+  if (any(bad)) {
+    cli::cli_warn(
+      c(
+        "!" = "{.fn {stat_name}} produced {sum(bad)} value{?s} outside the \\
+               {.fn coord_transform} domain; dropping them to keep the plot \\
+               renderable.",
+        "i" = "If your data is naturally on a transformed scale, prefer \\
+               {.fn scale_y_log10} (or similar) over {.fn coord_transform} -- \\
+               scales transform the data before the stat runs, so the stat \\
+               operates on already-transformed values."
+      ),
+      .frequency = "regularly",
+      .frequency_id = paste0("crop_coord_domain_", stat_name)
+    )
+    data <- data[!bad, , drop = FALSE]
+    rownames(data) <- NULL
+  }
+
+  data
+}
+
+
 # Generic colour-argument validator used by layer params that accept a
 # single colour or a length-n vector of colours (geom_point_glow's
-# glow_colour, geom_lexis's point_colour, geom_gridline's colour, …).
+# glow_colour, geom_lexis's point_colour, geom_gridline's colour, ...).
 #
 # Semantics:
 #   * NULL or scalar NA  -> returns NULL (caller decides the "inherit"
