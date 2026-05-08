@@ -1,9 +1,9 @@
 # Deferred grob for device-aware bar rendering.
 #
 # Two tiers (bars never need the compositing path because each bar has a
-# single fill colour — there is no within-bar colour gradient to combine):
-#   Tier 1 — linearGradient fill (ragg, cairo, svg, png, ...)
-#   Tier 2 — flat semi-transparent (base pdf(), postscript)
+# single fill colour -- there is no within-bar colour gradient to combine):
+#   Tier 1 -- linearGradient fill (ragg, cairo, svg, png, ...)
+#   Tier 2 -- flat semi-transparent (base pdf(), postscript)
 #' @noRd
 #' @keywords internal
 .bar_fade_grob <- function(gradient_glist, flat_glist) {
@@ -35,23 +35,7 @@ makeContent.bar_fade_grob <- function(x) {
     grobs <- x$gradient_glist
   }
 
-  # Clamp corner radius so it never exceeds half the bar's smaller
-  # dimension.  Without this, tiny bars degenerate into pill-shaped
-  # blobs when the user-supplied radius is larger than the bar itself.
-  for (i in seq_along(grobs)) {
-    g <- grobs[[i]]
-    if (!inherits(g, "roundrect")) {
-      next
-    }
-    r_pt <- grid::convertUnit(g$r, "pt", valueOnly = TRUE)
-    h_pt <- abs(grid::convertHeight(g$height, "pt", valueOnly = TRUE))
-    w_pt <- abs(grid::convertWidth(g$width, "pt", valueOnly = TRUE))
-    max_r <- min(h_pt, w_pt) / 2
-    if (r_pt > max_r) {
-      grobs[[i]]$r <- grid::unit(max_r, "pt")
-    }
-  }
-
+  grobs <- .clamp_roundrect_radius(grobs, arg = "radius")
   grid::setChildren(x, grobs)
 }
 
@@ -59,7 +43,7 @@ makeContent.bar_fade_grob <- function(x) {
 #
 # Each rectangle becomes an arc-interpolated polygon via GeomPolygon.
 # A radialGradient attached directly to the polygon would be resolved
-# in the polygon's bounding box — each wedge gets its own "pillow"
+# in the polygon's bounding box -- each wedge gets its own "pillow"
 # highlight, not the intended panel-centered annular fade.
 #
 # We get panel-centered gradients via viewport clipping paths: for
@@ -75,8 +59,8 @@ makeContent.bar_fade_grob <- function(x) {
 # sequential compositing groups were in play. Clip paths avoid
 # grid's group state machine entirely.
 #
-# Tier 1 — clipped gradient (devices with clippingPaths + patterns).
-# Tier 2 — flat mid-alpha polygons (pdf, postscript, ...).
+# Tier 1 -- clipped gradient (devices with clippingPaths + patterns).
+# Tier 2 -- flat mid-alpha polygons (pdf, postscript, ...).
 #' @noRd
 #' @keywords internal
 .bar_fade_polar_grob <- function(gradient_glist, flat_glist) {
@@ -142,17 +126,11 @@ makeContent.bar_fade_polar_grob <- function(x) {
   peak_abs <- pmax(abs(data$ymin), abs(data$ymax))
   baseline_abs <- pmin(abs(data$ymin), abs(data$ymax))
 
-  .safe_max <- function(v) {
-    mx <- max(v, na.rm = TRUE)
-    if (!is.finite(mx) || mx == 0) 1 else mx
-  }
-  global_max_abs <- .safe_max(peak_abs)
-  pos_key <- round(data$x)
-  group_max_abs <- vapply(
-    split(peak_abs, pos_key),
-    .safe_max,
-    numeric(1)
-  )
+  # Per-row alpha-scope reference. `draw_layer` stamps this for any
+  # scope other than "bar"; fallback recomputes via `.scope_max_abs_vec`
+  # so direct draw_panel calls see the same semantics.
+  scope_max <- data$.scope_max_abs %||%
+    .scope_max_abs_vec(data, alpha_scope, flipped_aes = FALSE)
 
   gradient_list <- vector("list", n)
   flat_list <- vector("list", n)
@@ -167,17 +145,12 @@ makeContent.bar_fade_polar_grob <- function(x) {
     if (identical(alpha_scope, "bar")) {
       a_baseline <- alpha_fade_to
       a_peak <- a_start
-    } else if (identical(alpha_scope, "group")) {
-      ref <- group_max_abs[as.character(pos_key[i])]
+    } else {
+      ref <- scope_max[i]
       a_baseline <- alpha_fade_to +
         (a_start - alpha_fade_to) * baseline_abs[i] / ref
       a_peak <- alpha_fade_to +
         (a_start - alpha_fade_to) * peak_abs[i] / ref
-    } else {
-      a_baseline <- alpha_fade_to +
-        (a_start - alpha_fade_to) * baseline_abs[i] / global_max_abs
-      a_peak <- alpha_fade_to +
-        (a_start - alpha_fade_to) * peak_abs[i] / global_max_abs
     }
 
     # Build the arc-interpolated polygon via GeomPolygon's non-linear
@@ -217,7 +190,7 @@ makeContent.bar_fade_polar_grob <- function(x) {
     flat_grob <- poly_grob
     flat_grob$gp$fill <- ggplot2::alpha(fill_col, mid_alpha)
 
-    # Degenerate arc (e.g. zero-height segment) — no gradient.
+    # Degenerate arc (e.g. zero-height segment) -- no gradient.
     if (!is.finite(r_in) || !is.finite(r_out) || r_out <= r_in) {
       gradient_list[[i]] <- flat_grob
       flat_list[[i]] <- flat_grob
@@ -226,7 +199,7 @@ makeContent.bar_fade_polar_grob <- function(x) {
 
     # Panel-sized rectGrob with the annular radialGradient. Because the
     # rectGrob fills the viewport, cx = cy = 0.5 resolves to the panel
-    # centre. r1 = inner NPC radius, r2 = outer NPC radius → fade from
+    # centre. r1 = inner NPC radius, r2 = outer NPC radius -> fade from
     # a_baseline (inner) to a_peak (outer).
     gradient_rect <- grid::rectGrob(
       gp = grid::gpar(
@@ -247,7 +220,7 @@ makeContent.bar_fade_polar_grob <- function(x) {
     )
 
     # Clip the gradient to the ring polygon via a viewport whose
-    # clip path IS the polygon. No compositing groups involved — this
+    # clip path IS the polygon. No compositing groups involved -- this
     # avoids the "Unknown group, N" warning that grid's display-list
     # replay emitted on RStudioGD when many sequential groupGrobs were
     # stacked.
@@ -268,31 +241,37 @@ makeContent.bar_fade_polar_grob <- function(x) {
 }
 
 
-# Legend key — rounded rect with vertical alpha gradient.
+# Legend key -- rounded rect with an alpha gradient along the bar's value
+# axis.  The corner radius is fixed (2pt) so the key reads as a tile even
+# when the bar's own `radius` is 0; the gradient direction follows
+# `flipped_aes` so horizontal bars get a horizontal fade in the key.
 #' @noRd
 #' @keywords internal
 .draw_key_col_fade <- function(data, params, size) {
-  radius <- params$radius %||% grid::unit(3, "pt")
-  if (!grid::is.unit(radius)) {
-    radius <- grid::unit(radius, "pt")
-  }
-
   fill_colour <- data$fill %||% "grey35"
   a_start <- data$alpha %||% 1
   a_end <- params$alpha_fade_to %||% 0
-  flipped <- params$flipped_aes %||% FALSE
+  flipped <- isTRUE(params$flipped_aes)
 
   if (flipped) {
+    # Horizontal bars: faded end at left, opaque end at right.
     x1 <- 0
     y1 <- 0.5
     x2 <- 1
     y2 <- 0.5
   } else {
+    # Vertical bars: faded end at bottom, opaque end at top.
     x1 <- 0.5
     y1 <- 0
     x2 <- 0.5
     y2 <- 1
   }
+
+  # Mirror the layer's actual `radius` so the legend key matches the rendered
+  # bars: default `unit(0, "pt")` -> flat key (matches geom_bar_fade /
+  # geom_histogram_fade defaults); user-supplied non-zero radius -> rounded
+  # key (matches geom_col_fade(radius = unit(5, "pt"))).
+  radius <- params$radius %||% grid::unit(0, "pt")
 
   grid::roundrectGrob(
     r = radius,
@@ -342,12 +321,33 @@ GeomColFade <- ggplot2::ggproto(
 
     params$alpha_scope <- rlang::arg_match0(
       params$alpha_scope,
-      values = c("bar", "group", "global")
+      values = c("bar", "group", "x", "y", "fill", "colour", "global"),
+      arg_nm = "alpha_scope"
     )
 
-    if (!is.null(params$radius) && !grid::is.unit(params$radius)) {
-      params$radius <- grid::unit(params$radius, "pt")
+    # Position-axis scopes ("x", "y") only make sense on the discrete
+    # (categorical) axis. Refuse the wrong axis with a hint at the
+    # matching one rather than silently swapping -- silent swaps would
+    # turn a downstream `coord_flip()` into a hidden behaviour change.
+    flipped <- isTRUE(params$flipped_aes)
+    if (params$alpha_scope == "x" && flipped) {
+      cli::cli_abort(c(
+        '{.arg alpha_scope} = {.val x} requires bars on the x-axis \\
+         (vertical orientation).',
+        "i" = 'Did you mean {.arg alpha_scope} = {.val y}? \\
+               Or remove {.fn coord_flip} / {.code orientation = "y"}.'
+      ))
     }
+    if (params$alpha_scope == "y" && !flipped) {
+      cli::cli_abort(c(
+        '{.arg alpha_scope} = {.val y} requires bars on the y-axis \\
+         (horizontal orientation, e.g. {.fn coord_flip}).',
+        "i" = 'Did you mean {.arg alpha_scope} = {.val x}? \\
+               Or add {.fn coord_flip} / {.code orientation = "y"}.'
+      ))
+    }
+
+    params$radius <- .validate_radius(params$radius)
 
     params
   },
@@ -361,21 +361,42 @@ GeomColFade <- ggplot2::ggproto(
     data
   },
 
+  # Stamp the per-row alpha-scope reference (`data$.scope_max_abs`).
+  #
+  # `draw_panel` sees only one panel's rows at a time, so computing
+  # scope references there yields per-panel-only values -- under faceting
+  # that breaks every "shared across the layer" semantic.  `draw_layer`
+  # sees ALL panels, post-position (so any `position = "stack" / "fill" /
+  # "dodge"` is already applied), so we compute the reference for each
+  # row once here, keyed on the chosen scope, before the per-panel split.
+  #
+  # Stamping is skipped for `alpha_scope = "bar"` because that scope's
+  # reference IS each bar's own peak, computed inline in `draw_panel`.
+  draw_layer = \(self, data, params, layout, coord) {
+    scope <- params$alpha_scope %||% "bar"
+    if (nrow(data) > 0L && scope != "bar") {
+      data$.scope_max_abs <- .scope_max_abs_vec(data, scope, params$flipped_aes)
+    }
+    ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_layer(
+      data,
+      params,
+      layout,
+      coord
+    )
+  },
+
   draw_panel = \(
     self,
     data,
     panel_params,
     coord,
     lineend = "butt",
-    linejoin = "round",
+    linejoin = "mitre",
     alpha_fade_to = 0,
     radius = NULL,
     alpha_scope = "bar"
   ) {
-    radius <- radius %||% grid::unit(3, "pt")
-    if (!grid::is.unit(radius)) {
-      radius <- grid::unit(radius, "pt")
-    }
+    radius <- .validate_radius(radius)
 
     alpha_scope <- data$.alpha_scope[1L] %||% alpha_scope
 
@@ -422,15 +443,29 @@ GeomColFade <- ggplot2::ggproto(
 
     if (.is_uniform_alpha(data, alpha_fade_to)) {
       return(ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_panel(
-        data, panel_params, coord,
-        lineend = lineend, linejoin = linejoin
+        data,
+        panel_params,
+        coord,
+        lineend = lineend,
+        linejoin = linejoin
       ))
     }
 
-    flipped <- any(data$flipped_aes %||% FALSE)
+    # Two distinct "flipped" notions:
+    #   `flipped_data`   - which DATA axis is the count axis (x for
+    #                      orientation = "y", y otherwise). Set by ggplot2's
+    #                      orientation handling via `flipped_aes`.
+    #   `flipped_visual` - whether the RENDERED bar is horizontal.
+    #                      `coord_flip()` rotates the rendering without
+    #                      touching `flipped_aes`, so we OR-detect it here.
+    # Use `flipped_data` when reading data columns; use `flipped_visual`
+    # when choosing the gradient direction in the rendered grob.
+    flipped_data <- any(data$flipped_aes %||% FALSE)
+    flipped_visual <- xor(flipped_data, inherits(coord, "CoordFlip"))
 
-    # Negative-bar flag (for gradient direction)
-    if (flipped) {
+    # Negative-bar flag (for gradient direction). Read the count axis in
+    # the original data orientation (i.e. follow `flipped_data`).
+    if (flipped_data) {
       is_neg <- data$xmax <= 0
     } else {
       is_neg <- data$ymax <= 0
@@ -438,7 +473,7 @@ GeomColFade <- ggplot2::ggproto(
 
     # Absolute y-positions of each bar's baseline and peak edges.
     # "baseline" = the edge closer to y = 0, "peak" = the edge further away.
-    if (flipped) {
+    if (flipped_data) {
       baseline_abs <- ifelse(is_neg, abs(data$xmax), abs(data$xmin))
       peak_abs <- ifelse(is_neg, abs(data$xmin), abs(data$xmax))
     } else {
@@ -446,24 +481,13 @@ GeomColFade <- ggplot2::ggproto(
       peak_abs <- ifelse(is_neg, abs(data$ymin), abs(data$ymax))
     }
 
-    # Reference values for "global" and "group" alpha scaling.
-    # Using max absolute value-axis position (not segment height) so that
-    # stacked segments high up the axis stay opaque.
-    .safe_max <- function(v) {
-      mx <- max(v, na.rm = TRUE)
-      if (!is.finite(mx) || mx == 0) 1 else mx
-    }
-    global_max_abs <- .safe_max(peak_abs)
-
-    # "group" key: bars sharing the same discrete position-axis coordinate.
-    # round() recovers the pre-dodge integer position so that dodged bars
-    # within the same category are grouped together.
-    pos_key <- if (flipped) round(data$y) else round(data$x)
-    group_max_abs <- vapply(
-      split(peak_abs, pos_key),
-      .safe_max,
-      numeric(1)
-    )
+    # Per-row alpha-scope reference. `draw_layer` stamps this for any
+    # scope other than "bar" using post-position, cross-panel data.
+    # Fallback (when called directly with un-stamped data) recomputes
+    # via `.scope_max_abs_vec` in R/aaa.R, so direct draw_panel calls
+    # see the same semantics as the full pipeline.
+    scope_max <- data$.scope_max_abs %||%
+      .scope_max_abs_vec(data, alpha_scope, flipped_data)
 
     coords <- coord$transform(data, panel_params)
     n <- nrow(coords)
@@ -481,28 +505,25 @@ GeomColFade <- ggplot2::ggproto(
 
       # Alpha at the baseline (closer to 0) and peak (further from 0) edges.
       # For "bar": full range per bar (baseline = alpha_fade_to, peak = a_start).
-      # For "group"/"global": both ends scale by absolute y-position so that
-      # stacked segments high up the axis stay opaque.
+      # For all other scopes: both ends scale by absolute y-position
+      # divided by the per-row scope reference, so stacked segments high
+      # up the axis stay opaque and shorter segments fade in proportion.
       if (identical(alpha_scope, "bar")) {
         a_baseline <- alpha_fade_to
         a_peak <- a_start
-      } else if (identical(alpha_scope, "group")) {
-        grp <- as.character(pos_key[i])
-        ref <- group_max_abs[grp]
+      } else {
+        ref <- scope_max[i]
         a_baseline <- alpha_fade_to +
           (a_start - alpha_fade_to) * baseline_abs[i] / ref
         a_peak <- alpha_fade_to +
           (a_start - alpha_fade_to) * peak_abs[i] / ref
-      } else {
-        a_baseline <- alpha_fade_to +
-          (a_start - alpha_fade_to) * baseline_abs[i] / global_max_abs
-        a_peak <- alpha_fade_to +
-          (a_start - alpha_fade_to) * peak_abs[i] / global_max_abs
       }
 
       # Gradient direction in the bar's bounding-box coordinates.
       # Always: colours = c(transparent, opaque), from baseline toward peak.
-      if (flipped) {
+      # Uses `flipped_visual` so `coord_flip()` rotates the gradient with
+      # the rendered bar.
+      if (flipped_visual) {
         if (is_neg[i]) {
           # Negative horizontal: baseline at right, peak at left
           gx1 <- 1
@@ -599,15 +620,18 @@ GeomColFade <- ggplot2::ggproto(
 #' [ggplot2::geom_col()] / [ggplot2::geom_bar()] but with two visual
 #' enhancements:
 #'
-#'   * **Rounded corners** via [grid::roundrectGrob()], controlled by the
-#'     `radius` argument.
-#'   * **A vertical alpha gradient** that fades from opaque at the peak of
-#'     each bar to transparent at its baseline (the edge closest to `y = 0`).
+#'   * **An alpha gradient** that fades from opaque at the peak of
+#'     each bar to transparent at its baseline.
+#'   * **Rounded corners** are supported via [grid::roundrectGrob()], controlled
+#'     by the `radius` argument.
 #'
 #' @concept rounded bar charts
 #' @concept fading gradient
 #'
 #' @aesthetics GeomColFade
+#'
+#' @inheritSection ggplot2::geom_bar Orientation
+#' @inheritSection geom_area_fade Legend key under coord_flip
 #'
 #' @inheritParams ggplot2::geom_bar
 #' @param stat The statistical transformation to use on the data for this
@@ -616,20 +640,31 @@ GeomColFade <- ggplot2::ggproto(
 #'   `"bin"`.
 #' @param alpha_fade_to A single finite number between 0 and 1. The alpha
 #'   value at the baseline of each bar. Defaults to `0` (fully transparent).
-#' @param alpha_scope How to scale the alpha gradient across bars and positions.
-#'   * `"bar"` (default): every bar gets the full alpha range independently of
-#'     positions or groups.
-#'   * `"group"`: alpha is scaled relative to the tallest bar *at each
-#'     position on the position axis*. For stacked bars this means each
-#'     stack independently uses their alpha range; for dodged bars each
-#'     bar has its alpha scaled relative to the maximum within that group.
-#'     With `position = "fill"` all stacks are normalised to the same
-#'     height, so `"group"` and `"global"` produce identical results, see examples.
-#'   * `"global"`: for each bar their alpha is scaled relative to the tallest
-#'     bar in the entire panel.
+#' @param alpha_scope How to choose the per-bar reference height that the
+#'   gradient normalises against. One of:
+#'   * `"bar"` (default): each bar uses its own height -- every peak hits
+#'     full opacity.
+#'   * `"global"`: every bar normalises to the tallest bar in the entire
+#'     layer, **including across facet panels**. The single tallest bar
+#'     reaches full opacity; all others fade in proportion.
+#'   * `"x"` / `"y"`: every bar normalises to the tallest bar at the same
+#'     discrete x (or y) position. Useful for highlighting the leader
+#'     within a stack or dodge cluster. `"x"` is for vertical bars;
+#'     `"y"` is for horizontal bars (`coord_flip()` /
+#'     `orientation = "y"`). Mismatched orientation aborts with a hint.
+#'   * `"group"`: every bar normalises to the tallest bar in its
+#'     ggplot2 group (`data$group` -- the interaction of all discrete
+#'     aesthetics). Most useful with explicit `aes(group = ...)`; with
+#'     the typical `aes(x = factor, fill = factor)` layout it
+#'     degenerates to `"bar"` because every (x, fill) pair is its own
+#'     group.
+#'   * `"fill"` / `"colour"`: every bar normalises to the tallest bar
+#'     with the same fill (or colour). Bars sharing a fill share an
+#'     alpha range across x and across facet panels.
 #' @param radius Corner radius passed to [grid::roundrectGrob()]. A
 #'   [grid::unit()] object (e.g. `unit(4, "pt")`); a bare number is
-#'   interpreted as points. Defaults to `unit(3, "pt")`.
+#'   interpreted as points. Defaults to `unit(0, "pt")` (matching
+#'   `geom_bar()` / `geom_col()`).
 #'
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #'
@@ -656,24 +691,16 @@ GeomColFade <- ggplot2::ggproto(
 #'   geom_col_fade() +
 #'   theme_minimal()
 #'
-#' # if you do not want the corners to be round, set the radius to 0
-#' # default radius is 3 "pt"
+#' # Rounded bar charts are supported too
 #' ggplot(df, aes(x, y)) +
-#'   geom_col_fade(radius = 0) +
+#'   geom_col_fade(radius = unit(5, "pt")) +
 #'   theme_minimal()
 #'
-#' # Global alpha scope: shorter bars appear more transparent
+#' # Start at 90% opacity and keep some opacity at the baseline
 #' ggplot(df, aes(x, y)) +
 #'   geom_col_fade(
-#'     alpha_scope = "global",
-#'     radius = unit(10, "pt")) +
-#'   theme_minimal()
-#'
-#' # Start at 75% opacity and keep some opacity at the baseline
-#' ggplot(df, aes(x, y)) +
-#'   geom_col_fade(
-#'     alpha = 0.75,
-#'     alpha_fade_to = 0.25
+#'     alpha = 0.9,
+#'     alpha_fade_to = 0.1
 #'   ) +
 #'   theme_minimal()
 #'
@@ -688,56 +715,43 @@ geom_col_fade <- make_constructor(
   position = "stack",
   alpha_fade_to = 0,
   alpha_scope = "bar",
-  radius = grid::unit(3, "pt")
+  orientation = NA,
+  radius = grid::unit(0, "pt")
 )
 
 #' @rdname geom_col_fade
 #' @export
 #' @examples
-#' library(ggplot2)
 #'
-#' # multiple groups
+#' # Multiple groups with different alpha scopes
 #' p <- ggplot(diamonds, aes(color, fill = cut)) +
 #'   scale_fill_viridis_d(guide = "none") +
 #'   labs(x = NULL, y = NULL) +
 #'   theme_minimal()
 #'
-#' # dodged bar chart - by default each bar has their own alpha scope
-#' p + geom_bar_fade(position = "dodge")
-#'
-#' # when bars are dodged, all bars within the same fill / colour group
-#' # can share the same alpha scope
-#' p + geom_bar_fade(position = "dodge", alpha_scope = "group")
-#'
-#' # when you want all bars to share a common scope, set the
-#' # alpha scope to be 'global'
-#' p + geom_bar_fade(position = "dodge", alpha_scope = "global")
-#'
-#' # stacked bar chart - by default each bar has their own alpha scope
+#' # By default each bar has its own alpha scope
 #' p + geom_bar_fade()
 #'
-#' # for stacked bar charts each stack uses their alpha range
-#' # independently when alpha_scope = "group"
-#' p + geom_bar_fade(alpha_scope = "group")
+#' # With alpha_scope = "x", bars at same x aesthetic share same alpha scope
+#' p + geom_bar_fade(alpha_scope = "x")
 #'
-#' # the alpha_scope = "global" option starts at fully opacity at maximum
-#' # y-value and scales all other bars accordingly
+#' # With alpha_scope = "fill", alpha is defined by what is mapped to the fill aesthetic
+#' p + geom_bar_fade(alpha_scope = "fill")
+#'
+#' # With alpha_scope = "global", the maximum absolute
+#' # value across the whole dataset is fully opaque
 #' p + geom_bar_fade(alpha_scope = "global")
 #'
-#' # coord_polar() / coord_radial() — the linear bar fade becomes a
-#' # panel-centered radial (annular) fade. Each ring fades from
-#' # transparent at its inner radius to opaque at its outer radius.
-#' # Rounded corners still require a linear coord system and are
-#' # silently dropped under polar.
-#' ggplot(mpg, aes(x = factor(1), fill = class)) +
+#' # same examples for position dodge with varying alpha scope:
+#' p + geom_bar_fade(alpha_scope = "bar", position = "dodge")
+#' p + geom_bar_fade(alpha_scope = "x", position = "dodge")
+#' p + geom_bar_fade(alpha_scope = "fill", position = "dodge")
+#' p + geom_bar_fade(alpha_scope = "global", position = "dodge")
+#'
+#' # Polar coordinates are supported too, if you need it
+#' ggplot(diamonds, aes(x = factor(1), fill = cut)) +
 #'   geom_bar_fade(width = 1) +
 #'   coord_polar(theta = "y") +
-#'   theme_void()
-#'
-#' # Bars radiating outward from the panel centre
-#' ggplot(mpg, aes(x = class, fill = drv)) +
-#'   geom_bar_fade() +
-#'   coord_radial(theta = "x") +
 #'   theme_void()
 #'
 geom_bar_fade <- make_constructor(
@@ -746,5 +760,6 @@ geom_bar_fade <- make_constructor(
   position = "stack",
   alpha_fade_to = 0,
   alpha_scope = "bar",
-  radius = grid::unit(3, "pt")
+  orientation = NA,
+  radius = grid::unit(0, "pt")
 )

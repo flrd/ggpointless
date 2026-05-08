@@ -1,8 +1,8 @@
-# Deferred grob for curve fade — one compositing group per curve.
+# Deferred grob for curve fade -- one compositing group per curve.
 #
 # Two tiers:
-#   Tier 1 — Porter-Duff "dest.in" compositing per curve
-#   Tier 2 — flat semi-transparent curves (no fade effect)
+#   Tier 1 -- Porter-Duff "dest.in" compositing per curve
+#   Tier 2 -- flat semi-transparent curves (no fade effect)
 #' @include geom-path-fade.R
 #' @noRd
 #' @keywords internal
@@ -92,6 +92,11 @@ GeomCurveFade <- ggplot2::ggproto(
   "GeomCurveFade",
   ggplot2::GeomCurve,
 
+  # Promote `xend|yend` (the parent `GeomCurve` rule) to require BOTH;
+  # the curve renderer needs both endpoints. A missing one previously
+  # crashed inside `grid::unit()` with a cryptic length-0 error.
+  required_aes = c("x", "y", "xend", "yend"),
+
   draw_key = .draw_key_path_fade,
 
   extra_params = c(
@@ -122,7 +127,7 @@ GeomCurveFade <- ggplot2::ggproto(
     curve_count_cap = 200
   ) {
     # `curve_count_cap` must be a positive scalar (or Inf to disable).  Nonsensical
-    # values warn and fall back to the default rather than fail — mirrors
+    # values warn and fall back to the default rather than fail -- mirrors
     # `cell_count_cap` in `geom_unit_*()`.
     if (
       !is.numeric(curve_count_cap) ||
@@ -141,8 +146,8 @@ GeomCurveFade <- ggplot2::ggproto(
       curve_count_cap <- 200
     }
 
-    # Non-linear coords (polar, radial, transformed) — `coord$transform` would
-    # produce ill-defined endpoints for a Bézier curve.  Fall back to the
+    # Non-linear coords (polar, radial, transformed) -- `coord$transform` would
+    # produce ill-defined endpoints for a Bezier curve.  Fall back to the
     # parent `geom_curve()` rendering (no fade) with a one-shot informational
     # message rather than rendering garbage.
     if (!coord$is_linear()) {
@@ -222,7 +227,7 @@ GeomCurveFade <- ggplot2::ggproto(
       coords$xend <- tmp_x
       coords$yend <- tmp_y
       if (!is.null(arrow)) {
-        # Flip the arrow end: 2 (last) ↔ 1 (first), 3 (both) stays 3
+        # Flip the arrow end: 2 (last) <-> 1 (first), 3 (both) stays 3
         arrow$ends <- match(arrow$ends, c(2, 1, 3))
       }
     }
@@ -232,7 +237,7 @@ GeomCurveFade <- ggplot2::ggproto(
     mask_list <- vector("list", n)
     flat_list <- vector("list", n)
 
-    # When the curve is flipped (x/y ↔ xend/yend swapped above), the gradient
+    # When the curve is flipped (x/y <-> xend/yend swapped above), the gradient
     # endpoints move with the coordinates but the user's fade_direction still
     # refers to the logical start/end before the swap.  Invert the direction so
     # the mask tracks the right end after the flip.
@@ -254,7 +259,7 @@ GeomCurveFade <- ggplot2::ggproto(
       seg_colour <- coords$colour[i]
       af <- arrow.fill %||% seg_colour
 
-      # Dst grob is fully opaque — all alpha comes from the mask via dest.in.
+      # Dst grob is fully opaque -- all alpha comes from the mask via dest.in.
       curve_list[[i]] <- grid::curveGrob(
         coords$x[i],
         coords$y[i],

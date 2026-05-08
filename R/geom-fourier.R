@@ -4,8 +4,8 @@
 #' Each geom has an associated function that draws the key when the geom needs
 #' to be displayed in a legend. These functions are called `draw_key_*()`, where
 #' `*` stands for the name of the respective key glyph. The key glyphs can be
-#' customized for individual geoms by providing a geom with the `key_glyph`
-#' argument (see [`layer()`] or examples below.)
+#' customised for individual geoms by providing a geom with the `key_glyph`
+#' argument (see [`layer()`] or examples below).
 #'
 #' @return A grid grob.
 #' @inheritParams ggplot2::draw_key
@@ -114,7 +114,7 @@ GeomFourier <- ggproto(
 #'   y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
 #' )
 #'
-#' # Basic usage – Interpolating fit (all harmonics)
+#' # Basic usage - Interpolating fit (all harmonics)
 #' p <- ggplot(df1, aes(x, y)) +
 #'   geom_point(alpha = 0.5)
 #' p + geom_fourier()
@@ -152,7 +152,7 @@ GeomFourier <- ggproto(
 #'   geom_point(alpha = 0.5) +
 #'   geom_fourier()
 #'
-#' # when the data is not uniformly-spaced, the Fourier
+#' # When the data is not uniformly-spaced, the Fourier
 #' # curve will not hit every data point exactly
 #' ggplot(head(economics, 25), aes(date, unemploy)) +
 #'   geom_fourier() +

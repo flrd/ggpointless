@@ -55,7 +55,7 @@ GeomAblineFade <- ggplot2::ggproto(
     x_fwd <- tr$fwd
     x_inv <- tr$inv
 
-    # Guard against slope = 0: dividing by zero gives ±Inf which produces NaN
+    # Guard against slope = 0: dividing by zero gives +/-Inf which produces NaN
     # when later multiplied back by slope.  For horizontal lines clamp x to the
     # full panel width directly.
     horizontal <- abs(data$slope) < .EPS_ZERO
@@ -179,7 +179,7 @@ GeomVlineFade <- ggplot2::ggproto(
 #' Reference Lines with a Fading Gradient
 #'
 #' @description
-#' These geoms draw reference lines — horizontal, vertical, or diagonal — with
+#' These geoms draw reference lines -- horizontal, vertical, or diagonal -- with
 #' an alpha gradient along the line so that one or both ends fade to
 #' transparent.
 #'
@@ -193,16 +193,16 @@ GeomVlineFade <- ggplot2::ggproto(
 #'
 #' The fade direction is defined in **visual** (panel) space, not in data
 #' space. `fade_direction = "start"` always makes the *start* of the line
-#' transparent — for horizontal lines this is the visual left edge; for
-#' vertical lines, the visual bottom edge — regardless of whether the x or y
+#' transparent -- for horizontal lines this is the visual left edge; for
+#' vertical lines, the visual bottom edge -- regardless of whether the x or y
 #' scale is reversed. This is analogous to other presentational properties
 #' such as `hjust` in [ggplot2::geom_text()]: `hjust = 1` means
 #' "right-justify" irrespective of axis direction, and
 #' `fade_direction = "start"` means "transparent at the left/bottom panel
 #' edge" irrespective of axis direction.
 #'
-#' If you *do* want the gradient to track the data direction — making the
-#' low-value end transparent even when it appears on the visual right — pass
+#' If you *do* want the gradient to track the data direction -- making the
+#' low-value end transparent even when it appears on the visual right -- pass
 #' `fade_direction = "end"` to override the default:
 #'
 #' ```r
@@ -227,7 +227,7 @@ GeomVlineFade <- ggplot2::ggproto(
 #' `fade_direction = "start"` fades the beginning of the traced path. For an
 #' `hline_fade()` circle the "start" is the first vertex of the traced
 #' circle (at the leftmost angle of the coord system, 12 o'clock by default),
-#' which may not match intuition from cartesian use — pass
+#' which may not match intuition from cartesian use -- pass
 #' `fade_direction = "end"` to reverse.
 #'
 #' Internally, the line is subdivided into a dense set of vertices in data

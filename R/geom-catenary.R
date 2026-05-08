@@ -4,8 +4,8 @@
 #' Each geom has an associated function that draws the key when the geom needs
 #' to be displayed in a legend. These functions are called `draw_key_*()`, where
 #' `*` stands for the name of the respective key glyph. The key glyphs can be
-#' customized for individual geoms by providing a geom with the `key_glyph`
-#' argument (see [`layer()`] or examples below.)
+#' customised for individual geoms by providing a geom with the `key_glyph`
+#' argument (see [`layer()`] or examples below).
 #'
 #' @return A grid grob.
 #' @inheritParams ggplot2::draw_key
@@ -14,9 +14,9 @@
 #' @keywords internal
 draw_key_catenary <- function(data, params, size) {
   x <- seq(0.1, 0.9, length.out = 30)
-  # Simple catenary approximation: y = a * cosh((x-h)/a) + v
-  # Hanging curve
-  y <- 0.8 - 0.5 * (cosh((x - 0.5) / 0.3) - 1)
+  # Hanging chain: cosh has its minimum at the centre, so the curve sags
+  # toward the bottom (concave-up).
+  y <- 0.2 + 0.5 * (cosh((x - 0.5) / 0.3) - 1)
 
   grid::linesGrob(
     x, y,
@@ -34,8 +34,8 @@ draw_key_catenary <- function(data, params, size) {
 #' @keywords internal
 draw_key_arch <- function(data, params, size) {
   x <- seq(0.1, 0.9, length.out = 30)
-  # Simple arch approximation: inverted catenary
-  y <- 0.2 + 0.5 * (cosh((x - 0.5) / 0.3) - 1)
+  # Inverted catenary (arch): peak at the centre, ends drop down (concave-down).
+  y <- 0.8 - 0.5 * (cosh((x - 0.5) / 0.3) - 1)
 
   grid::linesGrob(
     x, y,
@@ -57,6 +57,17 @@ GeomCatenary <- ggplot2::ggproto(
   ggplot2::GeomLine,
   stat = "catenary",
   draw_key = draw_key_catenary
+)
+
+#' @rdname ggpointless-ggproto
+#' @format NULL
+#' @usage NULL
+#' @export
+GeomArch <- ggplot2::ggproto(
+  "GeomArch",
+  GeomCatenary,
+  stat = "arch",
+  draw_key = draw_key_arch
 )
 
 #' @title Catenary Curves and Arches
@@ -91,11 +102,9 @@ GeomCatenary <- ggplot2::ggproto(
 #' @inheritParams ggplot2::geom_path
 #'
 #' @aesthetics GeomCatenary
+#' @aesthetics GeomArch
 #' @param geom,stat Override the default connection between `geom_catenary()`
 #'   and `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
-#' @param key_glyph A legend key drawing function or a string that names one
-#'   (e.g. `"arch"` uses [draw_key_arch()]).  `geom_arch()` sets this to
-#'   `"arch"` by default; pass a different value to override.
 #'
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #'
@@ -110,7 +119,7 @@ GeomCatenary <- ggplot2::ggproto(
 #'
 #' df <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
 #'
-#' # basic usage
+#' # Basic usage
 #' p <- ggplot(df, aes(x, y)) + ylim(-3, NA) + geom_point(size = 3)
 #' p + geom_catenary()
 #'
@@ -119,7 +128,7 @@ GeomCatenary <- ggplot2::ggproto(
 #' p + geom_catenary(sag = 2)
 #' p + geom_catenary(sag = c(2, 1, 1))
 #'
-#' # if sag and chain_length are provided for same segment(s), sag wins
+#' # If sag and chain_length are provided for same segment(s), sag wins
 #' p + geom_catenary(sag = c(2, 1, NA), chain_length = 10)
 #'
 #' # Arch with height = 2, considered from highest point of each segment
@@ -174,9 +183,8 @@ geom_catenary <- function(
 #' @rdname geom_catenary
 #' @export
 geom_arch <- make_constructor(
-  GeomCatenary,
+  GeomArch,
   stat = "arch",
   arch_length = NULL,
-  arch_height = NULL,
-  key_glyph = "arch"
+  arch_height = NULL
 )

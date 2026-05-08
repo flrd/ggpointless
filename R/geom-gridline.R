@@ -1,10 +1,10 @@
-# geom_gridline() — panel grid lines drawn above other layers.
+# geom_gridline() -- panel grid lines drawn above other layers.
 #
 # Inspired by Observable Plot's Grid mark:
 # https://observablehq.com/plot/marks/grid
 #
 # Positions are read directly from panel_params (ViewScale$break_positions()),
-# so they always match the trained scale — no manual break specification
+# so they always match the trained scale -- no manual break specification
 # needed.  By default the layer also injects theme() calls to suppress the
 # underlying theme grid so the two don't double-up.
 #
@@ -63,7 +63,7 @@ GeomGridline <- ggplot2::ggproto(
   # Read all line properties from theme(panel.grid.major.x/y / panel.grid.minor.x/y)
   # for any property the user has not explicitly overridden.
   # use_defaults() is called from compute_geom_2() with the full plot theme
-  # (plot@theme), so this is the correct hook — unlike draw_layer/draw_panel,
+  # (plot@theme), so this is the correct hook -- unlike draw_layer/draw_panel,
   # the theme object is available here.
   use_defaults = function(
     self,
@@ -121,48 +121,66 @@ GeomGridline <- ggplot2::ggproto(
     n_x <- .resolve_grid("panel.grid.minor.x")
     n_y <- .resolve_grid("panel.grid.minor.y")
 
+    # Walk one more step up the documented inheritance chain
+    # (panel.grid.major.x -> panel.grid.major -> panel.grid -> line) so that a
+    # custom theme(line = element_line(...)) is honoured when the panel grid
+    # itself is blanked.  NULL when line is element_blank (theme_void).
+    line_props <- .resolve_grid("line")
+
     # Major X  (colour uses %||%: NA is valid / transparent)
     data$.mj_x_col <- if ("colour" %in% user_set) {
       data$colour
     } else {
-      m_x$colour %||% grid_maj$colour %||% ink
+      m_x$colour %||% grid_maj$colour %||% line_props$colour %||% ink
     }
     data$.mj_x_lwd <- if ("linewidth" %in% user_set) {
       data$linewidth
     } else {
-      m_x$linewidth %|NA|% grid_maj$linewidth %|NA|% 0.5
+      m_x$linewidth %|NA|%
+        grid_maj$linewidth %|NA|%
+        line_props$linewidth %|NA|%
+        0.5
     }
     data$.mj_x_lty <- if ("linetype" %in% user_set) {
       data$linetype
     } else {
-      m_x$linetype %|NA|% grid_maj$linetype %|NA|% 1L
+      m_x$linetype %|NA|% grid_maj$linetype %|NA|% line_props$linetype %|NA|% 1L
     }
     data$.mj_x_end <- if ("lineend" %in% user_set) {
       data$lineend
     } else {
-      m_x$lineend %|NA|% grid_maj$lineend %|NA|% "butt"
+      m_x$lineend %|NA|%
+        grid_maj$lineend %|NA|%
+        line_props$lineend %|NA|%
+        "butt"
     }
 
     # Major Y
     data$.mj_y_col <- if ("colour" %in% user_set) {
       data$colour
     } else {
-      m_y$colour %||% grid_maj$colour %||% ink
+      m_y$colour %||% grid_maj$colour %||% line_props$colour %||% ink
     }
     data$.mj_y_lwd <- if ("linewidth" %in% user_set) {
       data$linewidth
     } else {
-      m_y$linewidth %|NA|% grid_maj$linewidth %|NA|% 0.5
+      m_y$linewidth %|NA|%
+        grid_maj$linewidth %|NA|%
+        line_props$linewidth %|NA|%
+        0.5
     }
     data$.mj_y_lty <- if ("linetype" %in% user_set) {
       data$linetype
     } else {
-      m_y$linetype %|NA|% grid_maj$linetype %|NA|% 1L
+      m_y$linetype %|NA|% grid_maj$linetype %|NA|% line_props$linetype %|NA|% 1L
     }
     data$.mj_y_end <- if ("lineend" %in% user_set) {
       data$lineend
     } else {
-      m_y$lineend %|NA|% grid_maj$lineend %|NA|% "butt"
+      m_y$lineend %|NA|%
+        grid_maj$lineend %|NA|%
+        line_props$lineend %|NA|%
+        "butt"
     }
 
     # Minor X
@@ -227,12 +245,12 @@ GeomGridline <- ggplot2::ggproto(
     # y-scale is horizontal.
     is_flipped <- inherits(coord, "CoordFlip")
 
-    # Data-space range for the orthogonal axis — used to span each gridline
+    # Data-space range for the orthogonal axis -- used to span each gridline
     # from edge to edge.  Works in Cartesian and polar alike.
     ranges <- coord$backtransform_range(panel_params)
     grobs <- list()
 
-    # Pre-compute breaks once per axis — result is independent of major/minor type.
+    # Pre-compute breaks once per axis -- result is independent of major/minor type.
     bks_by_ax <- list()
     for (ax in c("x", "y")) {
       if (!ax %in% grids) {
@@ -254,7 +272,7 @@ GeomGridline <- ggplot2::ggproto(
     # maps to npc 0.45 sits at r_range[1] + 1.125 * diff(r_range).  Extend
     # the r-axis span so our rays reach the same outer edge, and append
     # that synthetic position as an extra major break so the boundary
-    # circle is drawn too — matching what the theme suppresses.
+    # circle is drawn too -- matching what the theme suppresses.
     if (inherits(coord, "CoordPolar") && !inherits(coord, "CoordRadial")) {
       r_axis <- if (identical(coord$theta, "y")) "x" else "y"
       r_rng <- ranges[[r_axis]]
@@ -388,14 +406,14 @@ GeomGridline <- ggplot2::ggproto(
       numeric(0L)
     }
   } else {
-    return(NULL) # Unsupported coord — skip silently
+    return(NULL) # Unsupported coord -- skip silently
   }
 
   maj <- maj[!is.na(maj)]
   maj_dedup <- maj_dedup[!is.na(maj_dedup)]
   min <- min[!is.na(min)]
 
-  # minor_breaks() is a superset of breaks() — strip overlapping positions so
+  # minor_breaks() is a superset of breaks() -- strip overlapping positions so
   # thin minor lines never sit on top of the major ones.  Use maj_dedup (all
   # major positions) even when major = FALSE so nothing bleeds through.
   if (length(min) > 0L && length(maj_dedup) > 0L) {
@@ -478,31 +496,27 @@ GeomGridline <- ggplot2::ggproto(
 }
 
 
-#' Lines Drawn on Top of Other Layers
+#' (Grid) Lines Drawn on Top of Other Layers
 #'
 #' @description
 #'
-#' `geom_gridline()` draws horizontal and vertical lines where grid lines are
-#' as a regular ggplot2 layer, so they appear *above* bar charts or any other
-#' geom in your plot.
+#' `geom_gridline()` draws horizontal and vertical grid lines as a regular
+#' ggplot2 layer, so they appear *above* bar charts or any other geom in
+#' your plot.
 #'
 #' The line positions are read directly from the trained scale (via
 #' `panel_params`), and the line properties are read from the theme; so
-#' `geom_gridline()` always match the grid line positions and properties
-#' automatically; but you can overwrite these of course. All built-in ggplot2
-#' coordinate systems are supported, including [ggplot2::coord_flip()],
-#' [ggplot2::coord_fixed()], [ggplot2::coord_polar()],
-#' [ggplot2::coord_radial()], and [ggplot2::coord_sf()].
-#' By default the layer also suppresses the equivalent theme grid so the
-#' lines don't double up.
+#' `geom_gridline()` always matches the grid line positions and properties
+#' automatically — but you can override them, of course.
 #'
-#' This was inspired by Observable Plot's Grid mark:
+#' This was inspired by [Observable Plot](https://observablehq.com/plot/)'s Grid mark:
 #' <https://observablehq.com/plot/marks/grid#grid-mark>.
 #'
 #' @section Line properties:
-#' By default `geom_gridline()` inherits properties from
-#' `theme(panel.grid.major)` (or `panel.grid.minor` when only minor lines are
-#' requested), so the on-top lines look exactly like the background grid would.
+#' By default `geom_gridline()` inherits each property by walking ggplot2's
+#' documented theme chain: `panel.grid.major.x` (or `.y`) → `panel.grid.major` →
+#'  `panel.grid` → `line` so that by default lines look exactly like the grid would.
+#' If you blank `panel.grid` the layer picks up styling from `theme(line = ...)`.
 #' Pass an explicit `colour` to override, see examples.
 #'
 #' @section Rendering order:
@@ -516,28 +530,19 @@ GeomGridline <- ggplot2::ggproto(
 #' This means the final drawing sequence (from bottom to top) is: Minor X,
 #' Minor Y, Major X, Major Y.
 #'
-#' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
-#'   Usually `NULL`: `geom_gridline()` reads break positions from the trained
-#'   panel scales rather than from the layer's data, so no mapping is
-#'   required.  Pass one only if you want to override a specific aesthetic
-#'   (e.g. `aes(colour = ...)`) without setting it via `theme()`.
-#' @param data Optional data frame.  Same caveat as `mapping`: not needed in
-#'   typical use because the geom derives its positions from the panel
-#'   scales, but can be supplied for custom break sources.
+#' @param mapping,data Present for ggplot2 layer-signature compatibility but
+#'   unused: `geom_gridline()` reads break positions from the panel scales
+#'   rather than from a layer mapping or data. Passing a non-default value
+#'   for either emits a warning.
 #' @param grids Character vector specifying which "grid" lines to draw:
 #'   `"x"`, `"y"` (default), or `c("x", "y")` for both.
 #' @param major Draw major grid lines? Default `TRUE`.
 #' @param minor Draw minor grid lines? Default `FALSE`.
 #' @param colour,linewidth,linetype,lineend Line aesthetics. Default `NULL`
-#'   inherits each property from `theme(panel.grid.major)` (or
-#'   `panel.grid.minor` when only minor lines are drawn). Pass explicit values
-#'   to override individual properties.
+#'   inherits each property by walking ggplot2's documented theme chain:
+#'   `panel.grid.major.x` (or `.y`) → `panel.grid.major` → `panel.grid` →
+#'   `line`. Pass explicit values to override individual properties.
 #' @param alpha Opacity in `[0, 1]`. Default `NA` (fully opaque).
-#' @param suppress Suppress the equivalent theme panel grid so lines do not
-#'   double up? Default `TRUE`. When `TRUE`, both the major *and* minor theme
-#'   grid elements are blanked for the drawn axes — this prevents ggplot2's
-#'   auto-computed minor breaks from showing through when `minor = FALSE`.
-#'   Set to `FALSE` to keep the theme grid entirely.
 #' @param na.rm If `FALSE` (default) missing values are silently dropped.
 #' @param show.legend Logical. Should this layer appear in the legends?
 #'   Default `FALSE` (grid lines rarely need a legend entry).
@@ -545,9 +550,6 @@ GeomGridline <- ggplot2::ggproto(
 #' @param ... Other arguments passed to [ggplot2::layer()].
 #'
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
-#'   When `suppress = TRUE` (default), a list of a [ggplot2::layer()]
-#'   and one or more [ggplot2::theme()] calls that blank the corresponding
-#'   theme grid elements. Otherwise a single layer.
 #'
 #' @seealso [ggplot2::geom_hline()], [ggplot2::geom_vline()] for fixed
 #'   reference lines; [ggplot2::theme()] for controlling the underlying
@@ -584,11 +586,21 @@ GeomGridline <- ggplot2::ggproto(
 #'   scale_y_continuous(breaks = c(10, 20)) +
 #'   theme_gray(paper = "cornsilk", ink = "navy")
 #'
-#' # polar coordinates are supported too
+#' # Note: geom_gridline() does not touch the theme. To draw only the layer's
+#' # lines (no theme grid underneath), blank the panel grid yourself.
+#' bf <- theme_grey()$panel.background@fill
+#' p +
+#'   geom_gridline(linewidth = 0.4, colour = bf) +
+#'   theme_minimal() +
+#'   theme(panel.grid = element_blank())
+#'
+#'
+#' # Polar coordinates are supported too
 #' ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
 #'   geom_bar(width = 1) +
 #'   geom_gridline(grids = c("x", "y"), minor = TRUE) +
-#'   coord_polar(theta = "y")
+#'   coord_polar(theta = "y") +
+#'   theme_void()
 #'
 geom_gridline <- function(
   mapping = NULL,
@@ -601,7 +613,6 @@ geom_gridline <- function(
   linetype = NULL,
   lineend = NULL,
   alpha = NA,
-  suppress = TRUE,
   na.rm = FALSE,
   show.legend = FALSE,
   inherit.aes = FALSE,
@@ -649,7 +660,7 @@ geom_gridline <- function(
     )
   }
 
-  lyr <- ggplot2::layer(
+  ggplot2::layer(
     data = data.frame(x = 1L),
     mapping = NULL,
     stat = ggplot2::StatIdentity,
@@ -669,34 +680,4 @@ geom_gridline <- function(
       dots
     )
   )
-
-  if (!suppress) {
-    return(lyr)
-  }
-
-  # Suppress the theme grid for the axes / levels this layer covers so the
-  # on-top lines don't double up with the background ones.
-  # Minor grid is always suppressed for drawn axes: ggplot2 auto-computes
-  # minor breaks whenever >=2 major breaks exist, and the theme would draw
-  # those even when minor = FALSE.  Without this, theme minor lines bleed
-  # through behind the layer's lines.
-  th_args <- list()
-  for (ax in grids) {
-    if (major) {
-      th_args[[paste0("panel.grid.major.", ax)]] <- ggplot2::element_blank()
-    }
-    # Always suppress the theme's minor grid for axes where we draw something.
-    # With >= 2 major breaks ggplot2 auto-computes minor breaks and the theme
-    # draws them even when minor = FALSE, causing bleed-through.
-    # When major = FALSE and minor = FALSE nothing is drawn at all, so we
-    # leave the theme untouched (th_args stays empty → single layer returned).
-    if (major || minor) {
-      th_args[[paste0("panel.grid.minor.", ax)]] <- ggplot2::element_blank()
-    }
-  }
-
-  if (length(th_args) == 0L) {
-    return(lyr)
-  }
-  list(lyr, do.call(ggplot2::theme, th_args))
 }

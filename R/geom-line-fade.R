@@ -40,7 +40,7 @@ GeomLineFade <- ggplot2::ggproto(
 #'
 #' ggplot(economics, aes(date, unemploy)) + geom_line_fade()
 #'
-#' # NA values split the path into sub-paths — just like geom_line().
+#' # NA values split the path into sub-paths -- just like geom_line().
 #' # The fade is computed over the concatenated arc length of all visible
 #' # pieces, so the alpha just before a gap equals the alpha just after,
 #' # as if the path were "pulled apart" at the NA.

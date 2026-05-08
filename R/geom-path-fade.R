@@ -1,10 +1,10 @@
-# Legend key for path/line/segment/curve fade geoms — fading segment with
+# Legend key for path/line/segment/curve fade geoms -- fading segment with
 # Porter-Duff compositing, same fallback as the geoms themselves.
 #
 # The gradient stops use ABSOLUTE combined alpha: `alpha_fade_to` at the
 # faded end and `a` (aes alpha) at the opaque end. Under dest.in compositing
 # with a fully opaque dst this yields a final alpha that matches the geom's
-# own draw_panel semantics — in particular, `alpha = alpha_fade_to` renders
+# own draw_panel semantics -- in particular, `alpha = alpha_fade_to` renders
 # as a uniform stroke matching plain `geom_path(alpha = X)`.
 #' @noRd
 #' @keywords internal
@@ -44,7 +44,7 @@
     grad_stops <- c(0, 1)
   }
 
-  # Fully opaque dst — all alpha comes from the mask gradient via dest.in.
+  # Fully opaque dst -- all alpha comes from the mask gradient via dest.in.
   seg_grob <- grid::segmentsGrob(
     0.1,
     0.5,
@@ -117,7 +117,7 @@
 # to the fade target) renders as a uniform stroke at that alpha, matching
 # `geom_path(alpha = X)` exactly.
 #
-# @param pos Numeric vector in [0, 1] — normalised cumulative distance along
+# @param pos Numeric vector in [0, 1] -- normalised cumulative distance along
 #   the path (0 = start vertex, 1 = end vertex).
 # @param fade_direction Character vector, subset of `c("start", "end")`.
 # @return Numeric vector of fade factors (same length as `pos`).
@@ -140,7 +140,7 @@
 # Build bisector-cut polygon outlines for a path.
 #
 # At each internal vertex the shared edge lies along the angle bisector of
-# the two incident segments, so adjacent polygons meet exactly — no overlap
+# the two incident segments, so adjacent polygons meet exactly -- no overlap
 # and no gap. Path endpoints are capped according to `lineend`:
 #   - "butt"   : perpendicular cut at the vertex (no extension)
 #   - "square" : extends `half_lw` past the vertex along the segment
@@ -151,11 +151,11 @@
 #
 # Mitre-limit caveat: sharp `linejoin = "miter"` joins extend the stroke
 # outward past the bisector. The polygon stops at the bisector, so the
-# mitre spike is clipped. Visible only at very sharp angles — recommend
+# mitre spike is clipped. Visible only at very sharp angles -- recommend
 # `linejoin = "bevel"` or `"round"` in such cases.
 #
-# @param xn,yn numeric vectors — vertex coordinates (any consistent unit).
-# @param half_lw numeric — half the stroke width, in the same unit as xn/yn.
+# @param xn,yn numeric vectors -- vertex coordinates (any consistent unit).
+# @param half_lw numeric -- half the stroke width, in the same unit as xn/yn.
 # @param lineend one of `"butt"`, `"square"`, `"round"`.
 # @return list of length `length(xn) - 1L`; each element is a list with
 #   `x`, `y` (length-4 CCW polygon vertices).
@@ -174,7 +174,7 @@
   ok <- seg_len > .EPS_ZERO
   dxn <- ifelse(ok, dx / seg_len, 0)
   dyn <- ifelse(ok, dy / seg_len, 0)
-  # Left-normal (rotate direction 90° CCW)
+  # Left-normal (rotate direction 90 deg CCW)
   nxn <- -dyn
   nyn <- dxn
 
@@ -194,7 +194,7 @@
     }
   }
 
-  # Intersect a segment's offset edges (±half-linewidth along n) with the
+  # Intersect a segment's offset edges (+/-half-linewidth along n) with the
   # bisector line through V. Returns the left/right corner positions.
   bisect_corners <- function(vx, vy, dx, dy, nx, ny, bx, by, hw) {
     det <- bx * dy - dx * by
@@ -213,8 +213,8 @@
     )
   }
 
-  # End-cap corners. `cap_extend = 0` → butt (perpendicular cut at V);
-  # `cap_extend = 1` → square / round approximation (hw past V along d).
+  # End-cap corners. `cap_extend = 0` -> butt (perpendicular cut at V);
+  # `cap_extend = 1` -> square / round approximation (hw past V along d).
   end_corners <- function(vx, vy, dx, dy, nx, ny, hw, forward) {
     s <- if (forward) 1 else -1
     ex <- vx + s * cap_extend * hw * dx
@@ -276,7 +276,7 @@
         half_lw
       )
     }
-    # CCW winding: start_left → start_right → end_right → end_left
+    # CCW winding: start_left -> start_right -> end_right -> end_left
     polys[[i]] <- list(
       x = c(sc$left[1L], sc$right[1L], ec$right[1L], ec$left[1L]),
       y = c(sc$left[2L], sc$right[2L], ec$right[2L], ec$left[2L])
@@ -286,19 +286,19 @@
 }
 
 
-# Deferred grob for path fade — per-segment bisector clipping or compositing.
+# Deferred grob for path fade -- per-segment bisector clipping or compositing.
 #
 # Three tiers:
-# Tier 1 — Porter-Duff dest.in compositing for step mode. One polyline dst +
+# Tier 1 -- Porter-Duff dest.in compositing for step mode. One polyline dst +
 #          multi-polygon bisector mask pre-wrapped in an inner groupGrob (to
 #          avoid per-polygon alpha erosion under dest.in). Single groupGrob
-#          call per path group regardless of segment count — O(1) vs O(n_seg).
-# Tier 2 — viewport clipping. Step mode: per-segment 3–4 pt polylines clipped
+#          call per path group regardless of segment count -- O(1) vs O(n_seg).
+# Tier 2 -- viewport clipping. Step mode: per-segment 3-4 pt polylines clipped
 #          to bisector polygons. Gradient mode: per-segment linearGradient
 #          rectGrobs clipped to bisector polygons, wrapped in an outer mask
 #          viewport (the whole-path polyline stroke) for correct linejoin
 #          corners. Used when compositing is unavailable.
-# Tier 3 — flat fallback: per-segment segmentsGrob with mid-alpha. No linejoin
+# Tier 3 -- flat fallback: per-segment segmentsGrob with mid-alpha. No linejoin
 #          rendering, but preserves alpha stepping. Used on devices that
 #          support neither compositing nor clipping paths.
 #
@@ -363,7 +363,7 @@ makeContent.path_fade_grob <- function(x) {
     n_seg <- length(polys_in)
 
     # Batch-convert all polygon corner coordinates (4 per segment) to NPC in
-    # two vectorised calls instead of 2 × n_seg individual conversions.
+    # two vectorised calls instead of 2 x n_seg individual conversions.
     all_poly_x_in <- unlist(lapply(polys_in, `[[`, "x"), use.names = FALSE)
     all_poly_y_in <- unlist(lapply(polys_in, `[[`, "y"), use.names = FALSE)
     all_poly_x_npc <- grid::convertX(
@@ -378,7 +378,7 @@ makeContent.path_fade_grob <- function(x) {
     )
 
     # Step mode represents a fade by assigning each segment its endpoint-mean
-    # alpha — a discrete per-segment approximation of a continuous gradient.
+    # alpha -- a discrete per-segment approximation of a continuous gradient.
     # On a single-segment path this collapses to one uniform stroke at alpha
     # `(start + end) / 2`, so a two-observation line (`geom_line_fade()` on
     # `data.frame(x = c(a, b), y = c(c, d))`) renders flat. Promote such
@@ -485,7 +485,7 @@ makeContent.path_fade_grob <- function(x) {
         list(grid::groupGrob(mask_buffered, op = "dest.in", dst = dst))
       )
     } else if (can_clip) {
-      # step mode clip fallback: per-segment 3–4 pt polylines clipped to
+      # step mode clip fallback: per-segment 3-4 pt polylines clipped to
       # bisector polygons (O(n_seg) viewport push/pops, but no compositing).
       seg_children <- vector("list", n_seg)
       for (i in seq_len(n_seg)) {
@@ -524,8 +524,8 @@ makeContent.path_fade_grob <- function(x) {
 
     # Arrow heads are drawn unclipped so they aren't trimmed by the
     # bisector polygons. Each requested end (first / last) is drawn as its
-    # own short stub — a ~0.1% sub-pixel fraction of the incident
-    # sub-segment — with an arrow attribute. Drawing the full sub-segment
+    # own short stub -- a ~0.1% sub-pixel fraction of the incident
+    # sub-segment -- with an arrow attribute. Drawing the full sub-segment
     # would erase the visible fade on 2-point paths from segment_fade, and
     # a single `ends = "both"` stub would cluster both arrows at the same
     # endpoint.
@@ -679,7 +679,8 @@ GeomPathFade <- ggplot2::ggproto(
     params$alpha_mode <- params$alpha_mode %||% "auto"
     params$alpha_mode <- rlang::arg_match0(
       params$alpha_mode,
-      values = c("auto", "step", "gradient")
+      values = c("auto", "step", "gradient"),
+      arg_nm = "alpha_mode"
     )
     params
   },
@@ -781,7 +782,7 @@ GeomPathFade <- ggplot2::ggproto(
 
       # Concatenated arc length across all sub-paths of this group: the
       # denominator is the sum of visible segment lengths. All runs share
-      # this total, so the fade progresses continuously across the gap —
+      # this total, so the fade progresses continuously across the gap --
       # the alpha just before a gap and just after are (almost) identical,
       # as if the gap had zero width.
       total_dist <- sum(vapply(runs, \(r) sum(r$seg_lengths), 0))
@@ -808,8 +809,8 @@ GeomPathFade <- ggplot2::ggproto(
         alpha_vert <- alpha_fade_to + (a_vert - alpha_fade_to) * fade_factor
         combined_alpha <- (alpha_vert[-n_pts] + alpha_vert[-1L]) / 2
 
-        # Resolve `alpha_mode = "auto"` per sub-path: small n → gradient
-        # (smooth within each thick segment), large n → step (cheaper;
+        # Resolve `alpha_mode = "auto"` per sub-path: small n -> gradient
+        # (smooth within each thick segment), large n -> step (cheaper;
         # per-segment stepping is invisible at high density).
         # Threshold is n = 50 vertices: gradient render cost stays under
         # ~0.4 s per panel at that n, and step becomes visually
@@ -864,26 +865,26 @@ GeomPathFade <- ggplot2::ggproto(
 #'
 #' The `alpha_mode` argument controls how the alpha gradient is rendered. All
 #' three values compute a target alpha at each vertex from cumulative distance
-#' along the path — the fade follows the path regardless of direction or shape.
+#' along the path -- the fade follows the path regardless of direction or shape.
 #'
 #' **`"auto"`** (default): pick per sub-path based on vertex count `n`.
-#' `n <= 50` → `"gradient"` (smooth within-segment fade; protects the common
-#' "few thick segments" case). `n > 50` → `"step"` (stepping is invisible at
+#' `n <= 50` -> `"gradient"` (smooth within-segment fade; protects the common
+#' "few thick segments" case). `n > 50` -> `"step"` (stepping is invisible at
 #' that density and gradient's per-segment cost grows linearly with `n`).
 #' The threshold is chosen so that worst-case `"gradient"` render time stays
-#' under ~0.4 s per panel. Resolved per sub-path — a multi-group plot can mix
+#' under ~0.4 s per panel. Resolved per sub-path -- a multi-group plot can mix
 #' modes. Users who want deterministic rendering (snapshots, reproducible
 #' builds) should set `"step"` or `"gradient"` explicitly.
 #'
 #' **`"step"`**: each segment is drawn inside a viewport clipped to its
-#' bisector-cut polygon, carrying a single uniform alpha — the average of
+#' bisector-cut polygon, carrying a single uniform alpha -- the average of
 #' its two endpoint alphas. The fade is an illusion created by stepping
 #' through discrete alpha values across adjacent segments. Fast (~0.4 s for
 #' a 200-point path).
 #'
 #' **`"gradient"`**: each segment's clipped viewport contains a panel-sized
 #' `rectGrob` with its own direction-aligned `linearGradient` fill. The alpha
-#' transitions smoothly within each segment — a real continuous gradient, not
+#' transitions smoothly within each segment -- a real continuous gradient, not
 #' a step approximation. Slower (~1 s for 200 points, ~4 s for 1000 points);
 #' scales linearly with `n` and multiplies under facets.
 #'
@@ -904,7 +905,7 @@ GeomPathFade <- ggplot2::ggproto(
 #' The visual difference between `"step"` and `"gradient"` is only noticeable
 #' with very few, thick segments: in `"step"` mode each segment is visibly
 #' a solid colour, while `"gradient"` interpolates smoothly within each
-#' segment too. At typical point counts (>= ~50) both modes look identical —
+#' segment too. At typical point counts (>= ~50) both modes look identical --
 #' which is what `"auto"` exploits.
 #'
 #' As a special case, a single-segment path (exactly two observations) is
@@ -917,14 +918,14 @@ GeomPathFade <- ggplot2::ggproto(
 #' On the RStudio plot pane (and any device that caches and replays the
 #' rendered grob tree), step-mode rendering may emit grid warnings of the
 #' form `Warning in .useGroup(ref, NULL) : Unknown group, N` on repeat
-#' draws — typically when the pane is resized and replays a cached tree.
+#' draws -- typically when the pane is resized and replays a cached tree.
 #' The plot itself is correct; the warning is cosmetic noise.
 #'
 #' What is happening: step mode uses grid's compositing primitive
 #' (`groupGrob()` with operator `"dest.in"`) to trim the alpha mask onto
 #' the polyline. Each draw allocates fresh device-level group IDs. When
 #' the plot pane replays a cached grob tree, that tree still references
-#' the old IDs while grid's device table has been reset — the lookup
+#' the old IDs while grid's device table has been reset -- the lookup
 #' fails and grid prints `Unknown group, N`. The pixels you see are
 #' correct because the composited result was already resolved when the
 #' cache was built; grid is just reporting that the replay couldn't
@@ -934,8 +935,8 @@ GeomPathFade <- ggplot2::ggproto(
 #' code has already returned, so we cannot wrap it in `suppressWarnings()`
 #' from within the package. The only clean alternative would gate the
 #' fast compositing path off in RStudio, which makes the interactive
-#' plot pane roughly five times slower (~1.5 s → ~7.5 s on a five-group
-#' \eqn{\times} 573-segment dataset) — we judged that the worse trade-off.
+#' plot pane roughly five times slower (~1.5 s -> ~7.5 s on a five-group
+#' \eqn{\times} 573-segment dataset) -- we judged that the worse trade-off.
 #' If the warnings are intolerable for a particular layer, set
 #' `alpha_mode = "gradient"`; gradient mode uses viewport clipping
 #' instead of compositing and does not trigger the warning.
@@ -976,6 +977,28 @@ GeomPathFade <- ggplot2::ggproto(
 #' with multiple groups or to `fade_direction = c("start", "end")` without
 #' additional bookkeeping. `geom_path_fade()` handles all of this internally.
 #'
+#' @section Self-crossing paths:
+#'
+#' When a faded path crosses itself, the pixels at the crossing are
+#' rasterised once per overlapping segment, and the per-segment alpha values
+#' compound. Where the two strands carry different alphas (one near the
+#' faded end, one near the opaque end), the crossing appears noticeably
+#' darker than either strand alone.
+#'
+#' This behaviour is inherent to how semi-transparent strokes are
+#' alpha-blended at the device level, not specific to `geom_path_fade()` --
+#' the same effect appears with `ggplot2::geom_path(alpha = 0.5)`. There is
+#' no general workaround at the rendering layer; if a clean intersection
+#' matters for your plot, the practical options are:
+#'
+#' * Raise `alpha_fade_to` so the strands at both ends are closer in
+#'   opacity (smaller delta -> less visible darkening).
+#' * Use a fully opaque stroke (no fade) for paths known to self-cross.
+#' * Restructure the data so the crossing is split across separate layers.
+#'
+#' Applies equally to [geom_segment_fade()] and [geom_curve_fade()] when
+#' two segments / curves overlap at the same pixel.
+#'
 #' @aesthetics GeomPathFade
 #'
 #' @inheritParams ggplot2::geom_path
@@ -1009,7 +1032,7 @@ GeomPathFade <- ggplot2::ggproto(
 #' @examples
 #' library(ggplot2)
 #'
-#' # Path that doubles back — fade follows the drawing order
+#' # Path that doubles back -- fade follows the drawing order
 #' theta <- seq(1.3, -1.3, length.out = 101)
 #' df_ichthys <- data.frame(
 #'   x = theta^2,
@@ -1047,7 +1070,7 @@ GeomPathFade <- ggplot2::ggproto(
 #'   coord_equal() +
 #'   theme_minimal()
 #'
-#' # auto → gradient (n = 5, well below the 50-vertex threshold)
+#' # Auto -> gradient (n = 5, well below the 50-vertex threshold)
 #' p + geom_path_fade(
 #'   linewidth = 8,
 #'   colour = "#e63946"
@@ -1069,7 +1092,7 @@ GeomPathFade <- ggplot2::ggproto(
 #'   alpha_mode = "gradient"
 #'   )
 #'
-#' # using stat_function
+#' # Using stat_function
 #' ggplot() +
 #'   stat_function(
 #'     alpha = 0.5,
@@ -1079,7 +1102,7 @@ GeomPathFade <- ggplot2::ggproto(
 #'     geom = "area_fade",
 #'     outline.type = "none" # remove solid outline
 #'   ) +
-#'   # add fading outline instead
+#'   # Add fading outline instead
 #'   stat_function(
 #'     fun = dnorm, n = 100,
 #'     xlim = c(-4, 4),

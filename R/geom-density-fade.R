@@ -1,11 +1,11 @@
 #' @title Smoothed Density Estimate with Fading Gradient
 #' @description
-#' Computes and draws a kernel density estimate — a smoothed version of the
-#' histogram — with a vertical alpha gradient that fades from opaque at the
+#' Computes and draws a kernel density estimate -- a smoothed version of the
+#' histogram -- with a vertical alpha gradient that fades from opaque at the
 #' peak to transparent at the baseline, exactly like [geom_area_fade()].
 #'
 #' Under the hood this is [GeomAreaFade] paired with [ggplot2::stat_density()],
-#' so all smoothing parameters (`bw`, `adjust`, `kernel`, `bounds`, …) are
+#' so all smoothing parameters (`bw`, `adjust`, `kernel`, `bounds`, ...) are
 #' forwarded to the stat.
 #'
 #' @concept density plot
@@ -19,10 +19,8 @@
 #'
 #' @aesthetics GeomAreaFade
 #'
-#' @section Orientation:
-#' This geom handles horizontal variants automatically. You can either supply
-#' `aes(y = ...)` instead of `aes(x = ...)` and the orientation will be
-#' detected, or you can set `orientation = "y"` explicitly.
+#' @inheritSection ggplot2::geom_density Orientation
+#' @inheritSection geom_area_fade Legend key under coord_flip
 #'
 #' @inheritParams geom_area_fade
 #' @inheritParams ggplot2::geom_density
@@ -53,6 +51,7 @@
 #' @examples
 #' library(ggplot2)
 #'
+#' # Basic density curve: opaque at the peak, fully transparent at the baseline.
 #' ggplot(diamonds, aes(carat)) +
 #'   geom_density_fade()
 #'
@@ -60,45 +59,39 @@
 #' ggplot(diamonds, aes(y = carat)) +
 #'   geom_density_fade()
 #'
+#' # `alpha_fade_to` controls the alpha at the baseline.
+#' # The default `0` is fully transparent; raise it to keep some
+#' # opacity at the floor.
 #' ggplot(diamonds, aes(carat)) +
-#'   geom_density_fade(adjust = 1/5)
-#' ggplot(diamonds, aes(carat)) +
-#'   geom_density_fade(adjust = 5)
+#'   geom_density_fade(alpha_fade_to = 0.2)
 #'
-#' ggplot(diamonds, aes(depth, colour = cut)) +
+#' # Multiple groups via `fill`. With the default `alpha_scope = "global"`
+#' # the tallest peak in the layer reaches full opacity; shorter peaks fade
+#' # in proportion. `xlim()` trims the long tails for clarity.
+#' ggplot(diamonds, aes(depth, fill = cut)) +
 #'   geom_density_fade() +
 #'   xlim(55, 70)
-#' ggplot(diamonds, aes(depth, fill = cut, colour = cut)) +
-#'   geom_density_fade(alpha = 0.1) +
+#'
+#' # Switch to `alpha_scope = "group"` so every
+#' # area hits full opacity independently
+#' ggplot(diamonds, aes(depth, fill = cut)) +
+#'   geom_density_fade(alpha_scope = "group") +
 #'   xlim(55, 70)
 #'
-#' # Use `bounds` to adjust computation for known data limits
-#' big_diamonds <- diamonds[diamonds$carat >= 1, ]
-#' ggplot(big_diamonds, aes(carat)) +
-#'   geom_density_fade(color = 'red') +
-#'   geom_density_fade(bounds = c(1, Inf), color = 'blue')
-#'
-#' \donttest{
-#' # Stacked density plots: if you want to create a stacked density plot, you
-#' # probably want to use the 'count' (density * n) variable instead of the
-#' # default density
-#'
-#' # Loses marginal densities
-#' ggplot(diamonds, aes(carat, fill = cut)) +
-#'   geom_density_fade(position = "stack")
-#' # Preserves marginal densities
-#' ggplot(diamonds, aes(carat, after_stat(count), fill = cut)) +
-#'   geom_density_fade(position = "stack")
-#'
-#' # You can use position="fill" to produce a conditional density estimate
+#' # You can use position = "fill" to produce a conditional density estimate
 #' ggplot(diamonds, aes(carat, after_stat(count), fill = cut)) +
 #'   geom_density_fade(position = "fill")
-#' }
+#'
 geom_density_fade <- function(
   mapping = NULL,
   data = NULL,
   stat = "density",
-  position = "stack",
+  # Match `ggplot2::geom_density()`'s `position = "identity"` so density
+  # curves overlay rather than stack. The parent `GeomArea` defaults to
+  # `"stack"`, but density curves are conventionally displayed overlaid.
+  # Pass `position = "stack"` (or `"fill"`) explicitly for cumulative
+  # / conditional density visualisations.
+  position = "identity",
   ...,
   bw = "nrd0",
   adjust = 1,
@@ -106,7 +99,7 @@ geom_density_fade <- function(
   bounds = c(-Inf, Inf),
   alpha_fade_to = 0,
   alpha_scope = "global",
-  orientation = NULL,
+  orientation = NA,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE

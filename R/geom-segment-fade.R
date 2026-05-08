@@ -1,4 +1,4 @@
-# Segment fade — delegates to the path_fade pipeline by reshaping each
+# Segment fade -- delegates to the path_fade pipeline by reshaping each
 # segment row into a 2-point path.  This gives us Family A's clipping-path
 # fallback (works on svg devices) for free, instead of requiring Porter-Duff
 # compositing.
@@ -51,12 +51,12 @@ makeContent.segment_fade_grob <- function(x) {
 
 # Reshape a segment data frame (one row per segment with x/y/xend/yend) into
 # a path data frame with x/y, each segment its own group. Any existing
-# `group` column is replaced — segment-fade treats every row as its own
+# `group` column is replaced -- segment-fade treats every row as its own
 # independent path so fade never leaks across segments.
 #
 # When `fade_direction = c("start", "end")` a midpoint vertex is inserted so
 # the fade peak actually lands on a vertex. Without this a 2-point path
-# evaluates the fade factor at the endpoints only — both zero — and the
+# evaluates the fade factor at the endpoints only -- both zero -- and the
 # entire segment collapses to `alpha_fade_to`.
 #' @noRd
 #' @keywords internal
@@ -90,6 +90,12 @@ makeContent.segment_fade_grob <- function(x) {
 GeomSegmentFade <- ggplot2::ggproto(
   "GeomSegmentFade",
   ggplot2::GeomSegment,
+
+  # Promote `xend|yend` (the parent `GeomSegment` rule, which means "at
+  # least one of xend OR yend") to require BOTH. Our gradient renderer
+  # needs both endpoints; a missing one crashed downstream with a
+  # cryptic `rbind()` error before this guard.
+  required_aes = c("x", "y", "xend", "yend"),
 
   draw_key = .draw_key_path_fade,
 
@@ -173,13 +179,13 @@ GeomSegmentFade <- ggplot2::ggproto(
 #' Under non-linear coordinates such as [ggplot2::coord_polar()] and
 #' [ggplot2::coord_radial()] the user-supplied endpoints `(x, y)` and
 #' `(xend, yend)` are transformed to device space and connected by a
-#' straight chord — exactly as [ggplot2::geom_segment()] does. The fade is
+#' straight chord -- exactly as [ggplot2::geom_segment()] does. The fade is
 #' then applied along that chord, so both endpoint positions and the fade
 #' direction are consistent with the unfaded geom.
 #'
 #' If you want the line to *follow* a curve implied by the coord system
 #' (for example a circle at constant `y` under polar), use
-#' [geom_hline_fade()] / [geom_vline_fade()] / [geom_abline_fade()] instead —
+#' [geom_hline_fade()] / [geom_vline_fade()] / [geom_abline_fade()] instead --
 #' those geoms subdivide the line in data space so the fade tracks the
 #' curve, not a chord.
 #'
@@ -187,6 +193,8 @@ GeomSegmentFade <- ggplot2::ggproto(
 #' @concept fading gradient
 #'
 #' @aesthetics GeomSegmentFade
+#'
+#' @inheritSection geom_path_fade Self-crossing paths
 #'
 #' @inheritParams ggplot2::geom_segment
 #' @param alpha_fade_to A single finite number between 0 and 1. The alpha
@@ -244,7 +252,7 @@ GeomSegmentFade <- ggplot2::ggproto(
 #' p <- ggplot(df, aes(x)) +
 #'   theme_void()
 #'
-#' # basic example with default fade_direction
+#' # Basic example with default fade_direction
 #' p +
 #'   geom_segment_fade(
 #'     aes(x = x1, y = y1, xend = x2, yend = y2),
@@ -252,7 +260,7 @@ GeomSegmentFade <- ggplot2::ggproto(
 #'     linewidth = 10
 #'   )
 #'
-#' # change fade_direction towards start
+#' # Change fade_direction towards start
 #' p +
 #'   geom_segment_fade(
 #'     aes(x = x1, y = y1, xend = x2, yend = y2),
@@ -260,7 +268,7 @@ GeomSegmentFade <- ggplot2::ggproto(
 #'     linewidth = 10
 #'   )
 #'
-#' # fade from center to both sides
+#' # Fade from centre to both sides
 #' p +
 #'   geom_segment_fade(
 #'     aes(x = x1, y = y1, xend = x2, yend = y2),

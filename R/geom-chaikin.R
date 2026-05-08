@@ -64,14 +64,15 @@ GeomChaikin <- ggplot2::ggproto(
 #'   are not geometrically meaningful in the usual corner-cutting sense.
 #'   For **closed** paths the flipped result has the same vertex set as the
 #'   input ratio (with a cyclic shift). For **open** paths it is a
-#'   different curve — prefer increasing `iterations` if you want stronger
+#'   different curve -- prefer increasing `iterations` if you want stronger
 #'   smoothing.
 #' @param mode Character. Should the geom draw a closed polygon or an open
 #'   path? Must be one of `"open"` (default) or `"closed"`.
 #' @param closed `r lifecycle::badge("superseded")` Use `mode` instead.
 #'
-#' @references Chaikin, G. An algorithm for high speed curve generation.
-#' Computer Graphics and Image Processing 3 (1974), 346–349
+#' @references Chaikin, G. M. (1974). An algorithm for high-speed curve
+#'   generation. *Computer Graphics and Image Processing*, 3(4), 346–349.
+#'   \doi{10.1016/0146-664X(74)90028-8}
 #'
 #' @seealso The [smoothr](https://strimas.com/smoothr/) package offers tools to
 #'  smooth and tidy spatial features
@@ -97,11 +98,11 @@ GeomChaikin <- ggplot2::ggproto(
 #'   geom_path(linetype = "12") +
 #'   coord_equal()
 #'
-#' # ratio lets you control the cutting amount
+#' # Ratio lets you control the cutting amount
 #' p2 + geom_chaikin(ratio = .1)
 #' p2 + geom_chaikin(ratio = .5)
 #'
-#' # mode controls whether the result is an open or closed shape
+#' # Mode controls whether the result is an open or closed shape
 #' p2 + geom_chaikin(mode = "open")   # default
 #' p2 + geom_chaikin(mode = "closed")
 #'

@@ -3,7 +3,7 @@
 # GeomRibbon$draw_group (the parent) returns one of two structures:
 #
 #   outline.type = "full":
-#     ggname("geom_ribbon", polygonGrob(...)) — polygon grob directly
+#     ggname("geom_ribbon", polygonGrob(...)) -- polygon grob directly
 #
 #   all other outline.type values:
 #     ggname("geom_ribbon", gTree(
@@ -25,7 +25,7 @@
 # Patching `grob$gp$fill` directly after the parent has built the grob is the
 # only reliable way to inject a gradient without list-wrapping.
 #
-# For the compositing path the polygon's gp$fill is left entirely untouched —
+# For the compositing path the polygon's gp$fill is left entirely untouched --
 # the parent may already have built a HORIZONTAL linearGradient there (when
 # fill is mapped to a variable). The vertical alpha schedule is applied as a
 # separate compositing step (see .composite_poly_fill below).
@@ -74,7 +74,7 @@
 # naturally composites only the polygon and leaves the polyline untouched.
 #
 # For outline.type = "full" the parent returns a single polygonGrob whose
-# gp$col IS the outline — there is no separate polyline.  Compositing the
+# gp$col IS the outline -- there is no separate polyline.  Compositing the
 # whole polygon fades the outline together with the fill, making it invisible
 # near y = 0.  Fix: detach gp$col before compositing, composite the fill
 # alone, then re-add the outline on top at full opacity.
@@ -90,12 +90,12 @@
 #
 # groupGrob() avoids this by rendering each grob to an *independent offscreen
 # buffer* before compositing them:
-#   Step 1 — render `dst` (the area polygon) to buffer A. Because this is an
+#   Step 1 -- render `dst` (the area polygon) to buffer A. Because this is an
 #             isolated render, any linearGradient fill in gp$fill is produced
 #             correctly with no mask interference.
-#   Step 2 — render `src` (a plain black rectGrob with a vertical alpha
+#   Step 2 -- render `src` (a plain black rectGrob with a vertical alpha
 #             gradient) to buffer B.
-#   Step 3 — composite: dest.in ≡ result = dst_colour × src_alpha.
+#   Step 3 -- composite: dest.in == result = dst_colour x src_alpha.
 #             Only the alpha channel of `src` is used; its colour is irrelevant.
 #
 # The compositing rule "dest.in" is the Porter-Duff "Destination In Source"
@@ -138,7 +138,7 @@
 #
 # Grobs built in draw_group() may be replayed on a different device
 # (e.g. dev.copy2pdf(), RStudio "Export > Save as PDF"). By deferring the
-# device capability check to makeContent() — which fires at render time —
+# device capability check to makeContent() -- which fires at render time --
 # we pick the correct rendering tier for the *actual* output device rather
 # than the device that was active during plot construction.
 #' @noRd
@@ -165,9 +165,9 @@ makeContent.area_fade_grob <- function(x) {
   dev_name <- names(grDevices::dev.cur())
 
   # Three rendering tiers (see draw_group comments for details):
-  #   Tier 1 — Porter-Duff "dest.in" compositing (ragg, svg, cairo on-screen)
-  #   Tier 2 — single-colour vertical linearGradient (cairo_pdf, png, etc.)
-  #   Tier 3 — flat semi-transparent fill (base pdf(), postscript)
+  #   Tier 1 -- Porter-Duff "dest.in" compositing (ragg, svg, cairo on-screen)
+  #   Tier 2 -- single-colour vertical linearGradient (cairo_pdf, png, etc.)
+  #   Tier 3 -- flat semi-transparent fill (base pdf(), postscript)
   no_gradient <- dev_name %in% c("pdf", "postscript")
   no_composite <- dev_name %in% c("pdf", "cairo_pdf", "postscript")
   can_composite <- !no_composite &&
@@ -180,7 +180,7 @@ makeContent.area_fade_grob <- function(x) {
   if (no_gradient) {
     # Base `pdf()` / `postscript()` cannot render any gradient, so the vertical
     # fade collapses to a flat mid-alpha fill.  Users always lose fidelity
-    # here, regardless of whether `fill` was mapped to a variable — inform in
+    # here, regardless of whether `fill` was mapped to a variable -- inform in
     # both cases, but pick wording that reflects what was actually lost.
     msg <- if (x$has_multi_fill) {
       c(
@@ -209,7 +209,7 @@ makeContent.area_fade_grob <- function(x) {
     grob <- .patch_poly_fill(x$poly_grob, x$flat_fill)
   } else if (!can_composite) {
     # Tier 2: single-colour linearGradient.  Solid-fill groups render the
-    # vertical fade perfectly here — no fidelity loss worth flagging.  Only
+    # vertical fade perfectly here -- no fidelity loss worth flagging.  Only
     # the 2D case (multi-fill within one group) is degraded.
     if (x$has_multi_fill) {
       cli::cli_inform(
@@ -241,7 +241,7 @@ makeContent.area_fade_grob <- function(x) {
   a_start <- data$alpha %||% 1
   # setup_params has normally already validated this, but draw_key can be
   # invoked standalone (e.g. guide_legend building a key without the geom's
-  # setup_params pathway), so revalidate defensively — cheap, and keeps the
+  # setup_params pathway), so revalidate defensively -- cheap, and keeps the
   # whole-package validation consistent.
   a_end <- params$alpha_fade_to %||% 0
   .check_alpha_fade_to(a_end)
@@ -281,9 +281,9 @@ makeContent.area_fade_grob <- function(x) {
 # Build all three rendering tiers for a fade-area grob.
 #
 # Both GeomAreaFade and GeomRidgelineFade share identical tier logic:
-#   Tier 1 — Porter-Duff dest.in compositing (best quality)
-#   Tier 2 — single-colour linearGradient fallback
-#   Tier 3 — flat semi-transparent fill (last resort)
+#   Tier 1 -- Porter-Duff dest.in compositing (best quality)
+#   Tier 2 -- single-colour linearGradient fallback
+#   Tier 3 -- flat semi-transparent fill (last resort)
 # makeContent.area_fade_grob() selects the appropriate tier at draw time.
 #
 # The two geoms differ only in how they define their anchor point and
@@ -333,7 +333,7 @@ makeContent.area_fade_grob <- function(x) {
   flat_fill <- ggplot2::alpha(fill_col, (a_start + alpha_fade_to) / 2)
 
   if (is_degen) {
-    # Degenerate polygon (zero extent) → fully-transparent flat gradient.
+    # Degenerate polygon (zero extent) -> fully-transparent flat gradient.
     col_fade <- ggplot2::alpha(fill_col, alpha_fade_to)
     fallback_gradient <- grid::linearGradient(
       colours = c(col_fade, col_fade),
@@ -426,7 +426,7 @@ makeContent.area_fade_grob <- function(x) {
 
   # De-duplicate stops that can become identical when clipped to [0, 1]
 
-  # (e.g. val_hi far above panel → both anchor and val_hi clipped to 1.0).
+  # (e.g. val_hi far above panel -> both anchor and val_hi clipped to 1.0).
   # linearGradient() with duplicate stops is undefined on some devices.
 
   dups <- duplicated(comp_stops)
@@ -485,7 +485,7 @@ GeomAreaFade <- ggplot2::ggproto(
 
   draw_key = .draw_key_area_fade,
 
-  # Stamp alpha_scope into data so draw_panel can read it — ggplot2 v4
+  # Stamp alpha_scope into data so draw_panel can read it -- ggplot2 v4
   # filters non-formal params out of the draw_panel call via `parameters()`.
   setup_data = \(self, data, params) {
     data <- ggplot2::ggproto_parent(ggplot2::GeomArea, self)$setup_data(
@@ -494,6 +494,33 @@ GeomAreaFade <- ggplot2::ggproto(
     )
     data$.alpha_scope <- params$alpha_scope %||% "global"
     data
+  },
+
+  # Cross-panel reference for `alpha_scope = "global"`.  Same problem as in
+  # GeomColFade: computing the max in `draw_panel` is per-panel only, so
+  # under `facet_grid()` each panel re-normalises to its own tallest area
+  # and breaks the "scaled relative to the tallest in the entire layer"
+  # contract.  draw_layer sees ALL panels post-position (so position_stack
+  # cumulative ymax values are already in place), so we compute once here
+  # and stamp `global_max_abs` on every row.  draw_panel keeps a fallback
+  # for the rare case where it's invoked directly with hand-built data.
+  draw_layer = \(self, data, params, layout, coord) {
+    if (
+      nrow(data) > 0L &&
+        identical(data$.alpha_scope[1L] %||% "global", "global")
+    ) {
+      flipped <- isTRUE(params$flipped_aes) ||
+        isTRUE(any(data$flipped_aes %||% FALSE))
+      val <- if (flipped) {
+        c(data$xmin, data$xmax)
+      } else {
+        c(data$ymin, data$ymax)
+      }
+      data$global_max_abs <- .layer_max_abs(val)
+    }
+    ggplot2::ggproto_parent(ggplot2::GeomArea, self)$draw_layer(
+      data, params, layout, coord
+    )
   },
 
   # Validation in setup_params() keeps the constructor body clean.
@@ -513,7 +540,8 @@ GeomAreaFade <- ggplot2::ggproto(
 
     params$alpha_scope <- rlang::arg_match0(
       params$alpha_scope,
-      values = c("global", "group")
+      values = c("global", "group"),
+      arg_nm = "alpha_scope"
     )
 
     # Validate outline.type explicitly so the user gets a geom-specific error
@@ -550,14 +578,16 @@ GeomAreaFade <- ggplot2::ggproto(
     outline.type = "upper",
     ...
   ) {
-    # For alpha_scope = "global", stamp panel-wide max |value| from
-    # POST-position-adjustment data so draw_group sees a reference
-    # consistent with what is actually rendered. Computing this in
-    # setup_data would use pre-stacked y values and overflow alpha
-    # for stacked areas (top ribbon's post-stack ymax > pre-stack max).
-    # For alpha_scope = "group", we deliberately leave the column
-    # unstamped so draw_group's %||% fallback computes a per-group max.
-    if (identical(data$.alpha_scope[1L], "global")) {
+    # For alpha_scope = "global", `data$global_max_abs` is stamped once in
+    # `draw_layer` (cross-panel, post-position).  Falling back here only
+    # when the column is missing -- typically when draw_panel is called
+    # directly in tests with hand-built data.  For alpha_scope = "group",
+    # we deliberately leave the column unstamped so draw_group's `%||%`
+    # fallback computes a per-group max.
+    if (
+      identical(data$.alpha_scope[1L], "global") &&
+        is.null(data$global_max_abs)
+    ) {
       val <- if (isTRUE(flipped_aes)) {
         c(data$xmin, data$xmax)
       } else {
@@ -622,7 +652,8 @@ GeomAreaFade <- ggplot2::ggproto(
     if (inherits(coord, "CoordPolar") || inherits(coord, "CoordRadial")) {
       cli::cli_warn(
         c(
-          "!" = "{.fn geom_area_fade} does not support radial gradients in polar coordinates.",
+          "!" = "{.fn geom_area_fade} does not support gradient fills under \\
+             polar / radial coordinates.",
           "i" = "Falling back to standard area rendering."
         ),
         .frequency = "once",
@@ -649,14 +680,14 @@ GeomAreaFade <- ggplot2::ggproto(
       ))
     }
 
-    # Alpha at the data line; NA (no mapping) → fully opaque.
+    # Alpha at the data line; NA (no mapping) -> fully opaque.
     a_start <- data$alpha[1L]
     if (is.na(a_start)) {
       a_start <- 1
     }
 
     # Resolve outline colour.
-    # `outline.type = "none"` → remap to "full" with NA colour so the parent
+    # `outline.type = "none"` -> remap to "full" with NA colour so the parent
     # returns a single polygonGrob (no separate polyline grob). This is
     # cheaper than remapping to "upper" with NA colour, which leaves an
     # invisible polyline in the tree. `.composite_poly_fill` already takes
@@ -670,8 +701,17 @@ GeomAreaFade <- ggplot2::ggproto(
       data$colour <- data$fill[1L]
     }
 
+    # Two distinct "flipped" notions (mirrors the geom_col_fade fix):
+    #   `flipped_aes`     - which DATA axis is the value axis (set by
+    #                        ggplot2's orientation handling).
+    #   `flipped_visual`  - which RENDERED axis the value axis ends up on.
+    #                        `coord_flip()` rotates the rendering without
+    #                        touching `flipped_aes`, so we OR-detect it.
+    flipped_visual <- xor(isTRUE(flipped_aes), inherits(coord, "CoordFlip"))
+
     # Value-axis range of the polygon (setup_data guarantees this always
     # includes 0: ymin = 0, ymax = y; or xmin = 0, xmax = x if flipped).
+    # Reads the data axis -> uses `flipped_aes` (data orientation).
     if (flipped_aes) {
       val_lo <- min(c(data$xmin, data$xmax), na.rm = TRUE)
       val_hi <- max(c(data$xmin, data$xmax), na.rm = TRUE)
@@ -680,8 +720,10 @@ GeomAreaFade <- ggplot2::ggproto(
       val_hi <- max(c(data$ymin, data$ymax), na.rm = TRUE)
     }
 
-    # Gradient direction vectors — shared by both rendering paths.
-    if (flipped_aes) {
+    # Gradient direction vectors -- shared by both rendering paths.
+    # Uses `flipped_visual` so `coord_flip()` rotates the gradient with
+    # the rendered polygon.
+    if (flipped_visual) {
       gx1 <- 0
       gy1 <- 0.5
       gx2 <- 1
@@ -710,7 +752,7 @@ GeomAreaFade <- ggplot2::ggproto(
     }
 
     # Alpha at each extreme, proportional to |val| / panel max.
-    # Clamp to [0, 1] — defensive against any residual numerical overshoot
+    # Clamp to [0, 1] -- defensive against any residual numerical overshoot
     # (scales::alpha() silently produces invalid RGB for values > 1).
     alpha_lo <- alpha_fade_to +
       (a_start - alpha_fade_to) * abs(val_lo) / max_abs
@@ -731,7 +773,7 @@ GeomAreaFade <- ggplot2::ggproto(
     #
     # Three tiers:
     #   1. "dest.in" compositing (ragg, svg, cairo on-screen):
-    #      Full 2D gradient — ggplot2's horizontal colour gradient combined
+    #      Full 2D gradient -- ggplot2's horizontal colour gradient combined
     #      with a vertical alpha fade via Porter-Duff compositing.
     #   2. linearGradient fallback (cairo_pdf, png, most other devices):
     #      Fill collapsed to one colour; linearGradient encodes the vertical
@@ -743,10 +785,13 @@ GeomAreaFade <- ggplot2::ggproto(
     has_multi_fill <- length(unique(data$fill[!is.na(data$fill)])) > 1L
 
     # Transform anchor (y = 0) and extremes to panel NPC coordinates.
-    # Kept here because the axis depends on flipped_aes.
+    # `ref_df` construction follows `flipped_aes` (which DATA column carries
+    # the value); `pos_npc` extraction follows `flipped_visual` (which
+    # PANEL axis the values landed on after `coord$transform()` --
+    # `coord_flip()` swaps them).
     #
     # We only read the NPC coordinate of the *value* axis (the one we fade
-    # along).  The other axis (`data$x[1L]` / `data$y[1L]`) is filler —
+    # along).  The other axis (`data$x[1L]` / `data$y[1L]`) is filler --
     # coord$transform needs both columns present, but under the linear
     # Cartesian coords where this code runs (polar falls back earlier) the
     # axes transform independently, so the filler value cannot influence
@@ -754,12 +799,14 @@ GeomAreaFade <- ggplot2::ggproto(
     # NA-only groups, so `data$x[1L]` / `data$y[1L]` is guaranteed non-NA.
     if (flipped_aes) {
       ref_df <- data.frame(x = c(val_lo, 0, val_hi), y = data$y[1L])
-      ref_npc <- coord$transform(ref_df, panel_params)
-      pos_npc <- pmax(0, pmin(1, ref_npc$x))
     } else {
       ref_df <- data.frame(x = data$x[1L], y = c(val_lo, 0, val_hi))
-      ref_npc <- coord$transform(ref_df, panel_params)
-      pos_npc <- pmax(0, pmin(1, ref_npc$y))
+    }
+    ref_npc <- coord$transform(ref_df, panel_params)
+    pos_npc <- if (flipped_visual) {
+      pmax(0, pmin(1, ref_npc$x))
+    } else {
+      pmax(0, pmin(1, ref_npc$y))
     }
 
     # --- Build polygon grob from parent ------------------------------------
@@ -799,7 +846,7 @@ GeomAreaFade <- ggplot2::ggproto(
 #' to create area plots. The gradient is always anchored at `y = 0`: maximum
 #' transparency there, fading to opaque at the data values. Opacity scales
 #' with the absolute distance from zero, so equal `|y|` values always receive
-#' the same alpha — full opacity is reached only at the extreme with the largest
+#' the same alpha -- full opacity is reached only at the extreme with the largest
 #' absolute value. This works for positive values, negative values, and groups
 #' that cross zero (where a three-stop gradient is used).
 #'
@@ -816,6 +863,16 @@ GeomAreaFade <- ggplot2::ggproto(
 #' [ggplot2::coord_polar()] or [ggplot2::coord_radial()], the geom falls back
 #' to standard area rendering (equivalent to [ggplot2::geom_area()]), which
 #' means no gradient fill is added. The geom emits a warning in this case.
+#'
+#' @section Legend key under coord_flip:
+#' The legend key glyph always shows the canonical (data-axis) fade
+#' direction -- vertical for the default orientation, horizontal under
+#' `orientation = "y"`. Under [ggplot2::coord_flip()] the rendered geom
+#' rotates correctly but the legend key does *not*: ggplot2's legend
+#' builder is coord-independent by design (`draw_key` has no access to
+#' the coord). For a legend key that matches a horizontal layout, prefer
+#' `aes(y = ...)` with auto-detected `orientation = "y"` over
+#' `aes(x = ...) + coord_flip()`.
 #'
 #' @concept fading gradient
 #' @concept area plot
@@ -834,7 +891,7 @@ GeomAreaFade <- ggplot2::ggproto(
 #' @param alpha_scope How to scale alpha across groups. `"global"` (default)
 #'   computes the maximum absolute y value across **all** groups in the panel so
 #'   that equal `|y|` always maps to equal alpha. `"group"` computes the maximum
-#'   per group, giving each group the full alpha range independently — useful
+#'   per group, giving each group the full alpha range independently -- useful
 #'   with `position = "identity"` when groups have very different amplitudes.
 #' @param outline.type Which edges of the area to draw an outline on. One of
 #'   `"upper"` (default), `"lower"`, `"both"` (`"upper"` and `"lower"`),
@@ -875,29 +932,29 @@ GeomAreaFade <- ggplot2::ggproto(
 #' a <- ggplot(df1, aes(x, y, fill = g)) +
 #'   theme_minimal()
 #'
-#' # default behaviour: opaque at data line, transparent at y = 0
+#' # Default behaviour: opaque at data line, transparent at y = 0
 #' # the outline colour remains unaffected
 #' a + geom_area_fade()
 #'
-#' # change overall opacity
+#' # Change overall opacity
 #' a + geom_area_fade(alpha = .25)
 #'
-#' # keep some opacity at the baseline
+#' # Keep some opacity at the baseline
 #' a + geom_area_fade(alpha_fade_to = .25)
 #'
-#' # suppress the default upper outline
+#' # Suppress the default upper outline
 #' a + geom_area_fade(outline.type = "none")
 #'
-#' # closed outline (all four edges)
+#' # Closed outline (all four edges)
 #' a + geom_area_fade(outline.type = "full")
 #'
-#' # horizontal orientation
+#' # Horizontal orientation
 #' a + geom_area_fade(aes(y, x), orientation = "y")
 #'
-#' # disable stat alignment (useful when x values are already aligned)
+#' # Disable stat alignment (useful when x values are already aligned)
 #' a + geom_area_fade(stat = "identity")
 #'
-#' # draw upper and lower outlines (no left/right edges)
+#' # Draw upper and lower outlines (no left/right edges)
 #' a + geom_area_fade(outline.type = "both", stat = "identity")
 #'
 #' # Use the "alpha_scope" argument to scale the alpha
@@ -910,33 +967,33 @@ GeomAreaFade <- ggplot2::ggproto(
 #' b <- ggplot(df2, aes(x, y, fill = g)) +
 #'   theme_minimal()
 #'
-#' # alpha_scope = "group": each group uses the alpha range independently
+#' # With alpha_scope = "group", each group uses the alpha range independently
 #' b + geom_area_fade(
 #'   alpha_scope = "group",
 #'   position = "identity"
 #'   )
 #'
-#' # compare with the default where small groups appear washed out
+#' # Compare with the default where small groups appear washed out
 #' # next to dominant groups, especially when position = "identity"
 #' b + geom_area_fade(
 #'   alpha_scope = "global", # default
 #'   position = "identity"
 #'   )
 #'
-#' # geom_area_fade works with negative values too:
+#' # Negative values are supported too:
 #' # the gradient fades towards y = 0 from both sides
 #' d <- ggplot(df2, aes(x, y - mean(y))) +
 #'   theme_minimal()
 #' d + geom_area_fade()
 #'
-#' # overwrite both fill and colour
+#' # Overwrite both fill and colour
 #' d + geom_area_fade(
 #'   fill = "#0833F5",
 #'   colour = "#d77e7b",
 #'   outline.type = "lower"
 #'   )
 #'
-#' # a 2D-gradient is produced when fill is mapped to a variable
+#' # A 2D-gradient is produced when fill is mapped to a variable
 #' # this may not work on all graphic devices, see vignette for details
 #' d + geom_area_fade(
 #'   aes(fill = y),
@@ -950,6 +1007,6 @@ geom_area_fade <- make_constructor(
   position = "stack",
   alpha_fade_to = 0,
   alpha_scope = "global",
-  orientation = NULL
+  orientation = NA
 )
 

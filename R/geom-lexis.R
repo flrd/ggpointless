@@ -43,8 +43,8 @@ draw_key_pointless <- function(data, params, size) {
 #' Each geom has an associated function that draws the key when the geom needs
 #' to be displayed in a legend. These functions are called `draw_key_*()`, where
 #' `*` stands for the name of the respective key glyph. The key glyphs can be
-#' customized for individual geoms by providing a geom with the `key_glyph`
-#' argument (see [`layer()`] or examples below.)
+#' customised for individual geoms by providing a geom with the `key_glyph`
+#' argument (see [`layer()`] or examples below).
 #'
 #' @return A grid grob.
 #' @inheritParams ggplot2::draw_key
@@ -177,7 +177,7 @@ GeomLexis <- ggproto(
 #' @title Lexis diagrams
 #'
 #' @description
-#' This geom can be used to plot 45° lifelines for a cohort.
+#' This geom can be used to plot 45 deg lifelines for a cohort.
 #' Lexis diagrams are named after Wilhelm Lexis and used by demographers
 #' for more than a century.
 #'
@@ -195,7 +195,7 @@ GeomLexis <- ggproto(
 #'   `TRUE` by default.
 #'
 #' @details
-#' This geom draws 45° lines from the start to the end of a 'lifetime'. It is
+#' This geom draws 45 deg lines from the start to the end of a 'lifetime'. It is
 #' a combination of a segment, and a point.
 #' Besides `y` and `yend` coordinates this geom creates one additional variable
 #' called `type` in the layer data. You might want to map to an aesthetic with
@@ -213,7 +213,7 @@ GeomLexis <- ggproto(
 #'   start = c(0, 1, 6, 5, 6, 9),
 #'   end = c(5, 4, 10, 9, 8, 11)
 #' )
-#' p <- ggplot(df1, aes(x = start, xend = end, color = key))
+#' p <- ggplot(df1, aes(x = start, xend = end, colour = key))
 #' p +
 #'   geom_lexis()
 #' p +
@@ -223,7 +223,7 @@ GeomLexis <- ggproto(
 #'     point_show = FALSE
 #'   )
 #'
-#' # change point appearance
+#' # Change point appearance
 #' p + geom_lexis(
 #'   point_colour = "black",
 #'   size = 3,
@@ -232,13 +232,13 @@ GeomLexis <- ggproto(
 #'   stroke = 1
 #' )
 #'
-#' # missing values will be removed
+#' # Missing values will be removed
 #' df2 <- data.frame(
 #'   key = c("A", "B", "B", "C", "D"),
 #'   start = c(0, 1, 7, 5, 6),
 #'   end = c(5, 4, 13, 9, NA)
 #' )
-#' ggplot(df2, aes(x = start, xend = end, color = key)) +
+#' ggplot(df2, aes(x = start, xend = end, colour = key)) +
 #'   geom_lexis()
 #'
 #' # Ideally, `x` values should be increasing, unlike

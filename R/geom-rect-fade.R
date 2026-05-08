@@ -1,9 +1,9 @@
 # Deferred grob for device-aware rectangle rendering.
 #
-# Two tiers (rectangles never need the compositing path — each rect has a
+# Two tiers (rectangles never need the compositing path -- each rect has a
 # single fill colour):
-#   Tier 1 — linearGradient fill (ragg, cairo, svg, png, ...)
-#   Tier 2 — flat semi-transparent (base pdf(), postscript)
+#   Tier 1 -- linearGradient fill (ragg, cairo, svg, png, ...)
+#   Tier 2 -- flat semi-transparent (base pdf(), postscript)
 #' @noRd
 #' @keywords internal
 .rect_fade_grob <- function(gradient_glist, flat_glist) {
@@ -35,27 +35,7 @@ makeContent.rect_fade_grob <- function(x) {
     grobs <- x$gradient_glist
   }
 
-  # Clamp corner radius so it never exceeds half the rect's smaller dimension.
-  # Without this, tiny rects degenerate into pill shapes when radius > rect.
-  for (i in seq_along(grobs)) {
-    g <- grobs[[i]]
-    if (!inherits(g, "roundrect")) {
-      next
-    }
-    r_pt <- grid::convertUnit(g$r, "pt", valueOnly = TRUE)
-    h_pt <- abs(grid::convertHeight(g$height, "pt", valueOnly = TRUE))
-    w_pt <- abs(grid::convertWidth(g$width, "pt", valueOnly = TRUE))
-    # Skip clamping for degenerate rects (NaN/NA dimensions can occur when
-    # coordinates are transformed through a log scale with -Inf inputs, etc.).
-    if (!is.finite(h_pt) || !is.finite(w_pt) || !is.finite(r_pt)) {
-      next
-    }
-    max_r <- min(h_pt, w_pt) / 2
-    if (r_pt > max_r) {
-      grobs[[i]]$r <- grid::unit(max_r, "pt")
-    }
-  }
-
+  grobs <- .clamp_roundrect_radius(grobs, arg = "radius")
   grid::setChildren(x, grobs)
 }
 
@@ -111,7 +91,7 @@ makeContent.rect_fade_polar_grob <- function(x) {
 # For a rect under CoordPolar / CoordRadial, build the arc-interpolated
 # polygon (via GeomPolygon's non-linear path, which internally calls
 # coord_munch), then lay a panel-sized radialGradient rectGrob clipped to
-# that polygon via viewport(clip = poly_grob) — mirroring the pattern used
+# that polygon via viewport(clip = poly_grob) -- mirroring the pattern used
 # by .draw_panel_bar_fade_polar(). `radius` (rounded corners) is
 # geometrically meaningless on an arc and is ignored here.
 #' @noRd
@@ -185,7 +165,7 @@ makeContent.rect_fade_polar_grob <- function(x) {
     flat_grob <- poly_grob
     flat_grob$gp$fill <- ggplot2::alpha(fill_col, mid_alpha)
 
-    # Degenerate ring (zero height / zero width collapsed to a point) — fall
+    # Degenerate ring (zero height / zero width collapsed to a point) -- fall
     # back to a solid mid-alpha polygon.
     if (!is.finite(r_in) || !is.finite(r_out) || r_out <= r_in) {
       gradient_list[[i]] <- flat_grob
@@ -223,14 +203,11 @@ makeContent.rect_fade_polar_grob <- function(x) {
   )
 }
 
-# Legend key — rounded rect with alpha gradient (vertical or horizontal).
+# Legend key -- rounded rect with alpha gradient (vertical or horizontal).
 #' @noRd
 #' @keywords internal
 .draw_key_rect_fade <- function(data, params, size) {
-  radius <- params$radius %||% grid::unit(0, "pt")
-  if (!grid::is.unit(radius)) {
-    radius <- grid::unit(radius, "pt")
-  }
+  radius <- .validate_radius(params$radius)
 
   fill_colour <- data$fill %||% "grey35"
   a_start <- data$alpha %||% 1
@@ -238,7 +215,7 @@ makeContent.rect_fade_polar_grob <- function(x) {
   fade_direction <- params$fade_direction %||% "vertical"
 
   if (identical(fade_direction, "horizontal")) {
-    # Left (opaque) → right (transparent)
+    # Left (opaque) -> right (transparent)
     grad <- grid::linearGradient(
       colours = c(
         ggplot2::alpha(fill_colour, a_start),
@@ -250,7 +227,7 @@ makeContent.rect_fade_polar_grob <- function(x) {
       y2 = 0.5
     )
   } else {
-    # Bottom (transparent) → top (opaque)
+    # Bottom (transparent) -> top (opaque)
     grad <- grid::linearGradient(
       colours = c(
         ggplot2::alpha(fill_colour, a_end),
@@ -293,7 +270,7 @@ GeomRectFade <- ggplot2::ggproto(
   # (x, y, width, height) -> (xmin, xmax, ymin, ymax), but guards the
   # assignment with `lengths(result) > 1`.  For single-row input the
   # result vectors have length 1, the guard is FALSE, and corners are
-  # never written — a silent ggplot2 bug.  Call the parent first (which
+  # never written -- a silent ggplot2 bug.  Call the parent first (which
   # handles multi-row data correctly), then fill in any still-missing
   # corners explicitly.
   setup_data = \(self, data, params) {
@@ -324,12 +301,11 @@ GeomRectFade <- ggplot2::ggproto(
 
     params$fade_direction <- rlang::arg_match0(
       params$fade_direction %||% "vertical",
-      values = c("vertical", "horizontal")
+      values = c("vertical", "horizontal"),
+      arg_nm = "fade_direction"
     )
 
-    if (!is.null(params$radius) && !grid::is.unit(params$radius)) {
-      params$radius <- grid::unit(params$radius, "pt")
-    }
+    params$radius <- .validate_radius(params$radius)
 
     params
   },
@@ -340,15 +316,12 @@ GeomRectFade <- ggplot2::ggproto(
     panel_params,
     coord,
     lineend = "butt",
-    linejoin = "round",
+    linejoin = "mitre",
     alpha_fade_to = 0,
     fade_direction = "vertical",
     radius = NULL
   ) {
-    radius <- radius %||% grid::unit(0, "pt")
-    if (!grid::is.unit(radius)) {
-      radius <- grid::unit(radius, "pt")
-    }
+    radius <- .validate_radius(radius)
 
     is_polar <- inherits(coord, "CoordPolar") ||
       inherits(coord, "CoordRadial")
@@ -437,7 +410,7 @@ GeomRectFade <- ggplot2::ggproto(
     }
 
     coords <- coord$transform(data, panel_params)
-    # Drop rows with non-finite rect bounds — can occur when -Inf/Inf hits a
+    # Drop rows with non-finite rect bounds -- can occur when -Inf/Inf hits a
     # log scale (produces NaN) or any other scale that can't represent them.
     finite <- is.finite(coords$xmin) & is.finite(coords$xmax) &
       is.finite(coords$ymin) & is.finite(coords$ymax)
@@ -461,6 +434,20 @@ GeomRectFade <- ggplot2::ggproto(
       return(ggplot2::zeroGrob())
     }
     n <- nrow(coords)
+
+    # `fade_direction` is in data-axis semantics. Under `coord_flip()` the
+    # x/y axes swap visually, so what the user called "vertical" should
+    # render horizontally. Translate once here; the loop branches on the
+    # rendered direction.
+    rendered_dir <- if (inherits(coord, "CoordFlip")) {
+      switch(fade_direction,
+        vertical   = "horizontal",
+        horizontal = "vertical",
+        fade_direction
+      )
+    } else {
+      fade_direction
+    }
 
     gradient_list <- vector("list", n)
     flat_list <- vector("list", n)
@@ -487,12 +474,12 @@ GeomRectFade <- ggplot2::ggproto(
       y_vis_hi <- max(coords$ymin[i], coords$ymax[i])
 
       # Gradient direction:
-      #   "vertical"   — ymax side opaque, ymin side fades (data semantics).
-      #   "horizontal" — xmin side opaque, xmax side fades (data semantics).
+      #   "vertical"   -- ymax side opaque, ymin side fades (data semantics).
+      #   "horizontal" -- xmin side opaque, xmax side fades (data semantics).
       # Under scale reversal the colours are swapped so the opaque side always
       # tracks the intended data edge, not the visual edge.
-      if (identical(fade_direction, "horizontal")) {
-        # xmin → opaque, xmax → transparent.
+      if (identical(rendered_dir, "horizontal")) {
+        # xmin -> opaque, xmax -> transparent.
         # x_rev: xmin is at visual right (bbox x = 1), xmax at visual left (x = 0).
         col_x0 <- if (x_rev) ggplot2::alpha(fill_col, alpha_fade_to) else ggplot2::alpha(fill_col, a_start)
         col_x1 <- if (x_rev) ggplot2::alpha(fill_col, a_start)       else ggplot2::alpha(fill_col, alpha_fade_to)
@@ -501,7 +488,7 @@ GeomRectFade <- ggplot2::ggproto(
           x1 = 0, y1 = 0.5, x2 = 1, y2 = 0.5
         )
       } else {
-        # ymax → opaque, ymin → transparent.
+        # ymax -> opaque, ymin -> transparent.
         # y_rev: ymin is at visual top (bbox y = 1), ymax at visual bottom (y = 0).
         col_y0 <- if (y_rev) ggplot2::alpha(fill_col, a_start)       else ggplot2::alpha(fill_col, alpha_fade_to)
         col_y1 <- if (y_rev) ggplot2::alpha(fill_col, alpha_fade_to) else ggplot2::alpha(fill_col, a_start)
@@ -575,6 +562,8 @@ GeomRectFade <- ggplot2::ggproto(
 #'
 #' @aesthetics GeomRectFade
 #'
+#' @inheritSection geom_area_fade Legend key under coord_flip
+#'
 #' @inheritParams ggplot2::geom_rect
 #' @param alpha_fade_to A single finite number between 0 and 1. The alpha
 #'   value at the fading edge of each rectangle. Defaults to `0`
@@ -596,8 +585,8 @@ GeomRectFade <- ggplot2::ggproto(
 #'
 #' @section Polar coordinates:
 #' Under [ggplot2::coord_polar()] / [ggplot2::coord_radial()] each rectangle is
-#' bent into an annular segment. A radial alpha gradient — transparent at the
-#' inner radius, opaque at the outer — is rendered when the fade direction
+#' bent into an annular segment. A radial alpha gradient -- transparent at the
+#' inner radius, opaque at the outer -- is rendered when the fade direction
 #' aligns with the radial axis:
 #'
 #' - `theta = "x"` (default) + `fade_direction = "vertical"`: `ymin`/`ymax`

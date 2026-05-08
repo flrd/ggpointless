@@ -113,7 +113,7 @@ GeomPointGlow <- ggplot2::ggproto(
 
     # Priority for each glow_* value:
     #   1. `.glow_*` column on coords (stamped by setup_data for vector-length
-    #      params — already NA-filter aligned by ggplot2's handle_na).
+    #      params -- already NA-filter aligned by ggplot2's handle_na).
     #   2. scalar param from draw_panel formals.
     #   3. fallback: inherit from the point's matching aesthetic.
     # isTRUE(is.na(.)) is safe for NULL and length > 1 vectors.
@@ -135,10 +135,10 @@ GeomPointGlow <- ggplot2::ggproto(
       glow_alpha
     }
 
-    # Default glow: 9× the point's size aesthetic.
+    # Default glow: 9x the point's size aesthetic.
     # User-supplied glow_size: taken at face value, in ggplot2 size units
     # (same semantics as `size` in `geom_point()`).
-    # gg_par below handles the ggplot2 size → grid point conversion.
+    # gg_par below handles the ggplot2 size -> grid point conversion.
     g_sizes <- if (!is.null(coords$.glow_size)) {
       coords$.glow_size
     } else if (is.null(glow_size) || isTRUE(is.na(glow_size))) {
@@ -234,7 +234,7 @@ GeomPointGlow <- ggplot2::ggproto(
 #'   or a numeric vector whose length matches the number of points.
 #'
 #'   For the halo to be visible, `glow_size` must exceed the point's
-#'   `size` — otherwise the point grob (drawn on top) fully covers the
+#'   `size` -- otherwise the point grob (drawn on top) fully covers the
 #'   glow. If this happens the geom emits a one-shot informational
 #'   message at draw time pointing you at the fix (enlarge the glow or
 #'   shrink the point). See *Examples*.
@@ -265,10 +265,10 @@ GeomPointGlow <- ggplot2::ggproto(
 #' # `grid::radialGradient` pattern, and the example runner accumulates
 #' # patterns from every package example into a single pdf() device.  On
 #' # large pdf runs that pattern cache can trigger an upstream R bug at
-#' # `dev.off()` — unrelated to your real plots.
+#' # `dev.off()` -- unrelated to your real plots.
 #' df <- head(mtcars, 5)
 #'
-#' # Basic usage — the default glow is 9x the point's `size` aesthetic,
+#' # Basic usage -- the default glow is 9x the point's `size` aesthetic,
 #' # so it's always visibly larger than the point itself.
 #' ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
 #'   geom_point_glow()
