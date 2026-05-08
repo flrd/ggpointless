@@ -539,3 +539,157 @@ NULL
 }
 
 
+# Validate a `radius` argument for round-rect-style geoms (geom_col_fade,
+# geom_rect_fade, geom_unit_*).
+#
+# Returns the radius unchanged when valid; falls back to `default` with a
+# `cli` warning otherwise.  Bare numerics are accepted and coerced to
+# points (matching the pattern already used by geom_rect_fade /
+# geom_col_fade).  `NULL` returns `default` silently -- it is the documented
+# "use the default" sentinel.
+#
+# Validation rules (everything else falls back):
+#   * NULL                                          -> default (silent)
+#   * single non-negative finite numeric            -> unit(value, "pt")
+#   * single non-negative finite unit               -> unchanged
+#   * any other shape (string, list, vector, NA,
+#     negative, exotic units that fail convertUnit) -> default (with warning)
+#
+# @param radius  Raw user value.
+# @param default Fallback (a `unit` object).  Defaults to `unit(0, "pt")`.
+# @param arg     Argument name in the caller, for messages.
+# @return A length-1 unit object.
+#' @noRd
+#' @keywords internal
+.validate_radius <- function(
+  radius,
+  default = grid::unit(0, "pt"),
+  arg = "radius"
+) {
+  if (is.null(radius)) return(default)
+
+  if (is.numeric(radius) && !grid::is.unit(radius)) {
+    if (length(radius) != 1L || !is.finite(radius) || radius < 0) {
+      cli::cli_warn(
+        c(
+          "{.arg {arg}} must be a single non-negative finite number or \\
+           {.cls unit}.",
+          "x" = "Got {.val {radius}}.",
+          "i" = "Falling back to {.code {format(default)}}."
+        ),
+        call = NULL
+      )
+      return(default)
+    }
+    return(grid::unit(radius, "pt"))
+  }
+
+  if (!grid::is.unit(radius)) {
+    cli::cli_warn(
+      c(
+        "{.arg {arg}} must be a {.cls unit} object or a single number.",
+        "x" = "Got {.obj_type_friendly {radius}}; did you forget \\
+               {.fn grid::unit}?",
+        "i" = "Falling back to {.code {format(default)}}."
+      ),
+      call = NULL
+    )
+    return(default)
+  }
+
+  if (length(radius) != 1L) {
+    cli::cli_warn(
+      c(
+        "{.arg {arg}} must be a single value, got length \\
+         {.val {length(radius)}}.",
+        "i" = "Falling back to {.code {format(default)}}."
+      ),
+      call = NULL
+    )
+    return(default)
+  }
+
+  # Probe convertibility -- catches NA/NaN, negative units, and exotic
+  # unit strings that wouldn't survive convertUnit at draw time.
+  pt_val <- tryCatch(
+    grid::convertUnit(radius, "pt", valueOnly = TRUE),
+    error = function(e) NA_real_
+  )
+  if (is.na(pt_val) || !is.finite(pt_val) || pt_val < 0) {
+    cli::cli_warn(
+      c(
+        "{.arg {arg}} must be a non-negative finite value, got \\
+         {.code {format(radius)}}.",
+        "i" = "Falling back to {.code {format(default)}}."
+      ),
+      call = NULL
+    )
+    return(default)
+  }
+
+  radius
+}
+
+
+# Walk a glist (or list) of grobs and clamp any roundrect's `r` to half
+# the smaller rendered dimension.  Intended for use inside `makeContent.*`
+# methods where `grid::convertHeight()` / `convertWidth()` resolve
+# relative units against the panel viewport.
+#
+# When at least one roundrect needs clamping, emits a single throttled
+# explicit message per call naming the maximum displayable radius and
+# the user's input -- both reported in points so the user has a concrete
+# upper bound regardless of the unit they supplied.
+#
+# Non-roundrect children pass through untouched, as do roundrects whose
+# r/width/height resolve to NA (e.g. degenerate rects from log-scale -Inf
+# inputs).
+#
+# @param grobs A grid `gList` or list of grobs.
+# @param arg   Argument name for the message ("radius").
+# @return The (possibly-mutated) grobs.
+#' @noRd
+#' @keywords internal
+.clamp_roundrect_radius <- function(grobs, arg = "radius") {
+  reported <- FALSE
+  for (i in seq_along(grobs)) {
+    g <- grobs[[i]]
+    if (!inherits(g, "roundrect")) next
+
+    r_pt <- tryCatch(
+      grid::convertUnit(g$r, "pt", valueOnly = TRUE),
+      error = function(e) NA_real_
+    )
+    h_pt <- tryCatch(
+      abs(grid::convertHeight(g$height, "pt", valueOnly = TRUE)),
+      error = function(e) NA_real_
+    )
+    w_pt <- tryCatch(
+      abs(grid::convertWidth(g$width, "pt", valueOnly = TRUE)),
+      error = function(e) NA_real_
+    )
+    if (!is.finite(r_pt) || !is.finite(h_pt) || !is.finite(w_pt)) next
+
+    max_r <- min(h_pt, w_pt) / 2
+    if (r_pt > max_r) {
+      if (!reported) {
+        # `.frequency` defaults to "always" -- the user is actively iterating
+        # on a value, so they need feedback every time they pick one above
+        # the cap. Within-call duplication (one message per cell) is
+        # prevented by the `reported` flag; cross-panel duplication in
+        # faceted plots is intentional (the cap is panel-specific).
+        cli::cli_inform(c(
+          "!" = "{.arg {arg}} of {.val {round(r_pt, 2)}} pt exceeds the \\
+                 largest displayable corner radius for the rendered shape.",
+          "i" = "Maximum displayable radius is \\
+                 {.val {round(max_r, 2)}} pt; falling back to that."
+        ))
+        reported <- TRUE
+      }
+      grobs[[i]]$r <- grid::unit(max_r, "pt")
+    }
+  }
+  grobs
+}
+
+
