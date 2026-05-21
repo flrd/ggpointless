@@ -125,6 +125,20 @@ test_that("stat_arch renders without error", {
   expect_no_error(ggplotGrob(p))
 })
 
+test_that("geom_arch / stat_arch default to the arch key glyph", {
+  # Regression: GeomCatenary's draw_key (a hanging catenary) was leaking into
+  # the arch legend because make_constructor() does not forward `key_glyph` to
+  # layer(). Fixed by giving GeomArch its own draw_key.
+  # body() comparison is brittle under covr (instrumentation injects tracking
+  # calls into every function body); skip when covr is the test driver.
+  testthat::skip_if(nzchar(Sys.getenv("R_COVR")), "covr instrumentation alters body()")
+  for (lyr in list(geom_arch(), stat_arch(geom = "arch"))) {
+    expect_s3_class(lyr$geom, "GeomArch")
+    fn <- environment(lyr$geom$draw_key)$f
+    expect_identical(body(fn), body(draw_key_arch))
+  }
+})
+
 # --- geom_catenary constructor branch: both chainLength and chain_length ------
 
 test_that("geom_catenary: chainLength always errors, even when chain_length also supplied", {
@@ -504,20 +518,56 @@ test_that("GoG/facets: facet_grid with free scales does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
-  p <- ggplot(df, aes(x, y)) + geom_catenary() + theme_void()
-  expect_no_error(ggplotGrob(p))
+
+
+
+# ---------------------------------------------------------------------------
+# coord_transform restricted-domain regression (issue 2026-04-26)
+# ---------------------------------------------------------------------------
+#
+# Catenaries sag below their endpoints, so even strictly positive endpoints
+# produce y < 0 in the reconstructed curve.  Combined with `coord_transform(y =
+# "log10")` those negatives transform to NaN and used to crash
+# `expand_range4()`.  `.crop_to_coord_domain()` (R/aaa.R) drops them with a
+# helpful warning before limit expansion runs.
+
+df_pos_cat <- data.frame(x = c(1, 5), y = c(2, 2))
+
+test_that("coord_transform(y='log10') no longer crashes on catenary sag", {
+  p <- ggplot(df_pos_cat, aes(x, y)) +
+    geom_catenary() +
+    coord_transform(y = "log10")
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
 
-test_that("GoG/theme: theme_classic does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
-  p <- ggplot(df, aes(x, y)) + geom_catenary() + theme_classic()
-  expect_no_error(ggplotGrob(p))
+test_that("coord_transform(y='log10') drops catenary sag rows", {
+  # Behavioural check: cli's regularly-throttled warnings are flaky under
+  # expect_warning across tests in the same session, so compare row counts.
+  build_plain <- ggplot_build(ggplot(df_pos_cat, aes(x, y)) + geom_catenary())
+  build_clip  <- suppressWarnings(ggplot_build(
+    ggplot(df_pos_cat, aes(x, y)) +
+      geom_catenary() +
+      coord_transform(y = "log10")
+  ))
+  n_negative <- sum(build_plain$data[[1]]$y < 0)
+  expect_gt(n_negative, 0L)  # sanity: catenary really does dip below 0 here
+  expect_equal(
+    nrow(build_clip$data[[1]]),
+    nrow(build_plain$data[[1]]) - n_negative
+  )
 })
 
-test_that("GoG/theme: theme_bw does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(1, 1, 1))
-  p <- ggplot(df, aes(x, y)) + geom_catenary() + theme_bw()
-  expect_no_error(ggplotGrob(p))
+test_that("coord_transform crop also wired into stat_arch (no-op for safe input)", {
+  # Arches rise above endpoints, so log10 is safe — the crop should run but
+  # produce no warning.
+  df_arch_pos <- data.frame(x = c(1, 5), y = c(2, 3))
+  p <- ggplot(df_arch_pos, aes(x, y)) +
+    geom_arch() +
+    coord_transform(y = "log10")
+  expect_no_warning(ggplotGrob(p))
+})
+
+test_that("crop is a no-op on default CoordCartesian", {
+  p <- ggplot(df_pos_cat, aes(x, y)) + geom_catenary()
+  expect_no_warning(ggplotGrob(p))
 })

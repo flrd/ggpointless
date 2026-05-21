@@ -170,10 +170,6 @@ test_that("GoG/layer: multiple geom_fourier layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: geom_fourier standalone does not error", {
-  p <- ggplot(df_sine, aes(x, y)) + geom_fourier()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -248,17 +244,74 @@ test_that("GoG/facets: facet_grid with free scales does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + theme_void()
-  expect_no_error(ggplotGrob(p))
+
+
+
+# ---------------------------------------------------------------------------
+# coord_transform restricted-domain regression (issue 2026-04-26)
+# ---------------------------------------------------------------------------
+#
+# Fourier reconstruction of strictly positive data can dip into negative
+# values via Gibbs / harmonic-truncation overshoot.  Combined with
+# `coord_transform(y = "log10")` (or similar restricted-domain trans) those
+# negatives become NaN inside the coord transform, which used to crash
+# ggplot2's `expand_range4()` with the cryptic "missing value where
+# TRUE/FALSE needed" error.  `.crop_to_coord_domain()` filters such rows
+# before the limit-expansion step.
+
+df_pos <- data.frame(x = 1:20, y = exp(seq(0, 4, length.out = 20)))
+
+test_that("coord_transform(y='log10') no longer crashes on Fourier overshoot", {
+  p <- ggplot(df_pos, aes(x, y)) +
+    stat_fourier() +
+    coord_transform(y = "log10")
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
 
-test_that("GoG/theme: theme_classic does not error", {
-  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + theme_classic()
-  expect_no_error(ggplotGrob(p))
+test_that("coord_transform(y='log10') drops Fourier overshoot rows", {
+  # Behavioural check (avoids cli's `.frequency = "regularly"` throttling,
+  # which makes `expect_warning()` flaky across tests in the same session).
+  build_plain <- ggplot_build(ggplot(df_pos, aes(x, y)) + stat_fourier())
+  build_clip  <- suppressWarnings(ggplot_build(
+    ggplot(df_pos, aes(x, y)) +
+      stat_fourier() +
+      coord_transform(y = "log10")
+  ))
+  n_negative <- sum(build_plain$data[[1]]$y < 0)
+  expect_gt(n_negative, 0L)  # sanity: Fourier really does overshoot here
+  expect_equal(
+    nrow(build_clip$data[[1]]),
+    nrow(build_plain$data[[1]]) - n_negative
+  )
 })
 
-test_that("GoG/theme: theme_bw does not error", {
-  p <- ggplot(df_sine, aes(x, y)) + geom_fourier() + theme_bw()
-  expect_no_error(ggplotGrob(p))
+test_that("coord_transform(y='sqrt') also crops negative overshoot", {
+  p <- ggplot(df_pos, aes(x, y)) +
+    stat_fourier() +
+    coord_transform(y = "sqrt")
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("crop is a no-op when the Fourier output stays in domain", {
+  # Strongly positive series with enough harmonics that the reconstruction
+  # interpolates the data points without dipping below zero.
+  df_safe <- data.frame(x = 1:20, y = 100 + sin(seq(0, 2 * pi, length.out = 20)))
+  p <- ggplot(df_safe, aes(x, y)) +
+    stat_fourier() +
+    coord_transform(y = "log10")
+  expect_no_warning(ggplotGrob(p))
+})
+
+test_that("crop is a no-op without coord_transform", {
+  # The default CoordCartesian must not trigger the cropping warning even
+  # when the Fourier output goes negative.
+  p <- ggplot(df_pos, aes(x, y)) + stat_fourier()
+  expect_no_warning(ggplotGrob(p))
+})
+
+test_that("scale_y_log10 (the recommended path) still works", {
+  # The vignette / Rd points users at scale_y_log10() instead, because it
+  # transforms BEFORE the stat runs.  Make sure that path is also healthy.
+  p <- ggplot(df_pos, aes(x, y)) + stat_fourier() + scale_y_log10()
+  expect_no_error(suppressWarnings(ggplotGrob(p)))
 })

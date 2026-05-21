@@ -26,7 +26,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMzIuNzl8NzE0LjUyfDIyLjc4fDU0NS4xMQ==)'>
-<rect x='32.79' y='22.78' width='681.73' height='522.33' style='stroke-width: 1.07; stroke: none; fill: #EBEBEB;' />
+<rect x='32.79' y='22.78' width='681.73' height='522.33' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <circle cx='86.73' cy='269.11' r='1.95' style='stroke-width: 0.71; fill: #000000;' />
 <circle cx='86.73' cy='269.11' r='1.95' style='stroke-width: 0.71; fill: #000000;' />
 <circle cx='109.69' cy='239.43' r='1.95' style='stroke-width: 0.71; fill: #000000;' />
@@ -280,6 +280,7 @@
 <line x1='32.79' y1='402.66' x2='714.52' y2='402.66' style='stroke-width: 1.07; stroke: #E5E5E5; stroke-linecap: butt;' />
 <line x1='32.79' y1='254.27' x2='714.52' y2='254.27' style='stroke-width: 1.07; stroke: #E5E5E5; stroke-linecap: butt;' />
 <line x1='32.79' y1='105.88' x2='714.52' y2='105.88' style='stroke-width: 1.07; stroke: #E5E5E5; stroke-linecap: butt;' />
+<rect x='32.79' y='22.78' width='681.73' height='522.33' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
 <text x='27.86' y='405.69' text-anchor='end' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='9.79px' lengthAdjust='spacingAndGlyphs'>20</text>

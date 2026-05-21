@@ -107,3 +107,53 @@ test_that("get_chaikin: fewer than 3 points warns for closed paths too", {
   )
   expect_equal(result$x, c(0, 1))
 })
+
+test_that("compute_group: NAs in x/y AND extra numeric column don't silently drop layer", {
+  # Regression for the airquality + Solar.R bug: get_chaikin() strips
+  # NAs independently per column. When the main (x, y) had different
+  # NA rows than the extra numeric column being smoothed, output lengths
+  # differed and the per-column assignment errored — silently swallowed
+  # by ggplot2's stat machinery, leaving the layer empty. Pre-filtering
+  # complete cases across all numeric columns once fixes it.
+  set.seed(1)
+  data <- data.frame(
+    x = 1:10,
+    y = c(NA, 2:9, NA),                  # NAs at rows 1, 10
+    fill = c(1, NA, 3:8, NA, 10),        # NAs at rows 2, 9 (different)
+    PANEL = 1L,
+    group = -1L
+  )
+  out <- suppressWarnings(StatChaikin$compute_group(
+    data,
+    scales = NULL,
+    mode = "open",
+    iterations = 5L,
+    ratio = 0.25
+  ))
+  expect_true(nrow(out) > 0L)
+  expect_true(all(c("x", "y", "fill") %in% names(out)))
+  expect_equal(length(out$x), length(out$fill))  # all aligned
+})
+
+test_that("compute_group: warns once per group when na.rm = FALSE", {
+  data <- data.frame(
+    x = 1:10, y = c(NA, 2:9, NA),
+    PANEL = 1L, group = -1L
+  )
+  expect_warning(
+    StatChaikin$compute_group(data, scales = NULL, mode = "open",
+                               iterations = 3L, ratio = 0.25, na.rm = FALSE),
+    regexp = "Removed.*missing"
+  )
+})
+
+test_that("compute_group: na.rm = TRUE silences the missing-values warning", {
+  data <- data.frame(
+    x = 1:10, y = c(NA, 2:9, NA),
+    PANEL = 1L, group = -1L
+  )
+  expect_no_warning(
+    StatChaikin$compute_group(data, scales = NULL, mode = "open",
+                               iterations = 3L, ratio = 0.25, na.rm = TRUE)
+  )
+})

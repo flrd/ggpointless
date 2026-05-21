@@ -21,6 +21,25 @@ df_one <- data.frame(x1 = 1, x2 = 9, y1 = 1, y2 = 1)
 p_void <- function() ggplot() + theme_void()
 
 # ---------------------------------------------------------------------------
+# Required aesthetics
+# ---------------------------------------------------------------------------
+# `required_aes = c("x", "y", "xend", "yend")` was tightened from the
+# lenient `xend|yend` rule in 0.3.0 so missing-endpoint mistakes surface
+# as a clean ggplot2 missing-aesthetic error instead of a cryptic
+# downstream `rbind` / `grid::unit` failure.
+
+test_that("missing xend produces a clean missing-aesthetics error", {
+  p <- ggplot(df_one, aes(x = x1, y = y1, yend = y2)) + geom_segment_fade()
+  expect_error(ggplotGrob(p), "xend")
+})
+
+test_that("missing yend produces a clean missing-aesthetics error", {
+  p <- ggplot(df_one, aes(x = x1, y = y1, xend = x2)) + geom_segment_fade()
+  expect_error(ggplotGrob(p), "yend")
+})
+
+
+# ---------------------------------------------------------------------------
 # Parameter validation
 # ---------------------------------------------------------------------------
 
@@ -285,4 +304,89 @@ test_that("segment_fade visual: uniform alpha matches geom_segment reference", {
       alpha_fade_to = 0.5
     )
   )
+})
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests for geom_segment_fade
+# ===========================================================================
+# Theme stress is omitted — geom_segment_fade does not read the theme.
+
+df_seg <- data.frame(
+  x = c(1, 3, 5), y = c(2, 6, 4),
+  xend = c(4, 8, 9), yend = c(7, 1, 8)
+)
+df_seg_grp <- rbind(
+  cbind(df_seg, grp = "a"),
+  cbind(df_seg + 0.5, grp = "b")
+)
+
+# --- Data ----------------------------------------------------------------
+test_that("GoG/data: single segment renders", {
+  p <- ggplot(df_seg[1L, ], aes(x, y, xend = xend, yend = yend)) + geom_segment_fade()
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+})
+test_that("GoG/data: zero-length segment (x == xend, y == yend)", {
+  p <- ggplot(data.frame(x = 1, y = 1, xend = 1, yend = 1),
+              aes(x, y, xend = xend, yend = yend)) + geom_segment_fade()
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+})
+
+# --- Layer ---------------------------------------------------------------
+test_that("GoG/layer: two segment_fade layers compose", {
+  p <- ggplot(df_seg, aes(x, y, xend = xend, yend = yend)) +
+    geom_segment_fade(fade_direction = "start") +
+    geom_segment_fade(fade_direction = "end", colour = "red")
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+})
+
+# --- Scales --------------------------------------------------------------
+test_that("GoG/scale: reverse / sqrt / log10 / explicit limits / expand", {
+  base <- ggplot(df_seg, aes(x, y, xend = xend, yend = yend)) + geom_segment_fade()
+  for (s in list(
+    list(scale_x_reverse(), scale_y_reverse()),
+    list(scale_y_sqrt()),
+    list(scale_y_log10()),
+    list(scale_x_continuous(limits = c(0, 12)), scale_y_continuous(limits = c(0, 10))),
+    list(scale_x_continuous(expand = c(0, 0)), scale_y_continuous(expand = c(0, 0)))
+  )) {
+    p <- Reduce(`+`, c(list(base), s))
+    expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  }
+})
+
+# --- Coord ---------------------------------------------------------------
+test_that("GoG/coord: cartesian zoom / fixed / flip / transform / radial", {
+  # coord_polar already covered by an earlier test in this file.
+  base <- ggplot(df_seg, aes(x, y, xend = xend, yend = yend)) + geom_segment_fade()
+  for (cd in list(
+    coord_cartesian(xlim = c(2, 8), ylim = c(2, 7)),
+    coord_fixed(),
+    coord_flip(),
+    coord_transform(y = "log10"),
+    coord_radial()
+  )) {
+    p <- base + cd
+    expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  }
+})
+
+# --- Facets --------------------------------------------------------------
+test_that("GoG/facet: facet_wrap and facet_grid (free)", {
+  p1 <- ggplot(df_seg_grp, aes(x, y, xend = xend, yend = yend)) +
+    geom_segment_fade() + facet_wrap(~ grp, scales = "free")
+  p2 <- ggplot(df_seg_grp, aes(x, y, xend = xend, yend = yend)) +
+    geom_segment_fade() + facet_grid(~ grp, scales = "free")
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p1))))
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p2))))
+})
+
+# --- Drop-in parity ------------------------------------------------------
+test_that("layer-data parity vs geom_segment", {
+  build <- function(p) suppressWarnings(suppressMessages(ggplot_build(p)$data[[1L]]))
+  d_ref  <- build(ggplot(df_seg, aes(x, y, xend = xend, yend = yend)) + geom_segment())
+  d_ours <- build(ggplot(df_seg, aes(x, y, xend = xend, yend = yend)) + geom_segment_fade())
+  for (col in c("x", "y", "xend", "yend")) {
+    expect_equal(d_ours[[col]], d_ref[[col]], tolerance = 1e-9, info = col)
+  }
 })

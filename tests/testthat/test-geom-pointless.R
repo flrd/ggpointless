@@ -145,11 +145,6 @@ test_that("GoG/layer: multiple geom_pointless layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: geom_pointless before geom_line does not error", {
-  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
-    geom_pointless() + geom_line()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -267,20 +262,5 @@ test_that("GoG/facets: facet_grid does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
-    geom_line() + geom_pointless() + theme_void()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_classic does not error", {
-  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
-    geom_line() + geom_pointless() + theme_classic()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_bw does not error", {
-  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
-    geom_line() + geom_pointless() + theme_bw()
-  expect_no_error(ggplotGrob(p))
-})

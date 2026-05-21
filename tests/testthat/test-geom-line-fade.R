@@ -296,3 +296,97 @@ test_that("vdiffr: base (linear) reference rendering", {
     geom_line_fade(linewidth = 6, colour = "#e63946")
   vdiffr::expect_doppelganger("line-fade-base-linear", p)
 })
+
+
+# ===========================================================================
+# Grammar of Graphics adversarial stress tests for geom_line_fade
+# ===========================================================================
+# Theme stress is omitted — geom_line_fade does not read the theme.
+
+df_line <- data.frame(x = 1:10, y = c(1, 3, 2, 5, 4, 6, 5, 7, 8, 7))
+df_grp  <- data.frame(
+  x   = rep(1:5, 2),
+  y   = c(1, 3, 2, 5, 4,  2, 4, 3, 6, 5),
+  grp = rep(c("a", "b"), each = 5)
+)
+
+# --- Data ----------------------------------------------------------------
+test_that("GoG/data: empty dataset", {
+  p <- ggplot(data.frame(x = numeric(), y = numeric()), aes(x, y)) + geom_line_fade()
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+})
+test_that("GoG/data: single point", {
+  p <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) + geom_line_fade()
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+})
+test_that("GoG/data: NA handling with na.rm = TRUE", {
+  d <- df_line; d$y[3L] <- NA_real_
+  p <- ggplot(d, aes(x, y)) + geom_line_fade(na.rm = TRUE)
+  expect_no_warning(suppressMessages(ggplotGrob(p)))
+})
+
+# --- Layer ---------------------------------------------------------------
+test_that("GoG/layer: two layers compose", {
+  p <- ggplot(df_line, aes(x, y)) +
+    geom_line_fade(fade_direction = "start") +
+    geom_line_fade(fade_direction = "end", colour = "red")
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+})
+
+# --- Scales --------------------------------------------------------------
+test_that("GoG/scale: reverse / sqrt / log10 / explicit limits / expand", {
+  base <- ggplot(df_line, aes(x, y)) + geom_line_fade()
+  for (s in list(
+    list(scale_x_reverse(), scale_y_reverse()),
+    list(scale_y_sqrt()),
+    list(scale_y_log10()),
+    list(scale_x_continuous(limits = c(0, 12)), scale_y_continuous(limits = c(0, 10))),
+    list(scale_x_continuous(expand = c(0, 0)), scale_y_continuous(expand = c(0, 0)))
+  )) {
+    p <- Reduce(`+`, c(list(base), s))
+    expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  }
+})
+
+# --- Coord ---------------------------------------------------------------
+test_that("GoG/coord: cartesian zoom / fixed / flip / transform / polar / radial", {
+  base <- ggplot(df_line, aes(x, y)) + geom_line_fade()
+  for (cd in list(
+    coord_cartesian(xlim = c(2, 8), ylim = c(2, 7)),
+    coord_fixed(),
+    coord_flip(),
+    coord_transform(y = "log10"),
+    coord_polar(),
+    coord_radial()
+  )) {
+    p <- base + cd
+    expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  }
+})
+
+# --- Facets --------------------------------------------------------------
+test_that("GoG/facet: facet_wrap and facet_grid (free)", {
+  p1 <- ggplot(df_grp, aes(x, y)) + geom_line_fade() +
+    facet_wrap(~ grp, scales = "free")
+  p2 <- ggplot(df_grp, aes(x, y)) + geom_line_fade() +
+    facet_grid(~ grp, scales = "free")
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p1))))
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p2))))
+})
+
+# --- alpha_mode ----------------------------------------------------------
+test_that("alpha_mode: 'auto' / 'step' / 'gradient' all render", {
+  for (m in c("auto", "step", "gradient")) {
+    p <- ggplot(df_line, aes(x, y)) + geom_line_fade(alpha_mode = m)
+    expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  }
+})
+
+# --- Drop-in parity ------------------------------------------------------
+test_that("layer-data parity vs geom_line", {
+  build <- function(p) suppressWarnings(suppressMessages(ggplot_build(p)$data[[1L]]))
+  d_ref  <- build(ggplot(df_line, aes(x, y)) + geom_line())
+  d_ours <- build(ggplot(df_line, aes(x, y)) + geom_line_fade())
+  expect_equal(d_ours$x, d_ref$x, tolerance = 1e-9)
+  expect_equal(d_ours$y, d_ref$y, tolerance = 1e-9)
+})

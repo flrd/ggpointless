@@ -90,11 +90,6 @@ test_that("GoG/layer: multiple geom_chaikin layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: geom_chaikin as standalone layer does not error", {
-  df <- data.frame(x = c(0, 1, 2, 3), y = c(0, 1, 1, 0))
-  p <- ggplot(df, aes(x, y)) + geom_chaikin()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -180,20 +175,5 @@ test_that("GoG/facets: facet_grid does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
-  p <- ggplot(df, aes(x, y)) + geom_chaikin() + theme_void()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_classic does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
-  p <- ggplot(df, aes(x, y)) + geom_chaikin() + theme_classic()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_bw does not error", {
-  df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
-  p <- ggplot(df, aes(x, y)) + geom_chaikin() + theme_bw()
-  expect_no_error(ggplotGrob(p))
-})

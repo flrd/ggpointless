@@ -104,6 +104,51 @@ test_that("radius as bare number is coerced to unit", {
   expect_no_error(ggplotGrob(p + geom_col_fade(radius = 5)))
 })
 
+test_that("radius > 0 with non-NA colour uses linejoin = 'round' (artefact fix)", {
+  # Regression: rounded roundrects rendered with the default linejoin = 'mitre'
+  # produce visible stub-stroke artefacts at the path closure point. Forcing
+  # 'round' on rounded paths (where the join is visually invisible anyway)
+  # eliminates the artefact. See aaa.R `.roundrect_linejoin()`.
+  skip_if_not_installed("ragg")
+
+  collect_linejoin <- function(p) {
+    tmp <- tempfile(fileext = ".png")
+    ragg::agg_png(tmp, 400, 300)
+    on.exit(
+      {
+        dev.off()
+        unlink(tmp)
+      },
+      add = TRUE
+    )
+    g <- suppressWarnings(suppressMessages(ggplotGrob(p)))
+    panel <- g$grobs[[grep("panel", g$layout$name)[1]]]
+    bg <- NULL
+    walk <- function(node) {
+      if (inherits(node, "bar_fade_grob")) {
+        bg <<- node
+        return(invisible())
+      }
+      if (inherits(node, "gTree") && length(node$children)) {
+        for (ch in node$children) walk(ch)
+      }
+    }
+    walk(panel)
+    forced <- grid::makeContent(bg)
+    vapply(forced$children, \(c) c$gp$linejoin %||% NA_character_, character(1))
+  }
+
+  # Rounded → must be 'round'
+  p_r <- ggplot(df_col, aes(x, y)) +
+    geom_col_fade(colour = "black", radius = unit(5, "pt"))
+  expect_true(all(collect_linejoin(p_r) == "round"))
+
+  # Square (radius = 0) → user's choice survives (default 'mitre')
+  p_sq <- ggplot(df_col, aes(x, y)) +
+    geom_col_fade(colour = "black")
+  expect_true(all(collect_linejoin(p_sq) == "mitre"))
+})
+
 
 # -----------------------------------------------------------------------
 # Grob structure
@@ -229,54 +274,96 @@ test_that("alpha_scope = 'global' differs from 'bar' when bars have different he
   expect_false(identical(ggplotGrob(p_bar), ggplotGrob(p_global)))
 })
 
+test_that("alpha_scope = 'global' uses cross-panel max under faceting (2026-04-27)", {
+  # Regression for: under `facet_grid(cols = vars(grp))` each panel saw only
+  # its own bar, so the per-panel max equalled the bar's own peak and every
+  # bar rendered fully opaque.  The fix computes the layer-wide max in
+  # draw_layer (post-position) and stamps it on each row.  Faceted and
+  # un-faceted plots must produce the same per-bar alpha stops.
+  df <- data.frame(x = c("X", "Y", "Z"), y = c(1, 2, 3), grp = c("a", "b", "c"))
+
+  # Build the full gtable (so draw_layer runs end-to-end) and pull the peak
+  # alpha out of every bar_fade_grob's first gradient.
+  peak_alphas_from_gt <- function(p) {
+    gt <- ggplot2::ggplot_gtable(ggplot_build(p))
+    panels <- gt$grobs[grep("^panel", gt$layout$name)]
+    out <- numeric(0L)
+    for (pg in panels) {
+      bf <- Filter(\(ch) inherits(ch, "bar_fade_grob"), pg$children)
+      for (b in bf) {
+        for (i in seq_along(b$gradient_glist)) {
+          a <- gradient_alphas(b, i)
+          out <- c(out, a[length(a)])
+        }
+      }
+    }
+    out
+  }
+
+  alphas_plain <- peak_alphas_from_gt(
+    ggplot(df, aes(x, y)) +
+      geom_col_fade(alpha_scope = "global", alpha_fade_to = 0)
+  )
+  alphas_facet <- peak_alphas_from_gt(
+    ggplot(df, aes(x, y)) +
+      geom_col_fade(alpha_scope = "global", alpha_fade_to = 0) +
+      facet_grid(cols = vars(grp))
+  )
+
+  # Tallest bar (y = 3) → peak alpha 1; y = 2 → ~2/3; y = 1 → ~1/3.
+  expect_equal(sort(alphas_plain), c(1 / 3, 2 / 3, 1), tolerance = 0.01)
+  # Faceted alphas must match the unfaceted ones (same cross-panel reference).
+  expect_equal(sort(alphas_facet), sort(alphas_plain), tolerance = 0.01)
+})
+
 
 # -----------------------------------------------------------------------
-# Alpha scope: "group"
+# Alpha scope: "x" (per discrete x-position; was "group" before 0.3.0)
 # -----------------------------------------------------------------------
 
-test_that("alpha_scope = 'group': tallest bar in each stacked group gets peak alpha = 1", {
+test_that("alpha_scope = 'x': tallest bar in each stacked group gets peak alpha = 1", {
   # With position = "stack", each x position is a group. The tallest stack
   # top segment should have a_peak = 1.
   p    <- ggplot(df_stack, aes(x, y, fill = group)) +
-    geom_col_fade(position = "stack", alpha_scope = "group", alpha_fade_to = 0)
+    geom_col_fade(position = "stack", alpha_scope = "x", alpha_fade_to = 0)
   grob <- build_col_grob(p)
   alphas_all <- lapply(seq_along(grob$gradient_glist), \(i) gradient_alphas(grob, i))
   max_peak   <- max(vapply(alphas_all, \(a) a[2], numeric(1)))
   expect_equal(max_peak, 1, tolerance = 0.01)
 })
 
-test_that("alpha_scope = 'group' with stacked bars differs from 'global'", {
+test_that("alpha_scope = 'x' with stacked bars differs from 'global'", {
   p_global <- ggplot(df_stack, aes(x, y, fill = group)) +
     geom_col_fade(position = "stack", alpha_scope = "global")
   p_group  <- ggplot(df_stack, aes(x, y, fill = group)) +
-    geom_col_fade(position = "stack", alpha_scope = "group")
+    geom_col_fade(position = "stack", alpha_scope = "x")
   expect_false(identical(ggplotGrob(p_global), ggplotGrob(p_group)))
 })
 
-test_that("alpha_scope = 'group' with dodged bars: tallest per dodge group gets peak = 1", {
+test_that("alpha_scope = 'x' with dodged bars: tallest per dodge group gets peak = 1", {
   # df_dodge: group A has p=4 (tallest), group B has equal bars p=3, q=3
   p    <- ggplot(df_dodge, aes(x, y, fill = fill)) +
-    geom_col_fade(position = "dodge", alpha_scope = "group", alpha_fade_to = 0)
+    geom_col_fade(position = "dodge", alpha_scope = "x", alpha_fade_to = 0)
   grob <- build_col_grob(p)
   alphas_all <- lapply(seq_along(grob$gradient_glist), \(i) gradient_alphas(grob, i))
   max_peak   <- max(vapply(alphas_all, \(a) a[2], numeric(1)))
   expect_equal(max_peak, 1, tolerance = 0.01)
 })
 
-test_that("alpha_scope = 'group' differs from 'bar' for dodged bars with unequal heights", {
+test_that("alpha_scope = 'x' differs from 'bar' for dodged bars with unequal heights", {
   # Before the round() fix, "group" == "bar" for dodged. After fix they differ
   # because q in group A (y=2) now scales to 0.5 instead of 1.
   p_bar   <- ggplot(df_dodge, aes(x, y, fill = fill)) +
     geom_col_fade(position = "dodge", alpha_scope = "bar")
   p_group <- ggplot(df_dodge, aes(x, y, fill = fill)) +
-    geom_col_fade(position = "dodge", alpha_scope = "group")
+    geom_col_fade(position = "dodge", alpha_scope = "x")
   expect_false(identical(ggplotGrob(p_bar), ggplotGrob(p_group)))
 })
 
-test_that("alpha_scope = 'group' with dodged bars: shorter bar in group gets peak < 1", {
+test_that("alpha_scope = 'x' with dodged bars: shorter bar in group gets peak < 1", {
   # Group A: p=4 (peak), q=2 → q should have peak alpha ≈ 0.5
   p    <- ggplot(df_dodge, aes(x, y, fill = fill)) +
-    geom_col_fade(position = "dodge", alpha_scope = "group", alpha_fade_to = 0)
+    geom_col_fade(position = "dodge", alpha_scope = "x", alpha_fade_to = 0)
   grob <- build_col_grob(p)
   alphas_all <- lapply(seq_along(grob$gradient_glist), \(i) gradient_alphas(grob, i))
   peak_alphas <- vapply(alphas_all, \(a) a[2], numeric(1))
@@ -284,14 +371,14 @@ test_that("alpha_scope = 'group' with dodged bars: shorter bar in group gets pea
   expect_true(any(peak_alphas < 0.99))
 })
 
-test_that("alpha_scope = 'group' with position = 'fill': gradient stops match 'global'", {
+test_that("alpha_scope = 'x' with position = 'fill': gradient stops match 'global'", {
   # All stacks are normalised to height 1, so every group max == global max == 1.
   # The alpha stops must be numerically identical even though the alpha_scope
   # label differs (so we compare stops, not the full grob tree).
   p_global <- ggplot(df_stack, aes(x, y, fill = group)) +
     geom_col_fade(position = "fill", alpha_scope = "global")
   p_group  <- ggplot(df_stack, aes(x, y, fill = group)) +
-    geom_col_fade(position = "fill", alpha_scope = "group")
+    geom_col_fade(position = "fill", alpha_scope = "x")
 
   grob_global <- build_col_grob(p_global)
   grob_group  <- build_col_grob(p_group)
@@ -300,6 +387,171 @@ test_that("alpha_scope = 'group' with position = 'fill': gradient stops match 'g
     expect_equal(gradient_alphas(grob_global, i), gradient_alphas(grob_group, i),
                  tolerance = 0.01)
   }
+})
+
+
+# -----------------------------------------------------------------------
+# Full alpha_scope vocabulary (2026-04-27 redesign):
+#   c("bar", "group", "x", "y", "fill", "colour", "global")
+# Cross-panel correctness under facet_grid is tested for every scope.
+# -----------------------------------------------------------------------
+
+# Walk the full gtable and pull every bar_fade_grob's peak alpha (last
+# stop of each gradient).  Exercises the real draw_layer + draw_panel
+# pipeline (the build_col_grob helper bypasses draw_layer).
+peak_alphas_from_gtable <- function(p) {
+  gt <- ggplot2::ggplot_gtable(ggplot_build(p))
+  panels <- gt$grobs[grep("^panel", gt$layout$name)]
+  out <- numeric(0L)
+  for (pg in panels) {
+    bf <- Filter(\(ch) inherits(ch, "bar_fade_grob"), pg$children)
+    for (b in bf) {
+      for (i in seq_along(b$gradient_glist)) {
+        a <- gradient_alphas(b, i)
+        out <- c(out, a[length(a)])
+      }
+    }
+  }
+  out
+}
+
+# Shared fixture: 2 fills × 3 x positions × 3 facet panels.  ymax values
+# are all distinct so each scope produces a measurably different
+# normalisation.  Layout (within each panel):
+#   x = X     y = 0.5  fill = ha
+#   x = X     y = 1.0  fill = ho
+#   x = Y     y = 1.5  fill = ha
+#   x = Y     y = 2.0  fill = ho
+#   x = Z     y = 2.5  fill = ha
+#   x = Z     y = 3.0  fill = ho
+# panel "p1" = full data, "p2" = same again, "p3" = same again.
+df_scope <- expand.grid(
+  panel = c("p1", "p2", "p3"),
+  fill  = c("ha", "ho"),
+  x     = c("X", "Y", "Z"),
+  KEEP.OUT.ATTRS = FALSE,
+  stringsAsFactors = FALSE
+)
+df_scope$y <- ifelse(df_scope$fill == "ha",
+  c(0.5, 1.5, 2.5)[match(df_scope$x, c("X", "Y", "Z"))],
+  c(1.0, 2.0, 3.0)[match(df_scope$x, c("X", "Y", "Z"))]
+)
+make_p <- function(scope, ...) {
+  ggplot(df_scope, aes(x, y)) +
+    facet_grid(cols = vars(panel)) +
+    geom_col_fade(
+      aes(fill = fill),
+      position = "dodge",
+      alpha_scope = scope,
+      alpha_fade_to = 0,
+      ...
+    )
+}
+
+test_that("alpha_scope = 'bar' under facet_grid: every bar peaks at 1", {
+  alphas <- peak_alphas_from_gtable(make_p("bar"))
+  # 3 panels × 6 bars = 18 (legend keys are inside guide-box, not panels).
+  expect_equal(length(alphas), 18L)
+  expect_true(all(abs(alphas - 1) < 1e-3))
+})
+
+test_that("alpha_scope = 'global' under facet_grid: peaks scale to cross-panel max", {
+  alphas <- peak_alphas_from_gtable(make_p("global"))
+  # Each panel has the same 6 bars → expected peaks per panel:
+  #   y/3 for y in c(0.5, 1.0, 1.5, 2.0, 2.5, 3.0).
+  expected_one_panel <- c(0.5, 1.0, 1.5, 2.0, 2.5, 3.0) / 3
+  expect_equal(sort(alphas), sort(rep(expected_one_panel, 3L)), tolerance = 0.01)
+})
+
+test_that("alpha_scope = 'x' under facet_grid: per x-coord normalisation", {
+  alphas <- peak_alphas_from_gtable(make_p("x"))
+  # Per panel: x=X (max=1.0) → 0.5, 1.0; x=Y (max=2.0) → 0.75, 1.0;
+  #           x=Z (max=3.0) → 0.833, 1.0.
+  expected_one_panel <- c(0.5, 1.0, 0.75, 1.0, 5/6, 1.0)
+  expect_equal(sort(alphas), sort(rep(expected_one_panel, 3L)), tolerance = 0.01)
+})
+
+test_that("alpha_scope = 'fill' under facet_grid: per fill-aesthetic normalisation, cross-panel", {
+  alphas <- peak_alphas_from_gtable(make_p("fill"))
+  # ha bars (across panels): y in c(0.5, 1.5, 2.5), max = 2.5
+  #   → peaks 0.2, 0.6, 1.0
+  # ho bars (across panels): y in c(1.0, 2.0, 3.0), max = 3.0
+  #   → peaks 1/3, 2/3, 1.0
+  # Each appears in 3 panels.
+  expected <- c(rep(c(0.2, 0.6, 1.0), 3L), rep(c(1/3, 2/3, 1.0), 3L))
+  expect_equal(sort(alphas), sort(expected), tolerance = 0.01)
+})
+
+test_that("alpha_scope = 'group' under facet_grid: per data$group normalisation", {
+  # ggplot2 sets data$group = interaction(x, fill) when both are discrete,
+  # so each (x, fill) pair is its own group → degenerates to "bar".  This
+  # test pins that observed behaviour: every bar peaks at 1.
+  alphas <- peak_alphas_from_gtable(make_p("group"))
+  expect_true(all(abs(alphas - 1) < 1e-3))
+})
+
+test_that("alpha_scope = 'group' with explicit aes(group=fill): bars share scope by fill", {
+  # When the user pins data$group via aes(group=fill), "group" should
+  # behave like "fill": ha bars share, ho bars share, across x and panels.
+  p <- ggplot(df_scope, aes(x, y, fill = fill, group = fill)) +
+    facet_grid(cols = vars(panel)) +
+    geom_col_fade(
+      position = "dodge", alpha_scope = "group", alpha_fade_to = 0
+    )
+  alphas <- peak_alphas_from_gtable(p)
+  # Same expected vector as the "fill" case above.
+  expected <- c(rep(c(0.2, 0.6, 1.0), 3L), rep(c(1/3, 2/3, 1.0), 3L))
+  expect_equal(sort(alphas), sort(expected), tolerance = 0.01)
+})
+
+test_that("alpha_scope = 'colour' under facet_grid: per colour-aesthetic normalisation", {
+  p <- ggplot(df_scope, aes(x, y, fill = fill, colour = fill)) +
+    facet_grid(cols = vars(panel)) +
+    geom_col_fade(
+      position = "dodge", alpha_scope = "colour", alpha_fade_to = 0,
+      linewidth = 0.5
+    )
+  alphas <- peak_alphas_from_gtable(p)
+  # colour mirrors fill in this fixture, so same expectation.
+  expected <- c(rep(c(0.2, 0.6, 1.0), 3L), rep(c(1/3, 2/3, 1.0), 3L))
+  expect_equal(sort(alphas), sort(expected), tolerance = 0.01)
+})
+
+test_that("alpha_scope = 'y' aborts when bars are vertical", {
+  p <- ggplot(df_scope, aes(x, y, fill = fill)) +
+    geom_col_fade(alpha_scope = "y", position = "dodge")
+  expect_error(ggplotGrob(p), "alpha_scope.*y.*y-axis")
+})
+
+test_that("alpha_scope = 'x' aborts when bars are horizontal (orientation = 'y')", {
+  p <- ggplot(df_scope, aes(y, x, fill = fill)) +
+    geom_col_fade(alpha_scope = "x", position = "dodge", orientation = "y")
+  expect_error(ggplotGrob(p), "alpha_scope.*x.*x-axis")
+})
+
+test_that("alpha_scope = 'y' works under orientation = 'y'", {
+  p <- ggplot(df_scope, aes(y, x, fill = fill)) +
+    facet_grid(cols = vars(panel)) +
+    geom_col_fade(
+      position = "dodge", alpha_scope = "y", alpha_fade_to = 0,
+      orientation = "y"
+    )
+  alphas <- peak_alphas_from_gtable(p)
+  # data$y is now discrete (X, Y, Z); same per-x-coord normalisation as
+  # the "x" case above, just on the other axis.
+  expected_one_panel <- c(0.5, 1.0, 0.75, 1.0, 5/6, 1.0)
+  expect_equal(sort(alphas), sort(rep(expected_one_panel, 3L)), tolerance = 0.01)
+})
+
+test_that("alpha_scope = 'x' works under coord_flip (data$x stays discrete)", {
+  p <- ggplot(df_scope, aes(x, y, fill = fill)) +
+    facet_grid(cols = vars(panel)) +
+    geom_col_fade(
+      position = "dodge", alpha_scope = "x", alpha_fade_to = 0
+    ) + coord_flip()
+  alphas <- peak_alphas_from_gtable(p)
+  expected_one_panel <- c(0.5, 1.0, 0.75, 1.0, 5/6, 1.0)
+  expect_equal(sort(alphas), sort(rep(expected_one_panel, 3L)), tolerance = 0.01)
 })
 
 
@@ -394,6 +646,58 @@ test_that("geom_histogram_fade: alpha_scope = 'global' accepted", {
   p <- ggplot(faithful, aes(waiting)) +
     geom_histogram_fade(bins = 20, alpha_scope = "global")
   expect_no_error(ggplotGrob(p))
+})
+
+test_that("geom_histogram_fade: alpha_scope = 'x' / 'y' rejected with hint at 'bin'", {
+  # `"x"` / `"y"` key on round(data$x|y), which buckets bins by integer
+  # rounding -- meaningless on a continuous binned axis. A targeted
+  # pre-check intercepts these two values and points users at `"bin"`
+  # explicitly rather than letting `arg_match0` list all valid options
+  # flat (which left beginners reaching for `"group"` instead).
+  p_x <- ggplot(faithful, aes(waiting)) +
+    geom_histogram_fade(alpha_scope = "x", bins = 10)
+  expect_error(ggplotGrob(p_x), 'not accepted by .*geom_histogram_fade')
+  expect_error(ggplotGrob(p_x), 'Did you mean .*alpha_scope.*=.*bin')
+  p_y <- ggplot(faithful, aes(waiting)) +
+    geom_histogram_fade(alpha_scope = "y", bins = 10)
+  expect_error(ggplotGrob(p_y), 'not accepted by .*geom_histogram_fade')
+  expect_error(ggplotGrob(p_y), 'Did you mean .*alpha_scope.*=.*bin')
+})
+
+test_that("geom_histogram_fade: other invalid alpha_scope falls through to arg_match0", {
+  # The friendly pre-check is targeted at `"x"` / `"y"` only; any other
+  # invalid value should still hit `arg_match0`'s generic "must be one of"
+  # error so users get the canonical list of valid options.
+  p <- ggplot(faithful, aes(waiting)) +
+    geom_histogram_fade(alpha_scope = "panel", bins = 10)
+  expect_error(ggplotGrob(p), '`alpha_scope` must be one of')
+})
+
+test_that("geom_histogram_fade: alpha_scope = 'bin' normalises per-bin (dodged)", {
+  # Per-bin scope: every cluster of dodged bars in the same bin shares a
+  # `.scope_max_abs` reference; the value varies across bins.
+  p <- ggplot(iris, aes(Sepal.Width, fill = Species)) +
+    geom_histogram_fade(
+      position = "dodge", bins = 10, alpha_scope = "bin"
+    )
+  b <- ggplot_build(p)
+  d <- b$data[[1]]
+  expect_true(".bin_id" %in% names(d))
+  # Within each bin, `.bin_id` is constant; across bins it varies.
+  by_bin <- split(d, d$.bin_id)
+  expect_gt(length(by_bin), 1L)
+  # Pre-dodge bin centre = post-dodge `data$x` median per cluster (each
+  # cluster has 3 species dodged around the bin centre).
+  for (g in by_bin) {
+    expect_equal(length(unique(g$.bin_id)), 1L)
+  }
+})
+
+test_that("geom_col_fade: alpha_scope = 'bin' rejected (no continuous bins)", {
+  # `"bin"` is histogram-only; col/bar vocabulary must reject it cleanly.
+  df <- data.frame(x = c("A", "B", "C"), y = c(3, 7, 5))
+  p <- ggplot(df, aes(x, y)) + geom_col_fade(alpha_scope = "bin")
+  expect_error(ggplotGrob(p), '`alpha_scope` must be one of')
 })
 
 test_that("flipped orientation (orientation = 'y') works without error", {
@@ -538,6 +842,61 @@ test_that("stacked bar_fade global scope renders correctly", {
   vdiffr::expect_doppelganger("bar-fade-stacked-global", p)
 })
 
+test_that("rounded bar_fade with non-NA outline has no corner artefacts", {
+  # Regression for the linejoin = 'mitre' artefact: rounded roundrects
+  # rendered with mitre joins produce stub-strokes at the path closure.
+  # The fix sets linejoin = 'round' for radius > 0 (see aaa.R).
+  skip_if_not_installed("vdiffr")
+  df <- data.frame(class = c("a", "b"), n = c(5, 50))
+  p <- ggplot(df, aes(y = class, x = n)) +
+    geom_col_fade(
+      fill = "#311dfc",
+      colour = "#311dfc",
+      radius = unit(5, "pt")
+    )
+  vdiffr::expect_doppelganger("bar-fade-rounded-outline-no-artefact", p)
+})
+
+# -----------------------------------------------------------------------
+# Snapshots: radius is honoured even when the fade is degenerate
+# -----------------------------------------------------------------------
+# Regression for the bug where `.is_uniform_alpha()` short-circuited to
+# `GeomBar$draw_panel` whenever `alpha == alpha_fade_to`, dropping the
+# user's `radius` request along the way. Three cases pinned together so
+# any future tweak to the bypass condition stays honest about which
+# combination renders rounded corners vs flat rectangles.
+
+test_that("bar_fade snapshot: alpha_fade_to = 0.1, radius = 5 (gradient + rounded)", {
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(iris, aes(Sepal.Width)) +
+    geom_bar_fade(alpha_fade_to = 0.1, radius = 5) +
+    scale_x_binned()
+  vdiffr::expect_doppelganger("bar-fade-fadeto0.1-radius5", p)
+})
+
+test_that("bar_fade snapshot: alpha_fade_to = 1, radius = 5 (uniform + rounded)", {
+  # The previously-broken case: uniform alpha used to short-circuit to
+  # plain GeomBar, which doesn't honour `radius`. The fix gates the
+  # bypass on `radius == 0`, so this combination now renders rounded
+  # bars with a uniform (non-fading) fill.
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(iris, aes(Sepal.Width)) +
+    geom_bar_fade(alpha_fade_to = 1, radius = 5) +
+    scale_x_binned()
+  vdiffr::expect_doppelganger("bar-fade-fadeto1-radius5", p)
+})
+
+test_that("bar_fade snapshot: alpha_fade_to = 1, radius = 0 (fast path, flat)", {
+  # The legitimate fast-path: no fade and no rounding, so delegating to
+  # GeomBar$draw_panel is correct. Pinned to ensure the bypass stays
+  # reachable for this canonical "nothing to do" case.
+  skip_if_not_installed("vdiffr")
+  p <- ggplot(iris, aes(Sepal.Width)) +
+    geom_bar_fade(alpha_fade_to = 1, radius = 0) +
+    scale_x_binned()
+  vdiffr::expect_doppelganger("bar-fade-fadeto1-radius0", p)
+})
+
 test_that("stacked bar_fade global scope reversed renders correctly", {
   skip_if_not_installed("vdiffr")
 
@@ -556,7 +915,7 @@ test_that("stacked bar_fade group scope renders correctly", {
   skip_if_not_installed("vdiffr")
 
   p <- ggplot(mpg, aes(class, fill = drv)) +
-    geom_bar_fade(alpha_scope = "group") +
+    geom_bar_fade(alpha_scope = "x") +
     theme(legend.position = "top")
 
   vdiffr::expect_doppelganger("bar-fade-stacked-group", p)
@@ -566,7 +925,7 @@ test_that("dodged bar_fade group scope renders correctly", {
   skip_if_not_installed("vdiffr")
 
   p <- ggplot(diamonds, aes(color, fill = cut)) +
-    geom_bar_fade(position = "dodge", alpha_scope = "group") +
+    geom_bar_fade(position = "dodge", alpha_scope = "x") +
     theme(legend.position = "top")
 
   vdiffr::expect_doppelganger("bar-fade-dodged-group", p)
@@ -586,7 +945,7 @@ test_that("fill position bar_fade group scope renders correctly", {
   skip_if_not_installed("vdiffr")
 
   p <- ggplot(mpg, aes(class, fill = drv)) +
-    geom_bar_fade(position = "fill", alpha_scope = "group") +
+    geom_bar_fade(position = "fill", alpha_scope = "x") +
     theme(legend.position = "top")
 
   vdiffr::expect_doppelganger("bar-fade-fill-group", p)
@@ -790,11 +1149,6 @@ test_that("GoG/layer: multiple geom_col_fade layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: geom_bar_fade standalone does not error", {
-  p <- ggplot(data.frame(x = rep(c("A", "B"), c(5, 8))), aes(x)) +
-    geom_bar_fade()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -868,6 +1222,77 @@ test_that("GoG/coord: coord_flip does not error", {
   expect_no_error(ggplotGrob(p))
 })
 
+test_that("coord_flip: gradient direction matches orientation = 'y'", {
+  # Regression test for the coord_flip vs orientation = "y" parity bug.
+  # Both should produce the same NPC gradient direction (horizontal).
+  set.seed(10)
+  df_mixed <- data.frame(x = 1:10, y = rnorm(10))
+
+  p_flip <- ggplot(df_mixed, aes(x, y)) + geom_col_fade() + coord_flip()
+  p_orient <- ggplot(df_mixed, aes(y = x, x = y)) +
+    geom_col_fade(orientation = "y")
+
+  g_flip <- .collect_gradient_axes(p_flip)
+  g_orient <- .collect_gradient_axes(p_orient)
+
+  expect_true(!is.null(g_flip) && nrow(g_flip) > 0)
+  expect_equal(nrow(g_flip), nrow(g_orient))
+  # Gradient should run horizontally (x1 != x2, y1 == y2 == 0.5)
+  expect_true(all(as.numeric(g_flip[, "y1"]) == 0.5))
+  expect_true(all(as.numeric(g_flip[, "y2"]) == 0.5))
+  expect_true(all(as.numeric(g_flip[, "x1"]) != as.numeric(g_flip[, "x2"])))
+  # And it should match the orientation = "y" path's gradient axes.
+  expect_equal(g_flip[, c("x1", "x2", "y1", "y2")],
+               g_orient[, c("x1", "x2", "y1", "y2")])
+})
+
+test_that("coord_flip: vdiffr snapshot pins the rotated rendering", {
+  set.seed(10)
+  df_mixed <- data.frame(x = 1:10, y = rnorm(10))
+  p <- ggplot(df_mixed, aes(x, y)) + geom_col_fade() + coord_flip()
+  vdiffr::expect_doppelganger("col-fade-coord-flip", p)
+})
+
+test_that("alpha_scope = 'global' uses DATA magnitude under scale_y_log10", {
+  # Regression test for the 2026-05 fix: under a non-linear value scale
+  # `scope_max` and `peak_abs` must be computed in data space. With bars
+  # at y = c(10, 100, 1000) and alpha_scope = "global", bar A's peak
+  # alpha must be ~10/1000 = 0.01 (not log10(10)/log10(1000) = 0.33).
+  df <- data.frame(x = c("A", "B", "C"), y = c(10, 100, 1000))
+  p <- ggplot(df, aes(x, y)) +
+    geom_col_fade(alpha_scope = "global") + scale_y_log10()
+  # Direct extraction of the alpha endpoints from the rendered gradient.
+  # The bar_fade_grob's `gradient_glist` carries one rect per bar with
+  # a linearGradient whose final colour-stop alpha is `a_peak`.
+  g <- suppressMessages(suppressWarnings(ggplotGrob(p)))
+  panel <- g$grobs[[grep("^panel", g$layout$name)[1]]]
+  fade_grob <- panel$children[[3]]
+  expect_s3_class(fade_grob, "bar_fade_grob")
+  # Each gradient_glist child is one bar's rectGrob with a linearGradient fill
+  peaks <- vapply(fade_grob$gradient_glist, function(rg) {
+    grad <- rg$gp$fill
+    if (!inherits(grad, "GridLinearGradient")) return(NA_real_)
+    alphas <- attr(grDevices::col2rgb(grad$colours, alpha = TRUE), "matrix")
+    # Stops are c(0, 1); the peak (count = ymax) is at stop = 1.
+    rev(grDevices::col2rgb(grad$colours, alpha = TRUE)["alpha", ])[1L] / 255
+  }, numeric(1))
+  # Bar A peak alpha should be ~0.01 (= 10/1000), not ~0.33.
+  expect_lt(peaks[1], 0.05)
+  # Bar C peak alpha should be ~1 (= 1000/1000).
+  expect_gt(peaks[3], 0.95)
+  # Bar B peak alpha should be ~0.1 (= 100/1000).
+  expect_gt(peaks[2], 0.05)
+  expect_lt(peaks[2], 0.2)
+})
+
+test_that("vdiffr: alpha_scope = 'global' under scale_y_log10 (data-space scope)", {
+  skip_if_not_installed("vdiffr")
+  df <- data.frame(x = c("A", "B", "C"), y = c(10, 100, 1000))
+  p <- ggplot(df, aes(x, y)) +
+    geom_col_fade(alpha_scope = "global") + scale_y_log10()
+  vdiffr::expect_doppelganger("col-fade-global-log10", p)
+})
+
 test_that("GoG/coord: coord_polar does not error", {
   p <- ggplot(df_col, aes(x, y)) + geom_col_fade() + coord_polar()
   expect_no_error(suppressWarnings(ggplotGrob(p)))
@@ -898,17 +1323,5 @@ test_that("GoG/facets: facet_grid with free scales does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  p <- ggplot(df_col, aes(x, y)) + geom_col_fade() + theme_void()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_classic does not error", {
-  p <- ggplot(df_col, aes(x, y)) + geom_col_fade() + theme_classic()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_bw does not error", {
-  p <- ggplot(df_col, aes(x, y)) + geom_col_fade() + theme_bw()
-  expect_no_error(ggplotGrob(p))
-})

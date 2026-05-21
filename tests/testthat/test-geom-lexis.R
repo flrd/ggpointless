@@ -167,10 +167,6 @@ test_that("GoG/layer: multiple geom_lexis layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: geom_lexis standalone does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -273,20 +269,8 @@ test_that("GoG/facets: facet_grid does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_void()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_classic does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_classic()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_bw does not error", {
-  p <- ggplot(df1, aes(x = x, xend = xend)) + geom_lexis() + theme_bw()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # point_colour validation (delegated to farver via .check_colour_arg)

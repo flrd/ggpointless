@@ -337,10 +337,10 @@ test_that("coord_polar theta='y' + horizontal routes to polar grob", {
   expect_s3_class(grob, "rect_fade_polar_grob")
 })
 
-test_that("coord_polar with angular combo warns and falls back to GeomRect", {
+test_that("coord_polar with angular combo informs and falls back to GeomRect", {
   # theta = "x" + fade_direction = "horizontal" would require a conic /
-  # angular gradient, which grid does not support. Emit a one-time warning
-  # and fall back to plain geom_rect rendering.
+  # angular gradient, which grid does not support. Emit an informational
+  # message and fall back to plain geom_rect rendering.
   p <- ggplot(mapping = aes(x, y)) +
     geom_rect_fade(
       data = df_tile_single,
@@ -348,7 +348,7 @@ test_that("coord_polar with angular combo warns and falls back to GeomRect", {
       fade_direction = "horizontal"
     ) +
     coord_polar()
-  expect_warning(
+  expect_message(
     grob <- build_rect_grob(p),
     "angular fade is not yet supported"
   )
@@ -622,6 +622,26 @@ test_that("GoG/coord: coord_cartesian zoom renders without error", {
 
 test_that("GoG/coord: coord_flip renders without error", {
   expect_no_error(ggplotGrob(p_base + coord_flip()))
+})
+
+test_that("coord_flip: fade_direction rotates with the rendering", {
+  # Behavioural pin for the 2026-05 coord_flip parity fix. Default
+  # `fade_direction = "vertical"` paints a vertical gradient; coord_flip
+  # must rotate that gradient to horizontal in NPC.
+  g_normal <- .collect_gradient_axes(p_base)
+  g_flip <- .collect_gradient_axes(p_base + coord_flip())
+  expect_true(!is.null(g_normal) && nrow(g_normal) > 0)
+  expect_true(!is.null(g_flip) && nrow(g_flip) > 0)
+  # Default fade_direction = "vertical": gradient runs y0 -> y1.
+  expect_true(all(as.numeric(g_normal[, "x1"]) == as.numeric(g_normal[, "x2"])))
+  expect_true(all(as.numeric(g_normal[, "y1"]) != as.numeric(g_normal[, "y2"])))
+  # Under coord_flip: gradient axis swaps to horizontal in NPC.
+  expect_true(all(as.numeric(g_flip[, "y1"]) == as.numeric(g_flip[, "y2"])))
+  expect_true(all(as.numeric(g_flip[, "x1"]) != as.numeric(g_flip[, "x2"])))
+})
+
+test_that("coord_flip: vdiffr snapshot pins the rotated rendering", {
+  vdiffr::expect_doppelganger("rect-fade-coord-flip", p_base + coord_flip())
 })
 
 test_that("GoG/coord: coord_fixed renders without error", {

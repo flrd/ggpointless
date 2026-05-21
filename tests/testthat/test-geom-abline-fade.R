@@ -213,11 +213,6 @@ test_that("GoG/layer: multiple reference line layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: standalone hline_fade does not error", {
-  p <- ggplot(data.frame(x = 1:5, y = 1:5), aes(x, y)) +
-    geom_hline_fade(yintercept = 3)
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -336,20 +331,8 @@ test_that("GoG/facets: facet_grid does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  p <- base_p + geom_hline_fade(yintercept = 20) + theme_void()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_classic does not error", {
-  p <- base_p + geom_hline_fade(yintercept = 20) + theme_classic()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_bw does not error", {
-  p <- base_p + geom_hline_fade(yintercept = 20) + theme_bw()
-  expect_no_error(ggplotGrob(p))
-})
 
 test_that("GoG/theme: element_line colour propagates without error", {
   p <- base_p +

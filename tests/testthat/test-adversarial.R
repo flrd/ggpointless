@@ -168,9 +168,25 @@ test_that("geom_histogram_fade: stat = 'identity' requires xmin/xmax but errors 
   expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
 
+test_that("geom_histogram_fade: orientation = 'y' sets flipped_aes and renders", {
+  p <- ggplot(df_xy, aes(y = y)) +
+    geom_histogram_fade(orientation = "y", bins = 5)
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  b <- suppressWarnings(suppressMessages(ggplot_build(p)))
+  expect_true(isTRUE(b$plot$layers[[1]]$computed_geom_params$flipped_aes))
+})
+
 test_that("geom_freqpoly_fade: bins = 1 renders without error", {
   p <- ggplot(df_xy, aes(x)) + geom_freqpoly_fade(bins = 1)
   expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("geom_freqpoly_fade: orientation = 'y' sets flipped_aes and renders", {
+  p <- ggplot(df_xy, aes(y = y)) +
+    geom_freqpoly_fade(orientation = "y", bins = 5)
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  b <- suppressWarnings(suppressMessages(ggplot_build(p)))
+  expect_true(isTRUE(b$plot$layers[[1]]$computed_geom_params$flipped_aes))
 })
 
 
@@ -199,6 +215,77 @@ test_that("geom_density_fade: very small sample (n = 2) renders without crashing
 test_that("geom_density_fade: stat = 'bin' (unusual combo) renders without crashing", {
   p <- ggplot(df_xy, aes(x)) + geom_density_fade(stat = "bin")
   expect_no_error(suppressWarnings(ggplotGrob(p)))
+})
+
+test_that("geom_area_fade: coord_flip rotates gradient axis to horizontal", {
+  # Regression: under coord_flip the gradient ref_npc was extracted from the
+  # wrong panel axis, leaving the polygon fill empty. Behavioural assertion:
+  # the constructed `fallback_gradient` runs along x (y1 == y2 == 0.5,
+  # x1 != x2). Also covers density_fade / freqpoly_fade (shared GeomAreaFade).
+  df <- data.frame(x = 1:6, y = c(2, 5, 1, 3, 6, 7))
+  b <- ggplot_build(ggplot(df, aes(x, y)) + geom_area_fade() + coord_flip())
+  ld <- b$data[[1L]]
+  grob <- GeomAreaFade$draw_group(
+    ld, b$layout$panel_params[[1L]], b$layout$coord,
+    flipped_aes = isTRUE(any(ld$flipped_aes %||% FALSE))
+  )
+  fb <- grob$fallback_gradient
+  expect_equal(as.numeric(fb$y1), 0.5)
+  expect_equal(as.numeric(fb$y2), 0.5)
+  expect_true(as.numeric(fb$x1) != as.numeric(fb$x2))
+})
+
+test_that("geom_rect_fade: coord_flip rotates fade_direction = 'vertical' to horizontal", {
+  # Regression: user passes data-axis "vertical"; under coord_flip that
+  # should render horizontally. Behavioural assertion: the gradient on the
+  # first rendered roundrect runs along x.
+  df <- data.frame(xmin = 0, xmax = 4, ymin = 0, ymax = 1)
+  p <- ggplot(df) +
+    geom_rect_fade(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+                   fade_direction = "vertical") +
+    coord_flip()
+  b <- ggplot_build(p)
+  layer_params <- p$layers[[1]]$geom_params
+  grob <- suppressMessages(GeomRectFade$draw_panel(
+    b$data[[1L]], b$layout$panel_params[[1L]], b$layout$coord,
+    alpha_fade_to = layer_params$alpha_fade_to %||% 0,
+    fade_direction = layer_params$fade_direction %||% "vertical",
+    radius = layer_params$radius
+  ))
+  fill <- grob$gradient_glist[[1L]]$gp$fill
+  expect_s3_class(fill, "GridLinearGradient")
+  expect_equal(as.numeric(fill$y1), 0.5)
+  expect_equal(as.numeric(fill$y2), 0.5)
+  expect_true(as.numeric(fill$x1) != as.numeric(fill$x2))
+})
+
+test_that("geom_ridgeline_fade: coord_flip rotates gradient axis to horizontal", {
+  # Same root cause as geom_area_fade.
+  d <- data.frame(x = rep(1:5, 2), y = rep(c(1, 3), each = 5),
+                  height = c(0, 1, 3, 4, 0,  0, 2, 4, 2, 0))
+  p <- ggplot(d, aes(x, y, height = height, group = y, fill = factor(y))) +
+    geom_ridgeline_fade() + coord_flip()
+  b <- ggplot_build(p)
+  ld <- b$data[[1L]]
+  ld <- ld[ld$group == ld$group[1L], , drop = FALSE]  # one ridge
+  grob <- GeomRidgelineFade$draw_group(
+    ld, b$layout$panel_params[[1L]], b$layout$coord,
+    flipped_aes = FALSE
+  )
+  # `draw_group` now returns a `ridge_components_grob` whose `$fade_grob`
+  # is the original `area_fade_grob` holding `$fallback_gradient`.
+  fb <- grob$fade_grob$fallback_gradient
+  expect_equal(as.numeric(fb$y1), 0.5)
+  expect_equal(as.numeric(fb$y2), 0.5)
+  expect_true(as.numeric(fb$x1) != as.numeric(fb$x2))
+})
+
+test_that("geom_density_fade: orientation = 'y' sets flipped_aes and renders", {
+  p <- ggplot(df_xy, aes(y = y)) +
+    geom_density_fade(orientation = "y")
+  expect_no_error(suppressWarnings(suppressMessages(ggplotGrob(p))))
+  b <- suppressWarnings(suppressMessages(ggplot_build(p)))
+  expect_true(isTRUE(b$plot$layers[[1]]$computed_geom_params$flipped_aes))
 })
 
 
@@ -662,10 +749,12 @@ test_that("stat_pointless: location = NULL renders without crash (no points draw
   expect_no_error(suppressWarnings(ggplotGrob(p)))
 })
 
-test_that("stat_pointless: location = integer vector errors informatively", {
+test_that("stat_pointless: location = integer vector warns and falls back", {
+  # Integers coerce to character for setdiff/pmatch; none match valid_locations
+  # so the warning fires and `location` falls back to "last". Not an error.
   p <- ggplot(df_xy, aes(x, y)) + geom_line() +
     geom_pointless(location = 1:3)
-  expect_error(ggplotGrob(p))
+  expect_warning(ggplotGrob(p), regexp = "Ignoring invalid")
 })
 
 test_that("stat_pointless: mixed valid/invalid location keeps valid, warns about invalid", {

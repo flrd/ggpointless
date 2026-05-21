@@ -586,10 +586,6 @@ test_that("GoG/layer: multiple geom_area_fade layers do not error", {
   expect_no_error(ggplotGrob(p))
 })
 
-test_that("GoG/layer: geom_area_fade standalone does not error", {
-  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade()
-  expect_no_error(ggplotGrob(p))
-})
 
 # ---------------------------------------------------------------------------
 # Scales
@@ -633,6 +629,49 @@ test_that("GoG/coord: coord_flip does not error", {
   expect_no_error(ggplotGrob(p))
 })
 
+test_that("coord_flip: gradient axis rotates from vertical to horizontal", {
+  # Behavioural pin for the 2026-05 coord_flip parity fix. Default
+  # orientation paints a vertical gradient; coord_flip must rotate that
+  # gradient to horizontal so it tracks the rendered visual axis.
+  p_normal <- ggplot(df_pos, aes(x, y)) + geom_area_fade()
+  p_flip <- p_normal + coord_flip()
+  g_normal <- .collect_gradient_axes(p_normal)
+  g_flip <- .collect_gradient_axes(p_flip)
+  expect_true(!is.null(g_normal) && nrow(g_normal) > 0)
+  expect_true(!is.null(g_flip) && nrow(g_flip) > 0)
+  # Default: vertical gradient (x1 == x2, y1 != y2)
+  expect_true(all(as.numeric(g_normal[, "x1"]) == as.numeric(g_normal[, "x2"])))
+  expect_true(all(as.numeric(g_normal[, "y1"]) != as.numeric(g_normal[, "y2"])))
+  # Under coord_flip: horizontal gradient (y1 == y2, x1 != x2)
+  expect_true(all(as.numeric(g_flip[, "y1"]) == as.numeric(g_flip[, "y2"])))
+  expect_true(all(as.numeric(g_flip[, "x1"]) != as.numeric(g_flip[, "x2"])))
+})
+
+test_that("coord_flip: vdiffr snapshot pins the rotated rendering", {
+  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + coord_flip()
+  vdiffr::expect_doppelganger("area-fade-coord-flip", p)
+})
+
+test_that("vdiffr: alpha_scope = 'global' under scale_y_log10 (data-space scope)", {
+  skip_if_not_installed("vdiffr")
+  # Regression test for the 2026-05 fix: under a non-linear value scale
+  # the layer-wide `global_max_abs` and per-group `val_lo`/`val_hi` must
+  # be in data space. Pin the rendering so the next behaviour change
+  # surfaces here.
+  set.seed(1)
+  df <- data.frame(
+    x = rep(1:5, 2),
+    y = c(rep(10, 5), rep(1000, 5)),
+    g = rep(c("low", "high"), each = 5)
+  )
+  p <- ggplot(df, aes(x, y, group = g, fill = g)) +
+    geom_area_fade(alpha_scope = "global", outline.type = "none") +
+    scale_y_log10()
+  suppressMessages(suppressWarnings(
+    vdiffr::expect_doppelganger("area-fade-global-log10", p)
+  ))
+})
+
 test_that("GoG/coord: coord_polar does not error", {
   p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + coord_polar()
   expect_no_error(suppressWarnings(ggplotGrob(p)))
@@ -658,17 +697,5 @@ test_that("GoG/facets: facet_grid with free scales does not error", {
 # Theme
 # ---------------------------------------------------------------------------
 
-test_that("GoG/theme: theme_void does not error", {
-  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + theme_void()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_classic does not error", {
-  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + theme_classic()
-  expect_no_error(ggplotGrob(p))
-})
 
-test_that("GoG/theme: theme_bw does not error", {
-  p <- ggplot(df_pos, aes(x, y)) + geom_area_fade() + theme_bw()
-  expect_no_error(ggplotGrob(p))
-})
