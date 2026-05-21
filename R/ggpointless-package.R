@@ -8,6 +8,6 @@
 #' @import ggplot2
 #' @importFrom grid grobTree gList gpar makeContent pointsGrob segmentsGrob
 #' @importFrom rlang `%||%`
-#' @importFrom stats embed
+#' @importFrom stats embed density
 #' @importFrom lifecycle deprecated
 NULL
