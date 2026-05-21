@@ -1,26 +1,13 @@
-#' @title Smoothed Density Estimate with Fading Gradient
+#' @rdname geom_area_fade
 #' @description
-#' Computes and draws a kernel density estimate -- a smoothed version of the
-#' histogram -- with a vertical alpha gradient that fades from opaque at the
-#' peak to transparent at the baseline, exactly like [geom_area_fade()].
-#'
-#' Under the hood this is [GeomAreaFade] paired with [ggplot2::stat_density()],
-#' so all smoothing parameters (`bw`, `adjust`, `kernel`, `bounds`, ...) are
-#' forwarded to the stat.
+#' `geom_density_fade()` computes and draws a kernel density estimate --
+#' a smoothed version of the histogram -- with the same vertical alpha
+#' gradient as `geom_area_fade()`.  Under the hood this is [GeomAreaFade]
+#' paired with [ggplot2::stat_density()], so all smoothing parameters
+#' (`bw`, `adjust`, `kernel`, `bounds`, ...) are forwarded to the stat.
 #'
 #' @concept density plot
 #' @concept fading gradient
-#'
-#' @section Coordinate systems:
-#' `geom_density_fade()` only supports linear gradients. When used with
-#' [ggplot2::coord_polar()] or [ggplot2::coord_radial()], the geom falls back
-#' to standard area rendering (equivalent to [ggplot2::geom_area()]), which
-#' means no gradient fill is added. The geom emits a warning in this case.
-#'
-#' @aesthetics GeomAreaFade
-#'
-#' @inheritSection ggplot2::geom_density Orientation
-#' @inheritSection geom_area_fade Legend key under coord_flip
 #'
 #' @inheritParams geom_area_fade
 #' @inheritParams ggplot2::geom_density
@@ -35,22 +22,8 @@
 #' @param stat Use to override the default connection between
 #'   `geom_density_fade()` and `stat_density()`.
 #'
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
-#'
-#' @seealso [geom_area_fade()] for the general area-fade geom,
-#'   [geom_freqpoly_fade()] / [geom_histogram_fade()] for binned variants,
-#'   [ggplot2::geom_density()] for the non-fading original.
-#'
-#' @references
-#' Murrell, P. (2022). "Vectorised Pattern Fills in R Graphics." Technical
-#' Report 2022-01, Department of Statistics, The University of Auckland.
-#' Version 1.
-#' \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
-#'
 #' @export
 #' @examples
-#' library(ggplot2)
-#'
 #' # Basic density curve: opaque at the peak, fully transparent at the baseline.
 #' ggplot(diamonds, aes(carat)) +
 #'   geom_density_fade()
@@ -100,6 +73,7 @@ geom_density_fade <- function(
   alpha_fade_to = 0,
   alpha_scope = "global",
   orientation = NA,
+  outline.type = "upper",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -120,6 +94,7 @@ geom_density_fade <- function(
       alpha_fade_to = alpha_fade_to,
       alpha_scope = alpha_scope,
       orientation = orientation,
+      outline.type = outline.type,
       na.rm = na.rm,
       ...
     )
