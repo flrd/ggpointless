@@ -116,7 +116,7 @@ are flipped to \code{1 - ratio} with a warning, because ratios above \code{0.5}
 are not geometrically meaningful in the usual corner-cutting sense.
 For \strong{closed} paths the flipped result has the same vertex set as the
 input ratio (with a cyclic shift). For \strong{open} paths it is a
-different curve — prefer increasing \code{iterations} if you want stronger
+different curve -- prefer increasing \code{iterations} if you want stronger
 smoothing.}
 
 \item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
@@ -153,8 +153,6 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
-
-A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 Chaikin's corner-cutting algorithm can be used to smooth sharp
@@ -175,6 +173,7 @@ each pair of new points. The rule is applied iterations times. The
 maximum number of iterations is 10, default is 5.
 }
 \examples{
+library(ggplot2)
 set.seed(42)
 dat <- data.frame(
   x = seq.int(10),
@@ -195,25 +194,26 @@ p2 <- ggplot(triangle, aes(x, y)) +
   geom_path(linetype = "12") +
   coord_equal()
 
-# ratio lets you control the cutting amount
+# Ratio lets you control the cutting amount
 p2 + geom_chaikin(ratio = .1)
 p2 + geom_chaikin(ratio = .5)
 
-# mode controls whether the result is an open or closed shape
+# Mode controls whether the result is an open or closed shape
 p2 + geom_chaikin(mode = "open")   # default
 p2 + geom_chaikin(mode = "closed")
 
 }
 \references{
-Chaikin, G. An algorithm for high speed curve generation.
-Computer Graphics and Image Processing 3 (1974), 346–349
+Chaikin, G. M. (1974). An algorithm for high-speed curve
+generation. \emph{Computer Graphics and Image Processing}, 3(4), 346–349.
+\doi{10.1016/0146-664X(74)90028-8}
 }
 \seealso{
 The \href{https://strimas.com/smoothr/}{smoothr} package offers tools to
 smooth and tidy spatial features
 }
-\concept{corner cutting}
-\concept{path smoothing}
+\concept{chaikin's corner cutting}
+\concept{curve smoothing}
 \section{Aesthetics}{
 
 \code{geom_chaikin()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

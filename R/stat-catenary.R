@@ -305,6 +305,18 @@ StatCatenary <- ggproto(
 
   extra_params = c("na.rm", "chain_length", "sag"),
 
+  # The catenary curve sags BELOW its endpoints, so even with strictly
+  # positive y endpoints the output can dip into negative territory.  Under
+  # `coord_transform(y = "log10")` (or similar restricted-domain trans) those
+  # negatives transform to NaN and crash ggplot2's limit expansion.  Crop
+  # such rows here. See `.crop_to_coord_domain()` in R/aaa.R.
+  compute_layer = \(self, data, params, layout) {
+    out <- ggplot2::ggproto_parent(Stat, self)$compute_layer(
+      data, params, layout
+    )
+    .crop_to_coord_domain(out, layout$coord, "stat_catenary")
+  },
+
   compute_group = \(data, scales, chain_length = NULL, sag = NULL) {
     # scale_y_reverse() negates y before the stat runs, which would otherwise
     # produce a catenary that sags toward the visual bottom even on a flipped
@@ -337,6 +349,18 @@ StatArch <- ggproto(
 
   extra_params = c("na.rm", "arch_length", "arch_height"),
 
+  # Arches rise above their endpoints, so log10 / sqrt y-transforms are
+  # usually safe.  The crop is still wired in so any pathological case
+  # (e.g. arch_height > endpoint with `coord_transform(x = "log10")`) is
+  # handled the same way as catenary/Fourier.  See `.crop_to_coord_domain()`
+  # in R/aaa.R.
+  compute_layer = \(self, data, params, layout) {
+    out <- ggplot2::ggproto_parent(Stat, self)$compute_layer(
+      data, params, layout
+    )
+    .crop_to_coord_domain(out, layout$coord, "stat_arch")
+  },
+
   compute_group = \(
     data,
     scales,
@@ -361,14 +385,10 @@ StatArch <- ggproto(
   }
 )
 
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @rdname geom_catenary
 #' @export
 stat_catenary <- make_constructor(StatCatenary, geom = "catenary")
 
 #' @rdname geom_catenary
 #' @export
-# `geom = "catenary"` resolves to `GeomCatenary`, whose `draw_key` is the
-# catenary glyph; `key_glyph = "arch"` overrides that with `draw_key_arch`
-# so the legend correctly shows an arch instead of a hanging chain.
-stat_arch <- make_constructor(StatArch, geom = "catenary", key_glyph = "arch")
+stat_arch <- make_constructor(StatArch, geom = "arch")

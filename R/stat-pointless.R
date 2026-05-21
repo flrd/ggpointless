@@ -6,13 +6,21 @@ StatPointless <- ggproto(
   "StatPointless",
   Stat,
   setup_params = \(data, params) {
-    # Validate location parameter
+    # Validate location parameter. Accept partial matches for "minimum" /
+    # "maximum" (the obvious abbreviations users reach for) -- this is the
+    # same lenience `match.arg()` provides in base R for argument values.
     valid_locations <- c("first", "last", "minimum", "maximum", "all")
+    if (length(params$location) > 0L) {
+      partial <- pmatch(params$location, valid_locations, duplicates.ok = TRUE)
+      hits <- !is.na(partial)
+      params$location[hits] <- valid_locations[partial[hits]]
+    }
     invalid <- setdiff(params$location, valid_locations)
     if (length(invalid) > 0L) {
       cli::cli_warn(c(
         "{cli::qty(invalid)}Ignoring invalid {.arg location} value{?s}: {.val {invalid}}.",
-        "i" = "Must be one or more of: {.val {valid_locations}}."
+        "i" = "Must be one or more of: {.val {valid_locations}} \\
+               (abbreviations like {.val min} / {.val max} are accepted)."
       ))
       params$location <- intersect(params$location, valid_locations)
       if (length(params$location) == 0L) {
@@ -57,7 +65,6 @@ StatPointless <- ggproto(
   required_aes = c("x", "y")
 )
 
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_pointless
 stat_pointless <- make_constructor(StatPointless, geom = "point")

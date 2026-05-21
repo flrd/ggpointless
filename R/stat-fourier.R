@@ -10,13 +10,33 @@ StatFourier <- ggproto(
 
   extra_params = c("na.rm", "n_harmonics", "detrend"),
 
+  # Crop reconstruction values that fall outside the coord transform's domain
+  # (e.g. negative y after Fourier overshoot under `coord_transform(y =
+  # "log10")`).  Without this, ggplot2's limit expansion crashes with a
+  # cryptic "missing value where TRUE/FALSE needed" because the transformed
+  # range contains NaN. See `.crop_to_coord_domain()` in R/aaa.R.
+  #
+  # Also surface a ggpointless-specific hint when the user mapped extra
+  # aesthetics that the Fourier fit cannot carry: ggplot2 emits its own
+  # "aesthetics were dropped" warning, but its suggestion (specify
+  # `group`, convert to factor) is misleading here -- the real cause is
+  # that this stat only emits x/y on a re-sampled grid.
+  compute_layer = \(self, data, params, layout) {
+    out <- ggplot2::ggproto_parent(Stat, self)$compute_layer(
+      data, params, layout
+    )
+    .warn_dropped_extras(data, out, "stat_fourier")
+    .crop_to_coord_domain(out, layout$coord, "stat_fourier")
+  },
+
   # Parameter validation (runs once, not per group)
   setup_params = \(data, params) {
     # Validate detrend
     if (!is.null(params$detrend)) {
       params$detrend <- rlang::arg_match0(
         params$detrend,
-        values = c("lm", "loess")
+        values = c("lm", "loess"),
+        arg_nm = "detrend"
       )
     }
     # Validate n_harmonics
@@ -151,9 +171,9 @@ StatFourier <- ggproto(
           tryCatch(
             stats::loess(y ~ x, data = df_fit),
             error = \(e) {
-              cli::cli_warn(
+              cli::cli_inform(
                 c(
-                  "LOESS failed. Falling back to {.val lm}.",
+                  "i" = "LOESS failed. Falling back to {.val lm}.",
                   "i" = "{conditionMessage(e)}"
                 )
               )
@@ -298,7 +318,6 @@ StatFourier <- ggproto(
   }
 )
 
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @rdname geom_fourier
 #' @export
 stat_fourier <- make_constructor(

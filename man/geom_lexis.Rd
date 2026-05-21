@@ -151,32 +151,31 @@ give the geom as \code{"point"}.
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
-
-A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-This geom can be used to plot 45° lifelines for a cohort.
+This geom can be used to plot 45 deg lifelines for a cohort.
 Lexis diagrams are named after Wilhelm Lexis and used by demographers
 for more than a century.
 }
 \details{
-This geom draws 45° lines from the start to the end of a 'lifetime'. It is
+This geom draws 45 deg lines from the start to the end of a 'lifetime'. It is
 a combination of a segment, and a point.
 Besides \code{y} and \code{yend} coordinates this geom creates one additional variable
 called \code{type} in the layer data. You might want to map to an aesthetic with
-\code{\link[ggplot2:aes_eval]{ggplot2::after_stat()}}, see Examples section and \code{vignette("ggpointless")}
+\code{\link[ggplot2:after_stat]{ggplot2::after_stat()}}, see \emph{Examples} and \code{vignette("ggpointless")}
 for more details.
 
 Rows in your data with either missing \code{x} or \code{xend} values will be removed
 because your segments must start and end somewhere.
 }
 \examples{
+library(ggplot2)
 df1 <- data.frame(
   key = c("A", "B", "B", "C", "D", "E"),
   start = c(0, 1, 6, 5, 6, 9),
   end = c(5, 4, 10, 9, 8, 11)
 )
-p <- ggplot(df1, aes(x = start, xend = end, color = key))
+p <- ggplot(df1, aes(x = start, xend = end, colour = key))
 p +
   geom_lexis()
 p +
@@ -186,7 +185,7 @@ p +
     point_show = FALSE
   )
 
-# change point appearance
+# Change point appearance
 p + geom_lexis(
   point_colour = "black",
   size = 3,
@@ -195,13 +194,13 @@ p + geom_lexis(
   stroke = 1
 )
 
-# missing values will be removed
+# Missing values will be removed
 df2 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   start = c(0, 1, 7, 5, 6),
   end = c(5, 4, 13, 9, NA)
 )
-ggplot(df2, aes(x = start, xend = end, color = key)) +
+ggplot(df2, aes(x = start, xend = end, colour = key)) +
   geom_lexis()
 
 # Ideally, `x` values should be increasing, unlike

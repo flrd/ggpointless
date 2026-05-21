@@ -49,8 +49,8 @@ GeomFourier <- ggproto(
 #' transformed via [stats::fft()], and then reconstructed from the requested
 #' number of harmonics.
 #'
-#' @concept Fourier series
-#' @concept curve fitting
+#' @concept curve smoothing
+#' @concept discrete fourier series
 #'
 #' @section Period convention:
 #' The DFT treats the input as one period of an infinitely repeating signal.
@@ -140,12 +140,8 @@ GeomFourier <- ggproto(
 #' set.seed(3)
 #' x <- seq(0, 2 * pi, length.out = n/2)
 #' df3 <- rbind(
-#'   data.frame(x = x,
-#'              y = sin(x) + rnorm(n/2, sd = 0.2),
-#'              grp = "sine"),
-#'   data.frame(x = x,
-#'              y = cos(x) + rnorm(n/2, sd = 0.2),
-#'              grp = "cosine")
+#'   data.frame(x = x, y = sin(x) + rnorm(n / 2, sd = 0.2), grp = "sine"),
+#'   data.frame(x = x, y = cos(x) + rnorm(n / 2, sd = 0.2), grp = "cosine")
 #' )
 #'
 #' ggplot(df3, aes(x, y, colour = grp)) +

@@ -31,7 +31,7 @@ StatLexis <- ggproto(
     #
     # x-reverse: the scale has already negated data$x and data$xend.
     # Un-negate, run get_lexis on the original values (so the algorithm assigns
-    # y correctly: small original time → small y), then re-negate the output x
+    # y correctly: small original time -> small y), then re-negate the output x
     # values so they live in the reversed transformed space ggplot2 expects.
     # This makes segments tilt upper-LEFT (correct) instead of upper-RIGHT.
     x_is_reversed <- !is.null(scales$x) && isTRUE(scales$x$trans$name == "reverse")
@@ -51,7 +51,6 @@ StatLexis <- ggproto(
   }
 )
 
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_lexis
 stat_lexis <- make_constructor(StatLexis, geom = "lexis")

@@ -103,7 +103,7 @@ to \code{"start"}. For horizontal lines, \code{"start"} fades the visual left en
 for vertical lines, \code{"start"} fades the visual bottom end; for diagonal
 lines, \code{"start"} fades toward the visual left edge of the panel. See
 \emph{Gradient direction and reversed scales} for behaviour under
-\code{\link[ggplot2:scale_continuous]{ggplot2::scale_x_reverse()}} / \code{\link[ggplot2:scale_continuous]{ggplot2::scale_y_reverse()}}.}
+\code{\link[ggplot2:scale_x_reverse]{ggplot2::scale_x_reverse()}} / \code{\link[ggplot2:scale_y_reverse]{ggplot2::scale_y_reverse()}}.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -142,7 +142,7 @@ position of the line. If these are set, \code{data}, \code{mapping} and
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-These geoms draw reference lines — horizontal, vertical, or diagonal — with
+These geoms draw reference lines -- horizontal, vertical, or diagonal -- with
 an alpha gradient along the line so that one or both ends fade to
 transparent.
 
@@ -156,16 +156,13 @@ To vary lines across facets, supply your own \code{data} and \code{mapping}.
 
 The fade direction is defined in \strong{visual} (panel) space, not in data
 space. \code{fade_direction = "start"} always makes the \emph{start} of the line
-transparent — for horizontal lines this is the visual left edge; for
-vertical lines, the visual bottom edge — regardless of whether the x or y
-scale is reversed. This is analogous to other presentational properties
-such as \code{hjust} in \code{\link[ggplot2:geom_text]{ggplot2::geom_text()}}: \code{hjust = 1} means
-"right-justify" irrespective of axis direction, and
-\code{fade_direction = "start"} means "transparent at the left/bottom panel
-edge" irrespective of axis direction.
+transparent -- for horizontal lines this is the visual left edge; for
+vertical lines, the visual bottom edge -- regardless of whether the x or y
+scale is reversed. So \code{fade_direction = "start"} means "transparent at
+the left/bottom panel edge" irrespective of axis direction.
 
-If you \emph{do} want the gradient to track the data direction — making the
-low-value end transparent even when it appears on the visual right — pass
+If you \emph{do} want the gradient to track the data direction -- making the
+low-value end transparent even when it appears on the visual right -- pass
 \code{fade_direction = "end"} to override the default:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{# On a reversed x-axis, "end" fades toward larger x values (visual left)
@@ -191,7 +188,7 @@ The fade is applied along the \strong{path length} of that curve, so
 \code{fade_direction = "start"} fades the beginning of the traced path. For an
 \code{hline_fade()} circle the "start" is the first vertex of the traced
 circle (at the leftmost angle of the coord system, 12 o'clock by default),
-which may not match intuition from cartesian use — pass
+which may not match intuition from cartesian use -- pass
 \code{fade_direction = "end"} to reverse.
 
 Internally, the line is subdivided into a dense set of vertices in data
@@ -231,7 +228,7 @@ Statistics, The University of Auckland. Version 3.
 \seealso{
 \code{\link[=geom_segment_fade]{geom_segment_fade()}} for fading line segments with explicit
 endpoints, \code{\link[=geom_path_fade]{geom_path_fade()}} and \code{\link[=geom_line_fade]{geom_line_fade()}} for connected paths;
-\code{\link[ggplot2:geom_abline]{ggplot2::geom_abline()}}, \code{\link[ggplot2:geom_abline]{ggplot2::geom_hline()}}, and \code{\link[ggplot2:geom_abline]{ggplot2::geom_vline()}}
+\code{\link[ggplot2:geom_abline]{ggplot2::geom_abline()}}, \code{\link[ggplot2:geom_hline]{ggplot2::geom_hline()}}, and \code{\link[ggplot2:geom_vline]{ggplot2::geom_vline()}}
 for their ggplot2 originals.
 }
 \concept{fading gradient}
@@ -242,7 +239,8 @@ for their ggplot2 originals.
 \tabular{rll}{
  • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
  • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
- • \tab \strong{\code{\link[ggplot2:aes_position]{xend}} \emph{or} \code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{xend}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
  • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr

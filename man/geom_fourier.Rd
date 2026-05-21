@@ -138,8 +138,6 @@ and \code{stat_fourier()}.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
-
-A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 \code{geom_fourier()} and \code{stat_fourier()} fit a truncated Fourier (discrete
@@ -200,7 +198,7 @@ df1 <- data.frame(
   y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
 )
 
-# Basic usage – Interpolating fit (all harmonics)
+# Basic usage - Interpolating fit (all harmonics)
 p <- ggplot(df1, aes(x, y)) +
   geom_point(alpha = 0.5)
 p + geom_fourier()
@@ -226,19 +224,15 @@ geom_point(alpha = 0.35) +
 set.seed(3)
 x <- seq(0, 2 * pi, length.out = n/2)
 df3 <- rbind(
-  data.frame(x = x,
-             y = sin(x) + rnorm(n/2, sd = 0.2),
-             grp = "sine"),
-  data.frame(x = x,
-             y = cos(x) + rnorm(n/2, sd = 0.2),
-             grp = "cosine")
+  data.frame(x = x, y = sin(x) + rnorm(n / 2, sd = 0.2), grp = "sine"),
+  data.frame(x = x, y = cos(x) + rnorm(n / 2, sd = 0.2), grp = "cosine")
 )
 
 ggplot(df3, aes(x, y, colour = grp)) +
   geom_point(alpha = 0.5) +
   geom_fourier()
 
-# when the data is not uniformly-spaced, the Fourier
+# When the data is not uniformly-spaced, the Fourier
 # curve will not hit every data point exactly
 ggplot(head(economics, 25), aes(date, unemploy)) +
   geom_fourier() +
@@ -271,8 +265,8 @@ ggplot(df4, aes(x, y)) +
 \code{\link[=lm]{lm()}} and \code{\link[=loess]{loess()}} for the optional detrending fits,
 \code{\link[=geom_catenary]{geom_catenary()}} and \code{\link[=geom_chaikin]{geom_chaikin()}} for other curve-fitting geoms.
 }
-\concept{Fourier series}
-\concept{curve fitting}
+\concept{curve smoothing}
+\concept{discrete fourier series}
 \section{Aesthetics}{
 
 \code{geom_fourier()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:

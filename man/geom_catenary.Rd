@@ -29,7 +29,6 @@ geom_arch(
   ...,
   arch_length = NULL,
   arch_height = NULL,
-  key_glyph = "arch",
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -56,10 +55,9 @@ stat_catenary(
 stat_arch(
   mapping = NULL,
   data = NULL,
-  geom = "catenary",
+  geom = "arch",
   position = "identity",
   ...,
-  key_glyph = "arch",
   arch_length = NULL,
   arch_height = NULL,
   na.rm = FALSE,
@@ -166,10 +164,6 @@ twice the Euclidean distance per segment. Can be mixed with
 above the \strong{highest endpoint} of each segment. Takes precedence
 over \code{arch_length} when both are supplied for the same segment.}
 
-\item{key_glyph}{A legend key drawing function or a string that names one
-(e.g. \code{"arch"} uses \code{\link[=draw_key_arch]{draw_key_arch()}}).  \code{geom_arch()} sets this to
-\code{"arch"} by default; pass a different value to override.}
-
 \item{arrow}{Arrow specification, as created by \code{\link[grid:arrow]{grid::arrow()}}.}
 
 \item{arrow.fill}{fill colour to use for the arrow head (if closed). \code{NULL}
@@ -186,8 +180,6 @@ and \code{stat_catenary()}, or between \code{geom_arch()} and \code{stat_arch()}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
-
-A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 \code{geom_catenary()} draws a catenary curve (hanging chain) between
@@ -202,7 +194,7 @@ library(ggplot2)
 
 df <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
 
-# basic usage
+# Basic usage
 p <- ggplot(df, aes(x, y)) + ylim(-3, NA) + geom_point(size = 3)
 p + geom_catenary()
 
@@ -211,7 +203,7 @@ p + geom_catenary()
 p + geom_catenary(sag = 2)
 p + geom_catenary(sag = c(2, 1, 1))
 
-# if sag and chain_length are provided for same segment(s), sag wins
+# If sag and chain_length are provided for same segment(s), sag wins
 p + geom_catenary(sag = c(2, 1, NA), chain_length = 10)
 
 # Arch with height = 2, considered from highest point of each segment
@@ -226,8 +218,6 @@ ggplot(rice_house, aes(x, y)) +
   coord_equal()
 }
 \seealso{
-\code{\link[=geom_fourier]{geom_fourier()}} for fitting smooth curves to data via Fourier series,
-\code{\link[=geom_chaikin]{geom_chaikin()}} for smoothing paths via corner cutting.
 The catenary equation is described at
 \url{https://en.wikipedia.org/wiki/Catenary}.
 }

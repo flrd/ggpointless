@@ -51,7 +51,7 @@ GeomAblineFade <- ggplot2::ggproto(
     # data space.  Apply the scale's x-transformer to convert the line's x
     # intersection values to the internal space before clamping; invert when
     # computing y so the line equation stays in the original space.
-    tr    <- .get_scale_transformer(panel_params)
+    tr <- .get_scale_transformer(panel_params)
     x_fwd <- tr$fwd
     x_inv <- tr$inv
 
@@ -67,14 +67,25 @@ GeomAblineFade <- ggplot2::ggproto(
     )
     x_at_y <- apply(x_at_y_orig, c(1L, 2L), x_fwd)
 
-    data$x    <- ifelse(horizontal, ranges$x[1], pmax(ranges$x[1], pmin(x_at_y[1, ], x_at_y[2, ])))
-    data$xend <- ifelse(horizontal, ranges$x[2], pmin(ranges$x[2], pmax(x_at_y[1, ], x_at_y[2, ])))
-    data$y    <- x_inv(data$x)    * data$slope + data$intercept
+    data$x <- ifelse(
+      horizontal,
+      ranges$x[1],
+      pmax(ranges$x[1], pmin(x_at_y[1, ], x_at_y[2, ]))
+    )
+    data$xend <- ifelse(
+      horizontal,
+      ranges$x[2],
+      pmin(ranges$x[2], pmax(x_at_y[1, ], x_at_y[2, ]))
+    )
+    data$y <- x_inv(data$x) * data$slope + data$intercept
     data$yend <- x_inv(data$xend) * data$slope + data$intercept
 
     .draw_refline_fade(
-      unique(data), panel_params, coord,
-      lineend = lineend, na.rm = na.rm,
+      unique(data),
+      panel_params,
+      coord,
+      lineend = lineend,
+      na.rm = na.rm,
       alpha_fade_to = alpha_fade_to,
       fade_direction = fade_direction
     )
@@ -114,14 +125,17 @@ GeomHlineFade <- ggplot2::ggproto(
   ) {
     ranges <- coord$backtransform_range(panel_params)
 
-    data$x    <- ranges$x[1]
+    data$x <- ranges$x[1]
     data$xend <- ranges$x[2]
-    data$y    <- data$yintercept
+    data$y <- data$yintercept
     data$yend <- data$yintercept
 
     .draw_refline_fade(
-      unique(data), panel_params, coord,
-      lineend = lineend, na.rm = na.rm,
+      unique(data),
+      panel_params,
+      coord,
+      lineend = lineend,
+      na.rm = na.rm,
       alpha_fade_to = alpha_fade_to,
       fade_direction = fade_direction
     )
@@ -161,14 +175,17 @@ GeomVlineFade <- ggplot2::ggproto(
   ) {
     ranges <- coord$backtransform_range(panel_params)
 
-    data$x    <- data$xintercept
+    data$x <- data$xintercept
     data$xend <- data$xintercept
-    data$y    <- ranges$y[1]
+    data$y <- ranges$y[1]
     data$yend <- ranges$y[2]
 
     .draw_refline_fade(
-      unique(data), panel_params, coord,
-      lineend = lineend, na.rm = na.rm,
+      unique(data),
+      panel_params,
+      coord,
+      lineend = lineend,
+      na.rm = na.rm,
       alpha_fade_to = alpha_fade_to,
       fade_direction = fade_direction
     )
@@ -195,11 +212,8 @@ GeomVlineFade <- ggplot2::ggproto(
 #' space. `fade_direction = "start"` always makes the *start* of the line
 #' transparent -- for horizontal lines this is the visual left edge; for
 #' vertical lines, the visual bottom edge -- regardless of whether the x or y
-#' scale is reversed. This is analogous to other presentational properties
-#' such as `hjust` in [ggplot2::geom_text()]: `hjust = 1` means
-#' "right-justify" irrespective of axis direction, and
-#' `fade_direction = "start"` means "transparent at the left/bottom panel
-#' edge" irrespective of axis direction.
+#' scale is reversed. So `fade_direction = "start"` means "transparent at
+#' the left/bottom panel edge" irrespective of axis direction.
 #'
 #' If you *do* want the gradient to track the data direction -- making the
 #' low-value end transparent even when it appears on the visual right -- pass

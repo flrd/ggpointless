@@ -13,7 +13,7 @@ GeomPointless <- ggproto(
 #' @description This is a wrapper around [`ggplot2::geom_point()`] with one
 #' additional argument: `location`. This geom aims to emphasise some
 #' observations, and is not particularly useful on its own — hence its name —
-#' but it shines in conjunction with `geom_line()` and friends; see examples.
+#' but it shines in conjunction with `geom_line()` and friends; see *Examples*.
 #'
 #' @concept highlight observations
 #'
@@ -45,6 +45,7 @@ GeomPointless <- ggproto(
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @examples
+#' library(ggplot2)
 #' x <- seq(-pi, pi, length.out = 150)
 #' y <- outer(x, 1:5, FUN = \(x, y) sin(x * y))
 #'

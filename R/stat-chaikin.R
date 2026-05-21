@@ -1,4 +1,3 @@
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @rdname geom_chaikin
 stat_chaikin <- function(
@@ -69,7 +68,7 @@ StatChaikin <- ggproto(
     params$ratio      <- params$ratio %||% 0.25
 
     # Validate mode
-    params$mode <- rlang::arg_match0(params$mode, values = c("open", "closed"))
+    params$mode <- rlang::arg_match0(params$mode, values = c("open", "closed"), arg_nm = "mode")
 
     # Validate iterations
     if (
@@ -77,14 +76,17 @@ StatChaikin <- ggproto(
         params$iterations < 0L ||
         params$iterations > 10L
     ) {
-      cli::cli_abort(
+      cli::cli_abort(c(
         "{.arg iterations} must be a whole number between 0 and 10, \\
-         not {.val {params$iterations}}."
-      )
+         not {.val {params$iterations}}.",
+        "i" = "Each iteration roughly doubles the vertex count, so values \\
+               above 10 explode the output (1 input -> ~1024+ rendered \\
+               vertices) without visible improvement."
+      ))
     }
     params$iterations <- as.integer(params$iterations)
 
-    # Validate ratio — must be a single finite number in [0, 1].
+    # Validate ratio -- must be a single finite number in [0, 1].
     # Note: !is.numeric catches logical NA; !is.finite catches NA_real_, NaN,
     # Inf, and -Inf, so the range comparisons are always safe afterwards.
     if (
@@ -116,13 +118,41 @@ StatChaikin <- ggproto(
   },
 
   compute_group = \(
+    self,
     data,
     scales,
     mode = "open",
     iterations = 5L,
-    ratio = 0.25
+    ratio = 0.25,
+    na.rm = FALSE
   ) {
     closed <- mode == "closed"
+
+    # Pre-filter rows with NA in x, y, OR any numeric extra column we'll
+    # smooth. Without this each get_chaikin() call would strip NAs
+    # independently and produce different output lengths -- the per-column
+    # assignment `result[[col]] <- smoothed$y` would then error with
+    # "replacement has X rows, data has Y", and ggplot2's stat machinery
+    # silently swallows the error, leaving the layer empty. Filtering once
+    # here keeps every smoothed column aligned and surfaces the dropped
+    # rows via a single ggplot2-style warning when `na.rm = FALSE`.
+    extra_cols <- setdiff(names(data), c("x", "y"))
+    smooth_cols <- c("x", "y", extra_cols[vapply(
+      data[extra_cols], is.numeric, logical(1)
+    )])
+    keep <- Reduce(`&`, lapply(smooth_cols, \(c) is.finite(data[[c]])))
+    if (!isTRUE(na.rm) && any(!keep)) {
+      cli::cli_warn(
+        "Removed {sum(!keep)} row{?s} containing missing values \\
+         ({.fn stat_chaikin})."
+      )
+    }
+    data <- data[keep, , drop = FALSE]
+
+    if (nrow(data) == 0L) {
+      return(data.frame(x = numeric(0L), y = numeric(0L)))
+    }
+
     result <- get_chaikin(
       x = data$x,
       y = data$y,
@@ -133,8 +163,8 @@ StatChaikin <- ggproto(
 
     # When extra numeric columns are present (e.g. `height` from
     # geom_ridgeline_fade), apply the same corner-cutting so they
-    # are interpolated at the new x-positions.
-    extra_cols <- setdiff(names(data), c("x", "y"))
+    # are interpolated at the new x-positions. Pre-filtering above
+    # guarantees each call returns the same number of rows.
     for (col in extra_cols) {
       if (is.numeric(data[[col]])) {
         smoothed <- get_chaikin(
@@ -146,7 +176,7 @@ StatChaikin <- ggproto(
         )
         result[[col]] <- smoothed$y
       } else {
-        # Constant discrete columns (group, fill, etc.) — replicate first value
+        # Constant discrete columns (group, fill, etc.) -- replicate first value
         result[[col]] <- data[[col]][1L]
       }
     }
@@ -198,7 +228,7 @@ cut_corners <- function(x, y, ratio, closed = TRUE) {
 
 #' @keywords internal
 get_chaikin <- function(x, y, iterations = 5, ratio = .25, closed = FALSE) {
-  # 1. Validate lengths first — before the early-return for iterations = 0 —
+  # 1. Validate lengths first -- before the early-return for iterations = 0 --
   #    so that callers always receive clean cli errors for malformed inputs.
   if (length(x) == 0L || length(y) == 0L) {
     cli::cli_abort("{.arg x} and {.arg y} must have a positive length.")

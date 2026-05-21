@@ -50,6 +50,7 @@ draw_key_pointless <- function(data, params, size) {
 #' @inheritParams ggplot2::draw_key
 #'
 #' @examples
+#' library(ggplot2)
 #' ggplot(economics_long, aes(date, value01, colour = variable)) +
 #'   geom_line(key_glyph = "lexis")
 #'
@@ -199,7 +200,7 @@ GeomLexis <- ggproto(
 #' a combination of a segment, and a point.
 #' Besides `y` and `yend` coordinates this geom creates one additional variable
 #' called `type` in the layer data. You might want to map to an aesthetic with
-#' [ggplot2::after_stat()], see Examples section and `vignette("ggpointless")`
+#' [ggplot2::after_stat()], see *Examples* and `vignette("ggpointless")`
 #' for more details.
 #'
 #' Rows in your data with either missing `x` or `xend` values will be removed
@@ -208,6 +209,7 @@ GeomLexis <- ggproto(
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 #' @examples
+#' library(ggplot2)
 #' df1 <- data.frame(
 #'   key = c("A", "B", "B", "C", "D", "E"),
 #'   start = c(0, 1, 6, 5, 6, 9),

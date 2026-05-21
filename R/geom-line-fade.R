@@ -38,16 +38,17 @@ GeomLineFade <- ggplot2::ggproto(
 #' @export
 #' @examples
 #'
-#' ggplot(economics, aes(date, unemploy)) + geom_line_fade()
+#' nile_df <- data.frame(year = time(datasets::Nile), value = c(datasets::Nile))
+#' ggplot(nile_df, aes(year, value)) +
+#'   geom_line_fade()
 #'
 #' # NA values split the path into sub-paths -- just like geom_line().
 #' # The fade is computed over the concatenated arc length of all visible
 #' # pieces, so the alpha just before a gap equals the alpha just after,
 #' # as if the path were "pulled apart" at the NA.
-#' df <- data.frame(x = 1:5, y = c(1, 2, NA, 4, 5))
+#' df <- data.frame(x = c(1, 2, 3, 3, 4, 5), y = c(1, 2, NA, 3, 4, 5))
 #'
 #' ggplot(df, aes(x, y)) +
-#'   geom_point() +
 #'   geom_line_fade(alpha_mode = "gradient", linewidth = 2)
 #'
 geom_line_fade <- make_constructor(

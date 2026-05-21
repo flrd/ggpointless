@@ -19,7 +19,8 @@ draw_key_catenary <- function(data, params, size) {
   y <- 0.2 + 0.5 * (cosh((x - 0.5) / 0.3) - 1)
 
   grid::linesGrob(
-    x, y,
+    x,
+    y,
     gp = ggplot2::gg_par(
       col = alpha(data$colour %||% "black", data$alpha),
       lwd = data$linewidth %||% 0.5,
@@ -38,7 +39,8 @@ draw_key_arch <- function(data, params, size) {
   y <- 0.8 - 0.5 * (cosh((x - 0.5) / 0.3) - 1)
 
   grid::linesGrob(
-    x, y,
+    x,
+    y,
     gp = ggplot2::gg_par(
       col = alpha(data$colour %||% "black", data$alpha),
       lwd = data$linewidth %||% 0.5,
@@ -102,15 +104,12 @@ GeomArch <- ggplot2::ggproto(
 #' @inheritParams ggplot2::geom_path
 #'
 #' @aesthetics GeomCatenary
-#' @aesthetics GeomArch
 #' @param geom,stat Override the default connection between `geom_catenary()`
 #'   and `stat_catenary()`, or between `geom_arch()` and `stat_arch()`.
 #'
 #' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #'
 #' @seealso
-#'   [geom_fourier()] for fitting smooth curves to data via Fourier series,
-#'   [geom_chaikin()] for smoothing paths via corner cutting.
 #'   The catenary equation is described at
 #'   <https://en.wikipedia.org/wiki/Catenary>.
 #'

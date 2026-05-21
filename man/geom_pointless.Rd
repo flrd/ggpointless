@@ -3,7 +3,7 @@
 \name{geom_pointless}
 \alias{geom_pointless}
 \alias{stat_pointless}
-\title{Emphasize some observations with points}
+\title{Emphasise some observations with points}
 \usage{
 geom_pointless(
   mapping = NULL,
@@ -138,14 +138,12 @@ give the geom as \code{"point"}.
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
-
-A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-This is a wrapper around \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}} with the one
-additional argument: \code{location}. This geom aims to emphasis some observations
-but is not particularly useful on its own - hence its name - but hopefully
-in conjunction with \code{geom_line()} and friends, see examples.
+This is a wrapper around \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}} with one
+additional argument: \code{location}. This geom aims to emphasise some
+observations, and is not particularly useful on its own — hence its name —
+but it shines in conjunction with \code{geom_line()} and friends; see \emph{Examples}.
 }
 \section{Details}{
 
@@ -153,18 +151,19 @@ The \code{location} argument allows you to specify which observations
 should be highlighted. If \code{location} is \code{"last"}, the default, a
 single point will be plotted at the last non-missing observation.
 The locations are determined in the order in which they appear in
-the data -- like \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}} does compared to \code{\link[ggplot2:geom_path]{ggplot2::geom_line()}}.
+the data -- like \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}} does compared to \code{\link[ggplot2:geom_line]{ggplot2::geom_line()}}.
 
-When a single observation matches multiple \code{location} criteria — for
-example, the last point is also the maximum — it is emitted once with a
+When a single observation matches multiple \code{location} criteria -- for
+example, the last point is also the maximum -- it is emitted once with a
 composite label joined by \code{", "} (e.g. \code{"last, maximum"}). The row order
-in the output — which drives draw order and legend order — follows the
+in the output -- which drives draw order and legend order -- follows the
 order given in \code{location}; for \code{"all"} the canonical order is
 \code{"first"}, \code{"last"}, \code{"minimum"}, \code{"maximum"}. See
 \code{vignette("ggpointless")} for more details.
 }
 
 \examples{
+library(ggplot2)
 x <- seq(-pi, pi, length.out = 150)
 y <- outer(x, 1:5, FUN = \(x, y) sin(x * y))
 
@@ -173,7 +172,7 @@ df1 <- data.frame(
   y = rowSums(y)
 )
 
-# not terribly useful on its own ...
+# Not terribly useful on its own ...
 p <- ggplot(df1, aes(x = x, y = y))
 p + geom_pointless()
 p + geom_pointless(location = "all")
@@ -185,9 +184,11 @@ p + geom_pointless(location = c("first", "last"))
 p + geom_pointless(location = c("minimum", "maximum"))
 
 # The layer computes one additional variable, 'location',
-# that you can map e.g. to colour
+# that you can map to aesthetics. Pair `colour` with `shape` for redundant
+# encoding -- the four roles stay distinguishable in greyscale and under
+# colour-vision deficiencies.
 p + geom_pointless(
-  aes(colour = after_stat(location)),
+  aes(colour = after_stat(location), shape = after_stat(location)),
   location = "all",
   size = 3
 )
@@ -206,19 +207,19 @@ p <- ggplot(df3, aes(x = x, y = y)) +
   geom_path() +
   coord_equal()
 
-# same as location = 'all'
+# Same as location = 'all'
 p + geom_pointless(aes(colour = after_stat(location)),
   location = c("first", "last", "minimum", "maximum")
 ) +
   labs(subtitle = "same as location = 'all'")
 
-# reversed custom order
+# Reversed custom order
 p + geom_pointless(aes(colour = after_stat(location)),
   location = c("maximum", "minimum", "last", "first")
 ) +
   labs(subtitle = "custom order")
 
-# same as location = 'all' again
+# Same as location = 'all' again
 p + geom_pointless(aes(colour = after_stat(location)),
   location = c("maximum", "minimum", "last", "first", "all")
 ) +
