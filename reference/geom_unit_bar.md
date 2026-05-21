@@ -241,9 +241,8 @@ non-square cells.
 ## Cell rendering caveats
 
 A few details are easy to overlook. See the *Caveats worth knowing*
-section of
-[`vignette("ggpointless", package = "ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for worked examples and visuals.
+section of `vignette("ggpointless", package = "ggpointless")` for worked
+examples and visuals.
 
 - `position = "fill"` collapses every stack to a single cell (the unit
   semantics disappear). Use `"stack"` or `"dodge"` instead.
