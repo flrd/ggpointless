@@ -20,16 +20,7 @@ makeContent.bar_fade_grob <- function(x) {
   no_gradient <- dev_name %in% c("pdf", "postscript")
 
   if (no_gradient) {
-    cli::cli_inform(
-      c(
-        "!" = "The current graphics device does not support gradient fills.",
-        "i" = "Falling back to a flat semi-transparent fill. Switch to a \\
-               device that supports gradients (e.g. {.code ragg::agg_png()}, \\
-               {.code svg()}) for the full effect."
-      ),
-      .frequency = "once",
-      .frequency_id = "bar_fade_no_gradient"
-    )
+    .queue_rect_col_no_gradient("geom_col_fade")
     grobs <- x$flat_glist
   } else {
     grobs <- x$gradient_glist
@@ -87,18 +78,7 @@ makeContent.bar_fade_polar_grob <- function(x) {
   if (can_gradient) {
     grobs <- x$gradient_glist
   } else {
-    cli::cli_inform(
-      c(
-        "!" = "The current graphics device does not support the clipping \\
-               path + radial gradient combination required for polar \\
-               bar gradients.",
-        "i" = "Falling back to flat semi-transparent fills. Switch to a \\
-               device that supports both (e.g. {.code ragg::agg_png()}, \\
-               {.code svg()}) for the full effect."
-      ),
-      .frequency = "once",
-      .frequency_id = "bar_fade_polar_no_gradient"
-    )
+    .queue_rect_col_polar_no_clip_pattern("geom_col_fade")
     grobs <- x$flat_glist
   }
 
@@ -120,17 +100,32 @@ makeContent.bar_fade_polar_grob <- function(x) {
 
   # Peak/baseline absolute y-positions used for "group"/"global" scaling.
   # In polar theta = "x", y is the radial axis; in theta = "y", x is the
-  # radial axis and y is angular.  We still scale by y magnitude because
+  # radial axis and y is angular. We still scale by y magnitude because
   # that mirrors the linear path's semantics and keeps stacked segments
   # that reach higher y more opaque.
-  peak_abs <- pmax(abs(data$ymin), abs(data$ymax))
-  baseline_abs <- pmin(abs(data$ymin), abs(data$ymax))
+  #
+  # Under a non-linear value scale (rare in polar, but possible) the
+  # data magnitude lives in data space, not panel space -- inv-transform
+  # first. See the rectangular path for the same logic.
+  trans <- .get_scale_transformer(panel_params, "y")
+  ymin_data <- if (!identical(trans$name, "identity")) {
+    trans$inv(data$ymin)
+  } else {
+    data$ymin
+  }
+  ymax_data <- if (!identical(trans$name, "identity")) {
+    trans$inv(data$ymax)
+  } else {
+    data$ymax
+  }
+  peak_abs <- pmax(abs(ymin_data), abs(ymax_data))
+  baseline_abs <- pmin(abs(ymin_data), abs(ymax_data))
 
   # Per-row alpha-scope reference. `draw_layer` stamps this for any
   # scope other than "bar"; fallback recomputes via `.scope_max_abs_vec`
-  # so direct draw_panel calls see the same semantics.
+  # passing `trans` so direct draw_panel calls see the same semantics.
   scope_max <- data$.scope_max_abs %||%
-    .scope_max_abs_vec(data, alpha_scope, flipped_aes = FALSE)
+    .scope_max_abs_vec(data, alpha_scope, flipped_aes = FALSE, trans = trans)
 
   gradient_list <- vector("list", n)
   flat_list <- vector("list", n)
@@ -314,15 +309,10 @@ GeomColFade <- ggplot2::ggproto(
       params
     )
 
-    params$alpha_fade_to <- params$alpha_fade_to %||% 0
-    params$alpha_scope <- params$alpha_scope %||% "bar"
-
-    .check_alpha_fade_to(params$alpha_fade_to)
-
-    params$alpha_scope <- rlang::arg_match0(
-      params$alpha_scope,
-      values = c("bar", "group", "x", "y", "fill", "colour", "global"),
-      arg_nm = "alpha_scope"
+    params <- .fade_setup_params(
+      params,
+      scopes = c("bar", "group", "x", "y", "fill", "colour", "global"),
+      default_scope = "bar"
     )
 
     # Position-axis scopes ("x", "y") only make sense on the discrete
@@ -334,16 +324,18 @@ GeomColFade <- ggplot2::ggproto(
       cli::cli_abort(c(
         '{.arg alpha_scope} = {.val x} requires bars on the x-axis \\
          (vertical orientation).',
-        "i" = 'Did you mean {.arg alpha_scope} = {.val y}? \\
-               Or remove {.fn coord_flip} / {.code orientation = "y"}.'
+        "i" = 'Map your category to {.code x} instead \\
+               (e.g. {.code aes(x = ...)}), or pass \\
+               {.arg alpha_scope} = {.val y}.'
       ))
     }
     if (params$alpha_scope == "y" && !flipped) {
       cli::cli_abort(c(
         '{.arg alpha_scope} = {.val y} requires bars on the y-axis \\
-         (horizontal orientation, e.g. {.fn coord_flip}).',
-        "i" = 'Did you mean {.arg alpha_scope} = {.val x}? \\
-               Or add {.fn coord_flip} / {.code orientation = "y"}.'
+         (horizontal orientation).',
+        "i" = 'Map your category to {.code y} instead \\
+               (e.g. {.code aes(y = ...)}), or pass \\
+               {.arg alpha_scope} = {.val x}.'
       ))
     }
 
@@ -375,7 +367,29 @@ GeomColFade <- ggplot2::ggproto(
   draw_layer = \(self, data, params, layout, coord) {
     scope <- params$alpha_scope %||% "bar"
     if (nrow(data) > 0L && scope != "bar") {
-      data$.scope_max_abs <- .scope_max_abs_vec(data, scope, params$flipped_aes)
+      # Inv-transform ymin/ymax into data space before maxing so that
+      # under non-linear value scales (`scale_y_log10()` etc.) the
+      # cross-bar normalisation reflects data magnitude, not panel-
+      # space log-value. Under faceted free scales each panel may have
+      # its own transformer; we use panel 1's as a representative --
+      # for fixed scales (the common case) it's identical across
+      # panels, and for free non-linear scales the layer-wide "global"
+      # scope is already a contested concept (see the alpha_scope help
+      # section "alpha_scope = 'global' under faceting").
+      flipped <- isTRUE(params$flipped_aes) ||
+        isTRUE(any(data$flipped_aes %||% FALSE))
+      coord_flipped <- inherits(coord, "CoordFlip")
+      value_axis <- if (xor(flipped, coord_flipped)) "x" else "y"
+      trans <- .get_scale_transformer(
+        layout$panel_params[[1L]],
+        value_axis
+      )
+      data$.scope_max_abs <- .scope_max_abs_vec(
+        data,
+        scope,
+        params$flipped_aes,
+        trans = trans
+      )
     }
     ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_layer(
       data,
@@ -396,6 +410,7 @@ GeomColFade <- ggplot2::ggproto(
     radius = NULL,
     alpha_scope = "bar"
   ) {
+    .check_panel_range(panel_params, "geom_col_fade")
     radius <- .validate_radius(radius)
 
     alpha_scope <- data$.alpha_scope[1L] %||% alpha_scope
@@ -404,16 +419,7 @@ GeomColFade <- ggplot2::ggproto(
       inherits(coord, "CoordRadial")
 
     if (!coord$is_linear() && !is_polar) {
-      cli::cli_inform(
-        c(
-          "!" = "{.fn geom_col_fade}: rounded corners require a linear \\
-                 coordinate system.",
-          "i" = "Falling back to {.fn geom_bar} rendering (no rounding, \\
-                 no gradient)."
-        ),
-        .frequency = "once",
-        .frequency_id = "col_fade_nonlinear"
-      )
+      .queue_rounded_corner_fallback("geom_col_fade")
       return(
         ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_panel(
           data,
@@ -441,7 +447,17 @@ GeomColFade <- ggplot2::ggproto(
       ))
     }
 
-    if (.is_uniform_alpha(data, alpha_fade_to)) {
+    # Fast path: when there is no fade (the row alpha equals
+    # `alpha_fade_to`, so the gradient stops are identical), delegate to
+    # `GeomBar$draw_panel`. Skipped when `radius > 0` because the parent
+    # draws plain rects, dropping the rounded-corner request. With non-zero
+    # radius we fall through to the gradient path -- the "gradient" becomes
+    # a uniform single-colour pattern, but `grid::roundrectGrob()` honours
+    # `r`, so the user's `radius` is preserved.
+    if (
+      .is_uniform_alpha(data, alpha_fade_to) &&
+        identical(as.numeric(radius), 0)
+    ) {
       return(ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_panel(
         data,
         panel_params,
@@ -463,31 +479,42 @@ GeomColFade <- ggplot2::ggproto(
     flipped_data <- any(data$flipped_aes %||% FALSE)
     flipped_visual <- xor(flipped_data, inherits(coord, "CoordFlip"))
 
-    # Negative-bar flag (for gradient direction). Read the count axis in
-    # the original data orientation (i.e. follow `flipped_data`).
-    if (flipped_data) {
-      is_neg <- data$xmax <= 0
-    } else {
-      is_neg <- data$ymax <= 0
+    # Value-axis transformer (identity under linear scales, non-identity
+    # under e.g. `scale_y_log10()`). Under a non-linear scale, panel-space
+    # ymin/ymax ARE NOT the data magnitudes -- they're log-values. The
+    # alpha_scope contract is "normalise to the layer's tallest bar in
+    # data magnitude", so we inverse-transform the value axis to data
+    # space before computing peak_abs / baseline_abs / scope_max. The
+    # default scope = "bar" is unaffected (no scope_max comparison
+    # happens there).
+    coord_flipped <- inherits(coord, "CoordFlip")
+    value_axis <- if (xor(flipped_data, coord_flipped)) "x" else "y"
+    trans <- .get_scale_transformer(panel_params, value_axis)
+    value_min <- if (flipped_data) data$xmin else data$ymin
+    value_max <- if (flipped_data) data$xmax else data$ymax
+    if (!identical(trans$name, "identity")) {
+      value_min <- trans$inv(value_min)
+      value_max <- trans$inv(value_max)
     }
 
-    # Absolute y-positions of each bar's baseline and peak edges.
-    # "baseline" = the edge closer to y = 0, "peak" = the edge further away.
-    if (flipped_data) {
-      baseline_abs <- ifelse(is_neg, abs(data$xmax), abs(data$xmin))
-      peak_abs <- ifelse(is_neg, abs(data$xmin), abs(data$xmax))
-    } else {
-      baseline_abs <- ifelse(is_neg, abs(data$ymax), abs(data$ymin))
-      peak_abs <- ifelse(is_neg, abs(data$ymin), abs(data$ymax))
-    }
+    # Negative-bar flag (for gradient direction). Use the data-space
+    # value-axis, post inv-transform.
+    is_neg <- value_max <= 0
+
+    # Absolute data-space positions of each bar's baseline and peak
+    # edges. "baseline" = the edge closer to 0, "peak" = the edge
+    # further away.
+    baseline_abs <- ifelse(is_neg, abs(value_max), abs(value_min))
+    peak_abs <- ifelse(is_neg, abs(value_min), abs(value_max))
 
     # Per-row alpha-scope reference. `draw_layer` stamps this for any
-    # scope other than "bar" using post-position, cross-panel data.
-    # Fallback (when called directly with un-stamped data) recomputes
-    # via `.scope_max_abs_vec` in R/aaa.R, so direct draw_panel calls
-    # see the same semantics as the full pipeline.
+    # scope other than "bar" using post-position, cross-panel data
+    # (already in data space if the layer's `trans` was applied during
+    # stamping). Fallback (direct draw_panel calls with un-stamped
+    # data) recomputes via `.scope_max_abs_vec` in R/aaa.R, passing
+    # `trans` so the recomputation matches.
     scope_max <- data$.scope_max_abs %||%
-      .scope_max_abs_vec(data, alpha_scope, flipped_data)
+      .scope_max_abs_vec(data, alpha_scope, flipped_data, trans = trans)
 
     coords <- coord$transform(data, panel_params)
     n <- nrow(coords)
@@ -572,6 +599,7 @@ GeomColFade <- ggplot2::ggproto(
       w <- grid::unit(coords$xmax[i] - coords$xmin[i], "native")
       h <- grid::unit(coords$ymax[i] - coords$ymin[i], "native")
 
+      rr_linejoin <- .roundrect_linejoin(radius, linejoin)
       gradient_list[[i]] <- grid::roundrectGrob(
         x = x_pos,
         y = y_pos,
@@ -584,7 +612,7 @@ GeomColFade <- ggplot2::ggproto(
           fill = grad,
           lwd = coords$linewidth[i],
           lty = coords$linetype[i],
-          linejoin = linejoin,
+          linejoin = rr_linejoin,
           lineend = lineend
         )
       )
@@ -601,7 +629,7 @@ GeomColFade <- ggplot2::ggproto(
           fill = flat_fill,
           lwd = coords$linewidth[i],
           lty = coords$linetype[i],
-          linejoin = linejoin,
+          linejoin = rr_linejoin,
           lineend = lineend
         )
       )
@@ -617,13 +645,11 @@ GeomColFade <- ggplot2::ggproto(
 #' @title Bar Charts with Fading Gradient and Rounded Corners
 #' @description
 #' `geom_col_fade()` and `geom_bar_fade()` draw bar charts like
-#' [ggplot2::geom_col()] / [ggplot2::geom_bar()] but with two visual
-#' enhancements:
-#'
-#'   * **An alpha gradient** that fades from opaque at the peak of
-#'     each bar to transparent at its baseline.
-#'   * **Rounded corners** are supported via [grid::roundrectGrob()], controlled
-#'     by the `radius` argument.
+#' [ggplot2::geom_col()] / [ggplot2::geom_bar()] but with options to
+#' add an alpha gradient that fades from opaque at the peak of
+#' each bar to transparent at its baseline; and rounded corners
+#' are supported via [grid::roundrectGrob()], controlled by the
+#' `radius` argument.
 #'
 #' @concept rounded bar charts
 #' @concept fading gradient
@@ -631,6 +657,7 @@ GeomColFade <- ggplot2::ggproto(
 #' @aesthetics GeomColFade
 #'
 #' @inheritSection ggplot2::geom_bar Orientation
+#' @inheritSection geom_area_fade alpha_scope = "global" under faceting
 #' @inheritSection geom_area_fade Legend key under coord_flip
 #'
 #' @inheritParams ggplot2::geom_bar
@@ -693,7 +720,7 @@ GeomColFade <- ggplot2::ggproto(
 #'
 #' # Rounded bar charts are supported too
 #' ggplot(df, aes(x, y)) +
-#'   geom_col_fade(radius = unit(5, "pt")) +
+#'   geom_col_fade(radius = unit(10, "pt")) +
 #'   theme_minimal()
 #'
 #' # Start at 90% opacity and keep some opacity at the baseline
