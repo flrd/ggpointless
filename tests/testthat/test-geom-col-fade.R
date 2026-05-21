@@ -1083,6 +1083,7 @@ test_that("col_fade Pac-Man chart: coord_radial with start/end", {
   p <- ggplot(df, aes(x = "", y = value, fill = variable)) +
     geom_col_fade(width = 1) +
     scale_fill_manual(values = c("red", "yellow")) +
+    scale_y_continuous(breaks = seq(0, 75, 25)) +
     coord_radial("y", start = pi / 3, expand = FALSE) +
     labs(title = "Pac man")
 
