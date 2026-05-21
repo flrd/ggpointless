@@ -3,7 +3,6 @@
 \name{geom_unit_bar}
 \alias{geom_unit_bar}
 \alias{geom_unit_col}
-\alias{geom_unit_histogram}
 \title{Unit Bar Charts}
 \usage{
 geom_unit_bar(
@@ -13,10 +12,11 @@ geom_unit_bar(
   position = "stack",
   ...,
   just = 0.5,
-  radius = grid::unit(0, "npc"),
+  radius = grid::unit(0, "pt"),
   orientation = NA,
+  width = 1,
   cell_size = 1,
-  cell_padding = 0.025,
+  cell_padding = 0.05,
   cell_count_cap = 10000,
   lineend = "butt",
   linejoin = "mitre",
@@ -32,27 +32,11 @@ geom_unit_col(
   position = "stack",
   ...,
   just = 0.5,
-  radius = grid::unit(0, "npc"),
+  radius = grid::unit(0, "pt"),
   orientation = NA,
+  width = 1,
   cell_size = 1,
-  cell_padding = 0.025,
-  cell_count_cap = 10000,
-  lineend = "butt",
-  linejoin = "mitre",
-  na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE
-)
-
-geom_unit_histogram(
-  mapping = NULL,
-  data = NULL,
-  stat = "bin",
-  position = "stack",
-  ...,
-  radius = grid::unit(0, "npc"),
-  cell_size = 1,
-  cell_padding = 0.025,
+  cell_padding = 0.05,
   cell_count_cap = 10000,
   lineend = "butt",
   linejoin = "mitre",
@@ -84,43 +68,75 @@ side-by-side bars, \code{"fill"} for proportional stacking, or
 \code{1} aligns the right edge. Same as \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}}.}
 
 \item{radius}{Corner radius for each cell as a \code{\link[grid:unit]{grid::unit()}}. Default
-\code{grid::unit(0, "npc")} gives sharp corners. Only used with linear
-coordinates; non-linear coordinates (e.g. \code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}})
+\code{grid::unit(0, "pt")} gives sharp corners. Only used with linear
+coordinates; non-linear coordinates (e.g. \code{\link[ggplot2:coord_polar]{ggplot2::coord_polar()}})
 fall back to sharp corners.}
 
 \item{orientation}{The orientation of the layer. Default (\code{NA}) is guessed
 from the aesthetic mapping. Set to \code{"x"} for vertical bars (value on y)
 or \code{"y"} for horizontal bars (value on x). Same as \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}}.}
 
-\item{cell_size}{Number of data-units one cell represents. Default \code{1}
-(one cell per unit, the original "isotype" / pictogram pattern). Set to
-a larger value to aggregate units, e.g. \code{cell_size = 1e6} for one cell
-per million. Each cell is then \code{cell_size} tall in data space, so under
-\code{coord_equal()} you'll likely want
-\code{coord_equal(ratio = cell_size / width)} (default \code{width} is \code{0.9}) to
-keep cells visually square. The y-axis still shows the original data
-values; pair with \code{scale_y_continuous(labels = label_cells(cell_size))}
-if you want it to show cell counts instead.}
+\item{width}{Bar width in data units. Default \code{1}. With the package
+defaults (\code{width = 1}, \code{cell_size = 1}), \code{coord_equal()} already
+renders cells as squares. For non-default \code{width} or \code{cell_size}, see
+the \code{position = "dodge"} subsection below for the general
+\code{coord_equal(ratio = ...)} formula (it also covers the non-dodge
+\code{n_groups = 1} case). Same as \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}}.}
 
-\item{cell_padding}{Inset applied per side of each cell, as a fraction of
-\code{cell_size} in data space. Matches CSS \code{padding} semantics:
+\item{cell_size}{Number of data units one cell represents. Default \code{1}
+(one cell per unit, the original "isotype" / pictogram pattern). Set
+to a larger value to aggregate units, e.g. \code{cell_size = 1e4} so each
+cell stands for one thousand. Each cell is then \code{cell_size} tall in
+data space. With the package defaults (\code{width = 1}, \code{cell_size = 1})
+\code{coord_equal()} already renders cells as squares; for non-default
+\code{cell_size} (or under \code{position = "dodge"}) the \code{coord_equal(ratio)}
+must scale with \code{cell_size} — see the \code{position = "dodge"} subsection
+below for the formula. The value axis still shows the original data
+values; pair with \verb{scale_*_continuous(labels = label_cells(cell_size))}
+to show cell counts instead.}
+
+\item{cell_padding}{Inset applied per side of each cell, in CSS \code{padding}
+style. On linear value scales the vertical inset is a fraction of
+\code{cell_size} (data space); on non-linear value scales (\code{log10},
+\code{sqrt}, ...) it becomes a fraction of each cell's \emph{panel} extent so
+the gap looks visually uniform under compression -- see "Log and
+other non-linear value scales" below. The horizontal inset is
+always a fraction of the bar's \code{width} (the bar axis is never the
+transformed one). Labels are in canonical (vertical-bar)
+orientation; under \code{orientation = "y"} or \code{coord_flip()} the
+on-screen roles swap, but element 1 always pads the value axis and
+element 2 always pads the bar axis.
 \itemize{
-\item length 1 (default \code{0.025}) — same padding on all four sides.
-\item length 2 — \code{c(vertical, horizontal)}; \code{vertical} is the gap
-between vertically-stacked cells, \code{horizontal} is the gap between
-each cell and its bar's left/right edge.
+\item length 1 (default \code{0.05}) -- same fraction on all four sides.
+\item length 2, unnamed -- \code{c(vertical, horizontal)}; \code{vertical} is the
+inset between vertically-stacked cells, \code{horizontal} is the inset
+between each cell and its bar's left/right edge.
+\item named (length 1 or 2) -- positional independence; allowed names
+are \code{"vertical"} and \code{"horizontal"}. A missing axis falls back to
+the default \code{0.05}. So \code{c(horizontal = 0.2, vertical = 0.1)},
+\code{c(vertical = 0.1, horizontal = 0.2)}, and \code{c(0.1, 0.2)} are all
+equivalent. Unknown names error rather than silently default --
+a typo would otherwise be hard to spot in the rendered plot.
 }
 
 Each element must be finite and in \verb{[0, 0.5)}. Set \code{cell_padding = 0}
-for cells that touch (borderless isotype style); increase it for a
-waffle-like grid of separated tiles.  Vertical padding is suppressed
-at the outer edges of each stacked segment so segments touch across
-their shared boundary.}
+for cells that touch (the borderless isotype style); increase it for
+a waffle-like grid of separated cells. The inset is applied uniformly
+to every cell, including the cells at the bar's outer edges -- each
+cell represents one data unit, so cells must render at identical size
+regardless of whether they sit at the floor, in the middle, or at the
+top of a bar. As a consequence the bar's outer edges sit slightly
+inside the data extent: by \code{cell_padding * cell_size} vertically and
+\code{cell_padding * width} horizontally on linear scales, and
+proportionally less on non-linear value scales (where the inset is
+panel-proportional rather than data-proportional).}
 
-\item{cell_count_cap}{Soft cap on total cells drawn per panel. When the cap is
-exceeded, the layer renders as solid bars (one rectangle per bar) and
-emits a warning. Default \code{1e4}; pass \code{Inf} to disable. Setting a larger
-\code{cell_size} is usually the better fix for large \code{y}.}
+\item{cell_count_cap}{Soft cap on the total number of cells drawn per
+panel. A defensive safety net: this geom renders one grob per cell, so
+very large \code{y} values can freeze the graphics device. When the cap is
+exceeded, the layer falls back to solid bars (one rectangle per bar)
+and emits a warning. Default \code{1e4}; pass \code{Inf} to disable. For large
+\code{y} you might want to set a larger \code{cell_size}, see \emph{Examples}.}
 
 \item{lineend}{Line end style for the cell border when \code{colour} is set.
 One of \code{"round"}, \code{"butt"} (default), or \code{"square"}. Same as
@@ -130,8 +146,8 @@ One of \code{"round"}, \code{"butt"} (default), or \code{"square"}. Same as
 \code{"mitre"} (default), or \code{"bevel"}. Same as \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}}.}
 
 \item{na.rm}{If \code{FALSE} (default), rows with missing \code{y} are dropped
-with a warning. Non-positive \code{y} values are kept and produce empty
-segments (zero) or downward-tiled cells (negative).}
+with a warning. Non-positive \code{y} values are kept: \code{y = 0} produces an
+empty segment, and \code{y < 0} stacks cells downward from the baseline.}
 
 \item{show.legend}{logical. Should this layer appear in the legends?}
 
@@ -141,257 +157,193 @@ segments (zero) or downward-tiled cells (negative).}
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-Unit bar charts represent data as vertical (or, after \code{\link[ggplot2:coord_flip]{ggplot2::coord_flip()}},
-horizontal) strips of discrete cells, where each cell represents one unit
-of data. They follow the same \code{x}/\code{y} conventions as \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}},
-\code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}}, and \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}:
+Unit bar charts represent data as discrete cells, where each cell represents
+one unit of data. They follow the same \code{x}/\code{y} conventions as \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}},
+\code{\link[ggplot2:geom_col]{ggplot2::geom_col()}}, and \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}:
 \itemize{
 \item \code{geom_unit_bar()} counts observations (one row = one cell), like
 \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}}. Map \code{x} (or \code{y} for horizontal bars) to the
 grouping variable; \code{fill} to colour by a second variable.
-\item \code{geom_unit_col()} uses pre-computed \code{y} values, like \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}}.
+\item \code{geom_unit_col()} uses pre-computed \code{y} values, like \code{\link[ggplot2:geom_col]{ggplot2::geom_col()}}.
 Fractional values are supported: \code{y = 3.7} draws 3 full unit cells
 (height 1 in data space) plus a partial cell of height 0.7 at the top.
-\item \code{geom_unit_histogram()} bins a continuous variable and draws the resulting
-counts as cell strips, like \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}. Pass \code{bins} or
-\code{binwidth} to control the number of bins.
 }
 
-Any stat that produces positive \code{y} (or \code{ymin}/\code{ymax}) values works as a
-drop-in: \code{geom_unit_bar(stat = "bin")} gives a tiled histogram without a
-dedicated stat.
+For binning continuous data, see \code{\link[=geom_unit_histogram]{geom_unit_histogram()}}.
 
 All position adjustments supported by \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} work here:
 \code{"stack"} (default), \code{"dodge"}, \code{"fill"},
-\code{position_stack(reverse = TRUE)}, etc.
-
-Use \code{\link[ggplot2:coord_fixed]{ggplot2::coord_equal()}} to ensure cells render as squares. Pass a
-\code{ratio} to \code{\link[ggplot2:coord_fixed]{ggplot2::coord_equal()}} to render non-square cells, e.g.
-\code{coord_equal(ratio = 2)} for cells twice as tall as wide.
+\code{position_stack(reverse = TRUE)}, etc. Although  \code{"fill"} rarely makes sense
+for these geoms; see the examples below for why.
 }
 \note{
-Add \code{\link[ggplot2:coord_fixed]{ggplot2::coord_equal()}} to ensure cells render as squares.
+Add \code{\link[ggplot2:coord_equal]{ggplot2::coord_equal()}} to ensure cells render as squares.
 Use \code{coord_equal(ratio = r)} for non-square cells.
 }
 \section{Cell rendering caveats}{
 
 
-A few details are easy to overlook when pairing this geom with various
-coords, positions, and scales:
-
-\subsection{Aspect ratio}{
-Cells are rendered as rectangles of \verb{width × cell_size} in data space.
-The \code{width} default is inherited from \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} at \code{0.9},
-while \code{cell_size} defaults to \code{1} — so under \code{coord_equal(ratio = 1)}
-cells render ~11\\% taller than wide, not perfectly square. To get
-square cells, either match \code{width} to \code{cell_size}:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{geom_unit_col(width = 1)
-}\if{html}{\out{</div>}}
-
-or override the coord ratio:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{coord_equal(ratio = cell_size / width)   # default: 1 / 0.9
-}\if{html}{\out{</div>}}
-
-}
-
-\subsection{\code{position = "fill"}}{
-\code{position_fill()} normalises every stack to height \code{1}. With the default
-\code{cell_size = 1} each stack collapses to a \strong{single} cell — the
-unit-visualisation semantics disappear. Use \code{"stack"} (default) or
-\code{"dodge"} for unit plots; \code{"fill"} is only meaningful if you also set
-\code{cell_size} to a sub-\code{1} value.
-}
-
-\subsection{\code{position = "dodge"}}{
-\code{position_dodge()} splits the bar \code{width} across sub-groups, so each
-sub-bar shrinks to \code{width / n_groups}. Under \code{coord_equal()} the cells
-in dodged bars therefore become progressively narrower relative to
-\code{cell_size}. To restore square cells under dodge, pass a wider
-\code{coord_equal()} ratio:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{coord_equal(ratio = cell_size * n_groups / width)
-# e.g. n_groups = 3, defaults cell_size = 1 and width = 0.9:
-coord_equal(ratio = 3 / 0.9)
-}\if{html}{\out{</div>}}
-
-Note that setting \code{width = n_groups} does \strong{not} work — it makes each
-category's total span wider than the distance between categories, and
-dodged sub-bars from adjacent categories overlap.
-}
-
-\subsection{Log and other non-linear y scales}{
-Scale transforms run \strong{before} the stat, so cells tile in the
-transformed space. \code{scale_y_log10()} on \code{y = c(10, 100, 1000)} produces
-cells at log10 values \verb{1, 2, 3} — the bars do not visually reflect the
-original counts. Use a linear y-scale if you want one cell per
-observation, or set \code{cell_size} to match the transformed units.
-}
-
-\subsection{Gap visibility at small panel sizes}{
-The inter-cell gap is a fixed \code{0.025 * cell_size} in data space. On
-very small panels (or very tall bars) the gap can collapse below 1 px
-and visually disappear — cells appear fused. Either enlarge the panel
-or reduce \code{cell_size} so individual cells take up more pixels.
-}
-
-\subsection{Stacked-segment junction}{
-The gap applies between cells \strong{within a segment}. The junction
-between two stacked segments (same bar, different \code{fill}) has no gap
-— cells touch across the segment boundary. This is intentional: the
-stack should read as one continuous bar broken into coloured bands.
+A few details are easy to overlook. See the \emph{Caveats worth knowing}
+section of \code{vignette("ggpointless", package = "ggpointless")} for worked
+examples and visuals.
+\itemize{
+\item \code{position = "fill"} collapses every stack to a single cell (the unit
+semantics disappear). Use \code{"stack"} or \code{"dodge"} instead.
+\item \code{position = "dodge"} shrinks each sub-bar to \code{width / n_groups}. To
+restore square cells, pair with
+\code{coord_equal(ratio = width / (n_groups * cell_size))} for vertical bars,
+or the inverse \code{ratio = n_groups * cell_size / width} for horizontal.
+With \code{preserve = "single"}, \code{n_groups} is the \strong{max groups per cluster},
+not \code{nlevels(fill)}.
+\item Non-linear value scales (\code{log10}, \code{sqrt}, ...): cells tile in
+\strong{data space}, so the "1 cell = \code{cell_size} observations" contract is
+preserved. Cell heights become non-uniform under compression.
+\item Tiny panels: the default 5 \% gap can collapse below 1 px and cells
+visually fuse. Enlarge the panel or reduce \code{cell_size}.
+\item Polar coordinates: cells become annular segments. Rounded corners
+are dropped under polar (see \code{radius}).
 }
 }
 
 \section{Performance}{
 
-The geom allocates one grid rect per cell, so cost scales with total cell
-count, not input rows. A plot with \code{y} values in the millions would emit
-millions of rects and freeze the graphics device.
 
-Two parameters control the cell budget:
-\itemize{
-\item \code{cell_size} (semantic) — set this to aggregate multiple data-units into
-one cell (e.g. \code{cell_size = 1e6} makes each cell represent one million,
-so \code{y = 25e6} produces 25 cells instead of 25,000,000).
-\item \code{cell_count_cap} (defensive) — soft cap on total cells per panel
-(default \code{1e4}). When exceeded, the layer falls back to plain bars
-(one rectangle per bar, like \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}}) and emits a warning.
-Pass \code{cell_count_cap = Inf} to disable.
-}
-
-Reach for \code{cell_size} when your data is intrinsically large (populations,
-currencies); \code{cell_count_cap} is the seatbelt for accidental large input.
-
-Rounded corners (\code{radius > 0}) add a \code{roundrectGrob} per cell and are
-therefore the most expensive path; leave \code{radius} at its default for large
-plots. Non-linear coordinates always use plain rects regardless of
-\code{radius}.
+Cost scales with total cell count, not input rows — one grid rect per
+cell. The defensive \code{cell_count_cap = 1e4} falls back to plain bars
+when exceeded; pass \code{Inf} to disable. For intrinsically large data
+(populations, currencies, ...), set \code{cell_size} to aggregate units
+into single cells. Rounded corners (\code{radius > 0}) add a \code{roundrectGrob}
+per cell and are the most expensive path; leave \code{radius} at its default
+for large plots.
 }
 
 \examples{
 library(ggplot2)
 
-# geom_unit_bar: count observations automatically (like geom_bar)
-ggplot(mpg, aes(x = class, fill = drv)) +
-  geom_unit_bar() +
-  coord_equal()
+# Basic example: count observations with geom_unit_bar()
+p <- ggplot(mtcars, aes(reorder(cyl, cyl, length))) +
+  labs(y = NULL)
+p + geom_unit_bar()
 
-# Horizontal bars via y aesthetic
-ggplot(mpg, aes(y = class, fill = drv)) +
-  geom_unit_bar()
+# Let's make cells look square by adding coord_equal()
+p <- p + coord_equal()
+p + geom_unit_bar()
 
-# Dodged bars — cells shrink to width / n_groups under dodge
-ggplot(mpg, aes(x = class, fill = drv)) +
-  geom_unit_bar(position = "dodge") +
-  coord_equal()
+# Rounded corners are supported too
+p + geom_unit_bar(radius = unit(5, "pt"))
 
-# Dodge + square cells: compensate via the coord_equal() ratio so each
-# sub-bar cell renders as a square.  `mpg$drv` has 3 levels, so pass
-# ratio = n_groups / width = 3 / 0.9:
-ggplot(mpg, aes(x = class, fill = drv)) +
-  geom_unit_bar(position = "dodge") +
-  coord_equal(ratio = 3 / 0.9)
+# When a variable is mapped to fill
+# aesthetic, bars are stacked by default
+p + geom_unit_bar(aes(fill = factor(vs)))
 
-# Reversed stack
-ggplot(mpg, aes(x = class, fill = drv)) +
-  geom_unit_bar(position = position_stack(reverse = TRUE)) +
-  coord_equal()
+# But you might want bars to be dodged
+p +
+  geom_unit_bar(
+    aes(fill = factor(vs)),
+    position = position_dodge(preserve = "single")
+  ) +
+  coord_equal(ratio = 1 / 2)
 
-# Asymmetric `cell_padding` under `coord_flip()`.  The length-2 vector
-# c(vertical, horizontal) is interpreted in the stat's canonical
-# orientation, so coord_flip() swaps which gap is visually vertical vs.
-# horizontal.  Here: `c(0.1, 0.005)` gives generous vertical cell-to-cell
-# gaps (which become horizontal after the flip) and tight cell-to-edge
-# spacing (which becomes vertical after the flip).
-ggplot(mpg, aes(x = class, fill = drv)) +
-  geom_unit_bar(width = 1, cell_padding = c(0.1, 0.005)) +
-  coord_flip()
+# Dodging + facets: getting the coord ratio right.
+# With `preserve = "single"` every sub-bar is sized to
+# `width / max_groups_per_cluster` -- the largest number of fill levels
+# appearing at any *one* x-cluster, NOT the total nlevels(fill). In
+# `penguins` `fill = species` has three levels, but each island holds
+# at most two species (Biscoe: Adelie + Gentoo; Dream: Adelie + Chinstrap;
+# Torgersen: Adelie only), so the effective n_groups is 2.
+# The square-cell formula for horizontal bars is
+# `ratio = n_groups * cell_size / width`, hence `ratio = 2 * 1 / 1 = 2`
+# (not 3, which is what nlevels(fill) would suggest).
+if (getRversion() >= "4.5.0") {
+  p2 <- ggplot(datasets::penguins, aes(y = island))
+  p2 +
+    geom_unit_bar(
+      aes(fill = species),
+      radius = unit(1, "pt"),
+      position = position_dodge(preserve = "single"),
+      colour = "#333333",
+      na.rm = TRUE
+    ) +
+    labs(x = NULL, y = NULL) +
+    facet_wrap(~year, ncol = 1) +
+    # max 2 species per island -> ratio = 2, not 3
+    coord_equal(ratio = 2) +
+    theme(legend.position = "bottom")
+}
 
-# Large data + coord_equal(): meet `cell_size` and `label_cells()`
-# ------------------------------------------------------------------
-# `coord_equal()` keeps cells visually square by forcing a 1:1 data-space
-# aspect ratio.  That works on small data (mpg has ~7 categories and
-# counts up to ~60, so x and y are the same order of magnitude) but
-# breaks on large data.  `diamonds` has 53,940 rows and the tallest
-# stack reaches ~2,600, against an x-range (carat) of only ~5.
-#
-# 1. What it looks like by default — almost empty:
-ggplot(diamonds, aes(x = carat, fill = cut)) +
-  geom_unit_bar() +
-  coord_equal()
-# cell_count_cap (default 10,000) fires first and falls back to solid bars,
-# but even solid bars are ~1px-wide slivers once coord_equal squeezes
-# a 2,600-tall y-axis alongside a 5-wide x-axis.
+# Note: position dodge2 adds extra padding by default, but provides
+# an option to set this to 0; use the cell_padding argument
+# instead for full control of vertical and horizontal padding
+p +
+  geom_unit_bar(
+    aes(fill = factor(vs)),
+    position = position_dodge2(preserve = "single", padding = 0),
+    cell_padding = c(0.025, 0.1)
+  ) +
+  coord_equal(ratio = 1 / 2)
 
-# 2. Fix the scale mismatch with `cell_size`.  Each cell now represents
-#    500 observations, so the y-range collapses from ~2,600 to ~5 — now
-#    comparable to the x-range:
-ggplot(diamonds, aes(x = carat, fill = cut)) +
-  geom_unit_bar(cell_size = 500) +
-  coord_equal()
-
-# 3. Relabel the axis in cell counts with `label_cells()` so readers
-#    can see "2 cells" rather than "1000 diamonds":
-ggplot(diamonds, aes(x = carat, fill = cut)) +
-  geom_unit_bar(cell_size = 500) +
-  scale_y_continuous(labels = label_cells(500)) +
-  coord_equal() +
-  labs(y = "Diamonds (1 cell = 500)")
-
-# `cell_count_cap` remains the defensive seatbelt: even with `cell_size` set,
-# it catches pathological inputs (e.g. an extra zero in `cell_size`) so
-# the graphics device never drowns in rects.
-
-# geom_unit_col: pre-computed counts in y (like geom_col)
-ep_data <- data.frame(
-  episode = factor(
-    rep(paste0("Ep ", 1:5), each = 2),
-    levels = paste0("Ep ", 5:1)
-  ),
-  gender  = factor(rep(c("Female", "Male"), 5)),
-  minutes = c(8, 12, 15, 5, 6, 14, 10, 10, 4, 16)
+# Increase the cell padding (default is 0.05)
+p + geom_unit_bar(cell_padding = c(
+  "vertical"   = 0.1,
+  "horizontal" = 0.05
+  )
 )
 
-ggplot(ep_data, aes(x = episode, y = minutes, fill = gender)) +
+# When you map the categorical to y aesthetic,
+# the orientation is auto-detected
+ggplot(mtcars, aes(y = reorder(cyl, cyl, length))) +
+  geom_unit_bar() +
+  coord_equal()
+
+# `scale_*_binned()` belongs on the *mapped continuous variable*, not on the
+# count axis. Bin a continuous variable into discrete intervals, then count
+# observations per bin -- a unit-cell histogram in two lines:
+ggplot(iris, aes(y = Sepal.Length)) +
+  # the continuous variable (Sepal.Length) lives on y; binning it ...
+  geom_unit_bar() +
+  # ... discretises y into intervals so `stat = "count"` can tally each one.
+  scale_y_binned()
+# Using `scale_y_binned()` on the count axis instead would render an empty
+# plot -- the count axis is already discrete via `stat_count`, so binning
+# it again has nothing to bin.
+
+
+# Plot pre-computed counts with geom_unit_col() (like geom_col() does)
+# by default 1 cell represents 1 observation
+df <- data.frame(x = c("A", "B", "C"), y = c(10, 12, 8))
+ggplot(df, aes(x, y)) + geom_unit_col()
+
+# Too many cells might freeze the graphics device. When cell_count_cap
+# is exceeded, the geom falls back to its ggplot2 sibling with a warning.
+# For large y, divide at the aes level (e.g. `aes(x, y / 1e3)`) so each
+# cell represents a meaningful number of observations.
+df <- data.frame(x = c("A", "B", "C"), y = c(10000, 12000, 8000))
+ggplot(df, aes(x, y)) + geom_unit_col()
+
+# The aes-level division pattern:
+cs <- 1000
+ggplot(df, aes(x, y / cs)) +
   geom_unit_col() +
+  labs(caption = sprintf("Each cell represents \%d observations", cs)) +
   coord_equal()
 
-# Flat cells with rounded corners via coord_equal(ratio)
-ggplot(ep_data, aes(x = episode, y = minutes, fill = gender)) +
-  geom_unit_col(radius = grid::unit(3, "pt")) +
-  coord_equal(ratio = 1/4)
+# Flat cells with rounded corners via coord_equal(ratio = ...)
+ggplot(df, aes(x, y / cs)) +
+  geom_unit_col(radius = unit(5, "pt")) +
+  labs(caption = sprintf("Each cell represents \%d observations", cs)) +
+  coord_equal(ratio = 1 / 10)
 
-# Horizontal bars via orientation = "y" (value on x)
-ggplot(data.frame(x = 1:5, y = c(2, 4, 3, 5, 1)), aes(x, y)) +
-  geom_unit_col(orientation = "y") +
-  coord_equal()
-
-# use stat = "bin" to create a histogram
-ggplot(mpg, aes(x = displ)) +
-  geom_unit_bar(stat = "bin")
-
-
-# geom_unit_histogram: tiled histogram for continuous variables
-ggplot(mpg, aes(x = displ)) +
-  geom_unit_histogram(bins = 10) +
-  coord_equal()
-
-# Colour by a second variable; stat = "bin" also works directly
-ggplot(mpg, aes(x = hwy, fill = drv)) +
-  geom_unit_histogram(bins = 15) +
-  coord_equal()
 }
 \seealso{
-\code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}}, \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}},
-\code{\link[ggplot2:geom_tile]{ggplot2::geom_tile()}} for the underlying tile rendering.
+\code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} and \code{\link[ggplot2:geom_col]{ggplot2::geom_col()}} for the regular
+(non-unit) counterparts. \code{\link[=geom_unit_histogram]{geom_unit_histogram()}} for binning continuous
+data.
 }
 \concept{isotype chart}
 \concept{unit chart}
 \section{Aesthetics}{
 
-\code{geom_bar_cells()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
+\code{geom_unit_bar()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
 \tabular{rll}{
  • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
  • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
@@ -402,6 +354,13 @@ ggplot(mpg, aes(x = hwy, fill = drv)) +
  • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → via \code{theme()} \cr
  • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → via \code{theme()} \cr
  • \tab \code{width} \tab → \code{0.9} \cr
+}
+
+\code{stat_count()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
+\tabular{rll}{
+ • \tab \strong{\code{\link[ggplot2:aes_position]{x}} \emph{or} \code{\link[ggplot2:aes_position]{y}}} \tab   \cr
+ • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
+ • \tab \code{weight} \tab → \code{1} \cr
 }
 
 Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.

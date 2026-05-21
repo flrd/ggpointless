@@ -19,8 +19,15 @@ A grid grob.
 }
 \description{
 The default legend key for \code{\link[=geom_unit_bar]{geom_unit_bar()}} / \code{\link[=geom_unit_col]{geom_unit_col()}} /
-\code{\link[=geom_unit_histogram]{geom_unit_histogram()}}.  Renders a 2 × 2 grid of small cells with a
-tiny inter-cell gap, so the legend advertises the unit-cell character
-of the geom rather than showing a plain solid rectangle.
+\code{\link[=geom_unit_histogram]{geom_unit_histogram()}}.  Mirrors the geom's orientation so the
+legend reads as a miniature of the rendered bar:
+\itemize{
+\item vertical bars (\code{flipped_aes = FALSE}, the default) -> two cells
+stacked vertically with a single horizontal gap between them, no
+vertical gap.
+\item horizontal bars (\code{flipped_aes = TRUE}, e.g. \code{orientation = "y"} or
+\code{coord_flip()}) -> two cells placed side by side with a single
+vertical gap between them, no horizontal gap.
+}
 }
 \keyword{internal}
