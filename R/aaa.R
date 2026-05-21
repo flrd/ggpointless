@@ -102,6 +102,29 @@ NULL
 }
 
 
+# Predicate: does the current graphics device support a Porter-Duff
+# compositing operator (e.g. "dest.in", "dest.out")?
+#
+# Centralises the cap-list check shared across `geom_area_fade()`,
+# `geom_curve_fade()`, `geom_segment_fade()`, `geom_path_fade()` and
+# `geom_ridgeline_fade()`. The historical implementations also probed
+# `exists("groupGrob", envir = asNamespace("grid"))` -- but `grid::groupGrob`
+# shipped in R 4.2.0 and `DESCRIPTION` declares `R (>= 4.2.0)`, so the
+# `exists()` guard could never be FALSE on a supported installation.
+#
+# `dev_caps` is optional: pass a cached `grDevices::dev.capabilities()`
+# result if you already have one (saves one ~24us call); otherwise the
+# helper fetches it. `dev.capabilities()` never raises on any device, so
+# no `tryCatch` is needed -- a missing `compositing` slot returns NULL
+# and `op %in% NULL` is `logical(0)` which `isTRUE()` treats as FALSE.
+#' @noRd
+#' @keywords internal
+.has_compositing_op <- function(op, dev_caps = NULL) {
+  caps <- dev_caps %||% grDevices::dev.capabilities()
+  isTRUE(op %in% caps[["compositing"]])
+}
+
+
 # Retrieve the scale transformer for one axis from panel_params.
 #
 # Returns a named list with three elements:
@@ -123,6 +146,12 @@ NULL
     return(list(fwd = identity, inv = identity, name = "identity"))
   }
   tr <- fn()
+  # `coord_flip()` swaps panel_params x/y after scales train, leaving the
+  # vacated axis with NULL / empty-name transformers. Treat those as
+  # identity so callers don't false-positive on a plain `coord_flip()`.
+  if (is.null(tr) || !nzchar(tr$name %||% "")) {
+    return(list(fwd = identity, inv = identity, name = "identity"))
+  }
   list(fwd = tr$transform, inv = tr$inverse, name = tr$name)
 }
 
@@ -195,9 +224,7 @@ NULL
   if (!all(finite)) {
     cli::cli_warn(
       c("!" = "Dropping {sum(!finite)} reference line row{?s} with \\
-             non-finite coordinates before polar subdivision."),
-      .frequency = "once",
-      .frequency_id = "refline_fade_nonfinite"
+             non-finite coordinates before polar subdivision.")
     )
     data <- data[finite, , drop = FALSE]
     if (nrow(data) == 0L) return(ggplot2::zeroGrob())
@@ -383,26 +410,41 @@ NULL
 # Scopes:
 #   "global" -- one max for the whole data frame
 #   "x"      -- grouped by `round(data$x)` (the discrete position-axis
-#              category; round() recovers pre-dodge integer position)
-#   "y"      -- grouped by `round(data$y)` (only valid when flipped)
+#              category; round() recovers pre-dodge integer position).
+#              `geom_col_fade()` / `geom_bar_fade()` only.
+#   "y"      -- grouped by `round(data$y)` (only valid when flipped).
+#              `geom_col_fade()` / `geom_bar_fade()` only.
 #   "group"  -- grouped by `data$group` (ggplot2's interaction of all
 #              discrete aesthetics)
 #   "fill"   -- grouped by `as.character(data$fill)` (resolved hex)
 #   "colour" -- grouped by `as.character(data$colour)` (resolved hex)
+#   "bin"    -- grouped by `data$.bin_id` (pre-dodge bin centre stamped
+#              in `GeomHistogramFade$setup_data`). `geom_histogram_fade()`
+#              only; column is absent on col/bar/rect/etc.
 #
 # Used by `GeomColFade$draw_layer` to stamp the reference once across
 # all panels; also used as a fallback inside both `draw_panel` paths
 # (linear + polar) when called directly with un-stamped data.
 #' @noRd
 #' @keywords internal
-.scope_max_abs_vec <- function(data, scope, flipped_aes = FALSE) {
+.scope_max_abs_vec <- function(data, scope, flipped_aes = FALSE,
+                                trans = NULL) {
   flipped <- isTRUE(flipped_aes) ||
     isTRUE(any(data$flipped_aes %||% FALSE))
-  peak_abs <- if (flipped) {
-    pmax(abs(data$xmin), abs(data$xmax))
-  } else {
-    pmax(abs(data$ymin), abs(data$ymax))
+  # `data$ymin` / `ymax` arrive in PANEL space (post-coord-transform).
+  # Under a non-linear value scale (`scale_y_log10()`, `sqrt`, ...) the
+  # max of panel-space values is "max log-value", not "max data value",
+  # so the scope normalisation drifts from the documented "relative to
+  # the layer's tallest bar in data magnitude" contract. When the
+  # caller supplies a non-identity transformer, inverse-transform the
+  # value axis to data space before maxing.
+  value_min <- if (flipped) data$xmin else data$ymin
+  value_max <- if (flipped) data$xmax else data$ymax
+  if (!is.null(trans) && !identical(trans$name, "identity")) {
+    value_min <- trans$inv(value_min)
+    value_max <- trans$inv(value_max)
   }
+  peak_abs <- pmax(abs(value_min), abs(value_max))
   safe_max <- function(v) {
     mx <- suppressWarnings(max(v, na.rm = TRUE))
     if (!is.finite(mx) || mx == 0) 1 else mx
@@ -415,6 +457,18 @@ NULL
     "group"  = stats::ave(peak_abs, data$group,    FUN = safe_max),
     "fill"   = stats::ave(peak_abs, as.character(data$fill),   FUN = safe_max),
     "colour" = stats::ave(peak_abs, as.character(data$colour), FUN = safe_max),
+    "bin"    = stats::ave(
+      peak_abs,
+      # `.bin_id` is stamped by `GeomHistogramFade$setup_data` from the
+      # PRE-dodge `data$x` (or `data$y` when flipped). Fall back to
+      # post-dodge `x` if the column is somehow missing — this branch is
+      # only reachable via `geom_histogram_fade()`, whose scope vocabulary
+      # whitelists `"bin"` and where the stamp is always present in
+      # production. The fallback is defensive (test harnesses that call
+      # `.scope_max_abs_vec()` directly with hand-built data).
+      data$.bin_id %||% data$x,
+      FUN = safe_max
+    ),
     rep(safe_max(peak_abs), length(peak_abs))   # unknown scope -> "global"
   )
 }
@@ -487,6 +541,61 @@ NULL
   }
 
   data
+}
+
+
+# Inform the user about aesthetics the user actively mapped to a varying
+# variable but that the stat could not carry through.
+#
+# Stats that re-sample onto a new grid (`stat_fourier()`, `stat_catenary()`,
+# `stat_arch()`) only emit `x` and `y` from `compute_group()`; every other
+# column is dropped.  ggplot2 itself will warn ("The following aesthetics
+# were dropped during statistical transformation"), but its suggestion --
+# "did you forget to specify a `group` aesthetic?" -- is misleading here.
+# Surface a ggpointless-specific hint that names the dropped columns and
+# points at the two real workarounds:
+#   * map an `after_stat()` value to colour/shade by the fit itself
+#   * overlay the raw data as a separate layer
+#
+# Only columns that VARY in the input are reported, so the constant
+# layer-default columns (fill, colour, linewidth, ... inherited from the
+# geom's `default_aes`) do not trigger false positives.
+#
+# @param input    Data frame passed to `compute_layer()`.
+# @param output   Data frame returned by the parent's `compute_layer()`.
+# @param stat_name Name of the stat for the message (e.g. `"stat_fourier"`).
+#' @noRd
+#' @keywords internal
+.warn_dropped_extras <- function(input, output, stat_name) {
+  if (!is.data.frame(input) || nrow(input) == 0L) {
+    return(invisible())
+  }
+  always_present <- c("x", "y", "group", "PANEL", "flipped_aes")
+  candidates <- setdiff(names(input), c(names(output), always_present))
+  if (!length(candidates)) {
+    return(invisible())
+  }
+  varying <- candidates[vapply(
+    candidates,
+    function(col) length(unique(input[[col]])) > 1L,
+    logical(1)
+  )]
+  if (!length(varying)) {
+    return(invisible())
+  }
+  cli::cli_inform(
+    c(
+      "i" = "{.fn {stat_name}} does not propagate non-position aesthetics: \\
+             {.field {varying}} dropped after the fit.",
+      "*" = "To shade by the fit itself, map an {.fn after_stat} value \\
+             (e.g. {.code aes(fill = after_stat(x))}).",
+      "*" = "To overlay the raw data, draw it as a separate layer \\
+             (e.g. {.fn geom_point})."
+    ),
+    .frequency = "regularly",
+    .frequency_id = paste0(stat_name, "_dropped_extras")
+  )
+  invisible()
 }
 
 
@@ -650,11 +759,18 @@ NULL
 # @return The (possibly-mutated) grobs.
 #' @noRd
 #' @keywords internal
-.clamp_roundrect_radius <- function(grobs, arg = "radius") {
-  reported <- FALSE
+.clamp_roundrect_radius <- function(grobs, arg = "radius", quiet = FALSE) {
+  reported <- quiet
   for (i in seq_along(grobs)) {
     g <- grobs[[i]]
     if (!inherits(g, "roundrect")) next
+
+    # Fast path: a zero radius has nothing to clamp. Skip the three
+    # `convertUnit`/`convertHeight`/`convertWidth` calls (~150 us per
+    # grob) -- the default `geom_col_fade()` / `geom_bar_fade()` /
+    # `geom_rect_fade()` use `radius = unit(0, "pt")`, so this is the
+    # dominant case in real-world plots.
+    if (length(g$r) == 1L && as.numeric(g$r) == 0) next
 
     r_pt <- tryCatch(
       grid::convertUnit(g$r, "pt", valueOnly = TRUE),
@@ -672,7 +788,14 @@ NULL
 
     max_r <- min(h_pt, w_pt) / 2
     if (r_pt > max_r) {
-      if (!reported) {
+      # Degenerate (zero-area) grobs are not actually invisible when r > 0:
+      # a `roundrectGrob` with h = 0 or w = 0 draws an hourglass/lens
+      # because the four quarter-circle corners overlap. Clamp them to
+      # r = 0 so they render as a true zero-extent rect, but stay silent
+      # (the user can't fix zero-count histogram bins by lowering radius;
+      # only mention the cap when a *visible* cell would otherwise show
+      # the artefact).
+      if (h_pt > 0 && w_pt > 0 && !reported) {
         # `.frequency` defaults to "always" -- the user is actively iterating
         # on a value, so they need feedback every time they pick one above
         # the cap. Within-call duplication (one message per cell) is
@@ -690,6 +813,572 @@ NULL
     }
   }
   grobs
+}
+
+# Choose a safe linejoin for a `roundrectGrob`.
+#
+# `roundrectGrob` rendered with `linejoin = "mitre"` (the ggplot2 default
+# inherited from `GeomBar` / `GeomRect`) produces visible stub-stroke
+# artefacts at the path's closure point when `radius > 0` (visible as
+# extra horizontal stubs extending past the bar's edge). Reproducible in
+# pure grid: `grid.roundrect(r = unit(5, "pt"), gp = gpar(col = X,
+# fill = grad, linejoin = "mitre"))` shows the artefact;
+# `linejoin = "round"` is clean.
+#
+# The rounded path has no actual sharp corners, so "round" is visually
+# equivalent to any other join along the path itself; the only place the
+# choice matters is the closure point. For square corners (`radius == 0`)
+# the user's choice IS visually meaningful, so we preserve it.
+#' @noRd
+#' @keywords internal
+.roundrect_linejoin <- function(radius, linejoin = "mitre") {
+  r_pt <- tryCatch(
+    grid::convertUnit(radius, "pt", valueOnly = TRUE),
+    error = function(e) 0
+  )
+  if (isTRUE(r_pt > 0)) "round" else linejoin
+}
+
+# Shared `setup_params` boilerplate for the fade-geom families.
+# Sets defaults for `alpha_fade_to` and `alpha_scope`, validates
+# `alpha_fade_to` via `.check_alpha_fade_to()`, and arg_match0's
+# `alpha_scope` against the geom-specific vocabulary.
+#' @noRd
+#' @keywords internal
+.fade_setup_params <- function(params, scopes, default_scope = scopes[1L]) {
+  params$alpha_fade_to <- params$alpha_fade_to %||% 0
+  params$alpha_scope <- params$alpha_scope %||% default_scope
+  .check_alpha_fade_to(params$alpha_fade_to)
+  params$alpha_scope <- rlang::arg_match0(
+    params$alpha_scope,
+    values = scopes,
+    arg_nm = "alpha_scope"
+  )
+  params
+}
+
+# Validate `outline.type` for fade geoms that share GeomArea / GeomRibbon's
+# vocabulary. Two-step check (length, then arg_match0) so the user gets a
+# geom-specific error for non-scalar input instead of arg_match0's generic
+# "must be a string" message.
+#' @noRd
+#' @keywords internal
+.check_outline_type <- function(outline.type) {
+  if (is.null(outline.type)) {
+    return(invisible())
+  }
+  valid <- c("upper", "lower", "both", "full", "none")
+  if (length(outline.type) != 1L) {
+    cli::cli_abort(c(
+      "{.arg outline.type} must be a single string.",
+      "x" = "Got a vector of length {length(outline.type)}.",
+      "i" = "Allowed values: {.val {valid}}."
+    ))
+  }
+  rlang::arg_match0(
+    outline.type,
+    values = valid,
+    arg_nm = "outline.type"
+  )
+}
+
+# Cross-panel `alpha_scope = "global"` stamp used in fade geoms'
+# `draw_layer` overrides. `value_fn(data)` returns the per-row magnitudes
+# from which the layer-wide max is computed; the result is stored on
+# `data[[slot]]` for downstream `draw_panel` access.
+#' @noRd
+#' @keywords internal
+.fade_stamp_global_max <- function(
+  data,
+  value_fn,
+  slot,
+  default_scope = "global",
+  trans = NULL
+) {
+  if (
+    nrow(data) > 0L &&
+      identical(data$.alpha_scope[1L] %||% default_scope, "global")
+  ) {
+    values <- value_fn(data)
+    # Under a non-linear value scale the values arrive in panel
+    # (transformed) space. Inv-transform to data space before maxing
+    # so the layer-wide reference reflects data magnitude, matching
+    # the documented `alpha_scope = "global"` contract.
+    if (!is.null(trans) && !identical(trans$name, "identity")) {
+      values <- trans$inv(values)
+    }
+    data[[slot]] <- .layer_max_abs(values)
+  }
+  data
+}
+
+# Cross-layer message consolidation
+# -----------------------------------------------------------------------
+# Several diagnostics (panel-range non-finite, rounded-corner fallback,
+# ...) fire once per ggpointless layer, but a single `print(plot)` can
+# include many such layers and the user does not want four near-identical
+# messages -- they want one message naming all affected geoms.
+#
+# Strategy: each call buffers `(message_id, geom_name)` into a package
+# state env, and the *first* call per id+render walks up the stack to
+# find the outermost ggplot2 namespace frame and registers an `on.exit`
+# there that flushes the buffer once the render returns. Subsequent
+# calls for the same id and same render just append to the buffer.
+# When no ggplot2 frame is found (e.g. `.queue_or_emit()` invoked
+# directly from a test), the emitter is called immediately for that
+# single geom -- preserves the legacy single-geom behaviour.
+#' @noRd
+#' @keywords internal
+.ggpointless_state <- new.env(parent = emptyenv())
+.ggpointless_state$pending <- list()
+
+
+# Locate the outermost frame in the call stack whose function belongs to
+# `ggplot2`, `grid`, or `grDevices`. That is the frame whose return
+# marks the end of the current render -- it covers all three entry
+# paths:
+#   * `print.ggplot()` / `ggplotGrob()` (ggplot2 frame)
+#   * direct `grid::grid.draw(gtable)` (grid frame; e.g. RStudio's
+#     "Export > PDF" rebuilds the gtable and draws it without going
+#     back through `print.ggplot`, so without grid we'd see one
+#     message per `makeContent` call)
+#   * `grDevices::replayPlot()` on a recorded display list
+# Returning the first match (lowest stack index) gives the OUTERMOST
+# render boundary, so on.exit fires once at the end of the whole render.
+#' @noRd
+#' @keywords internal
+.find_render_frame <- function() {
+  n <- sys.nframe()
+  if (n <= 1L) return(NULL)
+  render_ns <- c("ggplot2", "grid", "grDevices")
+  for (i in seq_len(n - 1L)) {
+    fn <- tryCatch(sys.function(i), error = function(e) NULL)
+    if (is.null(fn)) next
+    env <- environment(fn)
+    if (!is.environment(env)) next
+    top <- topenv(env)
+    if (isNamespace(top) && environmentName(top) %in% render_ns) {
+      return(sys.frame(i))
+    }
+  }
+  NULL
+}
+
+
+# Buffer a per-layer diagnostic and arrange for a single consolidated
+# emission at the end of the current render.
+#
+# @param id           Stable key identifying the message kind (one buffer
+#                     per id per render).
+# @param geom_name    Name of the geom triggering the diagnostic.
+# @param meta         Named list of extra fields. Fields listed in
+#                     `union_keys` are unioned across calls (e.g. `axis`
+#                     so that one geom hitting `x` and another hitting
+#                     `y` yields a single "x and y" message); all other
+#                     fields are kept from the first call.
+# @param emit_fn      `function(geoms, meta)` -- builds and emits the
+#                     final cli message.
+# @param union_keys   Character vector of meta keys to union across
+#                     calls. Defaults to `character()`.
+#' @noRd
+#' @keywords internal
+.queue_or_emit <- function(id,
+                           geom_name,
+                           meta = list(),
+                           emit_fn,
+                           union_keys = character()) {
+  target_frame <- .find_render_frame()
+  if (is.null(target_frame)) {
+    emit_fn(geom_name, meta)
+    return(invisible())
+  }
+
+  state <- .ggpointless_state$pending[[id]]
+  first_call <- is.null(state)
+  if (first_call) {
+    state <- list(geoms = character(), meta = meta, emit_fn = emit_fn)
+  } else {
+    for (key in union_keys) {
+      state$meta[[key]] <- unique(c(state$meta[[key]], meta[[key]]))
+    }
+  }
+  state$geoms <- unique(c(state$geoms, geom_name))
+  .ggpointless_state$pending[[id]] <- state
+
+  if (first_call) {
+    # Build the on.exit expression with the function *value* captured
+    # (not a name lookup): the hook runs inside grid / grDevices /
+    # ggplot2's namespace frame, where `.flush_pending` is invisible by
+    # name. `rlang::call2()` produces `(<function>)(id)` semantics --
+    # eval calls the captured function directly. An earlier version
+    # used `ggpointless:::.flush_pending`, which works but trips R CMD
+    # check's "::: calls to the package's namespace" NOTE.
+    expr <- rlang::call2(.flush_pending, id)
+    do.call(
+      "on.exit",
+      list(expr, add = TRUE, after = TRUE),
+      envir = target_frame
+    )
+  }
+  invisible()
+}
+
+
+# Flush one buffer. Called by the on.exit hook registered in
+# `.queue_or_emit()` -- captured by value into the on.exit expression,
+# so the hook fires regardless of which namespace `on.exit` is in.
+#' @noRd
+#' @keywords internal
+.flush_pending <- function(id) {
+  state <- .ggpointless_state$pending[[id]]
+  .ggpointless_state$pending[[id]] <- NULL
+  if (is.null(state) || !length(state$geoms)) return(invisible())
+  state$emit_fn(state$geoms, state$meta)
+  invisible()
+}
+
+
+# Inform when a panel's x or y range is non-finite -- the canonical
+# symptom of `coord_transform()` applied to data outside the transform's
+# domain (e.g. `coord_transform(y = "log10")` with a y = 0 data point
+# becoming `log10(0) = -Inf`). Under that condition the panel range
+# becomes `[-Inf, Inf]`, every finite value normalises to ~0 NPC, and
+# all layers visually collapse to the panel edges -- a silent "no
+# layers" failure mode that's plain ggplot2's behaviour, not a
+# ggpointless bug, but worth surfacing so the user knows what to fix.
+#
+# Multiple layers in a single render share one consolidated message via
+# `.queue_or_emit()` (see comment above).
+#' @noRd
+#' @keywords internal
+.check_panel_range <- function(panel_params, geom_name) {
+  bad_y <- !is.null(panel_params$y.range) &&
+    any(!is.finite(panel_params$y.range))
+  bad_x <- !is.null(panel_params$x.range) &&
+    any(!is.finite(panel_params$x.range))
+  if (!bad_y && !bad_x) {
+    return(invisible())
+  }
+  axes <- c(if (bad_x) "x", if (bad_y) "y")
+  .queue_or_emit(
+    id = "panel_range",
+    geom_name = geom_name,
+    meta = list(axis = axes),
+    emit_fn = .emit_panel_range,
+    union_keys = "axis"
+  )
+}
+
+
+# cli emitter for the panel-range diagnostic. Receives the deduplicated
+# vector of geom names and the unioned `axis` meta from `.queue_or_emit()`.
+#' @noRd
+#' @keywords internal
+.emit_panel_range <- function(geoms, meta) {
+  axes <- meta$axis
+  axis_str <- if (length(axes) >= 2L) "x and y" else axes
+  cli::cli_warn(
+    c(
+      "!" = "{.fn {geoms}}: panel {axis_str}-range is non-finite.",
+      "*" = "Usually caused by {.fn coord_transform} applied to data \\
+             outside the transform's domain (e.g. {.code y = 0} under \\
+             {.code log10}, or negative values under {.code log} / \\
+             {.code sqrt}).",
+      "*" = "Layers will render at the panel edges and may appear \\
+             missing.",
+      "*" = "Use {.fn scale_y_log10} (or {.code scale_*_continuous(transform = ...)}) \\
+             instead of {.fn coord_transform} -- scale transforms run \\
+             before stats and drop bad values cleanly."
+    )
+  )
+}
+
+
+# Buffer a "rounded corners require a linear coordinate system" notice
+# from `geom_col_fade()` / `geom_rect_fade()` and emit a single
+# consolidated message at the end of the render (see `.queue_or_emit()`).
+#' @noRd
+#' @keywords internal
+.queue_rounded_corner_fallback <- function(geom_name) {
+  .queue_or_emit(
+    id = "rounded_corners_nonlinear",
+    geom_name = geom_name,
+    emit_fn = .emit_rounded_corner_fallback
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_rounded_corner_fallback <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: rounded corners require a linear \\
+             coordinate system.",
+      "i" = "Falling back to flat rendering (no rounding, no gradient)."
+    )
+  )
+}
+
+
+# Buffer the "device does not support gradient fills" notice from the
+# `geom_area_fade()` family (`pdf()` / `postscript()` Tier-3 fallback).
+# A single faceted or ridgeline plot can contain dozens of area grobs, so
+# without consolidation the user sees dozens of identical messages.
+#
+# `has_multi_fill` distinguishes the 1D fade (alpha gradient only) from
+# the 2D case (fill colour also varies within a group); unioned across
+# calls so a render that mixes both falls back to the richer wording.
+#' @noRd
+#' @keywords internal
+.queue_area_fade_no_gradient <- function(has_multi_fill,
+                                         geom_name = "geom_area_fade") {
+  .queue_or_emit(
+    id = "area_fade_no_gradient",
+    geom_name = geom_name,
+    meta = list(has_multi_fill = has_multi_fill),
+    emit_fn = .emit_area_fade_no_gradient,
+    union_keys = "has_multi_fill"
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_area_fade_no_gradient <- function(geoms, meta) {
+  any_multi <- any(meta$has_multi_fill)
+  lost <- if (any_multi) {
+    "The {.arg fill} colour gradient and the vertical alpha fade \\
+     are replaced by a single flat colour."
+  } else {
+    "The vertical alpha fade is replaced by a flat mid-alpha fill."
+  }
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support \\
+             gradient fills.",
+      "i" = paste(
+        lost,
+        "Switch to a device that supports gradients (e.g. \\
+         {.code ragg::agg_png()}, {.code cairo_pdf()}, \\
+         {.code svg()}) to keep the fade."
+      )
+    )
+  )
+}
+
+
+# Tier-2 fallback: device supports gradients but not Porter-Duff
+# compositing (`cairo_pdf()`). Only the 2D case (multi-fill within one
+# group) is degraded, so this is queued only when `has_multi_fill` is
+# TRUE at the call site.
+#' @noRd
+#' @keywords internal
+.queue_area_fade_no_composite <- function(geom_name = "geom_area_fade") {
+  .queue_or_emit(
+    id = "area_fade_no_composite",
+    geom_name = geom_name,
+    emit_fn = .emit_area_fade_no_composite
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_area_fade_no_composite <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support \\
+             Porter-Duff compositing.",
+      "i" = "The {.arg fill} colour gradient is replaced by a single \\
+             colour.  Switch to a device that supports compositing \\
+             (e.g. {.code ragg::agg_png()}, {.code svg()}) for the \\
+             combined effect."
+    )
+  )
+}
+
+
+# Tier-2 fallback shared by `geom_rect_fade()` / `geom_col_fade()` /
+# `geom_bar_fade()` flat (non-polar) rendering under `pdf()` /
+# `postscript()`. One grob per panel triggers `makeContent.*_fade_grob`,
+# so a faceted render duplicates the message N times without
+# consolidation.
+#' @noRd
+#' @keywords internal
+.queue_rect_col_no_gradient <- function(geom_name) {
+  .queue_or_emit(
+    id = "rect_col_no_gradient",
+    geom_name = geom_name,
+    emit_fn = .emit_rect_col_no_gradient
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_rect_col_no_gradient <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support \\
+             gradient fills.",
+      "i" = "Falling back to a flat semi-transparent fill. Switch to a \\
+             device that supports gradients (e.g. {.code ragg::agg_png()}, \\
+             {.code svg()}) for the full effect."
+    )
+  )
+}
+
+
+# Polar fallback shared by `geom_rect_fade()` / `geom_col_fade()` /
+# `geom_bar_fade()` under `coord_polar()` / `coord_radial()` when the
+# device lacks clipping paths or radial gradient patterns. One grob per
+# panel.
+#' @noRd
+#' @keywords internal
+.queue_rect_col_polar_no_clip_pattern <- function(geom_name) {
+  .queue_or_emit(
+    id = "rect_col_polar_no_clip_pattern",
+    geom_name = geom_name,
+    emit_fn = .emit_rect_col_polar_no_clip_pattern
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_rect_col_polar_no_clip_pattern <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support the \\
+             clipping path + radial gradient combination required for \\
+             polar fills.",
+      "i" = "Falling back to flat semi-transparent fills. Switch to a \\
+             device that supports both (e.g. {.code ragg::agg_png()}, \\
+             {.code svg()}) for the full effect."
+    )
+  )
+}
+
+
+# `geom_curve_fade()` compositing fallback (pdf, cairo_pdf, postscript,
+# or any device without Porter-Duff dest.in). One grob per panel.
+#' @noRd
+#' @keywords internal
+.queue_curve_no_composite <- function() {
+  .queue_or_emit(
+    id = "curve_no_composite",
+    geom_name = "geom_curve_fade",
+    emit_fn = .emit_curve_no_composite
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_curve_no_composite <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support \\
+             compositing.",
+      "i" = "Falling back to flat semi-transparent curves. Switch to a \\
+             device that supports compositing (e.g. {.code ragg::agg_png()}, \\
+             {.code svg()}) for the fade effect."
+    )
+  )
+}
+
+
+# `geom_path_fade()` compositing / clipping-paths fallback. Distinct
+# from the curve variant because the per-segment alpha-stepping fallback
+# loses linejoin -- the wording flags both losses (compositing AND
+# clipping) so the user knows which capability to chase. One grob per
+# panel.
+#' @noRd
+#' @keywords internal
+.queue_path_no_composite_clipping <- function() {
+  .queue_or_emit(
+    id = "path_no_composite_clipping",
+    geom_name = "geom_path_fade",
+    emit_fn = .emit_path_no_composite_clipping
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_path_no_composite_clipping <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support \\
+             compositing or clipping paths.",
+      "i" = "Falling back to per-segment alpha stepping (no linejoin). \\
+             Switch to a device that supports compositing (e.g. \\
+             {.code ragg::agg_png()}, {.code svg()}) for the fade effect."
+    )
+  )
+}
+
+
+# `geom_area_fade()` polar / radial fallback. Fires from `draw_group()`
+# (not a `makeContent` hook), once per group, and uses the warning
+# channel (the message is about an unsupported combination, not a
+# routine device limitation). Emitter keeps `cli::cli_warn()` for that
+# reason.
+#' @noRd
+#' @keywords internal
+.queue_area_polar_no_gradient <- function() {
+  .queue_or_emit(
+    id = "area_polar_no_gradient",
+    geom_name = "geom_area_fade",
+    emit_fn = .emit_area_polar_no_gradient
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_area_polar_no_gradient <- function(geoms, meta) {
+  cli::cli_warn(
+    c(
+      "!" = "{.fn {geoms}}: does not support gradient fills under \\
+             polar / radial coordinates.",
+      "i" = "Falling back to standard area rendering."
+    )
+  )
+}
+
+
+# Ridgeline outline-mask fallback. The ridgeline family uses Porter-Duff
+# `dest.out` to erase back-ridge outlines within front-ridge polygon
+# shapes (otherwise they bleed through transparent baselines). When the
+# device doesn't support compositing we draw outlines unmasked and emit
+# this informational message so the user understands why the bleed-
+# through is visible.
+#' @noRd
+#' @keywords internal
+.queue_ridgeline_outline_no_mask <- function(geom_name = "geom_ridgeline_fade") {
+  .queue_or_emit(
+    id = "ridgeline_outline_no_mask",
+    geom_name = geom_name,
+    emit_fn = .emit_ridgeline_outline_no_mask
+  )
+}
+
+
+#' @noRd
+#' @keywords internal
+.emit_ridgeline_outline_no_mask <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: the graphics device does not support \\
+             Porter-Duff compositing, so back-ridge outlines may bleed \\
+             through front-ridge transparent baselines.",
+      "i" = "Switch to a device that supports compositing (e.g. \\
+             {.code ragg::agg_png()}, {.code svg()}) for masked outlines, \\
+             or pass {.code outline.type = \"none\"} to hide them entirely."
+    )
+  )
 }
 
 
