@@ -1,0 +1,649 @@
+---
+title: "Doppelgänger"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Doppelgänger}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  dev       = "ragg_png",
+  dpi       = 300,
+  fig.asp   = 0.618,
+  fig.width = 6,
+  fig.height = 3,
+  fig.align = "center",
+  out.width = "80%"
+)
+```
+
+```{=html}
+<style>
+  .content h3 {
+    margin-top: -30px !important;
+  }
+
+  details {
+    margin-bottom: 40px;
+  }
+</style>
+```
+
+All `geom_*_fade()` functions in this vignette are drop-in replacements for
+their ggplot2 counterparts. So is `geom_point_glow()`. They expect the same data,
+support the same aesthetics, and use the same defaults — with two
+small additions:
+
+1. linear or radial gradient effect, and for rectangular geoms:
+2. support for rounded corners
+
+They do not add additional statistical meaning.
+
+All effects use either `grid::linearGradient()`, `grid::radialGradient()` or
+[Porter-Duff compositing](https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html). 
+
+> **Note**: Most but not all graphic devices that ship with R support 
+> gradients (ragg, Cairo-backed png on Linux/macOS, svg). The notable
+> exception is `grDevices::pdf()`.
+
+```{r setup-theme, warning=FALSE}
+library(ggpointless)
+
+# set consistent theme for all plots
+cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
+theme_set(
+  theme_minimal() +
+    theme(legend.position = "bottom") +
+    theme(geom = element_geom(fill = cols[1])) +
+    theme(palette.fill.discrete = c(cols[1], cols[3])) +
+    theme(palette.colour.discrete = cols)
+  )
+```
+
+## geom_area_fade
+
+`geom_area_fade()` behaves like `geom_area()` but fills each group with a
+linear gradient that fades from the fill colour to transparent at the baseline at
+`y = 0`.
+
+```{r area-fade-economics}
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade()
+```
+
+Use `alpha` to set the starting opacity and `alpha_fade_to` to control at which
+alpha value the gradient ends.
+
+```{r area-fade-alpha, fig.height = 3}
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(alpha = 0.75, alpha_fade_to = 0.1)
+```
+
+The direction can be reversed — transparent at the top, opaque at the
+baseline — by swapping their values. The outline colour is unaffected from
+the alpha logic.
+
+```{r geom-area-fade-reverse, warning=FALSE}
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(alpha = 0, alpha_fade_to = 1)
+```
+
+### 2D gradient
+
+When `fill` is mapped to a variable inside `aes()`, ggplot2 builds a
+**horizontal** colour gradient across each group. `geom_area_fade()` overlays
+its vertical alpha schedule on top, giving a true two-dimensional gradient:
+colour varies left-to-right while opacity fades from the data line down to
+the baseline.
+
+```{r area-fade-2d, fig.height = 3}
+set.seed(42)
+ggplot(economics, aes(date, unemploy)) +
+  geom_area_fade(aes(fill = uempmed), colour = cols[1]) +
+  scale_fill_continuous(palette = scales::colour_ramp(cols))
+```
+
+### Device compatibility and the fallback
+
+The 2D gradient depends on **Porter-Duff compositing**^[See: https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html], a feature of R's graphics engine added in R 4.2. When the active graphics
+device does not support compositing (e.g. `grDevices::pdf()`),
+`geom_area_fade()` falls back to a single-colour vertical fade: the
+horizontal colour gradient is lost, only the vertical alpha fade survives, and a one-time message is
+emitted:
+
+> ! `geom_area_fade()`: the graphics device does not support gradient fills.
+> The `fill` colour gradient is replaced by a single colour. Switch to a device that supports gradients (e.g. `ragg::agg_png()`, `svg()`, `cairo_pdf()`) for the full effect.
+> This message is displayed once per session.
+
+Most modern raster devices — including `ragg::agg_png()` and the
+Cairo-backed `png()` shipped on Linux and macOS — **do** support
+compositing, so the 2D gradient works out of the box. In RStudio, go to
+*Tools > Global Options > Graphics > Backend* and select *AGG* to ensure
+full support.
+
+### Multiple groups
+
+When your data contains multiple groups those are stacked (`position = "stack"`)
+and aligned (`stat = "align"`) -- just like `geom_area()` does it. By default,
+the alpha fade scales to the global maximum across _all_ groups
+(`alpha_scope = "global"`), so equal `|y|` always maps to equal opacity.
+
+```{r geom-area-fade-multiple-groups-basic, warning=FALSE}
+df1 <- data.frame(
+  g = c("a", "a", "a", "b", "b", "b"),
+  x = c(1, 3, 5, 2, 4, 6),
+  y = c(2, 5, 1, 3, 6, 7)
+)
+
+ggplot(df1, aes(x, y, fill = g)) +
+  geom_area_fade()
+```
+
+When groups have very different amplitudes or you may not use the default
+`position = "stack"` but `stat = "identity"` instead, this can make smaller
+groups nearly invisible next to dominant groups.
+
+```{r geom-area-fade-global, warning=FALSE}
+df_alpha_scope <- data.frame(
+  g = c("a", "a", "a", "b", "b", "b"),
+  x = c(1, 3, 5, 2, 4, 6),
+  y = c(1, 2, 1, 9, 10, 8)
+)
+p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+p + geom_area_fade(
+  alpha_scope = "global", # default
+  position = "identity"
+)
+```
+
+Setting `alpha_scope = "group"` lets the algorithm calculate the alpha range
+for each group separately.
+
+```{r geom-area-fade-group, warning=FALSE}
+p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+
+# alpha_scope = "group": each group uses the alpha range independently
+p + geom_area_fade(
+  alpha_scope = "group",
+  position = "identity"
+  )
+```
+
+## geom_col_fade
+
+`geom_col_fade()` is the fading counterpart of `geom_col()`: each bar is filled
+with a vertical alpha gradient, opaque at the tip and transparent at the
+baseline. `geom_bar_fade()` is the `stat = "count"` alias. Both accept a
+`radius` argument to draw bars with rounded corners and an `alpha_scope`
+argument to control whether the gradient is computed per bar (`"bar"`), per
+x-position (`"group"`), or relative to the tallest bar in the panel (`"global"`).
+
+```{r col-fade-dodge, fig.height = 4}
+# Mean highway MPG by car class and drive type
+df_hwy <- aggregate(hwy ~ class + drv, data = mpg, FUN = mean)
+df_hwy <- subset(df_hwy, drv %in% c("f", "r"))
+
+ggplot(df_hwy, aes(reorder(class, hwy), hwy, fill = drv)) +
+  geom_col_fade(
+    position    = "dodge",
+    alpha_scope = "global",
+    radius      = grid::unit(5, "pt")
+  ) +
+  scale_fill_manual(
+    values = c(f = cols[1], r = cols[3]),
+    labels = c(f = "front-wheel", r = "rear-wheel")
+  ) +
+  labs(
+    x    = NULL,
+    fill = NULL
+    )
+```
+
+## geom_density_fade
+
+`geom_density_fade()` pairs `GeomAreaFade` with `stat_density()` to compute and
+draw a kernel density estimate with a fading gradient. All smoothing parameters
+(`bw`, `adjust`, `kernel`, `bounds`, …) are forwarded to the stat.
+
+```{r density-fade-iris, fig.height = 3.5}
+ggplot(iris, aes(Sepal.Length, fill = Species, colour = Species)) +
+  geom_density_fade(position = "identity", alpha = 0.75) +
+  labs(x = "Sepal length (cm)", y = NULL, fill = NULL, colour = NULL)
+```
+
+### geom_ridgeline_density_fade
+
+This is a wrapper for [geom_ridgeline_fade]() where `stat` parameter
+uses `"density"` by default. A ridgeline plot, popularised by the cover of
+Joy Division's album [Unknown Pleasures](https://en.wikipedia.org/wiki/Unknown_Pleasures),
+stacks multiple lines vertically along the y-dimension. 
+
+Credit to the [ggridges packages](https://wilkelab.org/ggridges/index.html).
+
+```{r density-ridges-fade-iris, fig.height = 3.5}
+ggplot(iris, aes(Sepal.Length, y = Species)) +
+  geom_ridgeline_density_fade() +
+  labs(y = NULL)
+```
+
+## geom_freqpoly_fade
+
+`geom_freqpoly_fade()` draws the area under a frequency polygon — the filled
+region between the binned line and the baseline — using the same fading gradient
+as `geom_area_fade()`. It is paired with `stat_bin()`, so all binning parameters
+(`bins`, `binwidth`, `center`, `boundary`, …) are forwarded.
+
+```{r freqpoly-fade-mpg, fig.height = 3.5}
+ggplot(mpg, aes(hwy, fill = drv, colour = drv)) +
+  geom_freqpoly_fade(position = "identity", alpha = 0.7, bins = 20) +
+  scale_fill_manual(
+    values = cols[1:3],
+    labels = c("4" = "four-wheel", "f" = "front-wheel", "r" = "rear-wheel")
+  ) +
+  scale_colour_manual(
+    values = cols[1:3],
+    labels = c("4" = "four-wheel", "f" = "front-wheel", "r" = "rear-wheel")
+  ) +
+  labs(x = "Highway MPG", y = NULL, fill = NULL, colour = NULL)
+```
+
+## geom_histogram_fade
+
+`geom_histogram_fade()` is the fading counterpart of `geom_histogram()`:
+rounded, gradient-filled bars via `GeomColFade` paired with `stat_bin()`.
+`alpha_scope = "global"` scales all bars relative to the tallest one in the
+panel, so the height of a bar is reflected twice — in its physical size and
+in how opaque it is.
+
+```{r histogram-fade-diamonds, fig.height = 3.5}
+ggplot(diamonds, aes(carat, fill = cut)) +
+  geom_histogram_fade(alpha_scope = "global", bins = 40, colour = NA) +
+  scale_fill_viridis_d(direction = -1) +
+  labs(x = "Carat", y = "Count", fill = NULL)
+```
+
+## geom_point_glow
+
+`geom_point_glow()` is a drop-in replacement for `geom_point()` that adds a
+radial gradient glow behind each point using `grid::radialGradient()`. By default,
+alpha, colour and size inherit their values from `geom_point()`.
+
+```{r point-glow-basic, fig.height = 3.5}
+# Basic usage
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+   geom_point_glow()
+```
+
+You can control the alpha, colour, and size of the gradient with these arguments:
+
+- `glow_alpha`
+- `glow_colour`
+- `glow_size`
+
+
+```{r point-glow-overwrite-params, fig.height = 3.5}
+# Customizing glow parameters (fixed for all points)
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point_glow(
+    glow_alpha = 0.25,
+    glow_colour = "#0833F5",
+    glow_size = 5
+    )
+```
+
+
+### Big Dipper
+
+The constellation [Big Dipper](https://en.wikipedia.org/wiki/Big_Dipper), drawn with star positions in right ascension and declination.
+
+```{r big-dipper, fig.height = 5, fig.width = 7.5, echo = FALSE}
+# source: https://de.wikipedia.org/wiki/Gro%C3%9Fer_B%C3%A4r#Sterne
+# colours, coordinates all approximations of course
+big_dipper <- data.frame(
+  star = c(
+    "Megrez",
+    "Dubhe",
+    "Merak",
+    "Phecda",
+    "Megrez",
+    "Alioth",
+    "Mizar",
+    "Alkaid"
+  ),
+  ra_h = c(12.257, 11.062, 11.031, 11.897, 12.257, 12.900, 13.399, 13.792),
+  dec_d = c(57.03, 61.75, 56.38, 53.70, 57.03, 55.96, 54.93, 49.31),
+  mag = c(3.32, 1.81, 2.34, 2.41, 3.32, 1.77, 2.23, 1.86),
+  colour = c("#CFDDFF", "#FFDBBF", "#C7D9FF", "#C8D9FF", "#CFDDFF", "#C7D9FF", "#CBDBFF", "#BAD0FF")
+)
+
+big_dipper$x <- -big_dipper$ra_h
+big_dipper$y <- big_dipper$dec_d
+
+# Linear size mapping: brighter (lower mag) → larger point
+mag_to_size <- \(m) pmax(0.7, (5.5 - m) * 1.0)
+
+ggplot(big_dipper, aes(x = x, y = y)) +
+  geom_path(colour = "#F5F5F5", linewidth = 0.6, alpha = .6) +
+  geom_point_glow(
+    data = big_dipper[-1L, ], # don't plot Megrez a second time
+    aes(x = -ra_h, y = dec_d, size = mag_to_size(mag), colour = colour,
+        alpha = mag),
+    shape = 8,
+    glow_alpha = 0.75
+  ) +
+  scale_alpha_continuous(range = c(1, 0.4), guide = "none") +
+  scale_size_identity() +
+  scale_colour_identity() +
+  geom_text(
+    aes(x = -ra_h, y = dec_d, label = star),
+    colour = "#bbccdd",
+    vjust = -1.5,
+    size = 2.5,
+    check_overlap = TRUE
+  ) +
+  scale_x_continuous(
+    breaks = seq(-14, -8, by = 1),
+    labels = \(x) paste0(abs(x), "h")
+  ) +
+  scale_y_continuous(labels = \(x) paste0(x, "°")) +
+  labs(
+    title = "Big Dipper",
+    x = NULL,
+    y = NULL
+  ) +
+  coord_cartesian(clip = 'off') +
+  theme(
+    panel.background = element_rect(fill = grid::linearGradient(colours = c("#1D2180", "#081849")), colour = NA),
+    plot.background = element_rect(fill = grid::linearGradient(colours = c("#1D2180", "#081849")), colour = NA),
+    panel.grid = element_blank(),
+    text = element_text(colour = "#344B73"),
+    plot.title = element_text(size = 18, face = "bold")
+  )
+```
+
+```{r big-dipper-code, eval = FALSE}
+# source: https://de.wikipedia.org/wiki/Gro%C3%9Fer_B%C3%A4r#Sterne
+# colours, coordinates all approximations of course
+big_dipper <- data.frame(
+  star = c(
+    "Megrez",
+    "Dubhe",
+    "Merak",
+    "Phecda",
+    "Megrez",
+    "Alioth",
+    "Mizar",
+    "Alkaid"
+  ),
+  ra_h = c(12.257, 11.062, 11.031, 11.897, 12.257, 12.900, 13.399, 13.792),
+  dec_d = c(57.03, 61.75, 56.38, 53.70, 57.03, 55.96, 54.93, 49.31),
+  mag = c(3.32, 1.81, 2.34, 2.41, 3.32, 1.77, 2.23, 1.86),
+  colour = c("#CFDDFF", "#FFDBBF", "#C7D9FF", "#C8D9FF", "#CFDDFF", "#C7D9FF", "#CBDBFF", "#BAD0FF")
+)
+
+big_dipper$x <- -big_dipper$ra_h
+big_dipper$y <- big_dipper$dec_d
+
+# Linear size mapping: brighter (lower mag) → larger point
+mag_to_size <- \(m) pmax(0.7, (5.5 - m) * 1.0)
+
+ggplot(big_dipper, aes(x = x, y = y)) +
+  geom_path(colour = "#F5F5F5", linewidth = 0.6, alpha = .6) +
+  geom_point_glow(
+    data = big_dipper[-1L, ], # don't plot Megrez a second time
+    aes(x = -ra_h, y = dec_d, size = mag_to_size(mag), colour = colour,
+        alpha = mag),
+    shape = 8,
+    glow_alpha = 0.75
+  ) +
+  scale_alpha_continuous(range = c(1, 0.4), guide = "none") +
+  scale_size_identity() +
+  scale_colour_identity() +
+  geom_text(
+    aes(x = -ra_h, y = dec_d, label = star),
+    colour = "#bbccdd",
+    vjust = -1.5,
+    size = 2.5,
+    check_overlap = TRUE
+  ) +
+  scale_x_continuous(
+    breaks = seq(-14, -8, by = 1),
+    labels = \(x) paste0(abs(x), "h")
+  ) +
+  scale_y_continuous(labels = \(x) paste0(x, "°")) +
+  labs(title = "Big Dipper", x = NULL, y = NULL) +
+  coord_cartesian(clip = 'off') +
+  theme(
+    panel.background = element_rect(fill = grid::linearGradient(colours = c("#1D2180", "#081849")), colour = NA),
+    plot.background = element_rect(fill = grid::linearGradient(colours = c("#1D2180", "#081849")), colour = NA),
+    panel.grid = element_blank(),
+    text = element_text(colour = "#344B73"),
+    plot.title = element_text(size = 18, face = "bold")
+  )
+```
+
+## geom_rect_fade
+
+The `geom_rect_fade()` function draws a rectangle with a linear colour gradient,
+allowing you to subtly highlight elements. In the following example, a
+`geom_segment_fade()` is also added to serve as a border. Like all
+`geom_*_fade()` functions, this one is primarily intended to enhance the visual
+appeal for the viewer.
+
+
+```{r rect-fade, fig.height = 3.5}
+df <-data.frame(
+  x = seq_len(15),
+  y = c(90, 93, 88, 91, 86, 85, 89, 84, 96, 72, 68, 66, 62, 59, 46)
+)
+
+ggplot(df, aes(x, y)) +
+  geom_rect_fade(
+    data = data.frame(xmin = 10, xmax = 15, ymin = 0, ymax = 100),
+    mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[1],
+    alpha = 0,
+    alpha_fade_to = 0.1,
+    inherit.aes = FALSE
+  ) +
+  geom_segment_fade(
+    data = data.frame(x = 10, xend = 10, y = 100, yend = 0),
+    aes(x = x, xend = xend, y = y, yend = yend),
+    colour = cols[1],
+    alpha = 0.75,
+    alpha_fade_to = 0,
+    inherit.aes = FALSE
+  ) +
+  geom_fourier(colour = cols[3]) +
+  geom_point(size = 4, colour = cols[3], alpha = 0.25) +
+  scale_x_continuous(NULL, breaks = 10, labels = "Did something\nchange here?") +
+  scale_y_continuous(NULL, limits = c(0, NA), labels = \(x) paste(x, "%")) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank()) +
+  theme(panel.grid.major.x = element_blank()) +
+    theme(
+    axis.text.x = element_text(
+      size = 10,
+      colour = ggplot2::alpha(cols[1], 0.75),
+      face = "bold"
+    )
+  )
+```
+
+## geom_ridgeline_fade
+
+`geom_ridgeline_fade()` draws overlapping ridge shapes — each group's area sits
+at its own vertical baseline — with the same fading gradient as
+`geom_area_fade()`. The convenience wrapper `geom_ridgeline_density_fade()` pairs
+the geom with `stat_density()` to compute kernel density estimates on the fly.
+
+
+
+### Women in UK Headlines
+
+The chart below is inspired by [*Women in Headlines*](https://pudding.cool/2022/02/women-in-headlines/)
+by The Pudding (Jan Diehm and Amber Thomas, 2022). The original piece tracks how
+often words describing women appear in news headlines across four countries from
+2010 to 2021. The data are fetched directly from The Pudding's public data
+repository.
+
+```{r ridgeline-pudding-data, message=FALSE}
+url_pudding <- paste0(
+  "https://raw.githubusercontent.com/the-pudding/data/master/",
+  "women-in-headlines/country_time_freqrank.csv"
+)
+df_women <- read.csv(url_pudding)
+
+# UK only; drop the "all countries" aggregate rows
+df_uk <- subset(df_women, country == "UK")
+
+# Top 14 words by headline-frequency rank (lower rank = more prominent)
+top_words <- unique(df_uk[, c("word", "hfreq_rank")])
+top_words <- top_words[!duplicated(top_words$word), ]
+top_words <- head(top_words[order(top_words$hfreq_rank), ], 14)
+
+df_plot <- subset(df_uk, word %in% top_words$word)
+
+# Order factor: most prominent word at top (highest y)
+word_order <- rev(top_words$word[order(top_words$hfreq_rank)])
+df_plot$word <- factor(df_plot$word, levels = word_order)
+df_plot$y_pos <- as.numeric(df_plot$word)
+
+# Normalise height per word: each ridge's own peak = 1
+# so all waves are visually comparable regardless of absolute frequency
+maxima <- tapply(df_plot$freq_prop_headlines, df_plot$word, max, na.rm = TRUE)
+maxima[maxima == 0] <- 1
+df_plot$height_norm <- df_plot$freq_prop_headlines /
+  maxima[as.character(df_plot$word)]
+```
+
+```{r ridgeline-pudding-plot, fig.height=7, fig.asp=NULL}
+ggplot(
+  df_plot,
+  aes(year, y_pos,
+    height = height_norm,
+    group  = word,
+    fill   = word
+  )
+) +
+  geom_ridgeline_fade(
+    scale        = 0.85,
+    alpha_fade_to = 0.05,
+    alpha_scope  = "area",
+    colour       = NA
+  ) +
+  scale_x_continuous(
+    breaks = seq(2010, 2021, by = 2),
+    expand = c(0.02, 0)
+  ) +
+  scale_y_continuous(
+    breaks = seq_along(levels(df_plot$word)),
+    labels = levels(df_plot$word),
+    expand = c(0.02, 0)
+  ) +
+  scale_fill_viridis_d(option = "C", direction = -1, guide = "none") +
+  labs(
+    title    = "Women in UK Headlines, 2010\u20132021",
+    subtitle = paste0(
+      "Each wave shows how often a word appeared relative to its own peak year.\n",
+      "Words ranked by headline frequency (top = most prominent)."
+    ),
+    caption  = paste0(
+      "Data: The Pudding \u2014 Jan Diehm & Amber Thomas (2022), ",
+      "pudding.cool/2022/02/women-in-headlines/\n",
+      "Reproduced with geom_ridgeline_fade() from ggpointless."
+    ),
+    x = NULL,
+    y = NULL
+  ) +
+  theme(
+    plot.background  = element_rect(fill = "#0d1117", colour = NA),
+    panel.background = element_rect(fill = "#0d1117", colour = NA),
+    panel.grid.major.x = element_line(colour = "#ffffff22", linewidth = 0.3),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor   = element_blank(),
+    text               = element_text(colour = "#e0e0e0"),
+    axis.text          = element_text(colour = "#aaaaaa", size = 8),
+    plot.title         = element_text(colour = "#ffffff", face = "bold", size = 13),
+    plot.subtitle      = element_text(colour = "#aaaaaa", size = 8, lineheight = 1.4),
+    plot.caption       = element_text(colour = "#555555", size = 6.5, lineheight = 1.3),
+    plot.margin        = margin(12, 16, 10, 12)
+  )
+```
+
+## geom_unit_col
+
+`geom_unit_col()` renders each value as a vertical strip of discrete cells —
+one cell per unit — coloured by `fill`. It follows the same `x`/`y` convention
+as `geom_col()`: `x` identifies each bar; `y` is a pre-computed integer count per
+segment. Use `geom_unit_bar()` when you want ggplot2 to count observations for
+you (like `geom_bar()`).
+
+### Title Towns
+
+The chart below is inspired by [*Title Towns*](https://pudding.cool/2018/11/titletowns/)
+by The Pudding (Russell Goldenberg, 2018), which visualises how many professional
+sports championships each US city has won. Each cell represents one title.
+With `coord_flip()`, each cell occupies one unit along the count axis; the flat-strip
+appearance comes from having many cells per bar, not from non-square cells.
+
+```{r col-waffle-titletowns, fig.asp = 0.55, fig.width = 7}
+titles <- data.frame(
+  city = rep(
+    c("New York", "Boston", "Chicago", "Los Angeles",
+      "Detroit", "San Francisco", "Philadelphia", "Pittsburgh"),
+    each = 4
+  ),
+  sport = rep(c("NFL", "NBA", "NHL", "MLB"), times = 8),
+  n = c(
+     9,  2, 11, 35,   # New York
+     5, 17,  6, 10,   # Boston
+    10,  6,  6,  6,   # Chicago
+     2, 11,  3,  6,   # Los Angeles
+     4,  3, 11,  4,   # Detroit
+     7,  4,  0,  7,   # San Francisco
+     5,  4,  2,  7,   # Philadelphia
+     6,  0,  5,  5    # Pittsburgh
+  )
+)
+
+# Order cities top-to-bottom by total title count
+totals       <- tapply(titles$n, titles$city, sum)
+titles$city  <- factor(titles$city, levels = names(sort(totals)))
+titles$sport <- factor(titles$sport, levels = c("MLB", "NBA", "NFL", "NHL"))
+titles       <- titles[titles$n > 0L, ]
+
+cols_sport <- c(
+  "MLB" = "#30D840",
+  "NBA" = "#3EA3DB",
+  "NFL" = "#2E46BC",
+  "NHL" = "#ECE833"
+)
+
+ggplot(titles, aes(x = city, y = n, fill = sport)) +
+  geom_unit_col() +
+  scale_fill_manual(values = cols_sport) +
+  coord_flip() +
+  labs(
+    title    = "Title Towns",
+    subtitle = "Major professional sports championships by US city (NFL, NBA, NHL, MLB)",
+    caption  = paste0(
+      "Inspired by \u2018Title Towns\u2019 \u00b7 The Pudding (Russell Goldenberg, 2018)\n",
+      "pudding.cool/2018/11/titletowns/ \u00b7 ",
+      "Reproduced with geom_unit_col() from ggpointless"
+    ),
+    x    = NULL,
+    fill = NULL
+  ) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor   = element_blank(),
+    axis.text.y        = element_text(size = 9),
+    plot.caption       = element_text(size = 6.5, lineheight = 1.3),
+    legend.position    = "bottom"
+  )
+```

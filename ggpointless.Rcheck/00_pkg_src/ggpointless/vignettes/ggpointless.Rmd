@@ -1,0 +1,705 @@
+---
+title: "Layer Functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Layer Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  dev       = "ragg_png",
+  dpi       = 300,
+  fig.asp   = 0.618,
+  fig.width = 6,
+  fig.height = 3,
+  fig.align = "center",
+  out.width = "80%"
+)
+```
+
+```{=html}
+<style>
+  .content h3 {
+    margin-top: -30px !important;
+  }
+
+  details {
+    margin-bottom: 40px;
+  }
+</style>
+```
+
+
+This vignette covers the mathematically driven layer functions in ggpointless —
+geom/stat pairs that compute something non-trivial before drawing. For the
+visual-effect geoms (fades and glows), see the
+[Doppelgänger](doppelganger.html) vignette.
+
+```{r setup-theme, warning=FALSE}
+library(ggpointless)
+
+# set consistent theme for all plots
+cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
+theme_set(
+  theme_minimal() +
+    theme(legend.position = "bottom") +
+    theme(geom = element_geom(fill = cols[1])) +
+    theme(palette.fill.discrete = c(cols[1], cols[3])) +
+    theme(palette.colour.discrete = cols)
+  )
+```
+
+## geom_arch & stat_arch
+
+### Catenary curves and arches
+
+A **catenary** is the curve formed by a flexible chain or cable hanging freely
+between two fixed supports. It follows this equation:
+
+$$y = a \cosh\!\left(\frac{x}{a}\right)$$
+
+`geom_arch()` draws these inverted catenary curves between successive points.
+The shape is controlled by `arch_length` or `arch_height` (vertical rise above
+the highest endpoint of each segment). By default the arc length is twice
+the Euclidean distance calculated for each segment.
+
+```{r arch-basic, fig.height = 3}
+ggplot(data.frame(x = 1:2, y = c(0, 0)), aes(x, y)) +
+  geom_arch(arch_height = 0.6)
+```
+
+### Controlling arch height with stat_arch
+
+`stat_arch()` exposes the underlying computation. Here it shows the effect of
+different `arch_height` values between the same two endpoints:
+
+```{r stat-arch-compare, fig.height = 3.5}
+ggplot(data.frame(x = c(0, 2), y = c(0, 0)), aes(x, y)) +
+  stat_arch(arch_height = 0.5, aes(colour = "arch_height = 0.5")) +
+  stat_arch(arch_height = 1.5, aes(colour = "arch_height = 1.5")) +
+  stat_arch(arch_height = 3.0, aes(colour = "arch_height = 3"))
+```
+
+### The Rice House
+
+A real-world application is the **[Rice House](https://en.wikipedia.org/wiki/Rice_House,_Eltham)**
+in Eltham, whose distinctive roofline consists of shallow catenary arched
+spans rising above vertical columns. The sketch below reconstructs its simplified
+cross-section:
+
+```{r rice-house, fig.height = 3}
+rice_house <- data.frame(
+  x = c(0, 1.5, 2.5, 3.5, 5),
+  y = c(0, 1, 1, 1, 0)
+)
+
+ggplot(rice_house, aes(x, y)) +
+  geom_arch(arch_height = 0.15, linewidth = 2, colour = "#333333") +
+  geom_segment(aes(xend = x, yend = 0), colour = "#333333") +
+  geom_hline(yintercept = 0, colour = "#4a7c59", linewidth = 3) +
+  coord_equal() +
+  theme_void() +
+  labs(caption = "Rice House, Eltham (simplified catenary cross-section)")
+```
+
+## geom_catenary & stat_catenary
+
+`geom_catenary()` draws the *non*-inverted, hanging-chain form between
+successive points.
+
+```{r catenary-basic, fig.height = 3}
+set.seed(1)
+ggplot(data.frame(x = 1:6, y = sample(6)), aes(x, y)) +
+  geom_catenary() +
+  geom_point(size = 3, colour = "#333333")
+```
+
+### chain_length
+
+By default the chain length is twice the Euclidean distance per segment. Pass
+`chain_length` to set an explicit arc length — longer values make the chain sag
+more. If the value is shorter than the straight-line distance a warning is
+issued and a straight line is drawn instead.
+
+```{r catenary-chain-length, fig.height = 3}
+ggplot(data.frame(x = c(0, 1), y = c(1, 1)), aes(x, y)) +
+  lapply(c(1.5, 1.75, 2), \(cl) {
+    geom_catenary(chain_length = cl)
+  }) +
+  ylim(0, 1.05) +
+  labs(title = "Increasing chain_length adds more sag")
+```
+
+### sag
+
+`sag` sets the vertical drop below the lowest endpoint of each segment, giving
+you direct control over how much the chain droops:
+
+```{r catenary-sag, fig.height = 3}
+df_sag <- data.frame(x = c(0, 2, 4, 6), y = c(1, 1, 1, 1))
+
+ggplot(df_sag, aes(x, y)) +
+  geom_catenary(sag = c(0.1, 0.5, 1.2)) +
+  geom_point(size = 3, colour = "#333333") +
+  labs(title = "sag = 0.1, 0.5, 1.2 (left to right)")
+```
+
+### combine chain_length and sag
+
+`sag` sets the vertical drop below the lowest endpoint of each segment, giving
+you direct control over how much the chain droops:
+
+```{r catenary-sag-vs-chain-length, fig.height = 3}
+df_sag <- data.frame(x = c(0, 2, 4, 6), y = c(1, 1, 1, 1))
+
+ggplot(df_sag, aes(x, y)) +
+  geom_catenary(
+    chain_length = c(2, NA, 3),
+    sag = c(0.1, 0.5, NA)
+  ) +
+  geom_point(size = 3, colour = "#333333") +
+  labs(title = "sag wins over chain_length") +
+  ylim(c(-.25, 1))
+```
+
+## geom_chaikin & stat_chaikin
+
+Chaikin's corner-cutting algorithm smooths a polygonal path by iteratively
+replacing each corner with two new points placed at a given ratio along the
+adjacent edges. With `ratio = 0.25` (the default) and `iterations = 5` the
+path converges to a smooth B-spline approximation.
+
+```{r chaikin-basic, fig.height = 3}
+set.seed(42)
+dat <- data.frame(x = seq.int(10), y = sample(15:30, 10))
+
+ggplot(dat, aes(x, y)) +
+  geom_line(linetype = "dashed", colour = "#333333") +
+  geom_chaikin(colour = cols[1])
+```
+
+### Effect of ratio
+
+`ratio` controls how aggressively corners are cut. At `ratio = 0.5` the new
+points coincide with the edge midpoints, producing the maximum rounding
+possible in a single pass.
+
+```{r chaikin-ratio, fig.height = 3}
+triangle <- data.frame(x = c(0, 0.5, 1), y = c(0, 1, 0))
+
+ggplot(triangle, aes(x, y)) +
+  geom_polygon(fill = NA, colour = "grey70", linetype = "dashed") +
+  geom_chaikin(ratio = 0.10, mode = "closed", aes(colour = "ratio = 0.10")) +
+  geom_chaikin(ratio = 0.25, mode = "closed", aes(colour = "ratio = 0.25")) +
+  geom_chaikin(ratio = 0.50, mode = "closed", aes(colour = "ratio = 0.50")) +
+  coord_equal()
+```
+
+### Effect of iterations
+
+Each iteration halves the sharpness of every corner.
+The `r if (identical(Sys.getenv("IN_PKGDOWN"), "true")) "animation" else "plot"`
+below `r if (identical(Sys.getenv("IN_PKGDOWN"), "true")) "steps through iterations = 0, 1, 2, 3, 5, and 10" else "shows iterations = 3"`, applied to a five-pointed star. `r if (!identical(Sys.getenv("IN_PKGDOWN"), "true")) "See the [package website](https://flrd.github.io/ggpointless/articles/ggpointless.html#effect-of-iterations) for an animated version."`
+
+```{r chaikin-iterations-gif, echo=FALSE, out.width="60%", eval=identical(Sys.getenv("IN_PKGDOWN"), "true")}
+knitr::include_graphics("../man/figures/chaikin_iterations.gif")
+```
+
+```{r chaikin-iterations-static, echo=FALSE, fig.height = 3, fig.align="center", eval=!identical(Sys.getenv("IN_PKGDOWN"), "true")}
+n_pts   <- 5L
+outer_r <- 1
+inner_r <- 0.38
+ang_out <- seq(pi / 2, pi / 2 + 2 * pi, length.out = n_pts + 1L)[seq_len(n_pts)]
+ang_in  <- ang_out + pi / n_pts
+star <- data.frame(
+  x = c(rbind(outer_r * cos(ang_out), inner_r * cos(ang_in))),
+  y = c(rbind(outer_r * sin(ang_out), inner_r * sin(ang_in)))
+)
+
+ggplot(star, aes(x, y)) +
+  geom_polygon(
+    fill = NA, colour = "#333333", linetype = "dotted", linewidth = 0.55
+  ) +
+  stat_chaikin(
+    geom = "polygon", mode = "closed", iterations = 3,
+    fill = "#311dfc", alpha = 0.20, colour = "#311dfc", linewidth = 0.8
+  ) +
+  coord_equal(clip = "off") +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_line(linetype = "dotted"),
+    axis.text  = element_blank(),
+    axis.ticks = element_blank()
+  )
+```
+
+The source script that generates the animation is `inst/scripts/gen_chaikin_gif.R`.
+
+### Smoothing a closed polygon with stat_chaikin
+
+`stat_chaikin()` can be combined with any geom. Pass `geom = "polygon"` to
+smooth the boundary of a filled shape:
+
+```{r chaikin-polygon, fig.height = 3.5}
+# An irregular hexagon
+hex <- data.frame(
+  x = c(0.0, 0.4, 1.0, 1.2, 0.9, 0.1),
+  y = c(0.2, 1.0, 0.9, 0.3, -0.2, 0.0)
+)
+
+ggplot(hex, aes(x, y)) +
+  geom_polygon(fill = "grey95", colour = "#333333", linetype = "dashed") +
+  stat_chaikin(geom = "polygon", mode = "closed", fill = cols[1], colour = NA) +
+  coord_equal() +
+  labs(title = "Original polygon (dashed) with smoothed fill (purple)")
+```
+
+## geom_fourier & stat_fourier
+
+`geom_fourier()` fits a truncated **discrete Fourier transform** to the
+supplied x/y observations and renders the reconstructed curve. Fewer harmonics produce
+a smoother, low-frequency summary; retaining all harmonics reproduces the
+original signal exactly (up to interpolation artefacts).
+
+```{r fourier-harmonics, fig.height = 3.5}
+set.seed(42)
+n <- 150
+df_f <- data.frame(
+  x = seq(0, 2 * pi, length.out = n),
+  y = sin(seq(0, 2 * pi, length.out = n)) +
+    0.4 * sin(3 * seq(0, 2 * pi, length.out = n)) +
+    rnorm(n, sd = 0.25)
+)
+
+ggplot(df_f, aes(x, y)) +
+  geom_point(alpha = 0.25) +
+  geom_fourier(aes(colour = "n_harmonics = 1"), n_harmonics = 1) +
+  geom_fourier(aes(colour = "n_harmonics = 3"), n_harmonics = 3)
+```
+
+### Detrending
+
+A linear drift in the data will dominate the low-frequency coefficients,
+preventing the Fourier series from capturing the periodic structure. Set
+`detrend = "lm"` (or `"loess"`) to subtract the trend before the transform;
+it is added back afterwards so the output remains on the original scale.
+
+```{r fourier-detrend, fig.height = 3.5}
+set.seed(3)
+x_d <- seq(0, 4 * pi, length.out = 100)
+df_d <- data.frame(
+  x = x_d,
+  y = sin(x_d) + x_d * 0.4 + rnorm(100, sd = 0.2)
+)
+
+ggplot(df_d, aes(x, y)) +
+  geom_point(alpha = 0.35) +
+  geom_fourier(aes(colour = "as is"),
+    n_harmonics = 3
+  ) +
+  geom_fourier(
+    aes(colour = "detrend = 'lm'"),
+    n_harmonics = 3,
+    detrend = "lm") +
+  labs(
+    title = "geom_fourier() w/wo detrending",
+    x = NULL, y = NULL
+  )
+```
+
+### Irregular spacing
+
+The Fourier transform (via `stats::fft()`) assumes that observations are
+**evenly spaced** in time. If this assumption is violated, the Fourier curve
+will not pass through every data point:
+
+```{r fourier-dates-irregular-spacing, fig.height = 3.5}
+df_gap <- data.frame(
+  x = c(1:10, 19:20),
+  y = sin(seq_len(12))
+  )
+ggplot(df_gap, aes(x, y)) +
+  geom_fourier()
+```
+
+The last example is certainly somewhat exaggerated, but irregular data is
+relevant when you work directly with calendar data, for example with monthly
+time series, since months are known to have between 28 and 31 days and
+therefore consecutive observations do not have the same interval between them.
+
+## geom_lexis & stat_lexis
+
+`geom_lexis()` draws a 45° lifeline for each observation from its start to its
+end. The required aesthetics are `x` and `xend`; `y` and `yend` are calculated
+by `stat_lexis()` and represent the cumulative duration.
+
+```{r lexis-basic, fig.height = 3.5}
+df_l <- data.frame(
+  key  = c("A", "B", "B", "C", "D"),
+  x    = c(0, 1, 6, 5, 6),
+  xend = c(5, 4, 10, 8, 10)
+)
+
+p <- ggplot(df_l, aes(x = x, xend = xend, colour = key)) +
+  coord_equal()
+
+p + geom_lexis()
+```
+
+When there is a gap between two events of the same cohort, a horizontal dotted
+segment bridges the gap. Set `gap_filler = FALSE` to hide it.
+
+```{r lexis-gap, fig.height = 3.5}
+p + geom_lexis(gap_filler = FALSE)
+```
+
+### Using after_stat(type) and custom point styling
+
+The computed variable `type` takes the value `"solid"` for 45° lifelines and
+`"dotted"` for horizontal gap-fillers. Map it to `linetype` to make the
+distinction explicit, and use `point_colour` to style the endpoint dot
+independently of the lifeline colour.
+
+```{r lexis-type, fig.height = 3.5}
+p +
+  stat_lexis(
+    aes(linetype = after_stat(type)),
+    point_colour = "#333333",
+    shape        = 21,
+    fill         = "white",
+    size         = 2.5,
+    stroke       = 0.8
+  ) +
+  scale_linetype_identity()
+```
+
+### Date and POSIXct classes
+
+`geom_lexis()` works with Date and POSIXct objects as well as numerics. The
+y-axis shows duration in the native unit of the scale (days for Date, seconds
+for POSIXct).
+
+```{r lexis-dates, fig.height = 3.5}
+df_dates <- data.frame(
+  key   = c("A", "B"),
+  start = c(2019, 2021),
+  end   = c(2022, 2022)
+)
+df_dates[, c("start", "end")] <- lapply(
+  df_dates[, c("start", "end")],
+  \(i) as.Date(paste0(i, "-01-01"))
+)
+
+ggplot(df_dates, aes(x = start, xend = end, group = key)) +
+  geom_lexis() +
+  scale_y_continuous(
+    breaks = 0:3 * 365.25,
+    labels = \(i) paste0(floor(i / 365.25), " yr")
+  ) +
+  coord_fixed() +
+  labs(y = "Duration")
+```
+
+
+## geom_pointless & stat_pointless
+
+`geom_pointless()` highlights selected observations — first, last, minimum,
+maximum, or all of them — by default with points. Its name reflects that it is not
+particularly useful on its own, but in conjunction with `geom_line()` and
+friends, it adds useful context at a glance.
+
+```{r pointless-basic, fig.height = 3}
+x <- seq(-pi, pi, length.out = 100)
+df1 <- data.frame(var1 = x, var2 = rowSums(outer(x, 1:5, \(x, y) sin(x * y))))
+
+p <- ggplot(df1, aes(x = var1, y = var2)) +
+  geom_line()
+
+p + geom_pointless(location = "all", size = 3)
+```
+
+Map the computed variable `location` to `colour` to distinguish the four roles:
+
+```{r pointless-colour, fig.height = 3}
+p +
+  geom_pointless(
+    aes(colour = after_stat(location)),
+    location = "all",
+    size = 3
+  ) +
+  theme(legend.position = "bottom")
+```
+
+### Order and orientation
+
+Locations are determined in data order. This matters when e.g. the path crosses itself:
+
+```{r pointless-spiral, fig.height = 3.5, fig.show = 'hold'}
+x <- seq(5, -1, length.out = 1000) * pi
+spiral <- data.frame(var1 = sin(x) * 1:1000, var2 = cos(x) * 1:1000)
+
+p_spi <- ggplot(spiral) +
+  geom_path() +
+  coord_equal(xlim = c(-1000, 1000), ylim = c(-1000, 1000))
+
+p_spi +
+  aes(x = var1, y = var2) +
+  geom_pointless(aes(colour = after_stat(location)), location = "all", size = 3) +
+  labs(subtitle = "orientation = 'x'")
+
+p_spi +
+  aes(y = var1, x = var2) +
+  geom_pointless(aes(colour = after_stat(location)), location = "all", size = 3) +
+  labs(subtitle = "orientation = 'y'")
+```
+
+When `location = "all"`, points are drawn bottom to top in the order:
+`"maximum"` < `"minimum"` < `"last"` < `"first"`. Passing an explicit vector
+lets you override this:
+
+```{r pointless-order, fig.height = 3, fig.show = 'hold'}
+df2 <- data.frame(x = 1:2, y = 1:2)
+p2 <- ggplot(df2, aes(x, y)) +
+  geom_path() +
+  coord_equal()
+
+p2 + geom_pointless(aes(colour = after_stat(location)),
+  location = c("first", "last", "minimum", "maximum"), size = 4
+) +
+  labs(subtitle = "first on top")
+
+p2 + geom_pointless(aes(colour = after_stat(location)),
+  location = c("maximum", "minimum", "last", "first"), size = 4
+) +
+  labs(subtitle = "maximum on top")
+```
+
+`geom_pointless()` respects `ggplot2`'s group structure and works naturally with
+facets:
+
+```{r pointless-facets, fig.height = 7}
+ggplot(
+  subset(economics_long, variable %in% c("psavert", "unemploy")),
+  aes(x = date, y = value)
+) +
+  geom_line(colour = "#333333") +
+  geom_pointless(
+    aes(colour = after_stat(location)),
+    location = c("minimum", "maximum"),
+    size = 3
+  ) +
+  stat_pointless(
+    geom = "text",
+    aes(label = after_stat(y)),
+    location = c("minimum", "maximum"),
+    hjust = -.55) +
+  facet_wrap(vars(variable), ncol = 1, scales = "free_y") +
+  theme(legend.position = "bottom") +
+  labs(x = NULL, y = NULL, colour = NULL)
+```
+
+Here it adds horizontal reference lines at the minimum and maximum:
+
+```{r pointless-hline, fig.height = 3}
+set.seed(42)
+df3 <- data.frame(x = 1:10, y = sample(10))
+
+ggplot(df3, aes(x, y)) +
+  geom_line() +
+  stat_pointless(
+    aes(yintercept = y, colour = after_stat(location)),
+    location = c("minimum", "maximum"),
+    geom = "hline"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+## geom_unit_bar, geom_unit_col, geom_unit_histogram
+
+The `geom_unit_*()` family draws bar charts where each bar is a strip of
+discrete cells. Every cell represents one unit of the value axis (or
+`cell_size` units when aggregating). Inspired by isotype / pictogram
+visualisations and the [waffle](https://github.com/hrbrmstr/waffle) package,
+but built on the standard ggplot2 layering and coord systems so it composes
+cleanly with themes, facets, `coord_polar()`, and the rest of the grammar.
+
+Three constructors, mirroring the ggplot2 vocabulary:
+
+* `geom_unit_bar()` counts observations (like `geom_bar()`).
+* `geom_unit_col()` uses pre-computed `y` (like `geom_col()`).
+* `geom_unit_histogram()` bins a continuous variable (like `geom_histogram()`).
+
+### Basic usage
+
+```{r unit-bar-basic, fig.height = 3}
+ep_data <- data.frame(
+  episode = factor(
+    rep(paste0("Ep ", 1:5), each = 2),
+    levels = paste0("Ep ", 5:1)
+  ),
+  gender  = factor(rep(c("Female", "Male"), 5)),
+  minutes = c(8, 12, 15, 5, 6, 14, 10, 10, 4, 16)
+)
+
+ggplot(ep_data, aes(x = minutes, y = episode, fill = gender)) +
+  geom_unit_col(orientation = "y") +
+  coord_equal() +
+  labs(x = "Minutes", y = NULL, fill = NULL)
+```
+
+### Caveats worth knowing
+
+A handful of details are easy to overlook. Each subsection below is a
+minimal reproducible example of the problem and the fix.
+
+#### Aspect ratio under `coord_equal()`
+
+Cells are `width × cell_size` rectangles in data space. The `width`
+default is inherited from `geom_bar()` at `0.9`; `cell_size` defaults to
+`1`. Under `coord_equal(ratio = 1)` cells render ~11 % taller than wide.
+
+```{r unit-cell-aspect, fig.height = 3}
+df <- data.frame(x = c("A", "B"), y = 1:2)
+
+# Default (cells are NOT square — 0.9w × 1h)
+ggplot(df, aes(x, y)) +
+  geom_unit_col() +
+  coord_equal()
+
+# Fix: match width to cell_size
+ggplot(df, aes(x, y)) +
+  geom_unit_col(width = 1) +
+  coord_equal()
+```
+
+#### `position = "fill"` is a trap
+
+`position_fill()` normalises every stack to height 1. With the default
+`cell_size = 1`, each stack becomes exactly one cell tall — the
+unit-visualisation semantics disappear. Use `"stack"` or `"dodge"`.
+
+```{r unit-fill-trap, fig.height = 3}
+ggplot(ep_data, aes(episode, minutes, fill = gender)) +
+  geom_unit_col(position = "fill") +
+  coord_equal() +
+  labs(caption = "Every stack collapses to 1 cell — not what you want")
+```
+
+#### `position = "dodge"` splits width across groups
+
+Each dodged sub-bar has `width / n_groups`. Under `coord_equal()` cells
+become progressively narrower relative to their height.
+
+```{r unit-dodge-narrow, fig.height = 3}
+ggplot(ep_data, aes(episode, minutes, fill = gender)) +
+  geom_unit_col(position = "dodge") +
+  coord_equal()
+```
+
+To restore square cells under dodge, widen the `coord_equal()` ratio
+proportionally. `ep_data` has `n_groups = 2` (Female, Male), default
+`width = 0.9`, so `ratio = 2 / 0.9`:
+
+```{r unit-dodge-square, fig.height = 3}
+ggplot(ep_data, aes(episode, minutes, fill = gender)) +
+  geom_unit_col(position = "dodge") +
+  coord_equal(ratio = 2 / 0.9)
+```
+
+Setting `width = n_groups` does **not** work here: it makes each category's
+total span wider than the distance between categories and the dodged
+sub-bars from adjacent categories overlap.
+
+#### `cell_padding` and `coord_flip()` — length-2 padding in action
+
+`cell_padding` accepts `c(vertical, horizontal)` where the two axes are
+measured in the **stat's canonical orientation** (value axis = y).
+Under `coord_flip()`, what was vertical (between-cell) gap becomes the
+horizontal visual gap after the flip, and vice versa. This is a clean
+way to dial the two gap directions independently:
+
+```{r unit-padding-flip, fig.height = 3}
+ggplot(ep_data, aes(episode, minutes, fill = gender)) +
+  geom_unit_col(width = 1, cell_padding = c(0.1, 0.005)) +
+  coord_flip()
+```
+
+Read the result: generous gaps between neighbouring cells (what was
+"vertical" in the stat's frame) and tight packing against each bar's
+edges (what was "horizontal"). Swap the two numbers to flip the emphasis.
+
+#### Scale transforms run before the stat
+
+`scale_y_log10()` causes cells to tile in log space, not in the original
+count space. For unit rendering, use a linear scale.
+
+```{r unit-log-trap, fig.height = 3}
+df_log <- data.frame(
+  category = c("A", "B", "C"),
+  count    = c(10, 100, 1000)
+)
+
+# Cells tile in log10 space (values 1, 2, 3) — visually uninformative
+ggplot(df_log, aes(category, count)) +
+  geom_unit_col(width = 1) +
+  scale_y_log10() +
+  coord_equal()
+```
+
+#### Date and POSIXct on the value axis
+
+`cell_size` is in whatever unit the value axis uses — days for `Date`,
+seconds for `POSIXct`. Useful for timeline-style charts.
+
+```{r unit-date, fig.height = 3}
+df_date <- data.frame(
+  task     = c("Design", "Build", "Test"),
+  deadline = as.Date(c("2024-01-08", "2024-01-22", "2024-02-05"))
+)
+
+ggplot(df_date, aes(task, deadline)) +
+  geom_unit_col(cell_size = 7, width = 7) +    # weekly cells; square under coord_equal
+  coord_equal() +
+  labs(y = "Deadline (1 cell = 1 week)")
+```
+
+#### Large counts: `cell_size` + `label_cells()`
+
+When counts are large, naive rendering would emit thousands of rects and
+`cell_count_cap` (default `1e4`) falls back to plain bars. Use `cell_size` to
+aggregate, and `label_cells()` to relabel the axis in cell counts.
+
+```{r unit-large-counts, fig.height = 3}
+df_pop <- data.frame(
+  country = c("Luxembourg", "Ireland", "Denmark"),
+  pop     = c(6.4e5, 5.0e6, 5.8e6)
+)
+
+ggplot(df_pop, aes(country, pop)) +
+  geom_unit_col(cell_size = 5e5, width = 5e5) +
+  scale_y_continuous(labels = label_cells(5e5)) +
+  coord_equal() +
+  labs(y = "People (1 cell = 500k)")
+```
+
+#### Stacked-segment junction has no gap
+
+Cells within a segment get a gap; the junction between two stacked
+segments (same bar, different `fill`) does **not** — cells touch across
+the segment boundary. By design: the stack reads as one continuous bar
+broken into coloured bands.
+
+```{r unit-stack-junction, fig.height = 3}
+ggplot(ep_data, aes(episode, minutes, fill = gender)) +
+  geom_unit_col(width = 1) +
+  coord_equal() +
+  labs(caption = "Gap between cells inside each gender; no gap at the gender junction")
+```
+
+
+
