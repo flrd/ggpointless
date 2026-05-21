@@ -144,8 +144,14 @@ stat_chaikin(
 
 - ratio:
 
-  Numeric. Cutting ratio must be a number between `0` and `1`. If
-  `ratio > 0.5`, then it will be flipped to `1 - ratio`.
+  Numeric. Cutting ratio, a number in `[0, 1]`. The conventional Chaikin
+  range is `[0, 0.5]`: values outside that range are flipped to
+  `1 - ratio` with a warning, because ratios above `0.5` are not
+  geometrically meaningful in the usual corner-cutting sense. For
+  **closed** paths the flipped result has the same vertex set as the
+  input ratio (with a cyclic shift). For **open** paths it is a
+  different curve – prefer increasing `iterations` if you want stronger
+  smoothing.
 
 - arrow:
 
@@ -198,7 +204,7 @@ stat_chaikin(
 
 - closed:
 
-  **\[deprecated\]** Use `mode` instead.
+  **\[superseded\]** Use `mode` instead.
 
 ## Value
 
@@ -224,8 +230,9 @@ iterations is 10, default is 5.
 
 ## References
 
-Chaikin, G. An algorithm for high speed curve generation. Computer
-Graphics and Image Processing 3 (1974), 346–349
+Chaikin, G. M. (1974). An algorithm for high-speed curve generation.
+*Computer Graphics and Image Processing*, 3(4), 346–349.
+[doi:10.1016/0146-664X(74)90028-8](https://doi.org/10.1016/0146-664X%2874%2990028-8)
 
 ## See also
 
@@ -238,15 +245,15 @@ smooth and tidy spatial features
 aesthetics are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                     |                                                                       |
-|-----|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)       | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)      | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)             | → inferred                                                            |
-| •   | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -254,6 +261,7 @@ Learn more about setting these aesthetics in
 ## Examples
 
 ``` r
+library(ggplot2)
 set.seed(42)
 dat <- data.frame(
   x = seq.int(10),
@@ -276,13 +284,13 @@ p2 <- ggplot(triangle, aes(x, y)) +
   geom_path(linetype = "12") +
   coord_equal()
 
-# ratio lets you control the cutting amount
+# Ratio lets you control the cutting amount
 p2 + geom_chaikin(ratio = .1)
 
 p2 + geom_chaikin(ratio = .5)
 
 
-# mode controls whether the result is an open or closed shape
+# Mode controls whether the result is an open or closed shape
 p2 + geom_chaikin(mode = "open")   # default
 
 p2 + geom_chaikin(mode = "closed")

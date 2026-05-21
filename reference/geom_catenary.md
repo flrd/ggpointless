@@ -58,7 +58,7 @@ stat_catenary(
 stat_arch(
   mapping = NULL,
   data = NULL,
-  geom = "line",
+  geom = "arch",
   position = "identity",
   ...,
   arch_length = NULL,
@@ -171,7 +171,7 @@ stat_arch(
 
 - chainLength:
 
-  **\[deprecated\]** Use `chain_length` instead.
+  **\[superseded\]** Use `chain_length` instead.
 
 - na.rm:
 
@@ -244,11 +244,8 @@ object that can be added to a
 
 ## See also
 
-[`geom_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
-for fitting smooth curves to data via Fourier series,
-[`geom_chaikin()`](https://flrd.github.io/ggpointless/reference/geom_chaikin.md)
-for smoothing paths via corner cutting. The catenary equation is
-described at <https://en.wikipedia.org/wiki/Catenary>.
+The catenary equation is described at
+<https://en.wikipedia.org/wiki/Catenary>.
 
 ## Aesthetics
 
@@ -256,15 +253,15 @@ described at <https://en.wikipedia.org/wiki/Catenary>.
 aesthetics are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                     |                                                                       |
-|-----|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)       | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)      | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)             | → inferred                                                            |
-| •   | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -276,7 +273,7 @@ library(ggplot2)
 
 df <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
 
-# basic usage
+# Basic usage
 p <- ggplot(df, aes(x, y)) + ylim(-3, NA) + geom_point(size = 3)
 p + geom_catenary()
 
@@ -288,7 +285,7 @@ p + geom_catenary(sag = 2)
 p + geom_catenary(sag = c(2, 1, 1))
 
 
-# if sag and chain_length are provided for same segment(s), sag wins
+# If sag and chain_length are provided for same segment(s), sag wins
 p + geom_catenary(sag = c(2, 1, NA), chain_length = 10)
 #> Both `sag` and `chain_length` supplied for 2 segments; using `sag`.
 #> This message is displayed once every 8 hours.

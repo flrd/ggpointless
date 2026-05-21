@@ -1,8 +1,8 @@
 # Lexis diagrams
 
-This geom can be used to plot 45° lifelines for a cohort. Lexis diagrams
-are named after Wilhelm Lexis and used by demographers for more than a
-century.
+This geom can be used to plot 45 deg lifelines for a cohort. Lexis
+diagrams are named after Wilhelm Lexis and used by demographers for more
+than a century.
 
 ## Usage
 
@@ -214,14 +214,12 @@ object that can be added to a
 
 ## Details
 
-This geom draws 45° lines from the start to the end of a 'lifetime'. It
-is a combination of a segment, and a point. Besides `y` and `yend`
+This geom draws 45 deg lines from the start to the end of a 'lifetime'.
+It is a combination of a segment, and a point. Besides `y` and `yend`
 coordinates this geom creates one additional variable called `type` in
 the layer data. You might want to map to an aesthetic with
 [`ggplot2::after_stat()`](https://ggplot2.tidyverse.org/reference/aes_eval.html),
-see Examples section and
-[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.md)
-for more details.
+see *Examples* and `vignette("ggpointless")` for more details.
 
 Rows in your data with either missing `x` or `xend` values will be
 removed because your segments must start and end somewhere.
@@ -232,21 +230,21 @@ removed because your segments must start and end somewhere.
 are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                     |             |
-|-----|-------------------------------------------------------------------------------------|-------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |             |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |             |
-| •   | **[`xend`](https://ggplot2.tidyverse.org/reference/aes_position.html)**             |             |
-| •   | **[`yend`](https://ggplot2.tidyverse.org/reference/aes_position.html)**             |             |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)       | → `NA`      |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)      | → `"black"` |
-| •   | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)        | → `NA`      |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)             | → inferred  |
-| •   | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → `"solid"` |
-| •   | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → `0.5`     |
-| •   | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)     | → `19`      |
-| •   | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)      | → `1.5`     |
-| •   | `stroke`                                                                            | → `0.5`     |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`xend`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`yend`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | `stroke` | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -254,12 +252,13 @@ Learn more about setting these aesthetics in
 ## Examples
 
 ``` r
+library(ggplot2)
 df1 <- data.frame(
   key = c("A", "B", "B", "C", "D", "E"),
   start = c(0, 1, 6, 5, 6, 9),
   end = c(5, 4, 10, 9, 8, 11)
 )
-p <- ggplot(df1, aes(x = start, xend = end, color = key))
+p <- ggplot(df1, aes(x = start, xend = end, colour = key))
 p +
   geom_lexis()
 
@@ -272,7 +271,7 @@ p +
   )
 
 
-# change point appearance
+# Change point appearance
 p + geom_lexis(
   point_colour = "black",
   size = 3,
@@ -282,13 +281,13 @@ p + geom_lexis(
 )
 
 
-# missing values will be removed
+# Missing values will be removed
 df2 <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   start = c(0, 1, 7, 5, 6),
   end = c(5, 4, 13, 9, NA)
 )
-ggplot(df2, aes(x = start, xend = end, color = key)) +
+ggplot(df2, aes(x = start, xend = end, colour = key)) +
   geom_lexis()
 #> Warning: Removed 1 row containing non-finite outside the scale range (`stat_lexis()`).
 

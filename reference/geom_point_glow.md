@@ -1,7 +1,7 @@
 # Points that Glow
 
-geom_point_glow is a version of
-([`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html))
+`geom_point_glow()` is a version of
+[`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
 that adds a glow (radial gradient) behind each point.
 
 ## Usage
@@ -131,17 +131,29 @@ geom_point_glow(
 - glow_alpha:
 
   Transparency of the glow between 0 (fully transparent) and 1 (fully
-  opaque). Defaults to `0.5`.
+  opaque). Defaults to `0.5`. Either a scalar or a numeric vector whose
+  length matches the number of points.
 
 - glow_colour:
 
-  colour of the glow. If `NA` (default), it inherits the colour of the
-  point itself.
+  Colour of the glow. If `NA` (default), it inherits the colour of the
+  point itself. Either a scalar colour or a character vector whose
+  length matches the number of points.
 
 - glow_size:
 
-  Numerical value for the glow radius. If `NA` (default), it is
-  calculated as three times the point size.
+  Glow radius in `ggplot2` size units (same scale as the `size`
+  aesthetic in
+  [`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)).
+  If `NA` (default), the glow is rendered at nine times the point's
+  `size`. Either a scalar or a numeric vector whose length matches the
+  number of points.
+
+  For the halo to be visible, `glow_size` must exceed the point's `size`
+  – otherwise the point grob (drawn on top) fully covers the glow. If
+  this happens the geom emits a one-shot informational message at draw
+  time pointing you at the fix (enlarge the glow or shrink the point).
+  See examples.
 
 - na.rm:
 
@@ -172,6 +184,13 @@ A
 object that can be added to a
 [`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
 
+## Coordinate systems
+
+`geom_point_glow()` works in all coordinate systems. The glow effect
+remains point-centric and circular in device space, even in non-linear
+coordinates like
+[`ggplot2::coord_polar()`](https://ggplot2.tidyverse.org/reference/coord_radial.html).
+
 ## References
 
 Murrell, P. (2022). "Vectorised Pattern Fills in R Graphics." Technical
@@ -190,17 +209,17 @@ Version 1.
 aesthetics are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                 |                                                                       |
-|-----|---------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**            |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**            |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)   | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)    | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)         | → inferred                                                            |
-| •   | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | `stroke`                                                                        | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | `stroke` | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -210,24 +229,46 @@ Learn more about setting these aesthetics in
 ``` r
 library(ggplot2)
 
-# Basic usage
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+# Tiny dataset on purpose: each glow point becomes its own
+# `grid::radialGradient` pattern, and the example runner accumulates
+# patterns from every package example into a single pdf() device.  On
+# large pdf runs that pattern cache can trigger an upstream R bug at
+# `dev.off()` -- unrelated to your real plots.
+df <- head(mtcars, 10)
+
+# Basic usage -- the default glow is 9x the point's `size` aesthetic,
+# so it's always visibly larger than the point itself.
+ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
   geom_point_glow()
 
 
-# Customizing glow parameters (fixed for all points)
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point_glow(glow_colour = "#333", glow_alpha = 0.25, glow_size = 5) +
-  theme_minimal()
-
-
-# use the Geom with another Stat
-ggplot(head(economics), aes(date, uempmed)) +
-  geom_line() +
-  stat_pointless(
-    geom = "PointGlow",
+# \donttest{
+  # Customising the glow: fixed values applied to every point, while
+  # point colour is set to transparent
+  ggplot(df, aes(wt, mpg)) +
+    geom_point_glow(
+    colour = "transparent",
     glow_colour = "tomato",
-    glow_size = 10,
-    location = c("first", "last")
-)
+    glow_alpha = .75,
+    glow_size = 20
+  )
+
+
+  # Per-point glow: pass a length-N vector for `glow_colour`, `glow_alpha`,
+  # or `glow_size`.
+  ggplot(df, aes(wt, mpg)) +
+    geom_point_glow(glow_colour = rainbow(nrow(df)), glow_size = 15)
+
+
+  # Use the Geom with another Stat to glow only specific observations:
+  ggplot(head(economics), aes(date, uempmed)) +
+    geom_line() +
+    stat_pointless(
+      geom = "PointGlow",
+      glow_colour = "tomato",
+      glow_size = 10,
+      location = c("first", "last")
+    )
+
+# }
 ```

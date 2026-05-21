@@ -1,38 +1,10 @@
 # ggpointless
 
-ggpointless is an extension of the
+`ggpointless` is an extension of the
 [`ggplot2`](https://ggplot2.tidyverse.org/) package providing additional
-layers.
+layers. These layers group into two categories:
 
-## Installation
-
-You can install ggpointless from CRAN with:
-
-``` r
-install.packages("ggpointless")
-```
-
-Or install development version from Github with
-
-``` r
-# install.packages("pak")
-pak::pkg_install("flrd/ggpointless")
-```
-
-## What will you get
-
-The package groups into two categories:
-
-**Visual effects** — purely aesthetic layers that change how data looks
-without transforming it:
-
-- [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-  – area plots with a gradient fill
-- [`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
-  – adds a radial gradient glow to point plots
-
-**Data transformations** — geoms backed by a stat that fits or
-transforms data:
+Data transformations — geoms that fit or transform data:
 
 - [`geom_arch()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md)
   &
@@ -49,8 +21,9 @@ transforms data:
 - [`geom_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
   &
   [`stat_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
-  – fits a Fourier series to `x`/`y` observations and renders the
-  reconstructed curve
+  – fits a Fourier series to `x`/`y` observations
+- [`geom_gridline()`](https://flrd.github.io/ggpointless/reference/geom_gridline.md)
+  – gridlines as a layer (drawn above other geoms)
 - [`geom_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
   &
   [`stat_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
@@ -60,203 +33,93 @@ transforms data:
   [`stat_pointless()`](https://flrd.github.io/ggpointless/reference/geom_pointless.md)
   – emphasises selected observations with points
 
-See
-[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for details and examples.
+Visual effects — purely aesthetic layers that change how data looks
+without transforming it. The following layers are mostly drop-in
+replacements for their `ggplot2` counterparts. They add visual flair
+like alpha gradients but no statistical transformation:
 
-### Theme setup
+- [`geom_abline_fade()`](https://flrd.github.io/ggpointless/reference/geom_abline_fade.md)
+  /
+  [`geom_hline_fade()`](https://flrd.github.io/ggpointless/reference/geom_abline_fade.md)
+  /
+  [`geom_vline_fade()`](https://flrd.github.io/ggpointless/reference/geom_abline_fade.md)
+- [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+- [`geom_col_fade()`](https://flrd.github.io/ggpointless/reference/geom_col_fade.md)
+  /
+  [`geom_bar_fade()`](https://flrd.github.io/ggpointless/reference/geom_col_fade.md)
+- [`geom_density_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+- [`geom_freqpoly_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+- [`geom_histogram_fade()`](https://flrd.github.io/ggpointless/reference/geom_histogram_fade.md)
+- [`geom_path_fade()`](https://flrd.github.io/ggpointless/reference/geom_path_fade.md)
+  /
+  [`geom_line_fade()`](https://flrd.github.io/ggpointless/reference/geom_path_fade.md)
+  /
+  [`geom_step_fade()`](https://flrd.github.io/ggpointless/reference/geom_path_fade.md)
+- [`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
+- [`geom_rect_fade()`](https://flrd.github.io/ggpointless/reference/geom_rect_fade.md)
+- [`geom_ridgeline_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  /
+  [`geom_ridgeline_density_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  /
+  [`geom_ridgeline_freqpoly_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  /
+  [`geom_ridgeline_histogram_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+- [`geom_segment_fade()`](https://flrd.github.io/ggpointless/reference/geom_segment_fade.md)
+  /
+  [`geom_curve_fade()`](https://flrd.github.io/ggpointless/reference/geom_segment_fade.md)
+- [`geom_unit_bar()`](https://flrd.github.io/ggpointless/reference/geom_unit_bar.md)
+  /
+  [`geom_unit_col()`](https://flrd.github.io/ggpointless/reference/geom_unit_bar.md)
+  – isotype / unit bar charts
+- [`geom_unit_histogram()`](https://flrd.github.io/ggpointless/reference/geom_unit_histogram.md)
+  – isotype / unit histogram
+
+See the [Examples
+article](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for more examples.
+
+## Installation
+
+`ggpointless` requires **R** ≥ 4.2 and `ggplot2` ≥ 4.0.0. You can
+install it from CRAN with:
 
 ``` r
-library(ggpointless)
-#> Loading required package: ggplot2
 
-# set consistent theme for all plots
+install.packages("ggpointless")
+```
+
+## Usage
+
+The chunk below sets a colour palette so the README plots share a
+consistent look. It’s not required; only the look of your plots will
+differ.
+
+``` r
+
+library(ggplot2)
+library(ggpointless)
+
+# Brand palette -- kept in sync with the vignette
 cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
 theme_set(
-  theme_minimal() + 
-    theme(geom = element_geom(fill = cols[1])) +
-    theme(palette.fill.discrete = c(cols[1], cols[3])) +
-    theme(palette.colour.discrete = cols)
-  )
-```
-
-## geom_arch
-
-[`geom_arch()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md)
-draws a catenary arch (inverted catenary curve) between successive
-points. Hence it’s mirroring
-[`geom_catenary()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md).
-
-``` r
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-p <- ggplot(df_arch, aes(x, y)) +
-    geom_point(size = 3) +
-  ylim(0, 3.5)
-
-p + geom_arch()
-```
-
-![](reference/figures/README-geom-arch-basic-example-1.png)
-
-By default the arch length is twice the Euclidean distance. You can
-change that for each segment using the arguments `arch_length` or
-`arch_height` (vertical rise above the *highest* endpoint of each
-segment).
-
-``` r
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-ggplot(df_arch, aes(x, y)) +
-  geom_arch(
-    arch_height = c(1.5, NA, 0.5),
-    arch_length = c(NA, 6, NA)
-    ) +
-  geom_point(size = 3) +
-  ylim(0, 3.5)
-```
-
-![](reference/figures/README-geom-arch-height-sag-1.png)
-
-## geom_area_fade
-
-[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-behaves like
-[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-but fills each area with a vertical [linear
-gradient](https://search.r-project.org/R/refmans/grid/html/patterns.html).
-
-``` r
-set.seed(42)
-df_fade <- data.frame(
-  x = seq_len(60),
-  y = cumsum(rnorm(60, sd = 0.35))
-)
-
-p <- ggplot(df_fade, aes(x, y))
-p + geom_area_fade()
-```
-
-![](reference/figures/README-geom-area-fade-1.png) By default, the
-gradient fully transparent at at `y = 0` (the baseline) and
-proportionally opaque at the data values. That is, opacity scales with
-absolute distance from zero, so e.g. `y = -1` and `y = +1` always
-receive the same alpha.
-
-You can control the alpha value the fill fades to using the
-`alpha_fade_to` argument. By that logic you can effectively reverse the
-direction of the gradient. The outline colour is unaffected from the
-alpha logic.
-
-``` r
-p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
-```
-
-![](reference/figures/README-geom-area-fade-reverse-1.png)
-
-[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-supports the `orientation` argument familiar from other `geom_*`
-functions. With `orientation = "y"`, you create a horizontal area chart
-where the gradient fades from `x = 0` toward the data values.
-
-``` r
-p + geom_area_fade(
-  aes(y, x),
-  orientation = "y",
-  colour = "#333333" # changes outline colour
-  )
-```
-
-![](reference/figures/README-geom-area-fade-orientation-1.png)
-
-### 2D gradient
-
-Since [ggplot2 version
-4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
-was released both
-[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-and
-[`geom_ribbon()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-allow a varying `fill` aesthetic within a group.
-[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-creates a 2D-gradient in such cases which combines the vertical and
-horizontal gradients.
-
-``` r
-p + geom_area_fade(aes(fill = y), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-![](reference/figures/README-geom-area-fade-2D-gradient-1.png)
-
-> **Note** – Not all graphic devices support this kind of gradient, see
-> [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-> for more details and examples.
-
-### Multiple groups
-
-When your data contains multiple groups those are stacked
-(`position = "stack"`) and aligned (`stat = "align"`) – just like
-[`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-does it. By default, the alpha fade scales to the global maximum across
-*all* groups (`alpha_scope = "global"`), so equal `|y|` always maps to
-equal opacity.
-
-``` r
-df1 <- data.frame(
-  g = c("a", "a", "a", "b", "b", "b"),
-  x = c(1, 3, 5, 2, 4, 6),
-  y = c(2, 5, 1, 3, 6, 7)
-)
-
-ggplot(df1, aes(x, y, fill = g)) +
-  geom_area_fade()
-```
-
-![](reference/figures/README-geom-area-fade-multiple-groups-basic-1.png)
-
-When groups have very different amplitudes or you may not use the
-default `position = "stack"` but `stat = "identity"` instead, this can
-make smaller groups nearly invisible next to dominant groups.
-
-``` r
-df_alpha_scope <- data.frame(
-  g = c("a", "a", "a", "b", "b", "b"),
-  x = c(1, 3, 5, 2, 4, 6),
-  y = c(1, 2, 1, 9, 10, 8)
-)
-p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
-p + geom_area_fade(
-  alpha_scope = "global", # default
-  position = "identity"
+  theme_minimal() +
+    theme(
+      legend.position           = "bottom",
+      geom                      = element_geom(fill = cols[1]),
+      palette.fill.discrete     = cols,
+      palette.colour.discrete   = cols,
+      palette.fill.continuous   = cols,
+      palette.colour.continuous = cols
+    )
 )
 ```
 
-![](reference/figures/README-geom-area-fade-global-1.png)
+## Statistical transformations
 
-Setting `alpha_scope = "group"` lets the algorithm calculate the alpha
-range for each group separately.
-
-``` r
-p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
-
-# alpha_scope = "group": each group uses the alpha range independently
-p + geom_area_fade(
-  alpha_scope = "group", 
-  position = "identity"
-  )
-```
-
-![](reference/figures/README-geom-area-fade-group-1.png)
-
-## geom_catenary
-
-[`geom_catenary()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md)
-draws a flexible curve that simulates a chain or rope hanging loosely
-between successive points. By default, the chain length is twice the
-Euclidean distance between each `x`/`y` pair. The shape can be
-controlled via `chain_length` or `sag`, i.e vertical drop below the
-*lowest* endpoint of each segment.
+### Catenary curves and arches
 
 ``` r
+
 set.seed(5)
 df_catenary <- data.frame(x = 1:4, y = sample(4))
 ggplot(df_catenary, aes(x, y)) +
@@ -264,13 +127,11 @@ ggplot(df_catenary, aes(x, y)) +
   geom_point(size = 3)
 ```
 
-![](reference/figures/README-geom-catenary-1.png)
-
-The `sag` argument can be used to define each segment’s drop based on
-the smallest value of each segment. `NA` keeps the default. If you
-provide `sag` and `chain_length` for the same segment, then `sag` wins.
+![Four points connected by a catenary curve sagging between adjacent
+points.](reference/figures/README-geom-catenary-1.png)
 
 ``` r
+
 ggplot(df_catenary, aes(x, y)) +
   geom_catenary(
     sag = c(2, .5, NA),
@@ -280,16 +141,28 @@ ggplot(df_catenary, aes(x, y)) +
 #> This message is displayed once every 8 hours.
 ```
 
-![](reference/figures/README-geom-catenary-sag-1.png)
-
-## geom_chaikin
-
-[`geom_chaikin()`](https://flrd.github.io/ggpointless/reference/geom_chaikin.md)
-applies Chaikin’s corner cutting algorithm to turn a ragged path or
-polygon into a smooth one. The `closed` argument controls whether the
-path is treated as a closed polygon, or an open path.
+![Same four-point catenary with per-segment overrides — the first
+segment sags deeper, the second tighter, the third uses a longer chain
+length.](reference/figures/README-geom-catenary-sag-1.png)
 
 ``` r
+
+ggplot(df_catenary, aes(x, y)) +
+  geom_arch(
+    arch_height = c(1.5, NA, 0.5),
+    arch_length = c(NA, 6, NA)
+    ) +
+  geom_point(size = 3)
+```
+
+![Inverted catenary arches connecting four points; each arch peaks
+midway between two adjacent
+points.](reference/figures/README-geom-arch-height-sag-1.png)
+
+### Chaikin’s corner cutting algorithm
+
+``` r
+
 lst <- list(
   data = list(
     whale = data.frame(x = c(.5, 4, 4, 3.5, 2), y = c(.5, 1, 1.5, .5, 3)),
@@ -312,41 +185,32 @@ ggplot(mapping = aes(x, y)) +
   coord_equal()
 ```
 
-![](reference/figures/README-geom-chaikin-1.png)
+![Four polygon shapes drawn with sharp dashed outlines and overlaid with
+smoothed Chaikin corner-cut
+curves.](reference/figures/README-geom-chaikin-1.png)
 
-## geom_fourier
-
-[`geom_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
-fits a Fourier series (via
-[fft()](https://search.r-project.org/R/refmans/stats/html/fft.html)) to
-the supplied `x`/`y` observations and renders the reconstructed smooth
-curve. By default all harmonics up to the Nyquist limit are used, giving
-an exact interpolating fit; reducing `n_harmonics` progressively smooths
-the result.
-
-The animation below shows how
-[`geom_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
-approximates a square wave as the number of harmonics grows from `n = 1`
-to the Nyquist limit:
-
-![](reference/figures/fourier_square_wave.gif)
-
-The source script that generates the animation is at
-`inst/scripts/gen_fourier_gif.R`.
-
-An optional `detrend` argument removes slow non-periodic trends before
-the transform; `detrend` accepts one of `"lm"` or `"loess"`.
+### Discrete Fourier transform
 
 ``` r
-set.seed(1)
-x_d <- seq(0, 4 * pi, length.out = 100)
+
+x_d <- seq(0, 4 * pi, length.out = 15)
 df_d <- data.frame(
   x = x_d,
-  y = sin(x_d) + x_d * 0.4 + rnorm(100, sd = 0.2)
+  y = sin(x_d) + x_d * 0.4 + rnorm(15, sd = 0.2)
 )
 
-ggplot(df_d, aes(x, y)) +
-  geom_point(alpha = 0.35) +
+p <- ggplot(df_d, aes(x, y)) +
+  geom_point(alpha = 0.35)
+p + geom_fourier()
+```
+
+![Noisy point cloud with a single Fourier-series fit overlaid; the curve
+follows the upward drift while smoothing the cyclic
+component.](reference/figures/README-geom-fourier-1.png)
+
+``` r
+
+p +
   geom_fourier(
     aes(colour = "detrend = NULL"),
     n_harmonics = 3
@@ -358,82 +222,505 @@ ggplot(df_d, aes(x, y)) +
   )
 ```
 
-![](reference/figures/README-geom-fourier-1.png)
+![Noisy point cloud with two overlaid Fourier-series fits: one without
+detrending shows the linear drift, one with linear detrending isolates
+the cyclic
+component.](reference/figures/README-geom-fourier-detrending-1.png)
 
-## geom_lexis
-
-[`geom_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
-is a combination of a segment and a point layer. Given a start value and
-an end value, it draws a 45° line indicating the duration of an event.
-Required aesthetics are `x` and `xend`; `y` and `yend` are calculated
-automatically.
+### Draw (grid)lines above bars and other geoms
 
 ``` r
-df2 <- data.frame(
+
+ggplot(mpg, aes(class)) +
+  geom_bar() +
+  geom_gridline()
+```
+
+![Vertical bar chart of mpg car-class counts with horizontal grid lines
+drawn on top of the bars.](reference/figures/README-geom-gridline-1.png)
+
+``` r
+
+p <- ggplot(mpg, aes(y = class)) +
+  geom_bar() +
+  geom_gridline(grids = "x")
+
+# geom_gridline inherits its line properties from theme
+p + theme(panel.grid = element_line(colour = "white"))
+```
+
+![Horizontal bar chart of mpg car-class counts with vertical white grid
+lines drawn on top of the
+bars.](reference/figures/README-geom-gridline-horizontal-1.png)
+
+``` r
+
+# The x/y positions are deducted from the scale(s)
+p + scale_x_sqrt()
+```
+
+![Same horizontal bar chart on a log10 x scale; grid line positions
+follow the transformed
+breaks.](reference/figures/README-geom-gridline-horizontal-log10-1.png)
+
+``` r
+
+# You can overwrite these properties of course
+p + 
+  geom_gridline(grids = "x", colour = cols[4], linewidth = 1.5) +
+  scale_x_sqrt(breaks = c(10, 20, 30, 40, 50))
+```
+
+![Same horizontal bar chart with bolder white grid lines drawn via an
+explicit colour and linewidth
+override.](reference/figures/README-geom-gridline-horizontal-theme-dark-1.png)
+
+### Lexis diagrams
+
+``` r
+
+df_lexis <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   x = c(0, 1, 6, 5, 6),
   xend = c(5, 4, 10, 8, 10)
 )
 
-ggplot(df2, aes(x = x, xend = xend, color = key)) +
+ggplot(df_lexis, aes(x = x, xend = xend, color = key)) +
   geom_lexis(aes(linetype = after_stat(type)), size = 2) +
   coord_equal() +
-  scale_x_continuous(breaks = c(df2$x, df2$xend)) +
+  scale_x_continuous(breaks = c(df_lexis$x, df_lexis$xend)) +
   scale_linetype_identity() +
   theme(panel.grid.minor = element_blank())
 ```
 
-![](reference/figures/README-geom-lexis-1.png)
+![Lexis diagram showing five 45-degree lifelines coloured by category,
+with dotted gap-fillers bridging gaps between events of the same
+cohort.](reference/figures/README-geom-lexis-1.png)
 
-See also the [`LexisPlotR`
-package](https://github.com/ottlngr/LexisPlotR).
-
-## geom_point_glow
-
-[`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
-is a drop-in replacement for
-[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-that adds a radial gradient glow behind each point using
-[`grid::radialGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html).
-The glow colour, transparency (`glow_alpha`), and radius (`glow_size`)
-can be set independently of the point itself; by default the glow
-inherits the point colour and size.
+### Emphasise some observations
 
 ``` r
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point_glow(glow_size = 5, glow_alpha = .5) +
-  coord_cartesian(clip = "off")
+
+sunspot_df <- data.frame(
+  year = time(datasets::sunspot.year),
+  sunspots = unclass(datasets::sunspot.year)
+)
+ggplot(tail(sunspot_df, 12), aes(year, sunspots)) + 
+  geom_step(colour = cols[4]) +
+  geom_pointless(location = c("first", "last"), size = 3, colour = cols[4])
 ```
 
-![](reference/figures/README-geom-point-glow-1.png)
+![Yearly sunspot data from 1977 to 1986 as a step
+chart.](reference/figures/README-geom-pointless-1.png)
 
-## geom_pointless
+## Visual effects
 
-[`geom_pointless()`](https://flrd.github.io/ggpointless/reference/geom_pointless.md)
-lets you highlight observations, by default using a point layer. Hence
-it behaves like
-[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-but accepts a `location` argument: `"first"`, `"last"` (default),
-`"minimum"`, `"maximum"`, or `"all"` (shorthand for all four).
+### Fading area, density, and ridgeline charts
 
 ``` r
-x <- seq(-pi, pi, length.out = 500)
-y <- outer(x, 1:5, \(x, y) sin(x * y))
 
-df1 <- data.frame(
-  var1 = x,
-  var2 = rowSums(y)
+set.seed(42)
+df_fade <- data.frame(
+  x = seq_len(60),
+  y = cumsum(rnorm(60, sd = 0.35))
 )
 
-ggplot(df1, aes(x = var1, y = var2)) +
-  geom_line() +
-  geom_pointless(aes(color = after_stat(location)),
-    location = "all",
-    size = 3
+p <- ggplot(df_fade, aes(x, y))
+p + geom_area_fade()
+```
+
+![Area chart of a 60-step random walk, fill fading from opaque at the
+line to transparent at the y=0
+baseline.](reference/figures/README-geom-area-fade-1.png)
+
+``` r
+
+ggplot(iris, aes(Sepal.Length)) +
+  geom_freqpoly_fade(alpha = 0, alpha_fade_to = 1)
+#> `stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+```
+
+![Frequency polygon of iris Sepal.Length filled below the line with the
+gradient reversed — transparent at the line, opaque at the y=0
+baseline.](reference/figures/README-geom-freqpoly-fade-1.png)
+
+``` r
+
+dmn <- list(
+  month.abb,
+  time(datasets::nottem) |> floor() |> unique()
+)
+df_nottem <- datasets::nottem |> 
+  matrix(data = _, 12, dimnames = dmn) |> 
+  as.data.frame() |> 
+  stack() |> 
+  cbind(month = factor(month.abb, levels = month.abb))
+
+p <- ggplot(df_nottem, aes(x = values, group = month, fill = after_stat(x))) +
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = "Average air temperatures at Nottingham Castle in degrees Fahrenheit (1920–1939)"
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(expand = 0)
+
+p + geom_density_fade(
+  outline.type = "none"
   )
 ```
 
-![](reference/figures/README-geom-pointless-1.png)
+![Twelve overlapping monthly density curves of Nottingham temperatures,
+fill mapped to temperature so colour shifts from indigo (cold) through
+pink to amber (warm); each fades to transparent at the
+baseline.](reference/figures/README-geom-density-fade-1.png)
+
+``` r
+
+p <- p + aes(y = month)
+p + geom_ridgeline_density_fade(
+  alpha_scope = "global",
+  outline.type = "none"
+  )
+#> ℹ Using auto-computed `scale = 6.5`.
+#> • Pass an explicit `scale` to override.
+```
+
+![Twelve ridgeline density curves stacked from January at the bottom to
+December at the top, fill mapped to temperature, fading to transparent
+at each row's
+baseline.](reference/figures/README-geom-ridgeline-density-fade-2D-1.png)
+
+``` r
+
+p + geom_ridgeline_freqpoly_fade(
+  alpha_scope = "global",
+  linewidth = 0.25
+  )
+#> ℹ Using auto-computed `scale = 0.2`.
+#> • Pass an explicit `scale` to override.
+```
+
+![Same twelve monthly ridgelines drawn as binned frequency polygons
+(step-shaped) instead of smooth
+densities.](reference/figures/README-geom-ridgeline-freqpoly-fade-2D-1.png)
+
+``` r
+
+p + geom_ridgeline_histogram_fade(
+  alpha_scope = "group",
+  bins = 40,
+  linewidth = 0.25
+  )
+#> ℹ Using auto-computed `scale = 0.29`.
+#> • Pass an explicit `scale` to override.
+```
+
+![Same twelve monthly ridgelines drawn as 40-bin histograms — each row
+is a stack of fading bars instead of a smooth
+curve.](reference/figures/README-geom-ridgeline-histogram-fade-2D-1.png)
+
+### Points that glow
+
+``` r
+
+anscombe_long <- reshape(anscombe, varying = TRUE, sep = "", direction = "long", timevar = "tv")
+ggplot(anscombe_long, aes(x, y)) +
+  geom_point_glow(colour = cols[1]) +
+  facet_wrap(~tv) +
+  coord_equal(clip = "off") 
+```
+
+![Anscombe's quartet rendered as four scatter facets where each point
+carries a soft purple radial
+glow.](reference/figures/README-geom-point-glow-1.png)
+
+### Fading curves, lines, and paths
+
+``` r
+
+b <- ggplot(mtcars, aes(wt, mpg)) +
+  geom_point()
+
+df <- data.frame(x1 = 2.62, x2 = 3.57, y1 = 21.0, y2 = 15.0)
+b +
+  geom_curve_fade(
+    aes(x = x1, y = y1, xend = x2, yend = y2, colour = "curve"),
+    arrow = arrow(),
+    data = df
+  ) +
+  geom_segment_fade(
+    aes(x = x1, y = y1, xend = x2, yend = y2, colour = "segment"),
+    data = df
+  )
+```
+
+![mtcars weight-vs-mpg scatter with two fading arrows between the same
+two points — one curved, one straight — colour-labelled by
+geom.](reference/figures/README-geom-segment-fade-1.png)
+
+``` r
+
+theta <- seq(1.3, -1.3, length.out = 101)
+ichthys <- data.frame(
+  x = theta^2,
+  y = 0.5 * theta * (theta^2 - 1)
+)
+
+ggplot(ichthys, aes(x, y)) + 
+  geom_path_fade(
+    linewidth = 1.5,
+    fade_direction = c("start", "end"),
+    alpha_mode = "gradient"
+  ) +
+  coord_fixed()
+```
+
+![A stylised fish (ichthys) outline drawn as a single path with the line
+fading to transparent at both the start and the
+end.](reference/figures/README-geom-path-fade-1.png)
+
+``` r
+
+p <- ggplot() +
+  geom_abline_fade(intercept = 0, colour = "#a84dbd", linewidth = 1) +
+  geom_hline_fade(yintercept = 1, colour = "#d77e7b", linewidth = 1) +
+  geom_vline_fade(xintercept = 1, colour = "#f4ae1b", linewidth = 1) +
+  xlim(0, 2) +
+  ylim(0, 2)
+  
+p
+```
+
+![Three coloured reference lines on a unit panel — diagonal (purple),
+horizontal (pink), and vertical (amber) — each fading to transparent
+along its length.](reference/figures/README-geom-abline-fade-1.png)
+
+``` r
+
+p + coord_polar()
+```
+
+![The same three reference lines drawn under coord_polar, becoming
+concentric arcs and rays with the fade preserved along each
+line.](reference/figures/README-geom-abline-fade-polar-coord-1.png)
+
+``` r
+
+ggplot() +
+  stat_function(
+    alpha = 0.5,
+    fun = dnorm,
+    n = 100,
+    xlim = c(-4, 4),
+    geom = "area_fade",
+    outline.type = "none" # remove solid outline
+  ) +
+  # Add fading outline instead
+  stat_function(
+    fun = dnorm, n = 100,
+    xlim = c(-4, 4),
+    geom = "line_fade",
+    colour = cols[1],
+    linewidth = 1,
+    fade_direction = c("start", "end")
+  )
+```
+
+![Standard normal density curve filled as a fading area beneath the
+curve, with the outline drawn as a separate line that fades to
+transparent at both
+tails.](reference/figures/README-stat-function-1.png)
+
+``` r
+
+ggplot(head(economics, 25), aes(date, unemploy)) +
+  geom_step_fade(alpha_fade_to = 0.1)
+```
+
+![Step chart of US unemployment for the first 25 economics observations,
+the line fading from opaque on the right to nearly transparent on the
+left.](reference/figures/README-geom-step-fade-1.png)
+
+### Fading rectangles and bar charts with rounded corners
+
+``` r
+
+ggplot(head(economics, 25), aes(date, unemploy)) +
+  geom_rect_fade(
+    data = data.frame(
+      xmin = as.Date("1968-07-01"),
+      xmax = as.Date("1969-07-01"),
+      ymin = -Inf, ymax = 2800
+    ),
+    inherit.aes = FALSE,
+    alpha = 0,
+    alpha_fade_to = 0.3,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+  ) +
+  geom_step_fade(alpha_fade_to = 0.1)
+```
+
+![Same unemployment step chart with a vertical band from July 1968 to
+July 1969 shaded by a rectangle that fades to transparent at its top
+edge.](reference/figures/README-geom-rect-fade-1.png)
+
+``` r
+
+ggplot(mpg, aes(y = class)) +
+  geom_bar_fade()
+```
+
+![Vertical bar chart of mpg class counts with each bar filled by an
+alpha gradient that fades from opaque at the top to transparent at the
+baseline; bars have rounded
+corners.](reference/figures/README-geom-bar-fade-1.png)
+
+``` r
+
+ggplot(datasets::BOD, aes(Time, demand)) +
+  geom_col_fade(
+    radius = unit(10, "pt"),
+    alpha = 0.75,
+    alpha_fade_to = 0.25,
+    alpha_scope = "global"
+    )
+```
+
+![Vertical bar chart of BOD demand over time with rounded corners and a
+global alpha gradient — fade depth scales with each bar's height
+relative to the tallest.](reference/figures/README-geom-col-fade-1.png)
+
+``` r
+
+ggplot(faithful, aes(eruptions)) +
+  geom_histogram_fade(
+    alpha = 0.8,
+    alpha_fade_to = 0.1,
+    alpha_scope = "global"
+    ) +
+  geom_step(
+    stat = "bin",
+    direction = "mid",
+    colour = cols[1]
+    )
+#> `stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+#> `stat_bin()` using `bins = 30`. Pick better value `binwidth`.
+```
+
+![Histogram of Old Faithful eruption durations (30 bins) with each bar
+filled by an alpha gradient; gradient strength is shared across bars
+(global scope).](reference/figures/README-geom-histogram-fade-1.png)
+\### Unit bar charts and histograms
+
+``` r
+
+bins <- 30
+bw <- diff(range(faithful$eruptions)) / bins
+
+ggplot(faithful, aes(eruptions)) +
+  geom_unit_histogram(
+    aes(fill = after_stat(x)),
+    radius = unit(1, "pt"),
+    bins = bins
+  ) +
+  labs(
+    y = NULL
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(
+    breaks = 2:5,
+    labels = paste(2:5, "min")
+  ) +
+  coord_equal(ratio = 1/3 * bw, clip = "off") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.ticks    = element_blank()
+  )
+```
+
+![Old Faithful eruption-duration histogram drawn as a stack of unit
+cells per bar, with cell fill running from indigo blue for short
+eruptions to amber for long
+ones.](reference/figures/README-geom-unit-histogram-faithful-1.png)
+
+``` r
+
+cs <- 100
+ggplot(diamonds, aes(y = cut, fill = color)) +
+  geom_unit_bar(
+    cell_size = cs,
+    radius = unit(1, "pt"),
+    position = "dodge"
+    ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = sprintf("One cell equals %d observations.", cs)) +
+  coord_equal(ratio = 7 * cs) +
+  theme_minimal()
+#> ! `radius` of 1 pt exceeds the largest displayable corner radius for the
+#>   rendered shape.
+#> ℹ Maximum displayable radius is 0.52 pt; falling back to that.
+```
+
+![Horizontal isotype bar chart counting diamonds per cut; each cell
+represents one hundred
+observation.](reference/figures/README-geom-unit-bar-1.png)
+
+The `geom_unit_*` family was inspired by the work of
+[pudding.cool](https://pudding.cool/2017/09/this-american-life/).
+
+## Accessibility
+
+Visual effects can quietly exclude readers. The faded end of any
+gradient geom drops below
+[WCAG](https://en.wikipedia.org/wiki/Web_Content_Accessibility_Guidelines)
+contrast thresholds for low-vision readers. Pair colour with `linetype`,
+`shape`, or labels for categorical encodings; prefer
+colour-vision-deficiency-safe (CVD-safe) palettes like
+[`scale_colour_viridis_d()`](https://ggplot2.tidyverse.org/reference/scale_viridis.html)
+or Okabe–Ito; and raise `alpha_fade_to` when the faded region carries
+data your readers need to find.
+
+The 4-stop palette `cols` used in this README and the Examples article
+is monotonic in luminance, so it survives greyscale conversion and the
+stop ordering is preserved under CVD. The middle hues collapse under
+deuteranopia, however, so for cases where hue identity carries
+information rather than ordering, prefer
+[`scale_fill_viridis_c()`](https://ggplot2.tidyverse.org/reference/scale_viridis.html)
+/
+[`scale_colour_viridis_c()`](https://ggplot2.tidyverse.org/reference/scale_viridis.html).
+
+## Device compatibility
+
+The 2D gradients used by
+[`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+and friends depend on **Porter-Duff compositing**[^1], a feature of R’s
+graphics engine added in R 4.2. When the active device does not support
+compositing
+(e.g. [`grDevices::pdf()`](https://rdrr.io/r/grDevices/pdf.html)), the
+fade family falls back to a single-colour vertical fade — the horizontal
+colour gradient is lost, only the vertical alpha fade survives, and a
+one-time message is emitted:
+
+> !
+> [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md):
+> the graphics device does not support gradient fills. The `fill` colour
+> gradient is replaced by a single colour. Switch to a device that
+> supports gradients
+> (e.g. [`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html),
+> [`svg()`](https://rdrr.io/r/grDevices/cairo.html),
+> [`cairo_pdf()`](https://rdrr.io/r/grDevices/cairo.html)) for the full
+> effect. This message is displayed once per session.
+
+Most modern raster devices — including
+[`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html) and
+the Cairo-backed [`png()`](https://rdrr.io/r/grDevices/png.html) shipped
+on Linux and macOS — *do* support compositing, so the 2D gradient works
+out of the box. In RStudio, go to *Tools \> Global Options \> Graphics
+\> Backend* and select *AGG* to ensure full support.
 
 ## Code of Conduct
 
@@ -441,14 +728,14 @@ Please note that this project is released with a [Contributor Code of
 Conduct](https://github.com/flrd/ggpointless/blob/main/CODE_OF_CONDUCT.md).
 By participating in this project you agree to abide by its terms.
 
+[^1]: <https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html>
+
 # Package index
 
-## Geom, Stat
+## Layer Functions
 
-Layer Functions
+Geoms and Stats that transform your data.
 
-- [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
-  : Area Plots with Fading Linear Gradient
 - [`geom_catenary()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md)
   [`geom_arch()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md)
   [`stat_catenary()`](https://flrd.github.io/ggpointless/reference/geom_catenary.md)
@@ -460,18 +747,69 @@ Layer Functions
 - [`geom_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
   [`stat_fourier()`](https://flrd.github.io/ggpointless/reference/geom_fourier.md)
   : Fourier Series Smoothing
+- [`geom_gridline()`](https://flrd.github.io/ggpointless/reference/geom_gridline.md)
+  : (Grid) Lines Drawn on Top of Other Layers
 - [`geom_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
   [`stat_lexis()`](https://flrd.github.io/ggpointless/reference/geom_lexis.md)
   : Lexis diagrams
-- [`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
-  : Points that Glow
 - [`geom_pointless()`](https://flrd.github.io/ggpointless/reference/geom_pointless.md)
   [`stat_pointless()`](https://flrd.github.io/ggpointless/reference/geom_pointless.md)
-  : Emphasize some observations with points
+  : Emphasise some observations with points
+
+## Doppelgänger
+
+Drop-in replacements of existing geoms with additional features like
+alpha gradients.
+
+- [`geom_abline_fade()`](https://flrd.github.io/ggpointless/reference/geom_abline_fade.md)
+  [`geom_hline_fade()`](https://flrd.github.io/ggpointless/reference/geom_abline_fade.md)
+  [`geom_vline_fade()`](https://flrd.github.io/ggpointless/reference/geom_abline_fade.md)
+  : Reference Lines with a Fading Gradient
+- [`geom_area_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+  [`geom_density_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+  [`geom_freqpoly_fade()`](https://flrd.github.io/ggpointless/reference/geom_area_fade.md)
+  : Areas, Densities, and Frequency Polygons with Fading Gradient
+- [`geom_col_fade()`](https://flrd.github.io/ggpointless/reference/geom_col_fade.md)
+  [`geom_bar_fade()`](https://flrd.github.io/ggpointless/reference/geom_col_fade.md)
+  : Bar Charts with Fading Gradient and Rounded Corners
+- [`geom_segment_fade()`](https://flrd.github.io/ggpointless/reference/geom_segment_fade.md)
+  [`geom_curve_fade()`](https://flrd.github.io/ggpointless/reference/geom_segment_fade.md)
+  : Line Segments with a Fading Gradient
+- [`geom_path_fade()`](https://flrd.github.io/ggpointless/reference/geom_path_fade.md)
+  [`geom_line_fade()`](https://flrd.github.io/ggpointless/reference/geom_path_fade.md)
+  [`geom_step_fade()`](https://flrd.github.io/ggpointless/reference/geom_path_fade.md)
+  : Paths and Lines with a Fading Gradient
+- [`geom_histogram_fade()`](https://flrd.github.io/ggpointless/reference/geom_histogram_fade.md)
+  : Histograms with Fading Gradient
+- [`geom_point_glow()`](https://flrd.github.io/ggpointless/reference/geom_point_glow.md)
+  : Points that Glow
+- [`geom_rect_fade()`](https://flrd.github.io/ggpointless/reference/geom_rect_fade.md)
+  : Rectangles with a Fading Gradient and Rounded Corners
+- [`geom_ridgeline_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  [`geom_ridgeline_density_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  [`geom_ridgeline_freqpoly_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  [`geom_ridgeline_histogram_fade()`](https://flrd.github.io/ggpointless/reference/geom_ridgeline_fade.md)
+  : Ridgeline Plots with Fading Gradient
+- [`geom_unit_bar()`](https://flrd.github.io/ggpointless/reference/geom_unit_bar.md)
+  [`geom_unit_col()`](https://flrd.github.io/ggpointless/reference/geom_unit_bar.md)
+  : Unit Bar Charts
+- [`geom_unit_histogram()`](https://flrd.github.io/ggpointless/reference/geom_unit_histogram.md)
+  : Unit Chart Histograms
+
+## Labeller
+
+- [`label_cells()`](https://flrd.github.io/ggpointless/reference/label_cells.md)
+  : Axis labeller for unit-cell charts
+
+## Topics
+
+Concepts shared across multiple geoms.
+
+- [`alpha_scope`](https://flrd.github.io/ggpointless/reference/alpha_scope.md)
+  : Alpha scope: how the fade gradient is normalised across rows
 
 # Articles
 
-### All vignettes
+### Examples
 
-- [Introduction to
-  ggpointless](https://flrd.github.io/ggpointless/articles/ggpointless.md):
+- [Examples](https://flrd.github.io/ggpointless/articles/ggpointless.md):
