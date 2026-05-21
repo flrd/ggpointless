@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-histogram-fade.R
 \name{geom_histogram_fade}
 \alias{geom_histogram_fade}
-\title{Histograms and Frequency Polygons with Fading Gradient}
+\title{Histograms with Fading Gradient}
 \usage{
 geom_histogram_fade(
   mapping = NULL,
@@ -10,11 +10,14 @@ geom_histogram_fade(
   stat = "bin",
   position = "stack",
   ...,
+  binwidth = NULL,
+  bins = NULL,
   alpha_fade_to = 0,
   alpha_scope = "bar",
-  radius = grid::unit(3, "pt"),
+  orientation = NA,
+  radius = grid::unit(0, "pt"),
   lineend = "butt",
-  linejoin = "round",
+  linejoin = "mitre",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -85,26 +88,41 @@ lists which parameters it can accept.
 \link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
 }}
 
+\item{binwidth}{Width of each bin in data units. When supplied, takes
+precedence over \code{bins}. Forwarded to \code{\link[ggplot2:stat_bin]{ggplot2::stat_bin()}}.}
+
+\item{bins}{Number of bins. Overridden by \code{binwidth}. Defaults to 30.
+Forwarded to \code{\link[ggplot2:stat_bin]{ggplot2::stat_bin()}}.}
+
 \item{alpha_fade_to}{A single finite number between 0 and 1. The alpha
 value at the baseline of each bar. Defaults to \code{0} (fully transparent).}
 
-\item{alpha_scope}{How to scale the alpha gradient across bars and positions.
+\item{alpha_scope}{How to choose the per-bar reference height that the
+gradient normalises against. The histogram family's vocabulary differs
+from \code{\link[=geom_col_fade]{geom_col_fade()}} / \code{\link[=geom_bar_fade]{geom_bar_fade()}} because \code{x} is continuous
+(a binned variable) rather than a discrete category:
 \itemize{
-\item \code{"bar"} (default): every bar gets the full alpha range independently of
-positions or groups.
-\item \code{"group"}: alpha is scaled relative to the tallest bar \emph{at each
-position on the position axis}. For stacked bars this means each
-stack independently uses their alpha range; for dodged bars each
-bar has its alpha scaled relative to the maximum within that group.
-With \code{position = "fill"} all stacks are normalised to the same
-height, so \code{"group"} and \code{"global"} produce identical results, see examples.
-\item \code{"global"}: for each bar their alpha is scaled relative to the tallest
-bar in the entire panel.
-}}
+\item \code{"bar"} (default), \code{"group"}, \code{"fill"}, \code{"colour"}, \code{"global"} -- same
+meaning as in \code{\link[=geom_col_fade]{geom_col_fade()}}.
+\item \code{"bin"} -- every bar in the same bin shares an alpha range. Useful
+under \code{position = "dodge"} for highlighting the tallest group within
+each bin (e.g. "which species dominates each Sepal.Width bin").
+}
 
-\item{radius}{Corner radius passed to \code{\link[grid:grid.roundrect]{grid::roundrectGrob()}}. A
+The \code{"x"} / \code{"y"} scopes accepted by \code{\link[=geom_col_fade]{geom_col_fade()}} are \strong{not}
+available here -- on a continuous binned axis they would key on
+\code{round(data$x)}, which buckets bins by integer rounding rather than
+by bin identity. Use \code{"bin"} for the per-bin meaning.}
+
+\item{orientation}{The orientation of the layer. The default (\code{NA})
+automatically determines the orientation from the aesthetic mapping. In the
+rare event that this fails it can be given explicitly by setting \code{orientation}
+to either \code{"x"} or \code{"y"}. See the \emph{Orientation} section for more detail.}
+
+\item{radius}{Corner radius passed to \code{\link[grid:roundrectGrob]{grid::roundrectGrob()}}. A
 \code{\link[grid:unit]{grid::unit()}} object (e.g. \code{unit(4, "pt")}); a bare number is
-interpreted as points. Defaults to \code{unit(3, "pt")}.}
+interpreted as points. Defaults to \code{unit(0, "pt")} (matching
+\code{geom_bar()} / \code{geom_col()}).}
 
 \item{lineend}{Line end style (round, butt, square).}
 
@@ -130,37 +148,66 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-Visualise the distribution of a single continuous variable with a fading
-alpha gradient. \code{geom_histogram_fade()} displays counts with rounded,
+Visualise the distribution of a single continuous variable as a histogram
+with a fading alpha gradient. Counts are drawn with rounded,
 gradient-filled bars (like \code{\link[=geom_col_fade]{geom_col_fade()}} paired with
-\code{\link[ggplot2:geom_histogram]{ggplot2::stat_bin()}}). \code{geom_freqpoly_fade()} displays the same counts as
-a filled area under the frequency polygon (like \code{\link[=geom_area_fade]{geom_area_fade()}} paired
-with \code{\link[ggplot2:geom_histogram]{ggplot2::stat_bin()}}).
-
-Both functions accept all binning parameters forwarded to
-\code{\link[ggplot2:geom_histogram]{ggplot2::stat_bin()}} (\code{bins}, \code{binwidth}, \code{center}, \code{boundary}, ...).
+\code{\link[ggplot2:stat_bin]{ggplot2::stat_bin()}}). Accepts all binning parameters forwarded to
+\code{\link[ggplot2:stat_bin]{ggplot2::stat_bin()}} (\code{bins}, \code{binwidth}, \code{center}, \code{boundary}, ...).
 }
-\examples{
+\section{Aesthetics}{
 
-# by default each bar has its own alpha scope
-ggplot(faithful, aes(waiting)) +
+\code{geom_histogram_fade()} understands the same aesthetics as
+\code{\link[=geom_col_fade]{geom_col_fade()}} (it is \code{GeomHistogramFade}, a subclass of \code{GeomColFade},
+paired with \code{\link[ggplot2:stat_bin]{ggplot2::stat_bin()}}). See \code{?geom_col_fade} for the full
+aesthetics table.
+}
+
+\section{Orientation}{
+
+
+This geom treats each axis differently and, thus, can thus have two orientations. Often the orientation is easy to deduce from a combination of the given mappings and the types of positional scales in use. Thus, ggplot2 will by default try to guess which orientation the layer should have. Under rare circumstances, the orientation is ambiguous and guessing may fail. In that case the orientation can be specified directly using the \code{orientation} parameter, which can be either \code{"x"} or \code{"y"}. The value gives the axis that the geom should run along, \code{"x"} being the default orientation you would expect for the geom.
+
+}
+
+\examples{
+library(ggplot2)
+
+# By default each bar has its own alpha scope
+p <- ggplot(faithful, aes(waiting))
+p + geom_histogram_fade()
+
+# when all bars shall share the same alpha scope,
+# set alpha_scope = "global"
+p +
   geom_histogram_fade(
-    fill = "#ff005e",
-    alpha_scope = "bar" # default
+    alpha_scope = "global",
+    alpha = 0.75,
+    alpha_fade_to = 0.1,
+    radius = unit(3, "pt"),
+    colour = "#333333"
   ) +
   theme_minimal()
 
 # Stacked histogram with groups
-# scale alpha value globally
+ggplot(iris, aes(Sepal.Length, fill = Species)) +
+  geom_histogram_fade(alpha_fade_to = 0.25) +
+  theme_minimal()
+
+# Stacked histogram with groups and global alpha scope
 ggplot(iris, aes(Sepal.Length, fill = Species)) +
   geom_histogram_fade(
-    alpha_scope = "global",
-    radius = unit(5, "pt"),
-    colour = NA,
-    bins = 25
-  ) +
-  scale_fill_viridis_d() +
-  theme_minimal()
+    alpha_fade_to = 0.25,
+    alpha_scope = "global"
+  )
+
+# Per-fill scope under position = "dodge": each fill cluster has its own
+# alpha range, so the tallest sub-bar in every bin reaches full opacity.
+ggplot(iris, aes(Sepal.Width, fill = Species)) +
+  geom_histogram_fade(
+    position = "dodge",
+    bins = 10,
+    alpha_scope = "fill"
+  )
 
 }
 \references{
@@ -172,25 +219,8 @@ Version 1.
 \seealso{
 \code{\link[=geom_col_fade]{geom_col_fade()}} / \code{\link[=geom_bar_fade]{geom_bar_fade()}} for the bar-chart equivalents,
 \code{\link[=geom_area_fade]{geom_area_fade()}} for the general area-fade geom,
-\code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} and \code{\link[ggplot2:geom_histogram]{ggplot2::geom_freqpoly()}} for the
+\code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} and \code{\link[ggplot2:geom_freqpoly]{ggplot2::geom_freqpoly()}} for the
 non-fading originals.
 }
 \concept{fading gradient}
 \concept{histogram}
-\section{Aesthetics}{
-
-\code{geom_col_fade()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
-\tabular{rll}{
- • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
- • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
- • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
- • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
- • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{fill}} \tab → via \code{theme()} \cr
- • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr
- • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linetype}} \tab → via \code{theme()} \cr
- • \tab \code{\link[ggplot2:aes_linetype_size_shape]{linewidth}} \tab → via \code{theme()} \cr
- • \tab \code{width} \tab → \code{0.9} \cr
-}
-
-Learn more about setting these aesthetics in \code{vignette("ggplot2-specs")}.
-}

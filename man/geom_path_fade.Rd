@@ -191,10 +191,10 @@ data (like \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}}) and applies a 
 that one or both ends of the path fade to transparent.
 
 \code{geom_line_fade()} is identical to \code{geom_path_fade()} but sorts
-observations by x before drawing (like \code{\link[ggplot2:geom_path]{ggplot2::geom_line()}}).
+observations by x before drawing (like \code{\link[ggplot2:geom_line]{ggplot2::geom_line()}}).
 
 \code{geom_step_fade()} is identical to \code{geom_path_fade()} but draws a
-staircase-step path (like \code{\link[ggplot2:geom_path]{ggplot2::geom_step()}}). The \code{direction} argument
+staircase-step path (like \code{\link[ggplot2:geom_step]{ggplot2::geom_step()}}). The \code{direction} argument
 controls the step shape: \code{"hv"} (horizontal then vertical, the default),
 \code{"vh"} (vertical then horizontal), or \code{"mid"} (step at the midpoint).
 }
@@ -203,31 +203,31 @@ controls the step shape: \code{"hv"} (horizontal then vertical, the default),
 
 The \code{alpha_mode} argument controls how the alpha gradient is rendered. All
 three values compute a target alpha at each vertex from cumulative distance
-along the path — the fade follows the path regardless of direction or shape.
+along the path -- the fade follows the path regardless of direction or shape.
 
 \strong{\code{"auto"}} (default): pick per sub-path based on vertex count \code{n}.
-\code{n <= 50} → \code{"gradient"} (smooth within-segment fade; protects the common
-"few thick segments" case). \code{n > 50} → \code{"step"} (stepping is invisible at
+\code{n <= 50} -> \code{"gradient"} (smooth within-segment fade; protects the common
+"few thick segments" case). \code{n > 50} -> \code{"step"} (stepping is invisible at
 that density and gradient's per-segment cost grows linearly with \code{n}).
 The threshold is chosen so that worst-case \code{"gradient"} render time stays
-under ~0.4 s per panel. Resolved per sub-path — a multi-group plot can mix
+under ~0.4 s per panel. Resolved per sub-path -- a multi-group plot can mix
 modes. Users who want deterministic rendering (snapshots, reproducible
 builds) should set \code{"step"} or \code{"gradient"} explicitly.
 
 \strong{\code{"step"}}: each segment is drawn inside a viewport clipped to its
-bisector-cut polygon, carrying a single uniform alpha — the average of
+bisector-cut polygon, carrying a single uniform alpha -- the average of
 its two endpoint alphas. The fade is an illusion created by stepping
 through discrete alpha values across adjacent segments. Fast (~0.4 s for
 a 200-point path).
 
 \strong{\code{"gradient"}}: each segment's clipped viewport contains a panel-sized
 \code{rectGrob} with its own direction-aligned \code{linearGradient} fill. The alpha
-transitions smoothly within each segment — a real continuous gradient, not
+transitions smoothly within each segment -- a real continuous gradient, not
 a step approximation. Slower (~1 s for 200 points, ~4 s for 1000 points);
 scales linearly with \code{n} and multiplies under facets.
 
 All modes require a device that supports clipping paths (e.g.
-\code{\link[ragg:agg_png]{ragg::agg_png()}}, \code{\link[grDevices:cairo]{grDevices::svg()}}). On devices that don't, the geom
+\code{\link[ragg:agg_png]{ragg::agg_png()}}, \code{\link[grDevices:svg]{grDevices::svg()}}). On devices that don't, the geom
 falls back to per-segment \code{segmentsGrob} rendering with combined alpha
 (no linejoin).
 
@@ -237,13 +237,13 @@ bug at \code{dev.off()} once enough clipping or gradient operations
 accumulate (reproducible with pure \code{grid} on R 4.5.3). To keep these
 devices safe the geom routes through the flat per-segment fallback on
 \code{pdf()} / \code{postscript()} regardless of \code{alpha_mode}. Use
-\code{\link[grDevices:cairo]{grDevices::cairo_pdf()}} (or \code{\link[ragg:agg_png]{ragg::agg_png()}} / \code{\link[grDevices:cairo]{grDevices::svg()}} for
+\code{\link[grDevices:cairo_pdf]{grDevices::cairo_pdf()}} (or \code{\link[ragg:agg_png]{ragg::agg_png()}} / \code{\link[grDevices:svg]{grDevices::svg()}} for
 raster/vector output) if you need the smooth-gradient rendering.
 
 The visual difference between \code{"step"} and \code{"gradient"} is only noticeable
 with very few, thick segments: in \code{"step"} mode each segment is visibly
 a solid colour, while \code{"gradient"} interpolates smoothly within each
-segment too. At typical point counts (>= ~50) both modes look identical —
+segment too. At typical point counts (>= ~50) both modes look identical --
 which is what \code{"auto"} exploits.
 
 As a special case, a single-segment path (exactly two observations) is
@@ -258,14 +258,14 @@ uniform mid-alpha stroke.
 On the RStudio plot pane (and any device that caches and replays the
 rendered grob tree), step-mode rendering may emit grid warnings of the
 form \verb{Warning in .useGroup(ref, NULL) : Unknown group, N} on repeat
-draws — typically when the pane is resized and replays a cached tree.
+draws -- typically when the pane is resized and replays a cached tree.
 The plot itself is correct; the warning is cosmetic noise.
 
 What is happening: step mode uses grid's compositing primitive
 (\code{groupGrob()} with operator \code{"dest.in"}) to trim the alpha mask onto
 the polyline. Each draw allocates fresh device-level group IDs. When
 the plot pane replays a cached grob tree, that tree still references
-the old IDs while grid's device table has been reset — the lookup
+the old IDs while grid's device table has been reset -- the lookup
 fails and grid prints \verb{Unknown group, N}. The pixels you see are
 correct because the composited result was already resolved when the
 cache was built; grid is just reporting that the replay couldn't
@@ -275,8 +275,8 @@ The warning fires inside grid's drawing machinery after our render
 code has already returned, so we cannot wrap it in \code{suppressWarnings()}
 from within the package. The only clean alternative would gate the
 fast compositing path off in RStudio, which makes the interactive
-plot pane roughly five times slower (~1.5 s → ~7.5 s on a five-group
-\eqn{\times} 573-segment dataset) — we judged that the worse trade-off.
+plot pane roughly five times slower (~1.5 s -> ~7.5 s on a five-group
+\eqn{\times} 573-segment dataset) -- we judged that the worse trade-off.
 If the warnings are intolerable for a particular layer, set
 \code{alpha_mode = "gradient"}; gradient mode uses viewport clipping
 instead of compositing and does not trigger the warning.
@@ -294,9 +294,7 @@ points with a uniform aesthetic value (see the ggplot2 book,
 enough interpolated points make the stepping invisible and produce a smooth
 apparent fade without any compositing:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(ggplot2)
-
-df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
 
 # Parameterise by cumulative arc length, then densify
 arc <- with(df, c(0, cumsum(sqrt(diff(x)^2 + diff(y)^2))))
@@ -319,10 +317,35 @@ with multiple groups or to \code{fade_direction = c("start", "end")} without
 additional bookkeeping. \code{geom_path_fade()} handles all of this internally.
 }
 
+\section{Self-crossing paths}{
+
+
+When a faded path crosses itself, the pixels at the crossing are
+rasterised once per overlapping segment, and the per-segment alpha values
+compound. Where the two strands carry different alphas (one near the
+faded end, one near the opaque end), the crossing appears noticeably
+darker than either strand alone.
+
+This behaviour is inherent to how semi-transparent strokes are
+alpha-blended at the device level, not specific to \code{geom_path_fade()} --
+the same effect appears with \code{ggplot2::geom_path(alpha = 0.5)}. There is
+no general workaround at the rendering layer; if a clean intersection
+matters for your plot, the practical options are:
+\itemize{
+\item Raise \code{alpha_fade_to} so the strands at both ends are closer in
+opacity (smaller delta -> less visible darkening).
+\item Use a fully opaque stroke (no fade) for paths known to self-cross.
+\item Restructure the data so the crossing is split across separate layers.
+}
+
+Applies equally to \code{\link[=geom_segment_fade]{geom_segment_fade()}} and \code{\link[=geom_curve_fade]{geom_curve_fade()}} when
+two segments / curves overlap at the same pixel.
+}
+
 \examples{
 library(ggplot2)
 
-# Path that doubles back — fade follows the drawing order
+# Path that doubles back -- fade follows the drawing order
 theta <- seq(1.3, -1.3, length.out = 101)
 df_ichthys <- data.frame(
   x = theta^2,
@@ -360,7 +383,7 @@ p <- ggplot(df_thick, aes(x, y)) +
   coord_equal() +
   theme_minimal()
 
-# auto → gradient (n = 5, well below the 50-vertex threshold)
+# Auto -> gradient (n = 5, well below the 50-vertex threshold)
 p + geom_path_fade(
   linewidth = 8,
   colour = "#e63946"
@@ -382,7 +405,7 @@ p + geom_path_fade(
   alpha_mode = "gradient"
   )
 
-# using stat_function
+# Using stat_function
 ggplot() +
   stat_function(
     alpha = 0.5,
@@ -392,7 +415,7 @@ ggplot() +
     geom = "area_fade",
     outline.type = "none" # remove solid outline
   ) +
-  # add fading outline instead
+  # Add fading outline instead
   stat_function(
     fun = dnorm, n = 100,
     xlim = c(-4, 4),
@@ -401,16 +424,17 @@ ggplot() +
   )
 
 
-ggplot(economics, aes(date, unemploy)) + geom_line_fade()
+nile_df <- data.frame(year = time(datasets::Nile), value = c(datasets::Nile))
+ggplot(nile_df, aes(year, value)) +
+  geom_line_fade()
 
-# NA values split the path into sub-paths — just like geom_line().
+# NA values split the path into sub-paths -- just like geom_line().
 # The fade is computed over the concatenated arc length of all visible
 # pieces, so the alpha just before a gap equals the alpha just after,
 # as if the path were "pulled apart" at the NA.
-df <- data.frame(x = 1:5, y = c(1, 2, NA, 4, 5))
+df <- data.frame(x = c(1, 2, 3, 3, 4, 5), y = c(1, 2, NA, 3, 4, 5))
 
 ggplot(df, aes(x, y)) +
-  geom_point() +
   geom_line_fade(alpha_mode = "gradient", linewidth = 2)
 
 
@@ -423,8 +447,7 @@ d <- data.frame(
 )
 
 ggplot(d, aes(x, y, colour = grp)) +
-  geom_step_fade(linewidth = 1, direction = "vh") +
-  theme_minimal()
+  geom_step_fade(linewidth = 1, direction = "vh")
 
 }
 \references{

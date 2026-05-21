@@ -4,33 +4,68 @@
 \alias{label_cells}
 \title{Axis labeller for unit-cell charts}
 \usage{
-label_cells(cell_size = 1)
+label_cells(cell_size = 1, prefix = "", suffix = "", ...)
 }
 \arguments{
 \item{cell_size}{The same \code{cell_size} value passed to \code{\link[=geom_unit_bar]{geom_unit_bar()}} /
-\code{\link[=geom_unit_col]{geom_unit_col()}} / \code{\link[=geom_unit_histogram]{geom_unit_histogram()}}. Must be a positive finite
-scalar.}
+\code{\link[=geom_unit_col]{geom_unit_col()}} / \code{\link[=geom_unit_histogram]{geom_unit_histogram()}}. Must be a positive
+finite scalar. Translated internally to \code{scale = 1 / cell_size}.}
+
+\item{prefix, suffix}{Character strings to wrap each label. Default
+\code{""} (no decoration). Useful when \code{cell_size} matches a natural
+unit -- e.g. \code{cell_size = 1e3} with \code{suffix = "k"} produces
+\code{"1k"}, \code{"2k"}, ...; \code{cell_size = 1e6} with \code{suffix = "M"}
+produces \code{"1M"}, \code{"3M"}, ...}
+
+\item{...}{Other arguments forwarded to \code{\link[scales:label_number]{scales::label_number()}} --
+e.g. \code{accuracy = 0.1}, \code{big.mark = ","},
+\code{scale_cut = scales::cut_short_scale()} (auto SI prefix).}
 }
 \value{
 A function suitable for the \code{labels} argument of
-\code{\link[ggplot2:scale_continuous]{ggplot2::scale_y_continuous()}} / \code{\link[ggplot2:scale_continuous]{ggplot2::scale_x_continuous()}}.
+\code{\link[ggplot2:scale_y_continuous]{ggplot2::scale_y_continuous()}} / \code{\link[ggplot2:scale_x_continuous]{ggplot2::scale_x_continuous()}}.
 }
 \description{
-A small helper for use with \verb{scale_*_continuous(labels = ...)} when you've
-set \code{cell_size} on a \verb{geom_unit_*()} layer and want the axis to show the
-\emph{number of cells} rather than the underlying data values.
+A thin wrapper around \code{\link[scales:label_number]{scales::label_number()}} anchored to a
+\code{cell_size}: divides each axis break by \code{cell_size} and formats the
+result. Use with \verb{scale_*_continuous(labels = ...)} when the
+corresponding \verb{geom_unit_*()} layer was given a non-default
+\code{cell_size} and you want the axis to read in \emph{cell counts} (or in a
+natural-unit scale like thousands / millions, via \code{suffix}).
 
-Returns a closure that divides each axis break by \code{cell_size}. Pair the
-value passed here with the \code{cell_size} you passed to the geom.
+Because \code{label_cells()} is a wrapper, every option that
+\code{\link[scales:label_number]{scales::label_number()}} accepts (\code{accuracy}, \code{big.mark},
+\code{decimal.mark}, \code{scale_cut}, \code{style_positive}, ...) is available via
+\code{...}.
 }
 \examples{
 library(ggplot2)
-df <- data.frame(country = c("A", "B", "C"), pop = c(2.4e6, 1.1e6, 3.8e6))
-ggplot(df, aes(country, pop)) +
+
+# cell_size = 1,000 -> axis reads "1k", "2k", ... (one cell = 1,000)
+df_k <- data.frame(x = c("A", "B", "C"), y = c(4000, 11000, 8000))
+ggplot(df_k, aes(x, y)) +
+  geom_unit_col(cell_size = 1e3) +
+  scale_y_continuous(labels = label_cells(1e3, suffix = "k")) +
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = "One cell equals 1,000 observations.") +
+  coord_equal(ratio = 1 / 1e3)
+
+# cell_size = 1,000,000 -> axis reads "1M", "3M", ... (one cell = 1,000,000)
+# Flipped orientation: bars run along x, baselines on y.
+df_M <- data.frame(x = c("A", "B", "C"), y = c(2.4e6, 1.1e6, 3.8e6))
+ggplot(df_M, aes(y = x, x = y)) +
   geom_unit_col(cell_size = 1e6) +
-  scale_y_continuous(labels = label_cells(1e6)) +
-  labs(y = "People (millions; one cell = 1e6)")
+  scale_x_continuous(labels = label_cells(1e6, suffix = "M")) +
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = "One cell equals 1,000,000 observations.") +
+  coord_equal(ratio = 1e6)
 }
 \seealso{
-\code{\link[=geom_unit_bar]{geom_unit_bar()}} for the geoms that consume \code{cell_size}.
+\code{\link[scales:label_number]{scales::label_number()}} for the underlying formatter and the
+full list of forwardable options; \code{\link[=geom_unit_bar]{geom_unit_bar()}} for the geoms
+that consume \code{cell_size}.
 }

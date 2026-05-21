@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-A collection of layers for 'ggplot2'.
+A collection of layers for 'ggplot2'. Provides geoms built on linear and radial gradients from the 'grid' package, giving areas, bars, paths, rectangles, ridgelines, and individual points a fading or glowing visual effect. Also includes mathematically driven layers — catenary curves, Chaikin's corner-cutting smoothing (Chaikin, 1974, \doi{10.1016/0146-664X(74)90028-8}), and Fourier-series reconstruction — plus Lexis diagrams, unit (isotype) bar charts, and grid lines drawn above other layers.
 }
 \seealso{
 Useful links:
@@ -21,6 +21,11 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Markus Döring \email{m4rkus.doering@gmail.com} [copyright holder]
+
+Authors:
+\itemize{
+  \item Markus Döring \email{m4rkus.doering@gmail.com} [copyright holder]
+}
 
 }
 \keyword{internal}

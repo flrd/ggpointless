@@ -153,7 +153,7 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 \item{curve_count_cap}{Soft cap on the number of curves \code{geom_curve_fade()} will
 composite per panel. One \code{groupGrob(op = "dest.in")} is built per curve,
 so render cost scales roughly linearly at ~30 ms / curve. Past the cap
-the layer falls back to plain \code{\link[ggplot2:geom_segment]{ggplot2::geom_curve()}} (no fade) and
+the layer falls back to plain \code{\link[ggplot2:geom_curve]{ggplot2::geom_curve()}} (no fade) and
 emits a warning. Default \code{200} (~6 s worst case). Pass \code{Inf} to disable.
 For bulk fading, use \code{\link[=geom_path_fade]{geom_path_fade()}} or \code{\link[=geom_segment_fade]{geom_segment_fade()}} instead.}
 
@@ -172,8 +172,6 @@ For bulk fading, use \code{\link[=geom_path_fade]{geom_path_fade()}} or \code{\l
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
-
-A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
 \code{geom_segment_fade()} draws line segments like \code{\link[ggplot2:geom_segment]{ggplot2::geom_segment()}}
@@ -186,20 +184,45 @@ Rendering requires a graphics device that supports clipping paths
 \details{
 \subsection{Non-linear coordinate systems}{
 
-Under non-linear coordinates such as \code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}} and
+Under non-linear coordinates such as \code{\link[ggplot2:coord_polar]{ggplot2::coord_polar()}} and
 \code{\link[ggplot2:coord_radial]{ggplot2::coord_radial()}} the user-supplied endpoints \verb{(x, y)} and
 \verb{(xend, yend)} are transformed to device space and connected by a
-straight chord — exactly as \code{\link[ggplot2:geom_segment]{ggplot2::geom_segment()}} does. The fade is
+straight chord -- exactly as \code{\link[ggplot2:geom_segment]{ggplot2::geom_segment()}} does. The fade is
 then applied along that chord, so both endpoint positions and the fade
 direction are consistent with the unfaded geom.
 
 If you want the line to \emph{follow} a curve implied by the coord system
 (for example a circle at constant \code{y} under polar), use
-\code{\link[=geom_hline_fade]{geom_hline_fade()}} / \code{\link[=geom_vline_fade]{geom_vline_fade()}} / \code{\link[=geom_abline_fade]{geom_abline_fade()}} instead —
+\code{\link[=geom_hline_fade]{geom_hline_fade()}} / \code{\link[=geom_vline_fade]{geom_vline_fade()}} / \code{\link[=geom_abline_fade]{geom_abline_fade()}} instead --
 those geoms subdivide the line in data space so the fade tracks the
 curve, not a chord.
 }
 }
+\section{Self-crossing paths}{
+
+
+When a faded path crosses itself, the pixels at the crossing are
+rasterised once per overlapping segment, and the per-segment alpha values
+compound. Where the two strands carry different alphas (one near the
+faded end, one near the opaque end), the crossing appears noticeably
+darker than either strand alone.
+
+This behaviour is inherent to how semi-transparent strokes are
+alpha-blended at the device level, not specific to \code{geom_path_fade()} --
+the same effect appears with \code{ggplot2::geom_path(alpha = 0.5)}. There is
+no general workaround at the rendering layer; if a clean intersection
+matters for your plot, the practical options are:
+\itemize{
+\item Raise \code{alpha_fade_to} so the strands at both ends are closer in
+opacity (smaller delta -> less visible darkening).
+\item Use a fully opaque stroke (no fade) for paths known to self-cross.
+\item Restructure the data so the crossing is split across separate layers.
+}
+
+Applies equally to \code{\link[=geom_segment_fade]{geom_segment_fade()}} and \code{\link[=geom_curve_fade]{geom_curve_fade()}} when
+two segments / curves overlap at the same pixel.
+}
+
 \examples{
 library(ggplot2)
 
@@ -230,7 +253,7 @@ df <- data.frame(x1 = 1, x2 = 9, y1 = 1, y2 = 1)
 p <- ggplot(df, aes(x)) +
   theme_void()
 
-# basic example with default fade_direction
+# Basic example with default fade_direction
 p +
   geom_segment_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2),
@@ -238,7 +261,7 @@ p +
     linewidth = 10
   )
 
-# change fade_direction towards start
+# Change fade_direction towards start
 p +
   geom_segment_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2),
@@ -246,7 +269,7 @@ p +
     linewidth = 10
   )
 
-# fade from center to both sides
+# Fade from centre to both sides
 p +
   geom_segment_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2),
@@ -268,7 +291,7 @@ Statistics, The University of Auckland. Version 3.
 }
 \seealso{
 \code{\link[=geom_path_fade]{geom_path_fade()}} for connected paths with alpha fading,
-\code{\link[ggplot2:geom_segment]{ggplot2::geom_segment()}} and \code{\link[ggplot2:geom_segment]{ggplot2::geom_curve()}}
+\code{\link[ggplot2:geom_segment]{ggplot2::geom_segment()}} and \code{\link[ggplot2:geom_curve]{ggplot2::geom_curve()}}
 for the unfaded versions.
 }
 \concept{fading curve}
@@ -280,7 +303,8 @@ for the unfaded versions.
 \tabular{rll}{
  • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
  • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
- • \tab \strong{\code{\link[ggplot2:aes_position]{xend}} \emph{or} \code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{xend}}} \tab   \cr
+ • \tab \strong{\code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
  • \tab \code{\link[ggplot2:aes_group_order]{group}} \tab → inferred \cr

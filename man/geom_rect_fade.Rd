@@ -14,7 +14,7 @@ geom_rect_fade(
   fade_direction = "vertical",
   radius = grid::unit(0, "pt"),
   lineend = "butt",
-  linejoin = "round",
+  linejoin = "mitre",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -97,7 +97,7 @@ fades to \code{alpha_fade_to} (\code{ymin}).}
 \code{alpha_fade_to} (\code{xmax}).}
 }}
 
-\item{radius}{Corner radius passed to \code{\link[grid:grid.roundrect]{grid::roundrectGrob()}}. A
+\item{radius}{Corner radius passed to \code{\link[grid:roundrectGrob]{grid::roundrectGrob()}}. A
 \code{\link[grid:unit]{grid::unit()}} object (e.g. \code{unit(4, "pt")}); a bare number is
 interpreted as points. Defaults to \code{unit(0, "pt")} (sharp corners).}
 
@@ -125,17 +125,17 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-\code{geom_rect_fade()} draws axis-aligned rectangles like \code{\link[ggplot2:geom_tile]{ggplot2::geom_rect()}}
-but fills each one with a linear gradient that fades one edge to transparent.
-The direction is controlled by \code{fade_direction}. Corners can be rounded via
-the \code{radius} argument, enabling rounded rectangles and smooth-cornered visual
-elements. The default of \verb{0 pt} produces plain rectangles.
+\code{geom_rect_fade()} draws axis-aligned rectangles and fills each one with a
+linear gradient that fades one edge to transparent. The direction is
+controlled by \code{fade_direction}. Corners can be rounded via the \code{radius}
+argument, enabling rounded rectangles and smooth-cornered visual elements.
+The default of \verb{0 pt} produces plain rectangles.
 }
 \section{Polar coordinates}{
 
-Under \code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}} / \code{\link[ggplot2:coord_radial]{ggplot2::coord_radial()}} each rectangle is
-bent into an annular segment. A radial alpha gradient — transparent at the
-inner radius, opaque at the outer — is rendered when the fade direction
+Under \code{\link[ggplot2:coord_polar]{ggplot2::coord_polar()}} / \code{\link[ggplot2:coord_radial]{ggplot2::coord_radial()}} each rectangle is
+bent into an annular segment. A radial alpha gradient -- transparent at the
+inner radius, opaque at the outer -- is rendered when the fade direction
 aligns with the radial axis:
 \itemize{
 \item \code{theta = "x"} (default) + \code{fade_direction = "vertical"}: \code{ymin}/\code{ymax}
@@ -147,12 +147,25 @@ inner/outer radius and fade radially.
 Any other combination (for example \code{theta = "x"} with
 \code{fade_direction = "horizontal"}) would require an angular / conic gradient,
 which \code{grid} does not yet expose. Such plots fall back to plain
-\code{\link[ggplot2:geom_tile]{ggplot2::geom_rect()}} rendering and emit a one-time warning.
+\code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}} rendering and emit a one-time warning.
 Rounded corners (\code{radius}) are ignored in polar coordinates since arcs do
 not carry corner geometry.
 }
 
+\section{Legend key under coord_flip}{
+
+The legend key glyph always shows the canonical (data-axis) fade
+direction -- vertical for the default orientation, horizontal under
+\code{orientation = "y"}. Under \code{\link[ggplot2:coord_flip]{ggplot2::coord_flip()}} the rendered geom
+rotates correctly but the legend key does \emph{not}: ggplot2's legend
+builder is coord-independent by design (\code{draw_key} has no access to
+the coord). For a legend key that matches a horizontal layout, prefer
+\code{aes(y = ...)} with auto-detected \code{orientation = "y"} over
+\code{aes(x = ...) + coord_flip()}.
+}
+
 \examples{
+library(ggplot2)
 
 # With geom_rect_fade() you can draw arbitrary rectangles
 ggplot(head(economics, 25), aes(date, unemploy)) +
@@ -179,7 +192,7 @@ Version 1.
 \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
 }
 \seealso{
-\code{\link[ggplot2:geom_tile]{ggplot2::geom_rect()}} for plain rectangles,
+\code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}} for plain rectangles,
 \code{\link[=geom_col_fade]{geom_col_fade()}} for bar charts with per-bar gradient scaling and
 orientation support.
 }
