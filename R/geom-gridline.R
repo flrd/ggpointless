@@ -24,7 +24,7 @@
   if (length(bad) > 0L) {
     cli::cli_warn(c(
       "!" = "Ignoring invalid {.arg grids} value{?s}: {.val {bad}}.",
-      "i" = "Valid options are {.val \"x\"} and {.val \"y\"}."
+      "i" = "Valid options are {.val {valid}}."
     ))
     grids <- intersect(grids, valid)
   }
@@ -38,6 +38,39 @@
   }
 
   grids
+}
+
+# Validate and normalise the `lines` argument. Same shape as
+# .validate_grids: drop duplicates + unknown values (with a warning),
+# fall back to "major" if nothing valid remains.
+#' @noRd
+#' @keywords internal
+.validate_lines <- function(lines) {
+  valid <- c("major", "minor")
+
+  if (!is.character(lines)) {
+    cli::cli_warn(c(
+      "!" = "{.arg lines} must be a character vector, not {.obj_type_friendly {lines}}.",
+      "i" = 'Falling back to {.val major}.'
+    ))
+    return("major")
+  }
+
+  lines <- unique(lines)
+
+  bad <- setdiff(lines, valid)
+  if (length(bad) > 0L) {
+    cli::cli_warn(c(
+      "!" = "Ignoring invalid {.arg lines} value{?s}: {.val {bad}}.",
+      "i" = "Valid options are {.val {valid}}."
+    ))
+    lines <- intersect(lines, valid)
+  }
+
+  # `character(0)` (or all-filtered-out) is a legitimate "draw nothing" intent,
+  # not an error -- the geom returns zeroGrob.  Only warn if the user passed
+  # *something* and everything was invalid.
+  lines
 }
 
 #' @rdname ggpointless-ggproto
@@ -236,10 +269,12 @@ GeomGridline <- ggplot2::ggproto(
     panel_params,
     coord,
     grids = "y",
-    major = TRUE,
-    minor = FALSE
+    lines = "major"
   ) {
     grids <- .validate_grids(grids)
+    lines <- .validate_lines(lines)
+    major <- "major" %in% lines
+    minor <- "minor" %in% lines
 
     # Detect orientation.  In coord_flip(), the x-scale is vertical and the
     # y-scale is horizontal.
@@ -507,7 +542,7 @@ GeomGridline <- ggplot2::ggproto(
 #' The line positions are read directly from the trained scale (via
 #' `panel_params`), and the line properties are read from the theme; so
 #' `geom_gridline()` always matches the grid line positions and properties
-#' automatically — but you can override them, of course.
+#' by default — but you are free to override every property, of course.
 #'
 #' This was inspired by [Observable Plot](https://observablehq.com/plot/)'s Grid mark:
 #' <https://observablehq.com/plot/marks/grid#grid-mark>.
@@ -517,7 +552,7 @@ GeomGridline <- ggplot2::ggproto(
 #' documented theme chain: `panel.grid.major.x` (or `.y`) → `panel.grid.major` →
 #'  `panel.grid` → `line` so that by default lines look exactly like the grid would.
 #' If you blank `panel.grid` the layer picks up styling from `theme(line = ...)`.
-#' Pass an explicit `colour` to override, see examples.
+#' Pass an explicit `colour` to override, see *Examples*.
 #'
 #' @section Rendering order:
 #' `geom_gridline()` follows a specific Z-order convention to ensure
@@ -536,8 +571,8 @@ GeomGridline <- ggplot2::ggproto(
 #'   for either emits a warning.
 #' @param grids Character vector specifying which "grid" lines to draw:
 #'   `"x"`, `"y"` (default), or `c("x", "y")` for both.
-#' @param major Draw major grid lines? Default `TRUE`.
-#' @param minor Draw minor grid lines? Default `FALSE`.
+#' @param lines Character vector specifying which line type(s) to draw:
+#'   `"major"` (default), `"minor"`, or `c("major", "minor")` for both.
 #' @param colour,linewidth,linetype,lineend Line aesthetics. Default `NULL`
 #'   inherits each property by walking ggplot2's documented theme chain:
 #'   `panel.grid.major.x` (or `.y`) → `panel.grid.major` → `panel.grid` →
@@ -567,10 +602,19 @@ GeomGridline <- ggplot2::ggproto(
 #'   geom_bar()
 #' p + geom_gridline()
 #'
-#' # Horizontal bars: flip axes, draw gridlines atop x-grid
+#' # Note: geom_gridline() does not touch the theme. To draw only the layer's
+#' # lines (no theme grid underneath), blank the panel grid yourself.
+#' bf <- theme_grey()$panel.background@fill
+#' p +
+#'   geom_gridline(linewidth = 0.4, colour = bf) +
+#'   theme_minimal() +
+#'   theme(panel.grid = element_blank())
+#'
+#' # Horizontal bars: flip axes, draw gridlines atop x-grid at custom breaks
 #' ggplot(mpg, aes(y = class)) +
 #'   geom_bar() +
-#'   geom_gridline(grids = "x")
+#'   geom_gridline(grids = "x", colour = "tomato", linewidth = 2) +
+#'   scale_x_continuous(breaks = c(5, 10, 20, 40))
 #'
 #' # Line properties are inherited from theme
 #' # their positions from the scale
@@ -582,32 +626,15 @@ GeomGridline <- ggplot2::ggproto(
 #' # When you explicitly set properties in geom_gridline
 #' # they will overwrite theme properties
 #' p +
-#'   geom_gridline(colour = "tomato", major = FALSE, minor = TRUE) +
-#'   scale_y_continuous(breaks = c(10, 20)) +
+#'   geom_gridline(lines = c("major", "minor")) +
+#'   scale_y_sqrt(breaks = c(10, 20)) +
 #'   theme_gray(paper = "cornsilk", ink = "navy")
-#'
-#' # Note: geom_gridline() does not touch the theme. To draw only the layer's
-#' # lines (no theme grid underneath), blank the panel grid yourself.
-#' bf <- theme_grey()$panel.background@fill
-#' p +
-#'   geom_gridline(linewidth = 0.4, colour = bf) +
-#'   theme_minimal() +
-#'   theme(panel.grid = element_blank())
-#'
-#'
-#' # Polar coordinates are supported too
-#' ggplot(mtcars, aes(x = factor(1), fill = factor(cyl))) +
-#'   geom_bar(width = 1) +
-#'   geom_gridline(grids = c("x", "y"), minor = TRUE) +
-#'   coord_polar(theta = "y") +
-#'   theme_void()
 #'
 geom_gridline <- function(
   mapping = NULL,
   data = NULL,
   grids = "y",
-  major = TRUE,
-  minor = FALSE,
+  lines = "major",
   colour = NULL,
   linewidth = NULL,
   linetype = NULL,
@@ -630,6 +657,7 @@ geom_gridline <- function(
   }
 
   grids <- .validate_grids(grids)
+  lines <- .validate_lines(lines)
 
   # Validate the (scalar) colour override up front so an invalid colour
   # spec fails immediately with a clean cli error, not deep inside grid
@@ -671,8 +699,7 @@ geom_gridline <- function(
     params = c(
       list(
         grids = grids,
-        major = major,
-        minor = minor,
+        lines = lines,
         alpha = alpha,
         na.rm = na.rm
       ),
