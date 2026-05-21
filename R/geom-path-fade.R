@@ -316,7 +316,7 @@
 
 #' @export
 makeContent.path_fade_grob <- function(x) {
-  dev_caps <- tryCatch(grDevices::dev.capabilities(), error = \(e) list())
+  dev_caps <- grDevices::dev.capabilities()
   # Base pdf() / postscript() devices have an upstream heap-corruption bug
   # at dev.off() once enough clipping viewports or gradient patterns
   # accumulate (R-core, observed up to R 4.5.3). Force the flat fallback
@@ -324,10 +324,7 @@ makeContent.path_fade_grob <- function(x) {
   dev_name <- names(grDevices::dev.cur())
   unsafe_dev <- dev_name %in% c("pdf", "postscript")
   can_clip <- !unsafe_dev && isTRUE(dev_caps[["clippingPaths"]])
-  can_composite <-
-    !unsafe_dev &&
-    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE) &&
-    isTRUE("dest.in" %in% dev_caps[["compositing"]])
+  can_composite <- !unsafe_dev && .has_compositing_op("dest.in", dev_caps)
 
   all_children <- list()
   any_flat <- FALSE
@@ -606,17 +603,7 @@ makeContent.path_fade_grob <- function(x) {
   }
 
   if (any_flat) {
-    cli::cli_inform(
-      c(
-        "!" = "The current graphics device does not support compositing or \\
-               clipping paths.",
-        "i" = "Falling back to per-segment alpha stepping (no linejoin). \\
-               Switch to a device that supports compositing (e.g. \\
-               {.code ragg::agg_png()}, {.code svg()}) for the fade effect."
-      ),
-      .frequency = "once",
-      .frequency_id = "path_fade_no_clipping"
-    )
+    .queue_path_no_composite_clipping()
   }
 
   grid::setChildren(x, do.call(grid::gList, all_children))
@@ -700,6 +687,7 @@ GeomPathFade <- ggplot2::ggproto(
     fade_direction = "start",
     alpha_mode = "auto"
   ) {
+    .check_panel_range(panel_params, "geom_path_fade")
     # NAs are treated as path splitters (matching geom_path/geom_line), NOT
     # rows to drop. We emit the same "Removed N rows" warning as ggplot2 for
     # UX parity, but keep the rows so the loop below can detect gaps.
@@ -953,8 +941,6 @@ GeomPathFade <- ggplot2::ggproto(
 #' apparent fade without any compositing:
 #'
 #' ```r
-#' library(ggplot2)
-#'
 #' df <- data.frame(x = c(0, 1, 2), y = c(0, 1, 0))
 #'
 #' # Parameterise by cumulative arc length, then densify

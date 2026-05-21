@@ -19,12 +19,7 @@
 makeContent.curve_fade_grob <- function(x) {
   dev_name <- names(grDevices::dev.cur())
   no_composite <- dev_name %in% c("pdf", "cairo_pdf", "postscript")
-  can_composite <- !no_composite &&
-    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE) &&
-    tryCatch(
-      "dest.in" %in% grDevices::dev.capabilities()[["compositing"]],
-      error = \(e) FALSE
-    )
+  can_composite <- !no_composite && .has_compositing_op("dest.in")
 
   if (can_composite) {
     n <- length(x$curve_glist)
@@ -38,16 +33,7 @@ makeContent.curve_fade_grob <- function(x) {
     }
     grobs <- do.call(grid::gList, composited)
   } else {
-    cli::cli_inform(
-      c(
-        "!" = "The current graphics device does not support compositing.",
-        "i" = "Falling back to flat semi-transparent curves. Switch to a \\
-               device that supports compositing (e.g. {.code ragg::agg_png()}, \\
-               {.code svg()}) for the fade effect."
-      ),
-      .frequency = "once",
-      .frequency_id = "curve_fade_no_composite"
-    )
+    .queue_curve_no_composite()
     grobs <- x$flat_glist
   }
 
@@ -126,6 +112,7 @@ GeomCurveFade <- ggplot2::ggproto(
     fade_direction = "start",
     curve_count_cap = 200
   ) {
+    .check_panel_range(panel_params, "geom_curve_fade")
     # `curve_count_cap` must be a positive scalar (or Inf to disable).  Nonsensical
     # values warn and fall back to the default rather than fail -- mirrors
     # `cell_count_cap` in `geom_unit_*()`.
@@ -155,9 +142,7 @@ GeomCurveFade <- ggplot2::ggproto(
         c(
           "!" = "{.fn geom_curve_fade} does not support non-linear coordinates.",
           "i" = "Falling back to {.fn ggplot2::geom_curve} rendering (no fade)."
-        ),
-        .frequency = "once",
-        .frequency_id = "geom_curve_fade_nonlinear"
+        )
       )
       return(ggplot2::GeomCurve$draw_panel(
         data, panel_params, coord,
@@ -189,8 +174,6 @@ GeomCurveFade <- ggplot2::ggproto(
         c(
           "Refusing to composite {.val {nrow(data)}} curves (cap: {.val {curve_count_cap}}).",
           "i" = "Falling back to plain {.fn ggplot2::geom_curve} rendering (no fade).",
-          "i" = "For bulk fading, use {.fn geom_path_fade} (for connected paths) \\
-                 or {.fn geom_segment_fade} (for straight segments).",
           "i" = "To keep the fade, reduce the row count or pass {.code curve_count_cap = Inf}."
         ),
         call = NULL,
@@ -345,7 +328,6 @@ GeomCurveFade <- ggplot2::ggproto(
 #'
 #' @concept fading curve
 #'
-#' @return A [ggplot2::layer()] object that can be added to a [ggplot2::ggplot()].
 #' @export
 geom_curve_fade <- make_constructor(
   GeomCurveFade,

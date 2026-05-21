@@ -23,12 +23,7 @@
 makeContent.segment_fade_grob <- function(x) {
   dev_name <- names(grDevices::dev.cur())
   no_composite <- dev_name %in% c("pdf", "cairo_pdf", "postscript")
-  can_composite <- !no_composite &&
-    exists("groupGrob", envir = asNamespace("grid"), inherits = FALSE) &&
-    tryCatch(
-      "dest.in" %in% grDevices::dev.capabilities()[["compositing"]],
-      error = \(e) FALSE
-    )
+  can_composite <- !no_composite && .has_compositing_op("dest.in")
 
   if (can_composite) {
     n <- length(x$seg_glist)
@@ -122,6 +117,7 @@ GeomSegmentFade <- ggplot2::ggproto(
     alpha_fade_to = 0,
     fade_direction = "start"
   ) {
+    .check_panel_range(panel_params, "geom_segment_fade")
     data <- ggplot2::remove_missing(
       data,
       na.rm = na.rm,
