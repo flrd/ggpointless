@@ -11,9 +11,11 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%",
   fig.align = "center",
+  fig.width = 7,
   fig.height = 3,
   dev = "ragg_png",
-  dpi = 132
+  dpi = 132,
+  fig.alt = "ggpointless example plot"
 )
 ```
 
@@ -26,207 +28,81 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/flrd/ggpointless/graph/badge.svg)](https://app.codecov.io/gh/flrd/ggpointless)
 <!-- badges: end -->
 
-ggpointless is an extension of the [`ggplot2`](https://ggplot2.tidyverse.org/) package providing additional layers.
+`ggpointless` is an extension of the [`ggplot2`](https://ggplot2.tidyverse.org/)
+package providing additional layers. These layers group into two categories: 
+
+Data transformations — geoms that fit or transform data:
+
+- `geom_arch()` & `stat_arch()` -- draws a catenary arch
+- `geom_catenary()` & `stat_catenary()` -- draws a catenary curve
+- `geom_chaikin()` & `stat_chaikin()` -- smooths paths using Chaikin's corner cutting algorithm
+- `geom_fourier()` & `stat_fourier()` -- fits a Fourier series to `x`/`y` observations
+- `geom_gridline()` -- gridlines as a layer (drawn above other geoms)
+- `geom_lexis()` & `stat_lexis()` -- draws a Lexis diagram
+- `geom_pointless()` & `stat_pointless()` -- emphasises selected observations with points
+
+Visual effects — purely aesthetic layers that change how data looks
+without transforming it. The following layers are mostly drop-in replacements
+for their `ggplot2` counterparts. They add visual flair like alpha gradients
+but no statistical transformation:
+
+- `geom_abline_fade()` / `geom_hline_fade()` / `geom_vline_fade()`
+- `geom_area_fade()`
+- `geom_col_fade()` / `geom_bar_fade()`
+- `geom_density_fade()`
+- `geom_freqpoly_fade()`
+- `geom_histogram_fade()`
+- `geom_path_fade()` / `geom_line_fade()` / `geom_step_fade()`
+- `geom_point_glow()`
+- `geom_rect_fade()`
+- `geom_ridgeline_fade()` / `geom_ridgeline_density_fade()` / `geom_ridgeline_freqpoly_fade()` / `geom_ridgeline_histogram_fade()`
+- `geom_segment_fade()` / `geom_curve_fade()`
+- `geom_unit_bar()` / `geom_unit_col()` -- isotype / unit bar charts
+- `geom_unit_histogram()` -- isotype / unit histogram
+
+See the [Examples article](https://flrd.github.io/ggpointless/articles/ggpointless.html)
+for more examples.
 
 ## Installation
 
-You can install ggpointless from CRAN with:
+`ggpointless` requires **R** ≥ 4.2 and `ggplot2` ≥ 4.0.0. You can install
+it from CRAN with:
 
 ```{r eval=FALSE}
 install.packages("ggpointless")
 ```
 
-Or install development version from GitHub with
 
-```{r eval=FALSE}
-# install.packages("pak")
-pak::pkg_install("flrd/ggpointless")
-```
+## Usage
 
-## What will you get
-The package groups into two categories:
-
-**Visual effects** — purely aesthetic layers that change how data looks without transforming it:
-
-- `geom_area_fade()` -- area plots with a gradient fill
-- `geom_point_glow()` -- adds a radial gradient glow to point plots
-
-**Data transformations** — geoms backed by a stat that fits or transforms data:
-
-- `geom_arch()` & `stat_arch()` -- draws a catenary arch
-- `geom_catenary()` & `stat_catenary()` -- draws a catenary curve
-- `geom_chaikin()` & `stat_chaikin()` -- smooths paths using Chaikin's corner cutting algorithm
-- `geom_fourier()` & `stat_fourier()` -- fits a Fourier series to `x`/`y` observations and renders the reconstructed curve
-- `geom_lexis()` & `stat_lexis()` -- draws a Lexis diagram
-- `geom_pointless()` & `stat_pointless()` -- emphasises selected observations with points
-
-See [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html)
-for details and examples.
-
-### Theme setup
+The chunk below sets a colour palette so the README plots share a consistent
+look. It's not required; only the look of your plots will differ.
 
 ```{r setup-theme, warning=FALSE}
+library(ggplot2)
 library(ggpointless)
 
-# set consistent theme for all plots
+# Brand palette -- kept in sync with the vignette
 cols <- c("#311dfc", "#a84dbd", "#d77e7b", "#f4ae1b")
 theme_set(
-  theme_minimal() + 
-    theme(geom = element_geom(fill = cols[1])) +
-    theme(palette.fill.discrete = c(cols[1], cols[3])) +
-    theme(palette.colour.discrete = cols)
-  )
-```
-
-
-## geom_area_fade
-`geom_area_fade()` behaves like [`geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-but fills each area with a vertical [linear gradient](https://search.r-project.org/R/refmans/grid/html/patterns.html). 
-
-```{r geom-area-fade, warning=FALSE}
-set.seed(42)
-df_fade <- data.frame(
-  x = seq_len(60),
-  y = cumsum(rnorm(60, sd = 0.35))
-)
-
-p <- ggplot(df_fade, aes(x, y))
-p + geom_area_fade()
-```
-By default, the gradient is fully transparent at `y = 0` (the baseline) and
-proportionally opaque at the data values. That is, opacity scales with absolute
-distance from zero, so e.g. `y = -1` and `y = +1` always receive the same alpha. 
-The outline colour is unaffected by the alpha logic.
-
-You can control the alpha value the fill fades to using the `alpha` and `alpha_fade_to` 
-arguments. You can effectively reverse the direction of the gradient like so:
-
-```{r geom-area-fade-reverse, warning=FALSE}
-p + geom_area_fade(alpha = 0, alpha_fade_to = 1)
-```
-
-`geom_area_fade()` supports the `orientation` argument familiar from other
-`geom_*` functions. With `orientation = "y"`, you create a horizontal area chart
-where the gradient fades from `x = 0` toward the data values.
-
-```{r geom-area-fade-orientation, warning=FALSE}
-p + geom_area_fade(
-  aes(y, x),
-  orientation = "y",
-  colour = "#333333" # changes outline colour
-  )
-```
-
-### 2D gradient
-
-Since [ggplot2 version 4.0.0](https://tidyverse.org/blog/2025/09/ggplot2-4-0-0/#area-and-ribbons)
-was released both `geom_area()` and `geom_ribbon()` allow a varying `fill`
-aesthetic within a group. `geom_area_fade()` creates a 2D-gradient in such cases
-which combines the vertical and horizontal gradients.
-
-```{r geom-area-fade-2D-gradient, warning=FALSE}
-p + geom_area_fade(aes(fill = y), colour = cols[1]) +
-  scale_fill_continuous(palette = scales::colour_ramp(cols))
-```
-
-> **Note** -- Not all graphic devices support this kind of gradient, see [`vignette("ggpointless")`](https://flrd.github.io/ggpointless/articles/ggpointless.html) for more details and examples.
-
-
-### Multiple groups
-
-When your data contains multiple groups those are stacked (`position = "stack"`)
-and aligned (`stat = "align"`) -- just like `geom_area()` does it. By default, 
-the alpha fade scales to the global maximum across _all_ groups 
-(`alpha_scope = "global"`), so equal `|y|` always maps to equal opacity.
-
-```{r geom-area-fade-multiple-groups-basic, warning=FALSE}
-df1 <- data.frame(
-  g = c("a", "a", "a", "b", "b", "b"),
-  x = c(1, 3, 5, 2, 4, 6),
-  y = c(2, 5, 1, 3, 6, 7)
-)
-
-ggplot(df1, aes(x, y, fill = g)) +
-  geom_area_fade()
-```
-
-When groups have very different amplitudes or you may not use the default
-`position = "stack"` but `position = "identity"` instead, this can make smaller
-groups nearly invisible next to dominant groups.
-
-```{r geom-area-fade-global, warning=FALSE}
-df_alpha_scope <- data.frame(
-  g = c("a", "a", "a", "b", "b", "b"),
-  x = c(1, 3, 5, 2, 4, 6),
-  y = c(1, 2, 1, 9, 10, 8)
-)
-p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
-p + geom_area_fade(
-  alpha_scope = "global", # default
-  position = "identity"
+  theme_minimal() +
+    theme(
+      legend.position           = "bottom",
+      geom                      = element_geom(fill = cols[1]),
+      palette.fill.discrete     = cols,
+      palette.colour.discrete   = cols,
+      palette.fill.continuous   = cols,
+      palette.colour.continuous = cols
+    )
 )
 ```
 
-Setting `alpha_scope = "group"` lets the algorithm calculate the alpha range
-for each group separately. 
 
-```{r geom-area-fade-group, warning=FALSE}
-p <- ggplot(df_alpha_scope, aes(x, y, fill = g))
+## Statistical transformations
 
-# alpha_scope = "group": each group uses the alpha range independently
-p + geom_area_fade(
-  alpha_scope = "group", 
-  position = "identity"
-  )
-```
+### Catenary curves and arches
 
-## geom_point_glow
-`geom_point_glow()` is a drop-in replacement for [`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html) that adds a radial gradient glow behind each point using [`grid::radialGradient()`](https://search.r-project.org/R/refmans/grid/html/patterns.html). The glow colour, transparency (`glow_alpha`), and radius (`glow_size`) can be set independently of the point itself; by default the glow inherits the point colour and size.
-
-```{r geom-point-glow, warning=FALSE}
-ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
-  geom_point_glow(glow_size = 5, glow_alpha = .5) +
-  coord_cartesian(clip = "off")
-```
-
-
-## geom_arch
-`geom_arch()` draws a [catenary arch](https://en.wikipedia.org/wiki/Catenary_arch) (inverted catenary curve) between successive points. 
-
-```{r geom-arch-basic-example, warning=FALSE}
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-p <- ggplot(df_arch, aes(x, y)) +
-    geom_point(size = 3) +
-  ylim(0, 3.5)
-
-p + geom_arch()
-
-```
-
-By default the arch length is twice the Euclidean distance. You can change that
-for each segment using the arguments `arch_length` or `arch_height` (vertical
-rise above the _highest_ endpoint of each segment). 
-
-```{r geom-arch-height-sag, warning=FALSE}
-df_arch <- data.frame(x = seq_len(4), y = c(1, 1, 0, 2))
-ggplot(df_arch, aes(x, y)) +
-  geom_arch(
-    arch_height = c(1.5, NA, 0.5),
-    arch_length = c(NA, 6, NA)
-    ) +
-  geom_point(size = 3) +
-  ylim(0, 3.5)
-```
-
-## geom_catenary
-`geom_catenary()` draws a [catenary curve](https://en.wikipedia.org/wiki/Catenary_arch),
-i.e., a flexible curve that simulates a chain or rope hanging loosely between
-successive points. By default, the chain length is twice the Euclidean distance
-between each `x`/`y` pair. The shape can be controlled via `chain_length` or 
-`sag`, i.e, vertical drop below the _lowest_ endpoint of each segment.
-
-
-```{r geom-catenary, warning=FALSE}
+```{r geom-catenary, warning=FALSE, fig.alt="Four points connected by a catenary curve sagging between adjacent points."}
 set.seed(5)
 df_catenary <- data.frame(x = 1:4, y = sample(4))
 ggplot(df_catenary, aes(x, y)) +
@@ -234,11 +110,8 @@ ggplot(df_catenary, aes(x, y)) +
   geom_point(size = 3)
 ```
 
-The `sag` argument can be used to define each segment's drop based on the
-smallest value of each segment. `NA` keeps the default. If you provide `sag` and
-`chain_length` for the same segment, then `sag` wins.
 
-```{r geom-catenary-sag, warning=FALSE}
+```{r geom-catenary-sag, warning=FALSE, fig.alt="Same four-point catenary with per-segment overrides — the first segment sags deeper, the second tighter, the third uses a longer chain length."}
 ggplot(df_catenary, aes(x, y)) +
   geom_catenary(
     sag = c(2, .5, NA),
@@ -246,10 +119,19 @@ ggplot(df_catenary, aes(x, y)) +
   geom_point(size = 3)
 ```
 
-## geom_chaikin
-`geom_chaikin()` applies Chaikin's corner cutting algorithm to turn a ragged path or polygon into a smooth one. The `closed` argument controls whether the path is treated as a closed polygon, or an open path.
 
-```{r geom-chaikin, warning=FALSE}
+```{r geom-arch-height-sag, warning=FALSE, fig.alt="Inverted catenary arches connecting four points; each arch peaks midway between two adjacent points."}
+ggplot(df_catenary, aes(x, y)) +
+  geom_arch(
+    arch_height = c(1.5, NA, 0.5),
+    arch_length = c(NA, 6, NA)
+    ) +
+  geom_point(size = 3)
+```
+
+### Chaikin's corner cutting algorithm
+
+```{r geom-chaikin, warning=FALSE, fig.alt="Four polygon shapes drawn with sharp dashed outlines and overlaid with smoothed Chaikin corner-cut curves."}
 lst <- list(
   data = list(
     whale = data.frame(x = c(.5, 4, 4, 3.5, 2), y = c(.5, 1, 1.5, .5, 3)),
@@ -272,31 +154,22 @@ ggplot(mapping = aes(x, y)) +
   coord_equal()
 ```
 
-## geom_fourier
-`geom_fourier()` fits a Fourier series (via [fft()](https://search.r-project.org/R/refmans/stats/html/fft.html)) to the supplied `x`/`y` observations and renders the reconstructed smooth curve. By default all harmonics up to the Nyquist limit are used, giving an exact interpolating fit; reducing `n_harmonics` progressively smooths the result. 
+### Discrete Fourier transform
 
-The animation below shows how `geom_fourier()` approximates a square wave as
-the number of harmonics grows from `n = 1` to the Nyquist limit, where the
-[Gibbs phenomenon](https://en.wikipedia.org/wiki/Gibbs_phenomenon) is visible.
-
-```{r fourier-anim, echo=FALSE, out.width="100%", fig.cap=""}
-knitr::include_graphics("man/figures/fourier_square_wave.gif")
-```
-
-The source script that generates the animation is at `inst/scripts/gen_fourier_gif.R`.
-
-An optional `detrend` argument removes slow non-periodic trends before the transform; `detrend` accepts one of `"lm"` or `"loess"`.
-
-```{r geom-fourier, warning=FALSE}
-set.seed(1)
-x_d <- seq(0, 4 * pi, length.out = 100)
+```{r geom-fourier, warning=FALSE, fig.alt="Noisy point cloud with a single Fourier-series fit overlaid; the curve follows the upward drift while smoothing the cyclic component."}
+x_d <- seq(0, 4 * pi, length.out = 15)
 df_d <- data.frame(
   x = x_d,
-  y = sin(x_d) + x_d * 0.4 + rnorm(100, sd = 0.2)
+  y = sin(x_d) + x_d * 0.4 + rnorm(15, sd = 0.2)
 )
 
-ggplot(df_d, aes(x, y)) +
-  geom_point(alpha = 0.35) +
+p <- ggplot(df_d, aes(x, y)) +
+  geom_point(alpha = 0.35)
+p + geom_fourier()
+```
+
+```{r geom-fourier-detrending, warning=FALSE, fig.height=3.5, fig.alt="Noisy point cloud with two overlaid Fourier-series fits: one without detrending shows the linear drift, one with linear detrending isolates the cyclic component."}
+p +
   geom_fourier(
     aes(colour = "detrend = NULL"),
     n_harmonics = 3
@@ -308,45 +181,362 @@ ggplot(df_d, aes(x, y)) +
   )
 ```
 
-## geom_lexis
-`geom_lexis()` is a combination of a segment and a point layer. Given a start value and an end value, it draws a 45° line indicating the duration of an event. Required aesthetics are `x` and `xend`; `y` and `yend` are calculated automatically.
 
-```{r geom-lexis, warning=FALSE}
-df2 <- data.frame(
+### Draw (grid)lines above bars and other geoms
+
+```{r geom-gridline, warning=FALSE, fig.alt="Vertical bar chart of mpg car-class counts with horizontal grid lines drawn on top of the bars."}
+ggplot(mpg, aes(class)) +
+  geom_bar() +
+  geom_gridline()
+```
+
+```{r geom-gridline-horizontal, warning=FALSE, fig.alt="Horizontal bar chart of mpg car-class counts with vertical white grid lines drawn on top of the bars."}
+p <- ggplot(mpg, aes(y = class)) +
+  geom_bar() +
+  geom_gridline(grids = "x")
+
+# geom_gridline inherits its line properties from theme
+p + theme(panel.grid = element_line(colour = "white"))
+```
+
+```{r geom-gridline-horizontal-log10, warning=FALSE, fig.alt="Same horizontal bar chart on a log10 x scale; grid line positions follow the transformed breaks."}
+# The x/y positions are deducted from the scale(s)
+p + scale_x_sqrt()
+```
+
+```{r geom-gridline-horizontal-theme-dark, warning=FALSE, fig.alt="Same horizontal bar chart with bolder white grid lines drawn via an explicit colour and linewidth override."}
+# You can overwrite these properties of course
+p + 
+  geom_gridline(grids = "x", colour = cols[4], linewidth = 1.5) +
+  scale_x_sqrt(breaks = c(10, 20, 30, 40, 50))
+```
+
+### Lexis diagrams
+
+```{r geom-lexis, warning=FALSE, fig.alt="Lexis diagram showing five 45-degree lifelines coloured by category, with dotted gap-fillers bridging gaps between events of the same cohort."}
+df_lexis <- data.frame(
   key = c("A", "B", "B", "C", "D"),
   x = c(0, 1, 6, 5, 6),
   xend = c(5, 4, 10, 8, 10)
 )
 
-ggplot(df2, aes(x = x, xend = xend, color = key)) +
+ggplot(df_lexis, aes(x = x, xend = xend, color = key)) +
   geom_lexis(aes(linetype = after_stat(type)), size = 2) +
   coord_equal() +
-  scale_x_continuous(breaks = c(df2$x, df2$xend)) +
+  scale_x_continuous(breaks = c(df_lexis$x, df_lexis$xend)) +
   scale_linetype_identity() +
   theme(panel.grid.minor = element_blank())
 ```
 
-See also the [`LexisPlotR` package](https://github.com/ottlngr/LexisPlotR).
 
-## geom_pointless
-`geom_pointless()` lets you highlight observations, by default using a point layer. Hence it behaves like `geom_point()` but accepts a `location` argument: `"first"`, `"last"` (default), `"minimum"`, `"maximum"`, or `"all"` (shorthand for all four).
+### Emphasise some observations
 
-```{r geom-pointless}
-x <- seq(-pi, pi, length.out = 500)
-y <- outer(x, 1:5, \(x, y) sin(x * y))
+```{r geom-pointless, fig.alt="Yearly sunspot data from 1977 to 1986 as a step chart."}
+sunspot_df <- data.frame(
+  year = time(datasets::sunspot.year),
+  sunspots = unclass(datasets::sunspot.year)
+)
+ggplot(tail(sunspot_df, 12), aes(year, sunspots)) + 
+  geom_step(colour = cols[4]) +
+  geom_pointless(location = c("first", "last"), size = 3, colour = cols[4])
+```
 
-df1 <- data.frame(
-  var1 = x,
-  var2 = rowSums(y)
+
+## Visual effects
+
+### Fading area, density, and ridgeline charts
+
+```{r geom-area-fade, warning=FALSE, fig.alt="Area chart of a 60-step random walk, fill fading from opaque at the line to transparent at the y=0 baseline."}
+set.seed(42)
+df_fade <- data.frame(
+  x = seq_len(60),
+  y = cumsum(rnorm(60, sd = 0.35))
 )
 
-ggplot(df1, aes(x = var1, y = var2)) +
-  geom_line() +
-  geom_pointless(aes(color = after_stat(location)),
-    location = "all",
-    size = 3
+p <- ggplot(df_fade, aes(x, y))
+p + geom_area_fade()
+```
+
+
+```{r geom-freqpoly-fade, warning=FALSE, fig.alt="Frequency polygon of iris Sepal.Length filled below the line with the gradient reversed — transparent at the line, opaque at the y=0 baseline."}
+ggplot(iris, aes(Sepal.Length)) +
+  geom_freqpoly_fade(alpha = 0, alpha_fade_to = 1)
+```
+
+```{r geom-density-fade, warning=FALSE, fig.alt="Twelve overlapping monthly density curves of Nottingham temperatures, fill mapped to temperature so colour shifts from indigo (cold) through pink to amber (warm); each fades to transparent at the baseline."}
+dmn <- list(
+  month.abb,
+  time(datasets::nottem) |> floor() |> unique()
+)
+df_nottem <- datasets::nottem |> 
+  matrix(data = _, 12, dimnames = dmn) |> 
+  as.data.frame() |> 
+  stack() |> 
+  cbind(month = factor(month.abb, levels = month.abb))
+
+p <- ggplot(df_nottem, aes(x = values, group = month, fill = after_stat(x))) +
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = "Average air temperatures at Nottingham Castle in degrees Fahrenheit (1920–1939)"
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(expand = 0)
+
+p + geom_density_fade(
+  outline.type = "none"
   )
 ```
+
+```{r geom-ridgeline-density-fade-2D, fig.height = 5, warning=FALSE, fig.alt="Twelve ridgeline density curves stacked from January at the bottom to December at the top, fill mapped to temperature, fading to transparent at each row's baseline."}
+p <- p + aes(y = month)
+p + geom_ridgeline_density_fade(
+  alpha_scope = "global",
+  outline.type = "none"
+  )
+```
+
+```{r geom-ridgeline-freqpoly-fade-2D, fig.height = 5, warning=FALSE, fig.alt="Same twelve monthly ridgelines drawn as binned frequency polygons (step-shaped) instead of smooth densities."}
+p + geom_ridgeline_freqpoly_fade(
+  alpha_scope = "global",
+  linewidth = 0.25
+  )
+```
+
+
+```{r geom-ridgeline-histogram-fade-2D, fig.height = 5, warning=FALSE, fig.alt="Same twelve monthly ridgelines drawn as 40-bin histograms — each row is a stack of fading bars instead of a smooth curve."}
+p + geom_ridgeline_histogram_fade(
+  alpha_scope = "group",
+  bins = 40,
+  linewidth = 0.25
+  )
+```
+
+
+### Points that glow
+
+```{r geom-point-glow, warning=FALSE, fig.height=5, fig.alt="Anscombe's quartet rendered as four scatter facets where each point carries a soft purple radial glow."}
+anscombe_long <- reshape(anscombe, varying = TRUE, sep = "", direction = "long", timevar = "tv")
+ggplot(anscombe_long, aes(x, y)) +
+  geom_point_glow(colour = cols[1]) +
+  facet_wrap(~tv) +
+  coord_equal(clip = "off") 
+```
+
+### Fading curves, lines, and paths
+
+```{r geom-segment-fade, warning=FALSE, fig.alt="mtcars weight-vs-mpg scatter with two fading arrows between the same two points — one curved, one straight — colour-labelled by geom."}
+b <- ggplot(mtcars, aes(wt, mpg)) +
+  geom_point()
+
+df <- data.frame(x1 = 2.62, x2 = 3.57, y1 = 21.0, y2 = 15.0)
+b +
+  geom_curve_fade(
+    aes(x = x1, y = y1, xend = x2, yend = y2, colour = "curve"),
+    arrow = arrow(),
+    data = df
+  ) +
+  geom_segment_fade(
+    aes(x = x1, y = y1, xend = x2, yend = y2, colour = "segment"),
+    data = df
+  )
+```
+
+```{r geom-path-fade, warning=FALSE, fig.alt="A stylised fish (ichthys) outline drawn as a single path with the line fading to transparent at both the start and the end."}
+theta <- seq(1.3, -1.3, length.out = 101)
+ichthys <- data.frame(
+  x = theta^2,
+  y = 0.5 * theta * (theta^2 - 1)
+)
+
+ggplot(ichthys, aes(x, y)) + 
+  geom_path_fade(
+    linewidth = 1.5,
+    fade_direction = c("start", "end"),
+    alpha_mode = "gradient"
+  ) +
+  coord_fixed()
+```
+
+```{r geom-abline-fade, warning=FALSE, fig.alt="Three coloured reference lines on a unit panel — diagonal (purple), horizontal (pink), and vertical (amber) — each fading to transparent along its length."}
+p <- ggplot() +
+  geom_abline_fade(intercept = 0, colour = "#a84dbd", linewidth = 1) +
+  geom_hline_fade(yintercept = 1, colour = "#d77e7b", linewidth = 1) +
+  geom_vline_fade(xintercept = 1, colour = "#f4ae1b", linewidth = 1) +
+  xlim(0, 2) +
+  ylim(0, 2)
+  
+p
+```
+
+```{r geom-abline-fade-polar-coord, warning=FALSE, fig.alt="The same three reference lines drawn under coord_polar, becoming concentric arcs and rays with the fade preserved along each line."}
+p + coord_polar()
+```
+
+
+```{r stat-function, warning=FALSE, fig.alt="Standard normal density curve filled as a fading area beneath the curve, with the outline drawn as a separate line that fades to transparent at both tails."}
+ggplot() +
+  stat_function(
+    alpha = 0.5,
+    fun = dnorm,
+    n = 100,
+    xlim = c(-4, 4),
+    geom = "area_fade",
+    outline.type = "none" # remove solid outline
+  ) +
+  # Add fading outline instead
+  stat_function(
+    fun = dnorm, n = 100,
+    xlim = c(-4, 4),
+    geom = "line_fade",
+    colour = cols[1],
+    linewidth = 1,
+    fade_direction = c("start", "end")
+  )
+```
+
+
+```{r geom-step-fade, warning=FALSE, fig.alt="Step chart of US unemployment for the first 25 economics observations, the line fading from opaque on the right to nearly transparent on the left."}
+ggplot(head(economics, 25), aes(date, unemploy)) +
+  geom_step_fade(alpha_fade_to = 0.1)
+```
+
+
+### Fading rectangles and bar charts with rounded corners 
+
+
+```{r geom-rect-fade, warning=FALSE, fig.alt="Same unemployment step chart with a vertical band from July 1968 to July 1969 shaded by a rectangle that fades to transparent at its top edge."}
+ggplot(head(economics, 25), aes(date, unemploy)) +
+  geom_rect_fade(
+    data = data.frame(
+      xmin = as.Date("1968-07-01"),
+      xmax = as.Date("1969-07-01"),
+      ymin = -Inf, ymax = 2800
+    ),
+    inherit.aes = FALSE,
+    alpha = 0,
+    alpha_fade_to = 0.3,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+  ) +
+  geom_step_fade(alpha_fade_to = 0.1)
+```
+
+
+```{r geom-bar-fade, warning=FALSE, fig.alt="Vertical bar chart of mpg class counts with each bar filled by an alpha gradient that fades from opaque at the top to transparent at the baseline; bars have rounded corners."}
+ggplot(mpg, aes(y = class)) +
+  geom_bar_fade()
+```
+
+```{r geom-col-fade, warning=FALSE, fig.alt="Vertical bar chart of BOD demand over time with rounded corners and a global alpha gradient — fade depth scales with each bar's height relative to the tallest."}
+ggplot(datasets::BOD, aes(Time, demand)) +
+  geom_col_fade(
+    radius = unit(10, "pt"),
+    alpha = 0.75,
+    alpha_fade_to = 0.25,
+    alpha_scope = "global"
+    )
+```
+
+```{r geom-histogram-fade, warning=FALSE, fig.alt="Histogram of Old Faithful eruption durations (30 bins) with each bar filled by an alpha gradient; gradient strength is shared across bars (global scope)."}
+ggplot(faithful, aes(eruptions)) +
+  geom_histogram_fade(
+    alpha = 0.8,
+    alpha_fade_to = 0.1,
+    alpha_scope = "global"
+    ) +
+  geom_step(
+    stat = "bin",
+    direction = "mid",
+    colour = cols[1]
+    )
+```
+### Unit bar charts and histograms
+
+```{r geom-unit-histogram-faithful, warning=FALSE, fig.alt="Old Faithful eruption-duration histogram drawn as a stack of unit cells per bar, with cell fill running from indigo blue for short eruptions to amber for long ones."}
+bins <- 30
+bw <- diff(range(faithful$eruptions)) / bins
+
+ggplot(faithful, aes(eruptions)) +
+  geom_unit_histogram(
+    aes(fill = after_stat(x)),
+    radius = unit(1, "pt"),
+    bins = bins
+  ) +
+  labs(
+    y = NULL
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(
+    breaks = 2:5,
+    labels = paste(2:5, "min")
+  ) +
+  coord_equal(ratio = 1/3 * bw, clip = "off") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.ticks    = element_blank()
+  )
+```
+
+
+
+```{r geom-unit-bar, warning=FALSE, fig.height=5, fig.alt="Horizontal isotype bar chart counting diamonds per cut; each cell represents one hundred observation."}
+cs <- 100
+ggplot(diamonds, aes(y = cut, fill = color)) +
+  geom_unit_bar(
+    cell_size = cs,
+    radius = unit(1, "pt"),
+    position = "dodge"
+    ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = sprintf("One cell equals %d observations.", cs)) +
+  coord_equal(ratio = 7 * cs) +
+  theme_minimal()
+```
+
+
+The `geom_unit_*` family was inspired by the work of [pudding.cool](https://pudding.cool/2017/09/this-american-life/).
+
+## Accessibility
+
+Visual effects can quietly exclude readers. The faded end of any gradient
+geom drops below [WCAG](https://en.wikipedia.org/wiki/Web_Content_Accessibility_Guidelines)
+contrast thresholds for low-vision readers. Pair colour with `linetype`,
+`shape`, or labels for categorical encodings; prefer colour-vision-deficiency-safe
+(CVD-safe) palettes like `scale_colour_viridis_d()` or Okabe–Ito; and raise
+`alpha_fade_to` when the faded region carries data your readers need to find.
+
+The 4-stop palette `cols` used in this README and the Examples article
+is monotonic in luminance, so it survives greyscale conversion and the stop
+ordering is preserved under CVD. The middle hues collapse under deuteranopia,
+however, so for cases where hue identity carries information rather than
+ordering, prefer `scale_fill_viridis_c()` / `scale_colour_viridis_c()`.
+
+## Device compatibility
+
+The 2D gradients used by `geom_area_fade()` and friends depend on
+**Porter-Duff compositing**[^porter-duff], a feature of R's graphics
+engine added in R 4.2. When the active device does not support
+compositing (e.g. `grDevices::pdf()`), the fade family falls back to a
+single-colour vertical fade — the horizontal colour gradient is lost,
+only the vertical alpha fade survives, and a one-time message is
+emitted:
+
+> ! `geom_area_fade()`: the graphics device does not support gradient fills.
+> The `fill` colour gradient is replaced by a single colour. Switch to a
+> device that supports gradients (e.g. `ragg::agg_png()`, `svg()`,
+> `cairo_pdf()`) for the full effect. This message is displayed once
+> per session.
+
+Most modern raster devices — including `ragg::agg_png()` and the
+Cairo-backed `png()` shipped on Linux and macOS — *do* support
+compositing, so the 2D gradient works out of the box. In RStudio, go to
+*Tools > Global Options > Graphics > Backend* and select *AGG* to ensure
+full support.
+
+[^porter-duff]: <https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/compositing/compositing.html>
 
 ## Code of Conduct
 
