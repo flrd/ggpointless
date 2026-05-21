@@ -54,6 +54,10 @@ Collate:
     'geom-pointless.R'
     'geom-rect-fade.R'
     'geom-ridgeline-fade.R'
+    'geom-ridgeline-density-fade.R'
+    'geom-ridgeline-freqpoly-fade.R'
+    'stat-bin-ridges.R'
+    'geom-ridgeline-histogram-fade.R'
     'geom-step-fade.R'
     'geom-unit-bar.R'
     'geom-unit-histogram.R'
@@ -68,6 +72,7 @@ Imports:
     cli,
     farver,
     grid,
+    scales,
     lifecycle,
     rlang,
     stats
