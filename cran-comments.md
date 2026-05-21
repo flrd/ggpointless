@@ -38,8 +38,8 @@ and supporting helpers (`label_cells()`, `draw_key_unit()`,
   in DESCRIPTION as possibly misspelled: "Chaikin" / "Chaikin's"
   (eponymous corner-cutting algorithm), "catenary" (mathematical
   term), "geoms" (ggplot2 vocabulary), and "isotype" (the data-
-  visualisation tradition originated by Otto Neurath). All are
-  spelled correctly.
+  visualisation tradition originated by Otto Neurath), "ridgelines".
+  All are spelled correctly.
 
 ## R CMD check results
 
@@ -50,9 +50,9 @@ win-builder R-devel: 0 errors | 0 warnings | 1 NOTE
 ## Test environments
 
 * local Ubuntu 24.04, R 4.6.0 (2026-05-21), ggplot2 4.0.3 — Status: OK
-* win-builder R-devel (2026-05-08 r90020 ucrt, re-run 2026-05-09) — Status: 1 NOTE (spelling, see above)
-* win-builder R-release (R 4.6.0, 2026-04-24 ucrt, re-run 2026-05-09) — Status: 1 NOTE (spelling, see above)
-* macOS builder (sonoma-arm64, macOS Tahoe 26.2, R 4.6.0 Patched 2026-04-24 r89963) — Status: OK (re-run 2026-05-09)
+* win-builder R-devel (2026-05-19 r90065 ucrt, re-run 2026-05-21) — Status: 1 NOTE (spelling, see above)
+* win-builder R-release (R 4.6.0, 2026-04-24 ucrt, re-run 2026-05-21) — Status: 1 NOTE (spelling, see above)
+* macOS builder (sonoma-arm64, macOS Tahoe 26.2, R 4.6.0 Patched 2026-04-24 r89963) — Status: OK (re-run 2026-05-21)
 
 ## Reverse dependencies
 
