@@ -84,8 +84,11 @@ GeomStepFade <- ggplot2::ggproto(
   ) {
     if (.is_uniform_alpha(data, alpha_fade_to)) {
       return(ggplot2::GeomStep$draw_panel(
-        data, panel_params, coord,
-        direction = direction, na.rm = na.rm
+        data,
+        panel_params,
+        coord,
+        direction = direction,
+        na.rm = na.rm
       ))
     }
 
@@ -145,8 +148,7 @@ GeomStepFade <- ggplot2::ggproto(
 #' )
 #'
 #' ggplot(d, aes(x, y, colour = grp)) +
-#'   geom_step_fade(linewidth = 1, direction = "vh") +
-#'   theme_minimal()
+#'   geom_step_fade(linewidth = 1, direction = "vh")
 #'
 geom_step_fade <- make_constructor(
   GeomStepFade,
