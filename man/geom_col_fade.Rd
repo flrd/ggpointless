@@ -13,9 +13,10 @@ geom_col_fade(
   ...,
   alpha_fade_to = 0,
   alpha_scope = "bar",
-  radius = grid::unit(3, "pt"),
+  orientation = NA,
+  radius = grid::unit(0, "pt"),
   lineend = "butt",
-  linejoin = "round",
+  linejoin = "mitre",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -29,9 +30,10 @@ geom_bar_fade(
   ...,
   alpha_fade_to = 0,
   alpha_scope = "bar",
-  radius = grid::unit(3, "pt"),
+  orientation = NA,
+  radius = grid::unit(0, "pt"),
   lineend = "butt",
-  linejoin = "round",
+  linejoin = "mitre",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -107,23 +109,39 @@ lists which parameters it can accept.
 \item{alpha_fade_to}{A single finite number between 0 and 1. The alpha
 value at the baseline of each bar. Defaults to \code{0} (fully transparent).}
 
-\item{alpha_scope}{How to scale the alpha gradient across bars and positions.
+\item{alpha_scope}{How to choose the per-bar reference height that the
+gradient normalises against. One of:
 \itemize{
-\item \code{"bar"} (default): every bar gets the full alpha range independently of
-positions or groups.
-\item \code{"group"}: alpha is scaled relative to the tallest bar \emph{at each
-position on the position axis}. For stacked bars this means each
-stack independently uses their alpha range; for dodged bars each
-bar has its alpha scaled relative to the maximum within that group.
-With \code{position = "fill"} all stacks are normalised to the same
-height, so \code{"group"} and \code{"global"} produce identical results, see examples.
-\item \code{"global"}: for each bar their alpha is scaled relative to the tallest
-bar in the entire panel.
+\item \code{"bar"} (default): each bar uses its own height -- every peak hits
+full opacity.
+\item \code{"global"}: every bar normalises to the tallest bar in the entire
+layer, \strong{including across facet panels}. The single tallest bar
+reaches full opacity; all others fade in proportion.
+\item \code{"x"} / \code{"y"}: every bar normalises to the tallest bar at the same
+discrete x (or y) position. Useful for highlighting the leader
+within a stack or dodge cluster. \code{"x"} is for vertical bars;
+\code{"y"} is for horizontal bars (\code{coord_flip()} /
+\code{orientation = "y"}). Mismatched orientation aborts with a hint.
+\item \code{"group"}: every bar normalises to the tallest bar in its
+ggplot2 group (\code{data$group} -- the interaction of all discrete
+aesthetics). Most useful with explicit \code{aes(group = ...)}; with
+the typical \code{aes(x = factor, fill = factor)} layout it
+degenerates to \code{"bar"} because every (x, fill) pair is its own
+group.
+\item \code{"fill"} / \code{"colour"}: every bar normalises to the tallest bar
+with the same fill (or colour). Bars sharing a fill share an
+alpha range across x and across facet panels.
 }}
 
-\item{radius}{Corner radius passed to \code{\link[grid:grid.roundrect]{grid::roundrectGrob()}}. A
+\item{orientation}{The orientation of the layer. The default (\code{NA})
+automatically determines the orientation from the aesthetic mapping. In the
+rare event that this fails it can be given explicitly by setting \code{orientation}
+to either \code{"x"} or \code{"y"}. See the \emph{Orientation} section for more detail.}
+
+\item{radius}{Corner radius passed to \code{\link[grid:roundrectGrob]{grid::roundrectGrob()}}. A
 \code{\link[grid:unit]{grid::unit()}} object (e.g. \code{unit(4, "pt")}); a bare number is
-interpreted as points. Defaults to \code{unit(3, "pt")}.}
+interpreted as points. Defaults to \code{unit(0, "pt")} (matching
+\code{geom_bar()} / \code{geom_col()}).}
 
 \item{lineend}{Line end style (round, butt, square).}
 
@@ -150,15 +168,46 @@ A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \c
 }
 \description{
 \code{geom_col_fade()} and \code{geom_bar_fade()} draw bar charts like
-\code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}} / \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} but with two visual
-enhancements:
-\itemize{
-\item \strong{Rounded corners} via \code{\link[grid:grid.roundrect]{grid::roundrectGrob()}}, controlled by the
+\code{\link[ggplot2:geom_col]{ggplot2::geom_col()}} / \code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} but with options to
+add an alpha gradient that fades from opaque at the peak of
+each bar to transparent at its baseline; and rounded corners
+are supported via \code{\link[grid:roundrectGrob]{grid::roundrectGrob()}}, controlled by the
 \code{radius} argument.
-\item \strong{A vertical alpha gradient} that fades from opaque at the peak of
-each bar to transparent at its baseline (the edge closest to \code{y = 0}).
 }
+\section{Orientation}{
+
+
+This geom treats each axis differently and, thus, can thus have two orientations. Often the orientation is easy to deduce from a combination of the given mappings and the types of positional scales in use. Thus, ggplot2 will by default try to guess which orientation the layer should have. Under rare circumstances, the orientation is ambiguous and guessing may fail. In that case the orientation can be specified directly using the \code{orientation} parameter, which can be either \code{"x"} or \code{"y"}. The value gives the axis that the geom should run along, \code{"x"} being the default orientation you would expect for the geom.
+
 }
+
+\section{alpha_scope = "global" under faceting}{
+
+\code{alpha_scope = "global"} ties opacity to absolute height across the whole
+layer, so two ridges / areas / bars of equal height render at equal
+alpha regardless of which panel they're in. This is meaningful only when
+panels share a common y scale. Under
+\code{facet_wrap(scales = "free_y")} (or \code{facet_grid(rows = ..., scales = "free")})
+each panel rescales y independently, so the visual height of a shape no
+longer reflects its data height; the alpha encoding then conflicts with
+what the eye reads from the panel size. For comparable alpha across
+free-y panels you have two options: stick to the default \code{scales = "fixed"},
+or accept that under free scales \code{alpha_scope = "group"} is the more
+honest choice (each shape independently uses its own alpha range).
+}
+
+\section{Legend key under coord_flip}{
+
+The legend key glyph always shows the canonical (data-axis) fade
+direction -- vertical for the default orientation, horizontal under
+\code{orientation = "y"}. Under \code{\link[ggplot2:coord_flip]{ggplot2::coord_flip()}} the rendered geom
+rotates correctly but the legend key does \emph{not}: ggplot2's legend
+builder is coord-independent by design (\code{draw_key} has no access to
+the coord). For a legend key that matches a horizontal layout, prefer
+\code{aes(y = ...)} with auto-detected \code{orientation = "y"} over
+\code{aes(x = ...) + coord_flip()}.
+}
+
 \examples{
 library(ggplot2)
 
@@ -171,24 +220,16 @@ ggplot(df, aes(x, y)) +
   geom_col_fade() +
   theme_minimal()
 
-# if you do not want the corners to be round, set the radius to 0
-# default radius is 3 "pt"
+# Rounded bar charts are supported too
 ggplot(df, aes(x, y)) +
-  geom_col_fade(radius = 0) +
+  geom_col_fade(radius = unit(10, "pt")) +
   theme_minimal()
 
-# Global alpha scope: shorter bars appear more transparent
+# Start at 90\% opacity and keep some opacity at the baseline
 ggplot(df, aes(x, y)) +
   geom_col_fade(
-    alpha_scope = "global",
-    radius = unit(10, "pt")) +
-  theme_minimal()
-
-# Start at 75\% opacity and keep some opacity at the baseline
-ggplot(df, aes(x, y)) +
-  geom_col_fade(
-    alpha = 0.75,
-    alpha_fade_to = 0.25
+    alpha = 0.9,
+    alpha_fade_to = 0.1
   ) +
   theme_minimal()
 
@@ -197,50 +238,36 @@ ggplot(df, aes(y, x)) +
   geom_col_fade() +
   theme_minimal()
 
-library(ggplot2)
 
-# multiple groups
+# Multiple groups with different alpha scopes
 p <- ggplot(diamonds, aes(color, fill = cut)) +
   scale_fill_viridis_d(guide = "none") +
   labs(x = NULL, y = NULL) +
   theme_minimal()
 
-# dodged bar chart - by default each bar has their own alpha scope
-p + geom_bar_fade(position = "dodge")
-
-# when bars are dodged, all bars within the same fill / colour group
-# can share the same alpha scope
-p + geom_bar_fade(position = "dodge", alpha_scope = "group")
-
-# when you want all bars to share a common scope, set the
-# alpha scope to be 'global'
-p + geom_bar_fade(position = "dodge", alpha_scope = "global")
-
-# stacked bar chart - by default each bar has their own alpha scope
+# By default each bar has its own alpha scope
 p + geom_bar_fade()
 
-# for stacked bar charts each stack uses their alpha range
-# independently when alpha_scope = "group"
-p + geom_bar_fade(alpha_scope = "group")
+# With alpha_scope = "x", bars at same x aesthetic share same alpha scope
+p + geom_bar_fade(alpha_scope = "x")
 
-# the alpha_scope = "global" option starts at fully opacity at maximum
-# y-value and scales all other bars accordingly
+# With alpha_scope = "fill", alpha is defined by what is mapped to the fill aesthetic
+p + geom_bar_fade(alpha_scope = "fill")
+
+# With alpha_scope = "global", the maximum absolute
+# value across the whole dataset is fully opaque
 p + geom_bar_fade(alpha_scope = "global")
 
-# coord_polar() / coord_radial() — the linear bar fade becomes a
-# panel-centered radial (annular) fade. Each ring fades from
-# transparent at its inner radius to opaque at its outer radius.
-# Rounded corners still require a linear coord system and are
-# silently dropped under polar.
-ggplot(mpg, aes(x = factor(1), fill = class)) +
+# same examples for position dodge with varying alpha scope:
+p + geom_bar_fade(alpha_scope = "bar", position = "dodge")
+p + geom_bar_fade(alpha_scope = "x", position = "dodge")
+p + geom_bar_fade(alpha_scope = "fill", position = "dodge")
+p + geom_bar_fade(alpha_scope = "global", position = "dodge")
+
+# Polar coordinates are supported too, if you need it
+ggplot(diamonds, aes(x = factor(1), fill = cut)) +
   geom_bar_fade(width = 1) +
   coord_polar(theta = "y") +
-  theme_void()
-
-# Bars radiating outward from the panel centre
-ggplot(mpg, aes(x = class, fill = drv)) +
-  geom_bar_fade() +
-  coord_radial(theta = "x") +
   theme_void()
 
 }
@@ -251,7 +278,7 @@ Version 1.
 \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
 }
 \seealso{
-\code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} and \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}} for fully
+\code{\link[ggplot2:geom_bar]{ggplot2::geom_bar()}} and \code{\link[ggplot2:geom_col]{ggplot2::geom_col()}} for fully
 opaque bar charts,
 \code{\link[=geom_histogram_fade]{geom_histogram_fade()}} for the histogram chart equivalent.
 }
