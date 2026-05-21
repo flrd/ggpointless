@@ -8,27 +8,26 @@ template:
 navbar:
   structure:
     left:
-    - intro
-    - reference
     - articles
+    - reference
     - news
     right:
     - search
     - github
   components:
-    intro:
+    articles:
       text: Examples
       href: articles/ggpointless.html
 articles:
-- title: Vignettes
+- title: Examples
   contents:
-  - ggpointless
-  - doppelganger
+  - articles/ggpointless
+
 reference:
 
 - title: Layer Functions
   desc: |
-    Geom + Stat
+    Geoms and Stats that transform your data.
   contents:
   - geom_arch
   - stat_arch
@@ -43,11 +42,10 @@ reference:
   - stat_lexis
   - geom_pointless
   - stat_pointless
-  - geom_unit_bar
-  - geom_unit_col
-  - geom_unit_histogram
 
 - title: Doppelgänger
+  desc: |
+    Drop-in replacements of existing geoms with additional features like alpha gradients.
   contents:
   - geom_abline_fade
   - geom_area_fade
@@ -67,10 +65,19 @@ reference:
   - geom_segment_fade
   - geom_step_fade
   - geom_vline_fade
+  - geom_unit_bar
+  - geom_unit_col
+  - geom_unit_histogram
 
-- title: Positions
+- title: Labeller
   contents:
-  - position_ridgeline
+  - label_cells
+
+- title: Topics
+  desc: |
+    Concepts shared across multiple geoms.
+  contents:
+  - alpha_scope
 
 figures:
   dev: ragg::agg_png
