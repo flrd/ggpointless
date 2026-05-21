@@ -69,8 +69,8 @@ GeomPointGlow <- ggplot2::ggproto(
       self
     )$setup_params(data, params)
     n <- nrow(data)
-    params$glow_alpha  <- .check_glow_alpha(params$glow_alpha %||% 0.5, n = n)
-    params$glow_size   <- .check_glow_size(params$glow_size %||% NA, n = n)
+    params$glow_alpha <- .check_glow_alpha(params$glow_alpha %||% 0.5, n = n)
+    params$glow_size <- .check_glow_size(params$glow_size %||% NA, n = n)
     params$glow_colour <- .check_glow_colour(params$glow_colour %||% NA, n = n)
     params
   },
@@ -106,6 +106,7 @@ GeomPointGlow <- ggplot2::ggproto(
     glow_colour = NA,
     glow_size = NA
   ) {
+    .check_panel_range(panel_params, "geom_point_glow")
     coords <- coord$transform(data, panel_params)
     if (nrow(coords) == 0) {
       return(grid::nullGrob())
@@ -159,9 +160,7 @@ GeomPointGlow <- ggplot2::ggproto(
                  covered by the point itself.",
           "i" = "Use a larger {.arg glow_size} (the default is 9x {.arg size}) \\
                  or a smaller {.arg size} to make the halo visible."
-        ),
-        .frequency = "once",
-        .frequency_id = "geom_point_glow_size_covered"
+        )
       )
     }
 
@@ -228,7 +227,7 @@ GeomPointGlow <- ggplot2::ggproto(
 #' @param glow_colour Colour of the glow. If `NA` (default), it inherits the
 #'   colour of the point itself. Either a scalar colour or a character
 #'   vector whose length matches the number of points.
-#' @param glow_size Glow radius in ggplot2 size units (same scale as the
+#' @param glow_size Glow radius in `ggplot2` size units (same scale as the
 #'   `size` aesthetic in [ggplot2::geom_point()]). If `NA` (default), the
 #'   glow is rendered at nine times the point's `size`. Either a scalar
 #'   or a numeric vector whose length matches the number of points.
@@ -237,7 +236,7 @@ GeomPointGlow <- ggplot2::ggproto(
 #'   `size` -- otherwise the point grob (drawn on top) fully covers the
 #'   glow. If this happens the geom emits a one-shot informational
 #'   message at draw time pointing you at the fix (enlarge the glow or
-#'   shrink the point). See *Examples*.
+#'   shrink the point). See examples.
 #'
 #' @section Coordinate systems:
 #' `geom_point_glow()` works in all coordinate systems. The glow effect
@@ -266,7 +265,7 @@ GeomPointGlow <- ggplot2::ggproto(
 #' # patterns from every package example into a single pdf() device.  On
 #' # large pdf runs that pattern cache can trigger an upstream R bug at
 #' # `dev.off()` -- unrelated to your real plots.
-#' df <- head(mtcars, 5)
+#' df <- head(mtcars, 10)
 #'
 #' # Basic usage -- the default glow is 9x the point's `size` aesthetic,
 #' # so it's always visibly larger than the point itself.
@@ -274,15 +273,20 @@ GeomPointGlow <- ggplot2::ggproto(
 #'   geom_point_glow()
 #'
 #' \donttest{
-#'   # Customising the glow (fixed values applied to every point)
-#'   ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
-#'     geom_point_glow(glow_colour = "#333", glow_alpha = 0.25, glow_size = 5) +
-#'     theme_minimal()
+#'   # Customising the glow: fixed values applied to every point, while
+#'   # point colour is set to transparent
+#'   ggplot(df, aes(wt, mpg)) +
+#'     geom_point_glow(
+#'     colour = "transparent",
+#'     glow_colour = "tomato",
+#'     glow_alpha = .75,
+#'     glow_size = 20
+#'   )
 #'
 #'   # Per-point glow: pass a length-N vector for `glow_colour`, `glow_alpha`,
 #'   # or `glow_size`.
 #'   ggplot(df, aes(wt, mpg)) +
-#'     geom_point_glow(glow_colour = rainbow(nrow(df)), glow_size = 5)
+#'     geom_point_glow(glow_colour = rainbow(nrow(df)), glow_size = 15)
 #'
 #'   # Use the Geom with another Stat to glow only specific observations:
 #'   ggplot(head(economics), aes(date, uempmed)) +

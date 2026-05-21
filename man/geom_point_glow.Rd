@@ -101,16 +101,16 @@ vector whose length matches the number of points.}
 colour of the point itself. Either a scalar colour or a character
 vector whose length matches the number of points.}
 
-\item{glow_size}{Glow radius in ggplot2 size units (same scale as the
+\item{glow_size}{Glow radius in \code{ggplot2} size units (same scale as the
 \code{size} aesthetic in \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}). If \code{NA} (default), the
 glow is rendered at nine times the point's \code{size}. Either a scalar
 or a numeric vector whose length matches the number of points.
 
 For the halo to be visible, \code{glow_size} must exceed the point's
-\code{size} — otherwise the point grob (drawn on top) fully covers the
+\code{size} -- otherwise the point grob (drawn on top) fully covers the
 glow. If this happens the geom emits a one-shot informational
 message at draw time pointing you at the fix (enlarge the glow or
-shrink the point). See \emph{Examples}.}
+shrink the point). See examples.}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -139,7 +139,7 @@ that adds a glow (radial gradient) behind each point.
 
 \code{geom_point_glow()} works in all coordinate systems. The glow effect
 remains point-centric and circular in device space, even in non-linear
-coordinates like \code{\link[ggplot2:coord_radial]{ggplot2::coord_polar()}}.
+coordinates like \code{\link[ggplot2:coord_polar]{ggplot2::coord_polar()}}.
 }
 
 \examples{
@@ -149,24 +149,29 @@ library(ggplot2)
 # `grid::radialGradient` pattern, and the example runner accumulates
 # patterns from every package example into a single pdf() device.  On
 # large pdf runs that pattern cache can trigger an upstream R bug at
-# `dev.off()` — unrelated to your real plots.
-df <- head(mtcars, 5)
+# `dev.off()` -- unrelated to your real plots.
+df <- head(mtcars, 10)
 
-# Basic usage — the default glow is 9x the point's `size` aesthetic,
+# Basic usage -- the default glow is 9x the point's `size` aesthetic,
 # so it's always visibly larger than the point itself.
 ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
   geom_point_glow()
 
 \donttest{
-  # Customising the glow (fixed values applied to every point)
-  ggplot(df, aes(wt, mpg, colour = factor(cyl))) +
-    geom_point_glow(glow_colour = "#333", glow_alpha = 0.25, glow_size = 5) +
-    theme_minimal()
+  # Customising the glow: fixed values applied to every point, while
+  # point colour is set to transparent
+  ggplot(df, aes(wt, mpg)) +
+    geom_point_glow(
+    colour = "transparent",
+    glow_colour = "tomato",
+    glow_alpha = .75,
+    glow_size = 20
+  )
 
   # Per-point glow: pass a length-N vector for `glow_colour`, `glow_alpha`,
   # or `glow_size`.
   ggplot(df, aes(wt, mpg)) +
-    geom_point_glow(glow_colour = rainbow(nrow(df)), glow_size = 5)
+    geom_point_glow(glow_colour = rainbow(nrow(df)), glow_size = 15)
 
   # Use the Geom with another Stat to glow only specific observations:
   ggplot(head(economics), aes(date, uempmed)) +
@@ -186,7 +191,7 @@ Version 1.
 \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
 }
 \seealso{
-\code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}, \code{\link[grid:patterns]{grid::radialGradient()}}
+\code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}, \code{\link[grid:radialGradient]{grid::radialGradient()}}
 }
 \concept{glowing points}
 \concept{radial gradient}
