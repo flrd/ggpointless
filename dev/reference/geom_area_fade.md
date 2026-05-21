@@ -1,13 +1,13 @@
-# Area Plots with Fading Linear Gradient
+# Areas, Densities, and Frequency Polygons with Fading Gradient
 
-This geom behaves like
+`geom_area_fade()` behaves like
 [`ggplot2::geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
 but uses
 [`grid::linearGradient()`](https://rdrr.io/r/grid/patterns.html) to
 create area plots. The gradient is always anchored at `y = 0`: maximum
 transparency there, fading to opaque at the data values. Opacity scales
 with the absolute distance from zero, so equal `|y|` values always
-receive the same alpha — full opacity is reached only at the extreme
+receive the same alpha – full opacity is reached only at the extreme
 with the largest absolute value. This works for positive values,
 negative values, and groups that cross zero (where a three-stop gradient
 is used).
@@ -21,6 +21,19 @@ requires a device that supports Porter-Duff compositing (e.g.
 unsupported devices the geom falls back to a single-colour vertical fade
 and emits an informational message.
 
+`geom_density_fade()` computes and draws a kernel density estimate – a
+smoothed version of the histogram – with the same vertical alpha
+gradient as `geom_area_fade()`. Under the hood this is
+[GeomAreaFade](https://flrd.github.io/ggpointless/dev/reference/ggpointless-ggproto.md)
+paired with
+[`ggplot2::stat_density()`](https://ggplot2.tidyverse.org/reference/geom_density.html),
+so all smoothing parameters (`bw`, `adjust`, `kernel`, `bounds`, ...)
+are forwarded to the stat.
+
+`geom_freqpoly_fade()` draws a frequency polygon (like
+[`ggplot2::geom_freqpoly()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html))
+filled with the same linear gradient as `geom_area_fade()`.
+
 ## Usage
 
 ``` r
@@ -32,7 +45,44 @@ geom_area_fade(
   ...,
   alpha_fade_to = 0,
   alpha_scope = "global",
-  orientation = NULL,
+  orientation = NA,
+  outline.type = "upper",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
+)
+
+geom_density_fade(
+  mapping = NULL,
+  data = NULL,
+  stat = "density",
+  position = "identity",
+  ...,
+  bw = "nrd0",
+  adjust = 1,
+  kernel = "gaussian",
+  bounds = c(-Inf, Inf),
+  alpha_fade_to = 0,
+  alpha_scope = "global",
+  orientation = NA,
+  outline.type = "upper",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
+)
+
+geom_freqpoly_fade(
+  mapping = NULL,
+  data = NULL,
+  stat = "bin",
+  position = "identity",
+  ...,
+  binwidth = NULL,
+  bins = NULL,
+  alpha_fade_to = 0,
+  alpha_scope = "global",
+  orientation = NA,
+  pad = TRUE,
   outline.type = "upper",
   na.rm = FALSE,
   show.legend = NA,
@@ -70,22 +120,9 @@ geom_area_fade(
 
 - stat:
 
-  The statistical transformation to use on the data for this layer. When
-  using a `geom_*()` function to construct a layer, the `stat` argument
-  can be used to override the default coupling between geoms and stats.
-  The `stat` argument accepts the following:
-
-  - A `Stat` ggproto subclass, for example `StatCount`.
-
-  - A string naming the stat. To give the stat as a string, strip the
-    function name of the `stat_` prefix. For example, to use
-    [`stat_count()`](https://ggplot2.tidyverse.org/reference/geom_bar.html),
-    give the stat as `"count"`.
-
-  - For more information and other ways to specify the stat, see the
-    [layer
-    stat](https://ggplot2.tidyverse.org/reference/layer_stats.html)
-    documentation.
+  Use to override the default connection between `geom_freqpoly_fade()`
+  and
+  [`stat_bin()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html).
 
 - position:
 
@@ -156,7 +193,7 @@ geom_area_fade(
   How to scale alpha across groups. `"global"` (default) computes the
   maximum absolute y value across **all** groups in the panel so that
   equal `|y|` always maps to equal alpha. `"group"` computes the maximum
-  per group, giving each group the full alpha range independently —
+  per group, giving each group the full alpha range independently –
   useful with `position = "identity"` when groups have very different
   amplitudes.
 
@@ -197,12 +234,89 @@ geom_area_fade(
   plot specification, e.g.
   [`annotation_borders()`](https://ggplot2.tidyverse.org/reference/annotation_borders.html).
 
+- bw:
+
+  The smoothing bandwidth to be used. If numeric, the standard deviation
+  of the smoothing kernel. If character, a rule to choose the bandwidth,
+  as listed in
+  [`stats::bw.nrd()`](https://rdrr.io/r/stats/bandwidth.html).
+
+- adjust:
+
+  A multiplicate bandwidth adjustment. This makes it focused on giving
+  the kernel bandwidth more or less smoothing.
+
+- kernel:
+
+  Kernel. See [`stats::density()`](https://rdrr.io/r/stats/density.html)
+  for more details.
+
+- bounds:
+
+  Known lower and upper bounds for the variable. Default is
+  `c(-Inf, Inf)`.
+
+- binwidth:
+
+  Width of each bin in data units. When supplied, takes precedence over
+  `bins`. Forwarded to
+  [`ggplot2::stat_bin()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html).
+
+- bins:
+
+  Number of bins. Overridden by `binwidth`. Defaults to 30. Forwarded to
+  [`ggplot2::stat_bin()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html).
+
+- pad:
+
+  If `TRUE`, adds empty bins at either end of x. This ensures frequency
+  polygons touch 0. Defaults to `FALSE`.
+
 ## Value
 
 A
 [`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
 object that can be added to a
 [`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+
+## Coordinate systems
+
+`geom_area_fade()`, `geom_density_fade()`, and `geom_freqpoly_fade()`
+only support linear gradients. When used with
+[`ggplot2::coord_polar()`](https://ggplot2.tidyverse.org/reference/coord_radial.html)
+or
+[`ggplot2::coord_radial()`](https://ggplot2.tidyverse.org/reference/coord_radial.html),
+they fall back to standard area rendering (equivalent to
+[`ggplot2::geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)),
+which means no gradient fill is added. A warning is emitted in this
+case.
+
+## alpha_scope = "global" under faceting
+
+`alpha_scope = "global"` ties opacity to absolute height across the
+whole layer, so two ridges / areas / bars of equal height render at
+equal alpha regardless of which panel they're in. This is meaningful
+only when panels share a common y scale. Under
+`facet_wrap(scales = "free_y")` (or
+`facet_grid(rows = ..., scales = "free")`) each panel rescales y
+independently, so the visual height of a shape no longer reflects its
+data height; the alpha encoding then conflicts with what the eye reads
+from the panel size. For comparable alpha across free-y panels you have
+two options: stick to the default `scales = "fixed"`, or accept that
+under free scales `alpha_scope = "group"` is the more honest choice
+(each shape independently uses its own alpha range).
+
+## Legend key under coord_flip
+
+The legend key glyph always shows the canonical (data-axis) fade
+direction – vertical for the default orientation, horizontal under
+`orientation = "y"`. Under
+[`ggplot2::coord_flip()`](https://ggplot2.tidyverse.org/reference/coord_flip.html)
+the rendered geom rotates correctly but the legend key does *not*:
+ggplot2's legend builder is coord-independent by design (`draw_key` has
+no access to the coord). For a legend key that matches a horizontal
+layout, prefer `aes(y = ...)` with auto-detected `orientation = "y"`
+over `aes(x = ...) + coord_flip()`.
 
 ## Orientation
 
@@ -240,9 +354,9 @@ Statistics, The University of Auckland. Version 3.
 
 ## See also
 
-[`ggplot2::geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html)
-for fully opaque area charts, the [ggfx
-package](https://ggfx.data-imaginist.com/) for real magic.
+[`ggplot2::geom_area()`](https://ggplot2.tidyverse.org/reference/geom_ribbon.html),
+[`ggplot2::geom_density()`](https://ggplot2.tidyverse.org/reference/geom_density.html),
+[`ggplot2::geom_freqpoly()`](https://ggplot2.tidyverse.org/reference/geom_histogram.html).
 
 ## Aesthetics
 
@@ -250,16 +364,16 @@ package](https://ggfx.data-imaginist.com/) for real magic.
 aesthetics are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                     |                                                                       |
-|-----|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)       | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)      | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)        | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)             | → inferred                                                            |
-| •   | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -277,36 +391,36 @@ df1 <- data.frame(
 a <- ggplot(df1, aes(x, y, fill = g)) +
   theme_minimal()
 
-# default behaviour: opaque at data line, transparent at y = 0
+# Default behaviour: opaque at data line, transparent at y = 0
 # the outline colour remains unaffected
 a + geom_area_fade()
 
 
-# change overall opacity
+# Change overall opacity
 a + geom_area_fade(alpha = .25)
 
 
-# keep some opacity at the baseline
+# Keep some opacity at the baseline
 a + geom_area_fade(alpha_fade_to = .25)
 
 
-# suppress the default upper outline
+# Suppress the default upper outline
 a + geom_area_fade(outline.type = "none")
 
 
-# closed outline (all four edges)
+# Closed outline (all four edges)
 a + geom_area_fade(outline.type = "full")
 
 
-# horizontal orientation
+# Horizontal orientation
 a + geom_area_fade(aes(y, x), orientation = "y")
 
 
-# disable stat alignment (useful when x values are already aligned)
+# Disable stat alignment (useful when x values are already aligned)
 a + geom_area_fade(stat = "identity")
 
 
-# draw upper and lower outlines (no left/right edges)
+# Draw upper and lower outlines (no left/right edges)
 a + geom_area_fade(outline.type = "both", stat = "identity")
 
 
@@ -320,14 +434,14 @@ df2 <- data.frame(
 b <- ggplot(df2, aes(x, y, fill = g)) +
   theme_minimal()
 
-# alpha_scope = "group": each group uses the alpha range independently
+# With alpha_scope = "group", each group uses the alpha range independently
 b + geom_area_fade(
   alpha_scope = "group",
   position = "identity"
   )
 
 
-# compare with the default where small groups appear washed out
+# Compare with the default where small groups appear washed out
 # next to dominant groups, especially when position = "identity"
 b + geom_area_fade(
   alpha_scope = "global", # default
@@ -335,14 +449,14 @@ b + geom_area_fade(
   )
 
 
-# geom_area_fade works with negative values too:
+# Negative values are supported too:
 # the gradient fades towards y = 0 from both sides
 d <- ggplot(df2, aes(x, y - mean(y))) +
   theme_minimal()
 d + geom_area_fade()
 
 
-# overwrite both fill and colour
+# Overwrite both fill and colour
 d + geom_area_fade(
   fill = "#0833F5",
   colour = "#d77e7b",
@@ -350,12 +464,74 @@ d + geom_area_fade(
   )
 
 
-# a 2D-gradient is produced when fill is mapped to a variable
+# A 2D-gradient is produced when fill is mapped to a variable
 # this may not work on all graphic devices, see vignette for details
 d + geom_area_fade(
   aes(fill = y),
   colour = "#333333",
   outline.type = "both"
   )
+
+
+# Basic density curve: opaque at the peak, fully transparent at the baseline.
+ggplot(diamonds, aes(carat)) +
+  geom_density_fade()
+
+
+# Map the values to y to flip the orientation
+ggplot(diamonds, aes(y = carat)) +
+  geom_density_fade()
+
+
+# `alpha_fade_to` controls the alpha at the baseline.
+# The default `0` is fully transparent; raise it to keep some
+# opacity at the floor.
+ggplot(diamonds, aes(carat)) +
+  geom_density_fade(alpha_fade_to = 0.2)
+
+
+# Multiple groups via `fill`. With the default `alpha_scope = "global"`
+# the tallest peak in the layer reaches full opacity; shorter peaks fade
+# in proportion. `xlim()` trims the long tails for clarity.
+ggplot(diamonds, aes(depth, fill = cut)) +
+  geom_density_fade() +
+  xlim(55, 70)
+#> Warning: Removed 45 rows containing non-finite outside the scale range
+#> (`stat_density()`).
+
+
+# Switch to `alpha_scope = "group"` so every
+# area hits full opacity independently
+ggplot(diamonds, aes(depth, fill = cut)) +
+  geom_density_fade(alpha_scope = "group") +
+  xlim(55, 70)
+#> Warning: Removed 45 rows containing non-finite outside the scale range
+#> (`stat_density()`).
+
+
+# You can use position = "fill" to produce a conditional density estimate
+ggplot(diamonds, aes(carat, after_stat(count), fill = cut)) +
+  geom_density_fade(position = "fill")
+
+
+# Basic frequency polygon with fading gradient
+ggplot(faithful, aes(waiting)) +
+  geom_freqpoly_fade(
+    colour = "#3b528b",
+    bins = 20
+  ) +
+  theme_minimal()
+
+
+# Rather than stacking histograms, compare frequency polygons
+ggplot(iris, aes(Sepal.Length, fill = Species, colour = Species)) +
+  geom_freqpoly_fade(
+    alpha = 0.8,
+    position = "identity",
+    bins = 20
+  ) +
+  scale_fill_viridis_d() +
+  scale_colour_viridis_d() +
+  theme_minimal()
 
 ```

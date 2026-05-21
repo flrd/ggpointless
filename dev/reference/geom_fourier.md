@@ -32,7 +32,7 @@ geom_fourier(
 stat_fourier(
   mapping = NULL,
   data = NULL,
-  geom = "line",
+  geom = "fourier",
   position = "identity",
   ...,
   n_harmonics = NULL,
@@ -261,15 +261,15 @@ for other curve-fitting geoms.
 aesthetics are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                     |                                                                       |
-|-----|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**                |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)       | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)      | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)             | → inferred                                                            |
-| •   | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -285,7 +285,7 @@ df1 <- data.frame(
   y = sin(seq(0, 2 * pi, length.out = n)) + rnorm(n, sd = 0.2)
 )
 
-# Basic usage – Interpolating fit (all harmonics)
+# Basic usage - Interpolating fit (all harmonics)
 p <- ggplot(df1, aes(x, y)) +
   geom_point(alpha = 0.5)
 p + geom_fourier()
@@ -314,12 +314,8 @@ geom_point(alpha = 0.35) +
 set.seed(3)
 x <- seq(0, 2 * pi, length.out = n/2)
 df3 <- rbind(
-  data.frame(x = x,
-             y = sin(x) + rnorm(n/2, sd = 0.2),
-             grp = "sine"),
-  data.frame(x = x,
-             y = cos(x) + rnorm(n/2, sd = 0.2),
-             grp = "cosine")
+  data.frame(x = x, y = sin(x) + rnorm(n / 2, sd = 0.2), grp = "sine"),
+  data.frame(x = x, y = cos(x) + rnorm(n / 2, sd = 0.2), grp = "cosine")
 )
 
 ggplot(df3, aes(x, y, colour = grp)) +
@@ -327,14 +323,32 @@ ggplot(df3, aes(x, y, colour = grp)) +
   geom_fourier()
 
 
-# when the data is not uniformly-spaced, the Fourier
-# curve will not pass through every data point
+# When the data is not uniformly-spaced, the Fourier
+# curve will not hit every data point exactly
+ggplot(head(economics, 25), aes(date, unemploy)) +
+  geom_fourier() +
+  geom_point()  +
+  geom_curve_fade(
+    data = data.frame(
+      x    = as.Date("1967-10-01"),
+      xend = as.Date("1968-01-01"),
+      y    = 2750,
+      yend = 2850
+    ),
+    aes(x = x, xend = xend, y = y, yend = yend),
+    arrow = arrow(),
+    colour = "tomato"
+    )
+
+
+# ... in extreme cases a warning is emitted
 df4 <- data.frame(
   x = c(1:10, 19:20),
   y = sin(seq_len(12))
 )
 
 ggplot(df4, aes(x, y)) +
+  geom_point() +
   geom_fourier()
 #> Warning: Highly irregular x-spacing detected (coefficient of variation = 1.4). The
 #> uniform-grid interpolation may introduce artefacts.

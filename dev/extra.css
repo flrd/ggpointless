@@ -1,0 +1,9 @@
+/* Fade the "Doppelgänger" section heading on the reference index page,
+   echoing the package's gradient-fade geoms. */
+#doppelg-nger {
+  background: linear-gradient(to right, currentColor, transparent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}

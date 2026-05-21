@@ -1,12 +1,12 @@
-# Emphasize some observations with points
+# Emphasise some observations with points
 
 This is a wrapper around
 [`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-with the one additional argument: `location`. This geom aims to emphasis
-some observations but is not particularly useful on its own - hence its
-name - but hopefully in conjunction with
+with one additional argument: `location`. This geom aims to emphasise
+some observations, and is not particularly useful on its own — hence its
+name — but it shines in conjunction with
 [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
-and friends, see examples.
+and friends; see *Examples*.
 
 ## Usage
 
@@ -205,13 +205,13 @@ determined in the order in which they appear in the data – like
 does compared to
 [`ggplot2::geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html).
 
-Points may be plotted on top of one another; if `location` is set to
-`"all"`, then the order in which points are plotted from top to bottom
-is: `"first"` \> `"last"` \> `"minimum"` \> `"maximum"`. Otherwise, the
-order is determined as specified in the `location` argument, which also
-then applies to the order legend key labels, see
-[`vignette("ggpointless")`](https://flrd.github.io/ggpointless/dev/articles/ggpointless.md)
-for more details.
+When a single observation matches multiple `location` criteria – for
+example, the last point is also the maximum – it is emitted once with a
+composite label joined by `", "` (e.g. `"last, maximum"`). The row order
+in the output – which drives draw order and legend order – follows the
+order given in `location`; for `"all"` the canonical order is `"first"`,
+`"last"`, `"minimum"`, `"maximum"`. See `vignette("ggpointless")` for
+more details.
 
 ## See also
 
@@ -223,17 +223,17 @@ for more details.
 aesthetics are displayed in bold and defaults are displayed for optional
 aesthetics:
 
-|     |                                                                                 |                                                                       |
-|-----|---------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| •   | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)**            |                                                                       |
-| •   | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)**            |                                                                       |
-| •   | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)   | → `NA`                                                                |
-| •   | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html)    | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html)         | → inferred                                                            |
-| •   | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html)  | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| •   | `stroke`                                                                        | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+|  |  |  |
+|----|----|----|
+| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | **[`y`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
+| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
+| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
+| • | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+| • | `stroke` | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
 
 Learn more about setting these aesthetics in
 [`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
@@ -241,6 +241,7 @@ Learn more about setting these aesthetics in
 ## Examples
 
 ``` r
+library(ggplot2)
 x <- seq(-pi, pi, length.out = 150)
 y <- outer(x, 1:5, FUN = \(x, y) sin(x * y))
 
@@ -249,7 +250,7 @@ df1 <- data.frame(
   y = rowSums(y)
 )
 
-# not terribly useful on its own ...
+# Not terribly useful on its own ...
 p <- ggplot(df1, aes(x = x, y = y))
 p + geom_pointless()
 
@@ -266,9 +267,11 @@ p + geom_pointless(location = c("minimum", "maximum"))
 
 
 # The layer computes one additional variable, 'location',
-# that you can map e.g. to colour
+# that you can map to aesthetics. Pair `colour` with `shape` for redundant
+# encoding -- the four roles stay distinguishable in greyscale and under
+# colour-vision deficiencies.
 p + geom_pointless(
-  aes(colour = after_stat(location)),
+  aes(colour = after_stat(location), shape = after_stat(location)),
   location = "all",
   size = 3
 )
@@ -293,21 +296,21 @@ p <- ggplot(df3, aes(x = x, y = y)) +
   geom_path() +
   coord_equal()
 
-# same as location = 'all'
+# Same as location = 'all'
 p + geom_pointless(aes(colour = after_stat(location)),
   location = c("first", "last", "minimum", "maximum")
 ) +
   labs(subtitle = "same as location = 'all'")
 
 
-# reversed custom order
+# Reversed custom order
 p + geom_pointless(aes(colour = after_stat(location)),
   location = c("maximum", "minimum", "last", "first")
 ) +
   labs(subtitle = "custom order")
 
 
-# same as location = 'all' again
+# Same as location = 'all' again
 p + geom_pointless(aes(colour = after_stat(location)),
   location = c("maximum", "minimum", "last", "first", "all")
 ) +
