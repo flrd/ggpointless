@@ -20,16 +20,7 @@ makeContent.rect_fade_grob <- function(x) {
   no_gradient <- dev_name %in% c("pdf", "postscript")
 
   if (no_gradient) {
-    cli::cli_inform(
-      c(
-        "!" = "The current graphics device does not support gradient fills.",
-        "i" = "Falling back to a flat semi-transparent fill. Switch to a \\
-               device that supports gradients (e.g. {.code ragg::agg_png()}, \\
-               {.code svg()}) for the full effect."
-      ),
-      .frequency = "once",
-      .frequency_id = "rect_fade_no_gradient"
-    )
+    .queue_rect_col_no_gradient("geom_rect_fade")
     grobs <- x$flat_glist
   } else {
     grobs <- x$gradient_glist
@@ -70,18 +61,7 @@ makeContent.rect_fade_polar_grob <- function(x) {
   if (can_gradient) {
     grobs <- x$gradient_glist
   } else {
-    cli::cli_inform(
-      c(
-        "!" = "The current graphics device does not support the clipping \\
-               path + radial gradient combination required for polar \\
-               rectangle gradients.",
-        "i" = "Falling back to flat semi-transparent fills. Switch to a \\
-               device that supports both (e.g. {.code ragg::agg_png()}, \\
-               {.code svg()}) for the full effect."
-      ),
-      .frequency = "once",
-      .frequency_id = "rect_fade_polar_no_gradient"
-    )
+    .queue_rect_col_polar_no_clip_pattern("geom_rect_fade")
     grobs <- x$flat_glist
   }
 
@@ -136,17 +116,26 @@ makeContent.rect_fade_polar_grob <- function(x) {
     # the radialGradient colour stops below.
     poly_data <- data[rep(i, 4L), , drop = FALSE]
     poly_data$x <- c(
-      data$xmin[i], data$xmax[i], data$xmax[i], data$xmin[i]
+      data$xmin[i],
+      data$xmax[i],
+      data$xmax[i],
+      data$xmin[i]
     )
     poly_data$y <- c(
-      data$ymax[i], data$ymax[i], data$ymin[i], data$ymin[i]
+      data$ymax[i],
+      data$ymax[i],
+      data$ymin[i],
+      data$ymin[i]
     )
     poly_data$group <- 1L
     poly_data$alpha <- 1
 
     poly_grob <- ggplot2::GeomPolygon$draw_panel(
-      poly_data, panel_params, coord,
-      lineend = lineend, linejoin = linejoin
+      poly_data,
+      panel_params,
+      coord,
+      lineend = lineend,
+      linejoin = linejoin
     )
 
     if (!inherits(poly_grob, "polygon")) {
@@ -180,8 +169,12 @@ makeContent.rect_fade_polar_grob <- function(x) {
             ggplot2::alpha(fill_col, a_inner),
             ggplot2::alpha(fill_col, a_outer)
           ),
-          cx1 = 0.5, cy1 = 0.5, r1 = r_in,
-          cx2 = 0.5, cy2 = 0.5, r2 = r_out
+          cx1 = 0.5,
+          cy1 = 0.5,
+          r1 = r_in,
+          cx2 = 0.5,
+          cy2 = 0.5,
+          r2 = r_out
         ),
         col = NA
       )
@@ -321,6 +314,7 @@ GeomRectFade <- ggplot2::ggproto(
     fade_direction = "vertical",
     radius = NULL
   ) {
+    .check_panel_range(panel_params, "geom_rect_fade")
     radius <- .validate_radius(radius)
 
     is_polar <- inherits(coord, "CoordPolar") ||
@@ -328,7 +322,8 @@ GeomRectFade <- ggplot2::ggproto(
 
     if (is_polar) {
       theta <- coord$theta %||% "x"
-      radial <- (identical(theta, "x") && identical(fade_direction, "vertical")) ||
+      radial <- (identical(theta, "x") &&
+        identical(fade_direction, "vertical")) ||
         (identical(theta, "y") && identical(fade_direction, "horizontal"))
 
       if (nrow(data) == 0L) {
@@ -337,14 +332,19 @@ GeomRectFade <- ggplot2::ggproto(
 
       if (.is_uniform_alpha(data, alpha_fade_to)) {
         return(ggplot2::ggproto_parent(ggplot2::GeomRect, self)$draw_panel(
-          data, panel_params, coord,
-          lineend = lineend, linejoin = linejoin
+          data,
+          panel_params,
+          coord,
+          lineend = lineend,
+          linejoin = linejoin
         ))
       }
 
       if (radial) {
         return(.draw_panel_rect_fade_polar(
-          data, panel_params, coord,
+          data,
+          panel_params,
+          coord,
           alpha_fade_to = alpha_fade_to,
           fade_direction = fade_direction,
           lineend = lineend,
@@ -353,40 +353,32 @@ GeomRectFade <- ggplot2::ggproto(
       }
 
       # Angular fade (theta-aligned gradient): grid has no conic gradient
-      # primitive, so we fall back to a flat geom_rect render and warn once
-      # per session.
-      cli::cli_warn(
+      # primitive, so we fall back to a flat geom_rect render and emit an
+      # informational message.
+      cli::cli_inform(
         c(
-          "!" = "{.fn geom_rect_fade}: angular fade is not yet supported in \\
+          "i" = "{.fn geom_rect_fade}: angular fade is not yet supported in \\
                  {.pkg grid}.",
           "i" = "Falling back to {.fn geom_rect} (no gradient). For a radial \\
                  fade under {.fn coord_polar} / {.fn coord_radial}, use \\
                  {.code fade_direction = \"vertical\"} with {.code theta = \"x\"} \\
                  or {.code fade_direction = \"horizontal\"} with \\
                  {.code theta = \"y\"}."
-        ),
-        .frequency = "once",
-        .frequency_id = "rect_fade_polar_angular"
+        )
       )
       return(
         ggplot2::ggproto_parent(ggplot2::GeomRect, self)$draw_panel(
-          data, panel_params, coord,
-          lineend = lineend, linejoin = linejoin
+          data,
+          panel_params,
+          coord,
+          lineend = lineend,
+          linejoin = linejoin
         )
       )
     }
 
     if (!coord$is_linear()) {
-      cli::cli_inform(
-        c(
-          "!" = "{.fn geom_rect_fade}: rounded corners require a linear \\
-                 coordinate system.",
-          "i" = "Falling back to {.fn geom_rect} rendering (no rounding, \\
-                 no gradient)."
-        ),
-        .frequency = "once",
-        .frequency_id = "rect_fade_nonlinear"
-      )
+      .queue_rounded_corner_fallback("geom_rect_fade")
       return(
         ggplot2::ggproto_parent(ggplot2::GeomRect, self)$draw_panel(
           data,
@@ -402,18 +394,29 @@ GeomRectFade <- ggplot2::ggproto(
       return(ggplot2::zeroGrob())
     }
 
-    if (.is_uniform_alpha(data, alpha_fade_to)) {
+    # Fast path: same logic as `geom_col_fade()`. Skip when the user
+    # requested rounded corners, since `GeomRect$draw_panel` would draw
+    # plain rectangles and lose the `radius`.
+    if (
+      .is_uniform_alpha(data, alpha_fade_to) &&
+        identical(as.numeric(radius), 0)
+    ) {
       return(ggplot2::ggproto_parent(ggplot2::GeomRect, self)$draw_panel(
-        data, panel_params, coord,
-        lineend = lineend, linejoin = linejoin
+        data,
+        panel_params,
+        coord,
+        lineend = lineend,
+        linejoin = linejoin
       ))
     }
 
     coords <- coord$transform(data, panel_params)
     # Drop rows with non-finite rect bounds -- can occur when -Inf/Inf hits a
     # log scale (produces NaN) or any other scale that can't represent them.
-    finite <- is.finite(coords$xmin) & is.finite(coords$xmax) &
-      is.finite(coords$ymin) & is.finite(coords$ymax)
+    finite <- is.finite(coords$xmin) &
+      is.finite(coords$xmax) &
+      is.finite(coords$ymin) &
+      is.finite(coords$ymax)
     n_dropped <- sum(!finite)
     if (n_dropped > 0L) {
       cli::cli_warn(
@@ -424,9 +427,7 @@ GeomRectFade <- ggplot2::ggproto(
                  that has no representation for those values. Use finite \\
                  {.field xmin}/{.field xmax}/{.field ymin}/{.field ymax} \\
                  values instead."
-        ),
-        .frequency = "once",
-        .frequency_id = "rect_fade_nonfinite_bounds"
+        )
       )
       coords <- coords[finite, , drop = FALSE]
     }
@@ -440,8 +441,9 @@ GeomRectFade <- ggplot2::ggproto(
     # render horizontally. Translate once here; the loop branches on the
     # rendered direction.
     rendered_dir <- if (inherits(coord, "CoordFlip")) {
-      switch(fade_direction,
-        vertical   = "horizontal",
+      switch(
+        fade_direction,
+        vertical = "horizontal",
         horizontal = "vertical",
         fade_direction
       )
@@ -481,20 +483,42 @@ GeomRectFade <- ggplot2::ggproto(
       if (identical(rendered_dir, "horizontal")) {
         # xmin -> opaque, xmax -> transparent.
         # x_rev: xmin is at visual right (bbox x = 1), xmax at visual left (x = 0).
-        col_x0 <- if (x_rev) ggplot2::alpha(fill_col, alpha_fade_to) else ggplot2::alpha(fill_col, a_start)
-        col_x1 <- if (x_rev) ggplot2::alpha(fill_col, a_start)       else ggplot2::alpha(fill_col, alpha_fade_to)
+        col_x0 <- if (x_rev) {
+          ggplot2::alpha(fill_col, alpha_fade_to)
+        } else {
+          ggplot2::alpha(fill_col, a_start)
+        }
+        col_x1 <- if (x_rev) {
+          ggplot2::alpha(fill_col, a_start)
+        } else {
+          ggplot2::alpha(fill_col, alpha_fade_to)
+        }
         grad <- grid::linearGradient(
           colours = c(col_x0, col_x1),
-          x1 = 0, y1 = 0.5, x2 = 1, y2 = 0.5
+          x1 = 0,
+          y1 = 0.5,
+          x2 = 1,
+          y2 = 0.5
         )
       } else {
         # ymax -> opaque, ymin -> transparent.
         # y_rev: ymin is at visual top (bbox y = 1), ymax at visual bottom (y = 0).
-        col_y0 <- if (y_rev) ggplot2::alpha(fill_col, a_start)       else ggplot2::alpha(fill_col, alpha_fade_to)
-        col_y1 <- if (y_rev) ggplot2::alpha(fill_col, alpha_fade_to) else ggplot2::alpha(fill_col, a_start)
+        col_y0 <- if (y_rev) {
+          ggplot2::alpha(fill_col, a_start)
+        } else {
+          ggplot2::alpha(fill_col, alpha_fade_to)
+        }
+        col_y1 <- if (y_rev) {
+          ggplot2::alpha(fill_col, alpha_fade_to)
+        } else {
+          ggplot2::alpha(fill_col, a_start)
+        }
         grad <- grid::linearGradient(
           colours = c(col_y0, col_y1),
-          x1 = 0.5, y1 = 0, x2 = 0.5, y2 = 1
+          x1 = 0.5,
+          y1 = 0,
+          x2 = 0.5,
+          y2 = 1
         )
       }
 
@@ -506,6 +530,7 @@ GeomRectFade <- ggplot2::ggproto(
       w <- grid::unit(x_vis_hi - x_vis_lo, "native")
       h <- grid::unit(y_vis_hi - y_vis_lo, "native")
 
+      rr_linejoin <- .roundrect_linejoin(radius, linejoin)
       gradient_list[[i]] <- grid::roundrectGrob(
         x = x_pos,
         y = y_pos,
@@ -518,7 +543,7 @@ GeomRectFade <- ggplot2::ggproto(
           fill = grad,
           lwd = coords$linewidth[i],
           lty = coords$linetype[i],
-          linejoin = linejoin,
+          linejoin = rr_linejoin,
           lineend = lineend
         )
       )
@@ -535,7 +560,7 @@ GeomRectFade <- ggplot2::ggproto(
           fill = flat_fill,
           lwd = coords$linewidth[i],
           lty = coords$linetype[i],
-          linejoin = linejoin,
+          linejoin = rr_linejoin,
           lineend = lineend
         )
       )
@@ -551,11 +576,11 @@ GeomRectFade <- ggplot2::ggproto(
 #' Rectangles with a Fading Gradient and Rounded Corners
 #'
 #' @description
-#' `geom_rect_fade()` draws axis-aligned rectangles like [ggplot2::geom_rect()]
-#' but fills each one with a linear gradient that fades one edge to transparent.
-#' The direction is controlled by `fade_direction`. Corners can be rounded via
-#' the `radius` argument, enabling rounded rectangles and smooth-cornered visual
-#' elements. The default of `0 pt` produces plain rectangles.
+#' `geom_rect_fade()` draws axis-aligned rectangles and fills each one with a
+#' linear gradient that fades one edge to transparent. The direction is
+#' controlled by `fade_direction`. Corners can be rounded via the `radius`
+#' argument, enabling rounded rectangles and smooth-cornered visual elements.
+#' The default of `0 pt` produces plain rectangles.
 #'
 #' @concept rounded corners
 #' @concept fading gradient
@@ -613,6 +638,7 @@ GeomRectFade <- ggplot2::ggproto(
 #'
 #' @export
 #' @examples
+#' library(ggplot2)
 #'
 #' # With geom_rect_fade() you can draw arbitrary rectangles
 #' ggplot(head(economics, 25), aes(date, unemploy)) +
