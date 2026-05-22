@@ -53,7 +53,7 @@ GeomChaikin <- ggplot2::ggproto(
 #' @inheritParams ggplot2::geom_path
 #' @param geom,stat Use to override the default connection between
 #'   `geom_chaikin()` and `stat_chaikin()`.
-#' @param iterations Integer. Number of iterations to apply between `1` and
+#' @param iterations Integer. Number of iterations to apply between `0` and
 #'  `10`. When `iterations = 0` the original data is unchanged so essentially
 #'   this is the same as calling [`ggplot2::geom_path()`]; however this might
 #'   be useful when you want to toggle smoothing on/off programmatically without
