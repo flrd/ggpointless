@@ -6,9 +6,10 @@
 %   R/geom-histogram-fade.R, R/geom-lexis.R, R/geom-line-fade.R,
 %   R/geom-point-glow.R, R/geom-pointless.R, R/geom-rect-fade.R,
 %   R/geom-ridgeline-fade.R, R/geom-ridgeline-histogram-fade.R,
-%   R/geom-step-fade.R, R/geom-unit-bar.R, R/position-ridgeline.R,
-%   R/stat-catenary.R, R/stat-chaikin.R, R/stat-fourier.R, R/stat-lexis.R,
-%   R/stat-pointless.R
+%   R/geom-step-fade.R, R/geom-stipple-path.R, R/geom-stipple-line.R,
+%   R/geom-stipple-panel.R, R/geom-stipple-rect.R, R/geom-stipple-step.R,
+%   R/geom-unit-bar.R, R/position-ridgeline.R, R/stat-catenary.R,
+%   R/stat-chaikin.R, R/stat-fourier.R, R/stat-lexis.R, R/stat-pointless.R
 \name{ggpointless-ggproto}
 \alias{ggpointless-ggproto}
 \alias{GeomPathFade}
@@ -33,6 +34,11 @@
 \alias{GeomRidgelineFade}
 \alias{GeomRidgelineHistogramFade}
 \alias{GeomStepFade}
+\alias{GeomStipplePath}
+\alias{GeomStippleLine}
+\alias{GeomStipplePanel}
+\alias{GeomStippleRect}
+\alias{GeomStippleStep}
 \alias{GeomUnitBar}
 \alias{PositionRidgeline}
 \alias{StatCatenary}

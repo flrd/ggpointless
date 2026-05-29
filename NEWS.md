@@ -1,5 +1,19 @@
 # ggpointless (development version)
 
+## New features
+
+* **New** `geom_stipple_panel()`, `geom_stipple_path()`, `geom_stipple_line()`,
+  `geom_stipple_step()`, and `geom_stipple_rect()` render lines, paths, steps,
+  and filled regions as a regular grid of dots (a "stippled" look) instead of a
+  solid stroke. `spacing` (`"fine"`/`"medium"`/`"coarse"`) sets the dot density
+  as a per-axis fraction of the panel, so density stays consistent across plots
+  and across axes with different scales; every `geom_stipple_*()` layer shares
+  the same lattice, so their dots coincide. The keep `radius` defaults to the
+  lattice's covering radius, the smallest value that traces the line without
+  gaps. `geom_stipple_line()` is orientation-aware (`orientation = "y"`),
+  `geom_stipple_step()` supports `direction`, and `NA` values break the line
+  like `geom_line()` / `geom_step()`.
+
 # ggpointless 0.3.0
 
 ## New features

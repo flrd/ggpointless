@@ -69,6 +69,16 @@ reference:
   - geom_unit_col
   - geom_unit_histogram
 
+- title: Stipple
+  desc: |
+    Render lines, paths, steps, and regions as a grid of dots.
+  contents:
+  - geom_stipple_panel
+  - geom_stipple_path
+  - geom_stipple_line
+  - geom_stipple_step
+  - geom_stipple_rect
+
 - title: Labeller
   contents:
   - label_cells
