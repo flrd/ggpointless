@@ -77,7 +77,7 @@ draw_key_lexis <- function(data, params, size) {
 GeomLexis <- ggproto(
   "GeomLexis",
   Geom,
-  required_aes = c("x", "y", "xend", "yend"),
+  required_aes = c("x", "xend"),
   non_missing_aes = c("size", "shape", "point_colour", "type"),
   extra_params = c(
     "na.rm",
@@ -197,7 +197,8 @@ GeomLexis <- ggproto(
 #'
 #' @details
 #' This geom draws 45 deg lines from the start to the end of a 'lifetime'. It is
-#' a combination of a segment, and a point.
+#' a combination of a segment, and a point. `stat_lexis()` calculates
+#' `y` and `yend` for you, so the only required aesthetics are `x` and `xend`.
 #' Besides `y` and `yend` coordinates this geom creates one additional variable
 #' called `type` in the layer data. You might want to map to an aesthetic with
 #' [ggplot2::after_stat()], see *Examples* and `vignette("ggpointless")`
