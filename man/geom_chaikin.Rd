@@ -104,7 +104,7 @@ lists which parameters it can accept.
 \item{mode}{Character. Should the geom draw a closed polygon or an open
 path? Must be one of \code{"open"} (default) or \code{"closed"}.}
 
-\item{iterations}{Integer. Number of iterations to apply between \code{1} and
+\item{iterations}{Integer. Number of iterations to apply between \code{0} and
 \code{10}. When \code{iterations = 0} the original data is unchanged so essentially
 this is the same as calling \code{\link[ggplot2:geom_path]{ggplot2::geom_path()}}; however this might
 be useful when you want to toggle smoothing on/off programmatically without
@@ -155,7 +155,7 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.
 }
 \description{
-Chaikin's corner-cutting algorithm can be used to smooth sharp
+Use Chaikin's corner-cutting algorithm smooth sharp
 corners of a path.
 }
 \details{
@@ -166,10 +166,10 @@ The recursion formula starts from two vertices A and B, which represent
 a single corner of your path. From this, the algorithm derives two new
 points: one at the specified ratio when going from point A to point B,
 and one when going from B to A in the opposite direction.
-By default, a ratio of 0.25 results in two points: the first at 25\% of
-point A and the other at 75\% of point A (or 25\% of point B). Those new
-points form a smoother path. Then the algorithm applies the same rule to
-each pair of new points. The rule is applied iterations times. The
+By default, a ratio of 0.25 results in two points: the first at 25\% of the
+way from point A to point B and the other at 75\% of the way from A to B.
+Those new points form a smoother path. Then the algorithm applies the same
+rule to each pair of new points. The rule is applied iterations times. The
 maximum number of iterations is 10, default is 5.
 }
 \examples{
