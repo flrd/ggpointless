@@ -48,7 +48,7 @@ but no statistical transformation:
 
 - `geom_abline_fade()` / `geom_hline_fade()` / `geom_vline_fade()`
 - `geom_area_fade()`
-- `geom_col_fade()` / `geom_bar_fade()`
+- `geom_bar_fade()` / `geom_col_fade()`
 - `geom_density_fade()`
 - `geom_freqpoly_fade()`
 - `geom_histogram_fade()`
@@ -139,17 +139,17 @@ lst <- list(
     open_triangle = data.frame(x = c(3, 3, 5), y = c(2, 3, 3)),
     closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
   ),
-  color = cols,
+  colour = cols,
   mode = c("closed", "closed", "open", "closed")
 )
 
 ggplot(mapping = aes(x, y)) +
   lapply(lst$data, \(i) {
-    geom_polygon(data = i, fill = NA, linetype = "12", color = "#333333")
+    geom_polygon(data = i, fill = NA, linetype = "12", colour = "#333333")
   }) +
-  Map(f = \(data, color, mode) {
-    geom_chaikin(data = data, color = color, mode = mode)
-  }, data = lst$data, color = lst$color, mode = lst$mode) +
+  Map(f = \(data, colour, mode) {
+    geom_chaikin(data = data, colour = colour, mode = mode)
+  }, data = lst$data, colour = lst$colour, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
 ```
@@ -220,7 +220,7 @@ df_lexis <- data.frame(
   xend = c(5, 4, 10, 8, 10)
 )
 
-ggplot(df_lexis, aes(x = x, xend = xend, color = key)) +
+ggplot(df_lexis, aes(x = x, xend = xend, colour = key)) +
   geom_lexis(aes(linetype = after_stat(type)), size = 2) +
   coord_equal() +
   scale_x_continuous(breaks = c(df_lexis$x, df_lexis$xend)) +
@@ -450,6 +450,7 @@ ggplot(faithful, aes(eruptions)) +
     colour = cols[1]
     )
 ```
+
 ### Unit bar charts and histograms
 
 ```{r geom-unit-histogram-faithful, warning=FALSE, fig.alt="Old Faithful eruption-duration histogram drawn as a stack of unit cells per bar, with cell fill running from indigo blue for short eruptions to amber for long ones."}
@@ -482,7 +483,7 @@ ggplot(faithful, aes(eruptions)) +
 
 ```{r geom-unit-bar, warning=FALSE, fig.height=5, fig.alt="Horizontal isotype bar chart counting diamonds per cut; each cell represents one hundred observation."}
 cs <- 100
-ggplot(diamonds, aes(y = cut, fill = color)) +
+ggplot(diamonds, aes(y = cut, fill = colour)) +
   geom_unit_bar(
     cell_size = cs,
     radius = unit(1, "pt"),

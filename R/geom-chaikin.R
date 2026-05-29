@@ -42,10 +42,10 @@ GeomChaikin <- ggplot2::ggproto(
 #' a single corner of your path. From this, the algorithm derives two new
 #' points: one at the specified ratio when going from point A to point B,
 #' and one when going from B to A in the opposite direction.
-#' By default, a ratio of 0.25 results in two points: the first at 25% of
-#' point A and the other at 75% of point A (or 25% of point B). Those new
-#' points form a smoother path. Then the algorithm applies the same rule to
-#' each pair of new points. The rule is applied iterations times. The
+#' By default, a ratio of 0.25 results in two points: the first at 25% of the
+#' way from point A to point B and the other at 75% of the way from A to B.
+#' Those new points form a smoother path. Then the algorithm applies the same
+#' rule to each pair of new points. The rule is applied iterations times. The
 #' maximum number of iterations is 10, default is 5.
 #'
 #' @aesthetics GeomChaikin
