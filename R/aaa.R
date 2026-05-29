@@ -980,13 +980,17 @@ NULL
 #                     final cli message.
 # @param union_keys   Character vector of meta keys to union across
 #                     calls. Defaults to `character()`.
+# @param sum_keys     Character vector of numeric meta keys to sum across
+#                     calls (e.g. a count of dropped rows aggregated over
+#                     layers / panels). Defaults to `character()`.
 #' @noRd
 #' @keywords internal
 .queue_or_emit <- function(id,
                            geom_name,
                            meta = list(),
                            emit_fn,
-                           union_keys = character()) {
+                           union_keys = character(),
+                           sum_keys = character()) {
   target_frame <- .find_render_frame()
   if (is.null(target_frame)) {
     emit_fn(geom_name, meta)
@@ -1000,6 +1004,9 @@ NULL
   } else {
     for (key in union_keys) {
       state$meta[[key]] <- unique(c(state$meta[[key]], meta[[key]]))
+    }
+    for (key in sum_keys) {
+      state$meta[[key]] <- (state$meta[[key]] %||% 0) + (meta[[key]] %||% 0)
     }
   }
   state$geoms <- unique(c(state$geoms, geom_name))
@@ -1255,6 +1262,68 @@ NULL
              polar fills.",
       "i" = "Falling back to flat semi-transparent fills. Switch to a \\
              device that supports both (e.g. {.code ragg::agg_png()}, \\
+             {.code svg()}) for the full effect."
+    )
+  )
+}
+
+
+# `geom_rect_fade()` drops rectangles whose bounds are non-finite after the
+# coord transform (e.g. `-Inf`/`Inf` under `scale_y_log10()`). The drop fires
+# once per layer and per panel, so a plot with several rect-fade layers (or
+# facets) would emit the same warning many times. Consolidate into one
+# warning naming the affected geom(s) with the total count summed across
+# layers and panels.
+#' @noRd
+#' @keywords internal
+.queue_rect_fade_nonfinite <- function(geom_name, n) {
+  .queue_or_emit(
+    id = "rect_fade_nonfinite",
+    geom_name = geom_name,
+    meta = list(n = n),
+    emit_fn = .emit_rect_fade_nonfinite,
+    sum_keys = "n"
+  )
+}
+
+#' @noRd
+#' @keywords internal
+.emit_rect_fade_nonfinite <- function(geoms, meta) {
+  n <- meta$n
+  cli::cli_warn(
+    c(
+      "!" = "{.fn {geoms}}: removed {n} rect{?s} with non-finite bounds.",
+      "i" = "This usually means {.code -Inf} or {.code Inf} was used together \\
+             with a transformed scale (e.g. {.fn scale_y_log10}) that has no \\
+             representation for those values. Use finite \\
+             {.field xmin}/{.field xmax}/{.field ymin}/{.field ymax} values \\
+             instead."
+    )
+  )
+}
+
+
+# Pattern + fade compositing fallback for geom_rect_fade() (and future
+# geoms) when the device does not support Porter-Duff dest.in.
+#' @noRd
+#' @keywords internal
+.queue_rect_fade_pattern_no_composite <- function(geom_name) {
+  .queue_or_emit(
+    id = "rect_fade_pattern_no_composite",
+    geom_name = geom_name,
+    emit_fn = .emit_rect_fade_pattern_no_composite
+  )
+}
+
+#' @noRd
+#' @keywords internal
+.emit_rect_fade_pattern_no_composite <- function(geoms, meta) {
+  cli::cli_inform(
+    c(
+      "!" = "{.fn {geoms}}: {.arg pattern} fill with alpha fade requires \\
+             Porter-Duff compositing.",
+      "i" = "Falling back to a flat semi-transparent fill. Switch to a \\
+             device that supports compositing (e.g. {.code ragg::agg_png()}, \\
              {.code svg()}) for the full effect."
     )
   )
