@@ -159,7 +159,8 @@ for more than a century.
 }
 \details{
 This geom draws 45 deg lines from the start to the end of a 'lifetime'. It is
-a combination of a segment, and a point.
+a combination of a segment, and a point. \code{stat_lexis()} calculates
+\code{y} and \code{yend} for you, so the only required aesthetics are \code{x} and \code{xend}.
 Besides \code{y} and \code{yend} coordinates this geom creates one additional variable
 called \code{type} in the layer data. You might want to map to an aesthetic with
 \code{\link[ggplot2:after_stat]{ggplot2::after_stat()}}, see \emph{Examples} and \code{vignette("ggpointless")}
@@ -215,9 +216,7 @@ ggplot(df3, aes(x = x, xend = xend)) +
 \code{geom_lexis()} understands the following aesthetics. Required aesthetics are displayed in bold and defaults are displayed for optional aesthetics:
 \tabular{rll}{
  • \tab \strong{\code{\link[ggplot2:aes_position]{x}}} \tab   \cr
- • \tab \strong{\code{\link[ggplot2:aes_position]{y}}} \tab   \cr
  • \tab \strong{\code{\link[ggplot2:aes_position]{xend}}} \tab   \cr
- • \tab \strong{\code{\link[ggplot2:aes_position]{yend}}} \tab   \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{alpha}} \tab → \code{NA} \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{colour}} \tab → via \code{theme()} \cr
  • \tab \code{\link[ggplot2:aes_colour_fill_alpha]{fill}} \tab → via \code{theme()} \cr
