@@ -73,7 +73,7 @@ freely between two fixed supports. It follows this equation:
 $$y = a \cosh\!\left(\frac{x}{a}\right)$$
 
 `geom_catenary()` draws a hanging-chain catenary curve between successive
-points; `geom_arch()` draws a cetenary arch, i.e. the inverted curve.
+points; `geom_arch()` draws a catenary arch, i.e. the inverted curve.
 
 ### geom_arch
 The shape is controlled by `arch_length` or `arch_height` (vertical rise above
@@ -322,8 +322,8 @@ ggplot(mpg, aes(class)) +
 ### Picking axes
 
 Use `grids = "x"`, `"y"`, or `c("x", "y")` to choose which axis to draw, and
-`minor = TRUE` to draw minor gridlines too. Positions come from the
-trained scale — no manual breaks needed.
+`lines = c('major', 'minor')` to draw minor (grid-)lines too. Positions come
+from the trained scale — no manual breaks needed.
 
 ```{r gridline-axes, fig.height = 3.5, fig.alt = "Horizontal bar chart of vehicle counts on a log-scaled x-axis with major and minor vertical gridlines drawn on top."}
 ggplot(mpg, aes(y = class)) +
@@ -332,7 +332,7 @@ ggplot(mpg, aes(y = class)) +
   scale_x_log10()
 ```
 
-But you can of course add breaks whenever you want and `geom_ridgeline()` picks
+But you can of course add breaks whenever you want and `geom_gridline()` picks
 these values up automatically.
 
 ```{r gridline-axes-log10, fig.height = 3.5, fig.alt = "Horizontal bar chart on a log-scaled x-axis with thick gold custom-positioned gridlines at the breaks 5, 10 and 20."}
@@ -1043,6 +1043,90 @@ ggplot(df, aes(x, y)) +
   )
 ```
 
+### Pattern fills
+
+Instead of a solid fade, `geom_rect_fade()` can fill each rectangle with a
+texture that fades along with the alpha gradient. The built-in preset
+`pattern = "stripe"` draws continuous diagonal hatching, recoloured to the
+`fill` aesthetic:
+
+```{r rect-fade-stripe, fig.height = 3, fig.alt = "A rectangle filled with diagonal stripe hatching that fades from opaque at the top to transparent at the bottom."}
+df <- data.frame(xmin = 1, xmax = 9, ymin = 0, ymax = 6)
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[1], alpha = 0.9, alpha_fade_to = 0,
+    pattern = "stripe"
+  ) +
+  theme_minimal()
+```
+
+The `"stripe"` name is borrowed, with thanks, from the
+[`ggpattern`](https://trevorldavis.com/R/ggpattern/) package by Trevor L. Davis;
+for a far richer set of patterns use `ggpattern` directly.
+
+#### Build your own pattern
+
+`pattern` also accepts a `grid` grob, which is drawn once and **clipped** to each
+rectangle. This is the reliable way to get *continuous* custom hatching:
+`grid::pattern()` tiling clips every tile at its own bounds, so diagonal or wavy
+lines come out as disconnected dashes. Drawing a single grob and clipping it
+keeps the lines continuous.
+
+The key is to build the grob in `"npc"` units, so it spans the rectangle
+(`x` and `y` run from 0 to 1 across width and height). Here is a wavy-line
+"pattern": a stack of sine curves stepped up the height, overshooting the
+`[0, 1]` range so clipping trims them cleanly. Leave the stroke colour
+unset --- `geom_rect_fade()` recolours it to the `fill` aesthetic for you.
+
+```{r rect-fade-wave, fig.height = 3, fig.alt = "A rectangle filled with continuous wavy horizontal lines that fade from opaque at the top to transparent at the bottom."}
+wave_hatch <- function(spacing = 0.14, frequency = 6, amplitude = 0.04,
+                       linewidth = 1.5) {
+  t <- seq(0, 1, length.out = 250)
+  y0 <- seq(-0.2, 1.2, by = spacing) # overshoot; clipping trims the ends
+  lines <- lapply(y0, function(y) {
+    grid::linesGrob(
+      x = grid::unit(t, "npc"),
+      y = grid::unit(y + amplitude * sin(2 * pi * frequency * t), "npc"),
+      gp = grid::gpar(lwd = linewidth)
+    )
+  })
+  grid::gTree(children = do.call(grid::gList, lines))
+}
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[3], alpha = 0.9, alpha_fade_to = 0,
+    pattern = wave_hatch()
+  ) +
+  theme_minimal()
+```
+
+For self-contained *motifs* (dots, small shapes) rather than continuous lines,
+a tiled `grid::pattern()` works well and is simpler --- tiling only breaks down
+for lines that need to cross tile boundaries:
+
+```{r rect-fade-dots, fig.height = 3, fig.alt = "A rectangle filled with a regular grid of dots that fades from opaque at the top to transparent at the bottom."}
+dots <- grid::pattern(
+  grid::circleGrob(r = grid::unit(1, "mm"), gp = grid::gpar(fill = "black")),
+  width = grid::unit(5, "mm"), height = grid::unit(5, "mm"), extend = "repeat"
+)
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[2], alpha = 0.9, alpha_fade_to = 0,
+    pattern = dots
+  ) +
+  theme_minimal()
+```
+
+Pattern fills require a graphics device with Porter-Duff compositing (for
+example `ragg::agg_png()` or `grDevices::svg()`); on devices without it the
+geom falls back to a flat semi-transparent fill.
+
 ## geom_col_fade
 
 `geom_col_fade()` is the fading counterpart of `geom_col()`: each bar is filled
@@ -1083,9 +1167,9 @@ ggplot(df, aes(x, y, fill = grp)) +
 ```
 
 
-`"global"` — the tallest bar in the whole layer (`y = 3` in panel `c`) is
+`"global"` — the tallest bar in the whole layer (`y = 4`) is
 the only one at full opacity. Every other bar fades in proportion to its
-own height divided by 3, *across panels*:
+own height:
 
 ```{r col-fade-scope-global, fig.height = 3, fig.alt = "Same chart under alpha_scope global, where only the tallest bar reaches full opacity and every other bar fades in proportion."}
 ggplot(df, aes(x, y, fill = grp)) +
@@ -1139,7 +1223,7 @@ shares the same parameters and underlying mechanics like
 `geom_bar_fade()` and `geom_col_fade()` rounded,  but uses `stat_bin()`.
 
 
-```{r histogram-fade-diamonds, fig.height = 3.5, fig.alt = "Stacked faded histogram of diamond carats coloured by cut, where taller bars are also more opaque so bar height is reflected both in size and in transparency."}
+```{r histogram-fade-diamonds, fig.height = 3.5, fig.alt = "Stacked faded histogram of sepal width coloured by species, where taller bars are also more opaque so bar height is reflected both in size and in transparency."}
 ggplot(iris, aes(Sepal.Width, fill = Species)) +
   geom_histogram_fade(
     alpha_scope = "fill",

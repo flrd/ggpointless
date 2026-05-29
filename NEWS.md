@@ -14,6 +14,15 @@
   `geom_stipple_step()` supports `direction`, and `NA` values break the line
   like `geom_line()` / `geom_step()`.
 
+* `geom_rect_fade()` gains a `pattern` argument to fill rectangles with a
+  texture that fades along with the alpha gradient. Use the built-in
+  `pattern = "stripe"` for continuous diagonal hatching, pass a `grid::grob()`
+  to clip your own continuous hatching (e.g. wavy lines) to each rectangle, or
+  pass a `grid::pattern()` for tiled motifs such as dots. The texture's stroke
+  colour follows the `fill` aesthetic. Requires a graphics device with
+  Porter-Duff compositing; falls back to a flat semi-transparent fill
+  otherwise.
+
 # ggpointless 0.3.0
 
 ## New features

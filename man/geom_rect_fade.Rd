@@ -13,6 +13,7 @@ geom_rect_fade(
   alpha_fade_to = 0,
   fade_direction = "vertical",
   radius = grid::unit(0, "pt"),
+  pattern = NULL,
   lineend = "butt",
   linejoin = "mitre",
   na.rm = FALSE,
@@ -101,6 +102,26 @@ fades to \code{alpha_fade_to} (\code{ymin}).}
 \code{\link[grid:unit]{grid::unit()}} object (e.g. \code{unit(4, "pt")}); a bare number is
 interpreted as points. Defaults to \code{unit(0, "pt")} (sharp corners).}
 
+\item{pattern}{An optional textured fill, applied \emph{underneath} the alpha
+fade. One of:
+\describe{
+\item{\code{"stripe"}}{The built-in preset: continuous diagonal hatching
+(see \emph{Patterns} below).}
+\item{a \code{\link[grid:grob]{grid::grob()}}}{Drawn once and clipped to each rectangle. Best
+for continuous custom hatching (e.g. wavy lines built in \code{"npc"}
+units), which \code{grid::pattern()} tiling cannot render without breaking
+lines into dashes. See the vignette for a worked "wave" example.}
+\item{a \code{\link[grid:pattern]{grid::pattern()}} object}{A tiled pattern -- best for
+self-contained motifs (dots, shapes). Tiling renders continuous
+diagonal/wavy lines as dashes, so prefer a grob for those.}
+}
+In every case the texture's stroke colour (\code{gp$col}) is automatically
+recoloured to match the \code{fill} aesthetic. The alpha fade is applied on top
+via Porter-Duff \code{"dest.in"} compositing; devices without compositing
+support fall back to a flat semi-transparent fill. Patterns are not
+supported under polar coordinates. \code{NULL} (default) uses the plain
+gradient fill.}
+
 \item{lineend}{Line end style (round, butt, square).}
 
 \item{linejoin}{Line join style (round, mitre, bevel).}
@@ -152,6 +173,30 @@ Rounded corners (\code{radius}) are ignored in polar coordinates since arcs do
 not carry corner geometry.
 }
 
+\section{Patterns}{
+
+One built-in preset is available: \code{pattern = "stripe"} draws continuous
+diagonal hatching, recoloured to the \code{fill} aesthetic and faded with the
+alpha gradient. The \code{"stripe"} name is borrowed, with thanks, from the
+\pkg{ggpattern} package by Trevor L. Davis
+(\url{https://trevorldavis.com/R/ggpattern/}); the implementation here is an
+independent \pkg{grid} one.
+
+Unlike \code{grid::pattern()} tiling -- which renders diagonal or wavy lines as
+disconnected dashes, because each tile is clipped at its own bounds -- the
+\code{"stripe"} preset draws real parallel lines clipped to the rectangle, so the
+diagonals stay continuous at a true visual angle.
+
+For your own \emph{continuous} hatching (e.g. wavy lines), build a \code{\link[grid:grob]{grid::grob()}}
+in \code{"npc"} units and pass it as \code{pattern}: it is drawn once and clipped to
+each rectangle, preserving line continuity. For self-contained \emph{motifs}
+(dots, small shapes) pass a \code{\link[grid:pattern]{grid::pattern()}} object, which tiles cleanly.
+In both cases the stroke colour is recoloured to the \code{fill} aesthetic. The
+article \code{vignette("ggpointless")} walks through building a wavy-line grob and
+injecting it. For a far richer set of patterns and controls, use
+\pkg{ggpattern} directly.
+}
+
 \section{Legend key under coord_flip}{
 
 The legend key glyph always shows the canonical (data-axis) fade
@@ -194,7 +239,9 @@ Version 1.
 \seealso{
 \code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}} for plain rectangles,
 \code{\link[=geom_col_fade]{geom_col_fade()}} for bar charts with per-bar gradient scaling and
-orientation support.
+orientation support. The \pkg{ggpattern} package
+(\url{https://trevorldavis.com/R/ggpattern/}) for comprehensive pattern
+fills.
 }
 \concept{fading gradient}
 \concept{rounded corners}

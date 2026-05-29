@@ -513,6 +513,32 @@ test_that("GoG/data: rects with non-finite bounds are dropped without crashing",
   )
 })
 
+test_that("non-finite bounds warning is consolidated across layers", {
+  df <- data.frame(xmin = 1, xmax = 5, ymin = -Inf, ymax = 10)
+  layer_for <- function(fill) {
+    geom_rect_fade(
+      data = df, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      inherit.aes = FALSE, fill = fill
+    )
+  }
+  p <- ggplot() + layer_for("grey50") + layer_for("tomato") + scale_y_log10()
+
+  warns <- character()
+  withCallingHandlers(
+    ggplotGrob(p),
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  ours <- grep("non-finite bounds", warns, value = TRUE)
+  # Two layers each drop one rect, but exactly ONE warning fires, naming
+  # the geom once and summing the count.
+  expect_length(ours, 1L)
+  expect_match(ours, "removed 2 rect")
+  expect_match(ours, "geom_rect_fade")
+})
+
 ## mapping -----------------------------------------------------------------
 
 test_that("GoG/mapping: inherit.aes = FALSE isolates aesthetics", {
@@ -700,4 +726,131 @@ test_that("GoG/theme: theme_classic renders without error", {
 
 test_that("GoG/theme: theme_bw renders without error", {
   expect_no_error(ggplotGrob(p_base + theme_bw()))
+})
+
+# -----------------------------------------------------------------------
+# pattern fills
+# -----------------------------------------------------------------------
+
+# Build the draw_panel grob with an explicit `pattern` argument.
+build_rect_grob_pattern <- function(p, pattern) {
+  b     <- ggplot_build(p)
+  ldata <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  GeomRectFade$draw_panel(
+    ldata, pp, coord,
+    alpha_fade_to = 0, fade_direction = "vertical",
+    radius = grid::unit(0, "pt"), pattern = pattern
+  )
+}
+
+p_pat <- ggplot(df_corners) +
+  geom_rect_fade(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax))
+
+test_that('pattern = "stripe" produces a deferred rect_fade_pattern_grob', {
+  g <- build_rect_grob_pattern(p_pat, "stripe")
+  expect_s3_class(g, "rect_fade_pattern_grob")
+  # one dst per rect, plus matching alpha_ref / outline / flat lists
+  expect_length(g$dst_glist, nrow(df_corners))
+  expect_length(g$alpha_ref_glist, nrow(df_corners))
+})
+
+test_that("a user grob pattern is clipped (dst is a gTree, not a roundrect)", {
+  wave <- grid::linesGrob(
+    x = grid::unit(c(0, 1), "npc"), y = grid::unit(c(0.5, 0.5), "npc")
+  )
+  g <- build_rect_grob_pattern(p_pat, wave)
+  expect_s3_class(g, "rect_fade_pattern_grob")
+  expect_true(grid::is.grob(g$dst_glist[[1]]))
+})
+
+test_that("a user grid::pattern() is accepted (tiled dst)", {
+  pat <- grid::pattern(
+    grid::circleGrob(r = grid::unit(1, "mm")),
+    width = grid::unit(5, "mm"), height = grid::unit(5, "mm"),
+    extend = "repeat"
+  )
+  g <- build_rect_grob_pattern(p_pat, pat)
+  expect_s3_class(g, "rect_fade_pattern_grob")
+})
+
+test_that("an invalid pattern preset name aborts with a helpful error", {
+  p <- ggplot(df_corners) +
+    geom_rect_fade(
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      pattern = "zigzag"
+    )
+  expect_error(ggplot_build(p), "stripe")
+})
+
+test_that("an invalid pattern type aborts", {
+  p <- ggplot(df_corners) +
+    geom_rect_fade(
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      pattern = 42
+    )
+  expect_error(
+    ggplot_build(p),
+    class = "ggpointless_rect_fade_pattern_type"
+  )
+})
+
+test_that("GoG: pattern fills render without error (all three modes)", {
+  wave <- grid::gTree(children = grid::gList(grid::linesGrob(
+    x = grid::unit(c(0, 1), "npc"), y = grid::unit(c(0.4, 0.6), "npc")
+  )))
+  dots <- grid::pattern(
+    grid::circleGrob(r = grid::unit(1, "mm")),
+    width = grid::unit(5, "mm"), height = grid::unit(5, "mm"), extend = "repeat"
+  )
+  base <- ggplot(df_corners) +
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+  expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = "stripe")))
+  expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = wave)))
+  expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = dots)))
+})
+
+test_that("pattern recolours the user grob stroke to the fill aesthetic", {
+  line <- grid::linesGrob(
+    x = grid::unit(c(0, 1), "npc"), y = grid::unit(c(0.5, 0.5), "npc"),
+    gp = grid::gpar(col = "black")
+  )
+  p <- ggplot(df_corners) +
+    geom_rect_fade(
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      fill = "tomato"
+    )
+  g <- build_rect_grob_pattern(p, line)
+  dst1 <- g$dst_glist[[1]]
+  # the clipped grob's child line should carry the fill colour, not black
+  child <- dst1$children[[1]]
+  expect_equal(
+    grDevices::col2rgb(child$gp$col),
+    grDevices::col2rgb("tomato")
+  )
+})
+
+test_that('vdiffr snapshot: "stripe" pattern highlight (NYT-style)', {
+  df_econ <- head(economics, 25)
+  p <- ggplot(df_econ, aes(date, unemploy)) +
+    geom_rect_fade(
+      data = data.frame(
+        xmin = min(df_econ$date),
+        xmax = max(df_econ$date),
+        ymin = -Inf, ymax = 2800
+      ),
+      inherit.aes = FALSE,
+      fill = "tomato",
+      alpha = 0.75,
+      alpha_fade_to = 0,
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      pattern = "stripe"
+    ) +
+    stat_fourier(
+      geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2
+    ) +
+    geom_point(size = 3, alpha = 0.2) +
+    theme_minimal()
+  vdiffr::expect_doppelganger("rect-fade-stripe-pattern", p)
 })
