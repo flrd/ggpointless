@@ -760,7 +760,12 @@ NULL
 #' @noRd
 #' @keywords internal
 .clamp_roundrect_radius <- function(grobs, arg = "radius", quiet = FALSE) {
-  reported <- quiet
+  # Accumulate the requested radius and the tightest displayable cap across all
+  # clamped shapes in this call, both in the user's own unit, then queue ONE
+  # message afterwards (consolidated again across panel + legend-key calls).
+  clamp_req  <- NULL
+  clamp_cap  <- Inf
+  clamp_unit <- NULL
   for (i in seq_along(grobs)) {
     g <- grobs[[i]]
     if (!inherits(g, "roundrect")) next
@@ -795,22 +800,24 @@ NULL
       # (the user can't fix zero-count histogram bins by lowering radius;
       # only mention the cap when a *visible* cell would otherwise show
       # the artefact).
-      if (h_pt > 0 && w_pt > 0 && !reported) {
-        # `.frequency` defaults to "always" -- the user is actively iterating
-        # on a value, so they need feedback every time they pick one above
-        # the cap. Within-call duplication (one message per cell) is
-        # prevented by the `reported` flag; cross-panel duplication in
-        # faceted plots is intentional (the cap is panel-specific).
-        cli::cli_inform(c(
-          "!" = "{.arg {arg}} of {.val {round(r_pt, 2)}} pt exceeds the \\
-                 largest displayable corner radius for the rendered shape.",
-          "i" = "Maximum displayable radius is \\
-                 {.val {round(max_r, 2)}} pt; falling back to that."
-        ))
-        reported <- TRUE
+      if (h_pt > 0 && w_pt > 0 && !quiet) {
+        # Record the requested radius and this shape's displayable cap in the
+        # user's own unit (computed here, inside the viewport, where relative
+        # units resolve). The cap is converted from pt back to that unit so the
+        # message reads, e.g., "10 mm ... which is 1.23 mm". Keep the tightest
+        # (smallest) cap across shapes.
+        vals <- .radius_clamp_values(g$r, max_r)
+        clamp_req  <- vals$req
+        clamp_unit <- vals$unit
+        clamp_cap  <- min(clamp_cap, vals$cap)
       }
       grobs[[i]]$r <- grid::unit(max_r, "pt")
     }
+  }
+  # Queue ONE message per call (the render-level queue consolidates further
+  # across the panel and each legend-key glyph into a single notice).
+  if (!is.null(clamp_req)) {
+    .queue_radius_clamp(arg, clamp_req, clamp_cap, clamp_unit)
   }
   grobs
 }
@@ -1329,6 +1336,79 @@ NULL
   )
 }
 
+# Express a requested radius and its displayable cap (`max_r`, in pt) in the
+# unit the user supplied, so the clamp notice echoes their input. MUST run
+# inside the rendering viewport so relative units resolve. Falls back to pt for
+# compound or unknown unit types.
+#' @noRd
+#' @keywords internal
+.radius_clamp_values <- function(r, max_r_pt) {
+  ut <- tryCatch(grid::unitType(r), error = function(e) "pt")
+  if (length(ut) != 1L || is.na(ut)) {
+    return(list(
+      req  = grid::convertUnit(r, "pt", valueOnly = TRUE),
+      cap  = max_r_pt,
+      unit = "pt"
+    ))
+  }
+  list(
+    req  = grid::convertUnit(r, ut, valueOnly = TRUE),
+    cap  = grid::convertUnit(grid::unit(max_r_pt, "pt"), ut, valueOnly = TRUE),
+    unit = ut
+  )
+}
+
+# Corner-radius clamp notice, consolidated to one message per render.
+#
+# `.clamp_roundrect_radius()` runs in every `makeContent` call -- the panel and
+# each legend-key glyph -- so emitting directly produced one message per call
+# (e.g. 6x for a 5-level fill legend). Queueing by a fixed id collapses them to
+# a single notice. `req`/`cap`/`unit` are unioned; the emitter reports the
+# largest requested radius, the tightest (smallest) displayable cap, and the
+# user's unit.
+#' @noRd
+#' @keywords internal
+.queue_radius_clamp <- function(arg, req, cap, unit) {
+  .queue_or_emit(
+    id = "roundrect_radius_clamp",
+    geom_name = arg,
+    meta = list(req = req, cap = cap, unit = unit),
+    emit_fn = .emit_radius_clamp,
+    union_keys = c("req", "cap", "unit")
+  )
+}
+
+#' @noRd
+#' @keywords internal
+.emit_radius_clamp <- function(geoms, meta) {
+  unit <- meta$unit[1L]
+  req  <- round(max(meta$req), 2)
+  cap  <- round(min(meta$cap), 2)
+  # Throttle per session, keyed on the requested radius: RStudio re-renders a
+  # plot at several pane sizes (each a fresh draw), which would otherwise repeat
+  # this notice -- with *different* size-dependent caps, looking like distinct
+  # problems. Keying on the requested value suppresses those identical-input
+  # repeats while still reporting when the user picks a *different* radius.
+  # cli's frequency cache is in-memory (per session), so fresh sessions and
+  # tests always see the first emission.
+  cli::cli_inform(
+    c(
+      "!" = "{.arg {geoms[1]}} of {req} {unit} exceeds the largest displayable \\
+             corner radius for one or more rendered shapes, which is \\
+             {cap} {unit}.",
+      "i" = "Falling back to each shape's maximum displayable radius."
+    ),
+    .frequency    = "regularly",
+    .frequency_id = paste0("ggpointless_radius_clamp_", geoms[1L], "_", req, unit)
+  )
+}
+
+
+# `hatch(colour = NULL)` follows `fill`; when an explicit `colour` is also
+# present (a rectangle outline), `fill` drives the hatch. Inform once per
+# render so a faceted / multi-rect plot does not repeat the message.
+#' @noRd
+#' @keywords internal
 
 # `geom_curve_fade()` compositing fallback (pdf, cairo_pdf, postscript,
 # or any device without Porter-Duff dest.in). One grob per panel.

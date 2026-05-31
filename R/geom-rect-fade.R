@@ -26,54 +26,127 @@
 }
 
 
-# Built-in pattern presets.  The "stripe" name is borrowed, with thanks,
-# from the {ggpattern} package by Trevor L. Davis; the implementation here
-# is our own.  We deliberately do NOT use grid::pattern() tiling for the
-# preset: tiling renders diagonal lines as disconnected dashes (each tile
-# is clipped at its bounds, so corner-to-corner segments meet only at a
-# point).  Instead we draw real parallel lines clipped to the rectangle,
-# which gives genuinely continuous diagonals at a true visual angle.
-# User-supplied grid::pattern() objects still go through the tiling path.
-.fade_pattern_presets <- c("stripe")
-
-# Build a clipped diagonal-hatch grob for the "stripe" preset.
+# Build a hatch *spec* (one or two line families) covering a rectangle.
 #
-# Parallel lines covering the rectangle (`xc`/`yc`/`w`/`h`, in `units`),
-# clipped to it via a viewport.  Endpoints are in "snpc" so the angle is
-# visually true regardless of the rectangle's aspect ratio, and the line
-# spacing scales with the rectangle's smaller dimension.
+# This returns a lightweight S3 list, NOT a grob. The actual segment geometry
+# is generated later by `.hatch_materialize()`, called from
+# `makeContent.rect_fade_pattern_grob` at draw time. Deferring to draw time
+# lets us size SPAN and the line count from the rectangle's true physical
+# dimensions (mm), rather than a fixed worst-case budget: for a 15 × 60 mm bar
+# at 2 mm spacing that is ~32 segments per family instead of 601 -- a ~18×
+# reduction in grob count.
 #
-# `snpc` is the *smaller* of the viewport's width/height, so for a wide
-# (or tall) rectangle the lines must be laid out far beyond [0, 1] to
-# reach the far edge before clipping.  `REACH` is the half-extent of the
-# perpendicular offsets and the line half-length, both in snpc: REACH = 10
-# covers aspect ratios up to roughly 20:1 (offset projection grows like
-# ~0.43 * aspect), comfortably beyond any realistic rectangle.
+# A spec (not a deferred gTree) is used because the materialised hatch becomes
+# the `dst` of a Porter-Duff `groupGrob()`, and grid computes `grobCoords()` on
+# that dst *before* any `makeContent()` would run -- an empty deferred gTree has
+# no valid coordinates and errors. Materialising eagerly inside the parent's
+# `makeContent` (where the viewport's mm size is known) keeps the dst a
+# fully-populated, coords-valid gTree.
+#
+# Why grid::pattern() is NOT used: tiling clips every tile at its own bounds,
+# so diagonal lines come out as disconnected dashes. Drawing real parallel
+# lines and clipping the whole family keeps them continuous.
 #' @noRd
 #' @keywords internal
-.stripe_hatch_grob <- function(xc, yc, w, h, colour,
-                               angle = 60, spacing = 0.06,
-                               lwd = 1, lineend = "butt",
-                               units = "native") {
-  vp <- grid::viewport(
-    x = xc, y = yc, width = w, height = h,
-    just = "centre", default.units = units, clip = "on"
+.hatch_grob <- function(xc, yc, w, h, colour,
+                        angle = 45, crossed = FALSE,
+                        spacing_mm = 2, linewidth = 0.5, linetype = 1,
+                        units = "native") {
+  structure(
+    list(
+      xc = xc, yc = yc, w = w, h = h, units = units,
+      colour = colour, angle = angle, crossed = crossed,
+      spacing_mm = spacing_mm, linewidth = linewidth,
+      linetype = linetype
+    ),
+    class = "hatch_spec"
   )
-  ang <- angle * pi / 180
-  dx <- cos(ang)
-  dy <- sin(ang)
-  nx <- -dy
-  ny <- dx
-  REACH <- 10
-  rng <- seq(-REACH, REACH, by = spacing)
-  seg <- grid::segmentsGrob(
-    x0 = grid::unit(0.5 + rng * nx - REACH * dx, "snpc"),
-    y0 = grid::unit(0.5 + rng * ny - REACH * dy, "snpc"),
-    x1 = grid::unit(0.5 + rng * nx + REACH * dx, "snpc"),
-    y1 = grid::unit(0.5 + rng * ny + REACH * dy, "snpc"),
-    gp = ggplot2::gg_par(col = colour, lwd = lwd, lineend = lineend)
+}
+
+# Materialise a `hatch_spec` into a concrete clipped gTree. MUST be called from
+# within the target viewport (panel or legend key) so that `convertWidth/Height`
+# resolve the rectangle's `units` (native / npc) to physical mm.
+#' @noRd
+#' @keywords internal
+.hatch_materialize <- function(spec, clip = "on") {
+  w_mm <- abs(grid::convertWidth(
+    grid::unit(spec$w, spec$units), "mm", valueOnly = TRUE
+  ))
+  h_mm <- abs(grid::convertHeight(
+    grid::unit(spec$h, spec$units), "mm", valueOnly = TRUE
+  ))
+
+  if (w_mm <= 0 || h_mm <= 0) return(ggplot2::zeroGrob())
+
+  # Draw in a viewport whose native scale IS millimetres, isotropically:
+  # width = w_mm mm spans an xscale of width w_mm, so 1 native unit = 1 mm on
+  # both axes (the angle stays visually true). Segment endpoints are then plain
+  # numerics in a single coordinate system -- much cheaper for grid to resolve
+  # than `unit(0.5, "npc") + unit(.., "mm")` compound units, which force a
+  # per-segment solve of two unit systems.
+  #
+  # Each line family is sized to ITS orientation, not the box diagonal: the
+  # perpendicular half-extent of the w x h box (`hp`) bounds the number of
+  # lines, the parallel half-extent (`lp`) bounds their length. For a thin
+  # dodged bar with vertical hatch this yields a handful of lines instead of
+  # one-per-pitch across the diagonal (most of which would be clipped away).
+  s  <- spec$spacing_mm
+  cap <- 2000L
+  family <- function(ang) {
+    a   <- ang * pi / 180
+    dx  <- cos(a);  dy  <- sin(a)
+    nx  <- -dy;     ny  <- dx
+    lp  <- (abs(w_mm * dx) + abs(h_mm * dy)) / 2 + s   # half-length (parallel)
+    hp  <- (abs(w_mm * nx) + abs(h_mm * ny)) / 2 + s   # half-extent (perp.)
+    n   <- min(ceiling(hp / s), cap)
+    off <- seq.int(-n, n) * s
+    grid::segmentsGrob(
+      x0 = off * nx - lp * dx,
+      y0 = off * ny - lp * dy,
+      x1 = off * nx + lp * dx,
+      y1 = off * ny + lp * dy,
+      default.units = "native",
+      gp = ggplot2::gg_par(
+        col = spec$colour, lwd = spec$linewidth, lty = spec$linetype
+      )
+    )
+  }
+
+  children <- if (spec$crossed) {
+    grid::gList(family(spec$angle), family(spec$angle + 90))
+  } else {
+    grid::gList(family(spec$angle))
+  }
+
+  grid::gTree(
+    children = children,
+    vp = grid::viewport(
+      x = grid::unit(spec$xc, spec$units), y = grid::unit(spec$yc, spec$units),
+      width  = grid::unit(spec$w, spec$units),
+      height = grid::unit(spec$h, spec$units),
+      xscale = c(-w_mm / 2, w_mm / 2),
+      yscale = c(-h_mm / 2, h_mm / 2),
+      just = "centre", clip = clip
+    )
   )
-  grid::gTree(children = grid::gList(seg), vp = vp)
+}
+
+
+# Resolve the pattern stroke colour, one value per row.
+#
+# Pattern colour (hatch lines) always follows the `fill` aesthetic, falling
+# back to `colour` only when `fill` is unset. The `explicit` argument is kept
+# for the (rare) grob-pattern path but is always NULL for hatch() since it
+# exposes no colour param.
+#' @noRd
+#' @keywords internal
+.hatch_resolve_colour <- function(data, explicit) {
+  if (!is.null(explicit)) return(rep(explicit, length.out = nrow(data)))
+  fill   <- data$fill
+  colour <- data$colour
+  if (!is.null(fill)   && !all(is.na(fill)))   return(fill)
+  if (!is.null(colour) && !all(is.na(colour))) return(colour)
+  fill
 }
 
 # Wrap a user-supplied grob so it is clipped to a single rectangle
@@ -84,12 +157,13 @@
 # stroke colour is recoloured to the mapped `fill`.
 #' @noRd
 #' @keywords internal
-.clip_pattern_grob <- function(grob, xc, yc, w, h, colour, units = "native") {
+.clip_pattern_grob <- function(grob, xc, yc, w, h, colour, units = "native",
+                               clip = "on") {
   grid::gTree(
     children = grid::gList(.recolour_grob_col(grob, colour)),
     vp = grid::viewport(
       x = xc, y = yc, width = w, height = h,
-      just = "centre", default.units = units, clip = "on"
+      just = "centre", default.units = units, clip = clip
     )
   )
 }
@@ -129,15 +203,28 @@ makeContent.rect_fade_pattern_grob <- function(x) {
     return(grid::setChildren(x, grobs))
   }
 
-  # Clamp radius on both dst (pattern fill) and outline roundrects at
-  # render time when physical dimensions are known.
-  dst_cl     <- .clamp_roundrect_radius(x$dst_glist,     arg = "radius")
-  outline_cl <- .clamp_roundrect_radius(x$outline_glist, arg = "radius")
+  # Clamp radius on dst (pattern fill), the alpha mask, and the outline so all
+  # three share the same rounded shape. The mask in particular MUST match the
+  # outline: it is what clips the hatch to rounded corners (dest.in), and an
+  # unclamped radius on a short bar degenerates into a lens, mis-shaping the
+  # pattern. `quiet = TRUE` on dst/mask so only the outline pass reports.
+  dst_cl       <- .clamp_roundrect_radius(x$dst_glist,       arg = "radius", quiet = TRUE)
+  alpha_ref_cl <- .clamp_roundrect_radius(x$alpha_ref_glist, arg = "radius", quiet = TRUE)
+  outline_cl   <- .clamp_roundrect_radius(x$outline_glist,   arg = "radius")
 
+  # One dest.in group per rectangle. Batching the whole layer into a single
+  # group is NOT possible: grid's group compositing collapses a multi-child
+  # gTree dst/src to an empty render for spatially separated content, so each
+  # rectangle must be composited on its own.
   n      <- length(dst_cl)
   result <- vector("list", n)
   for (i in seq_len(n)) {
-    comp <- grid::groupGrob(x$alpha_ref_glist[[i]], op = "dest.in", dst = dst_cl[[i]])
+    # Hatch dsts arrive as lightweight specs; materialise them here, inside
+    # the panel / key viewport, so SPAN is sized from the rect's true mm
+    # dimensions and the resulting dst gTree has valid grobCoords.
+    dst <- dst_cl[[i]]
+    if (inherits(dst, "hatch_spec")) dst <- .hatch_materialize(dst)
+    comp <- grid::groupGrob(alpha_ref_cl[[i]], op = "dest.in", dst = dst)
     ol   <- outline_cl[[i]]
     result[[i]] <- if (inherits(ol, "zeroGrob")) {
       comp
@@ -183,15 +270,137 @@ makeContent.rect_fade_grob <- function(x) {
 
 # Deferred grob for polar rectangles with a radial alpha gradient.
 #
-# Polar renders require both clipping paths (to shape the gradient to the
-# annular segment) AND a radialGradient pattern. Devices missing either
-# capability fall back to flat semi-transparent annular segments.
+# Build one polar ring's pattern fill at draw time: a panel-covering pattern
+# (hatch lines / user grob / tiled grid::pattern), radially faded via dest.in
+# compositing and clipped to the wedge polygon. MUST run inside the panel
+# viewport because hatch materialisation converts npc -> mm.
+#
+# `ring` is an ingredient list: poly_grob, r_in, r_out, a_inner, a_outer,
+# fill_col (assembled eagerly in the polar draw path; only the hatch dst needs
+# this deferred, draw-time context).
+# Build the panel-covering pattern fill (hatch lines / user grob / tiled
+# grid::pattern), recoloured to the wedge's fill. Shared by the radial
+# (compositing) and flat (clip-only) ring builders.
 #' @noRd
 #' @keywords internal
-.rect_fade_polar_grob <- function(gradient_glist, flat_glist) {
+# `clip` is the clip region for the pattern's own viewport. The radial path
+# leaves it "on" (the group handles wedge clipping); the flat path passes the
+# wedge polygon so the pattern clips to the wedge in a SINGLE viewport (nesting
+# a second clip viewport would reset, not intersect, the wedge clip).
+#' @noRd
+#' @keywords internal
+.polar_pattern_dst <- function(pattern, fill_col, clip = "on") {
+  if (inherits(pattern, "ggpointless_pattern")) {
+    .hatch_materialize(
+      .hatch_grob(
+        xc = 0.5, yc = 0.5, w = 1, h = 1, units = "npc",
+        colour     = fill_col,
+        angle      = pattern$angle,
+        crossed    = identical(pattern$style, "crossed"),
+        spacing_mm = as.numeric(grid::convertUnit(pattern$spacing, "mm"))
+      ),
+      clip = clip
+    )
+  } else if (grid::is.grob(pattern)) {
+    .clip_pattern_grob(pattern, 0.5, 0.5, 1, 1, fill_col, units = "npc",
+                       clip = clip)
+  } else {
+    tile <- grid::rectGrob(gp = grid::gpar(
+      fill = .recolour_pattern(pattern, fill_col), col = NA
+    ))
+    if (identical(clip, "on")) {
+      tile
+    } else {
+      grid::gTree(children = grid::gList(tile),
+                  vp = grid::viewport(clip = clip))
+    }
+  }
+}
+
+# Radially-faded pattern ring: pattern x radial alpha mask via dest.in,
+# clipped to the wedge. Needs clipping paths, a radial gradient, AND Porter-Duff
+# compositing.
+#' @noRd
+#' @keywords internal
+.polar_pattern_ring <- function(pattern, ring) {
+  dst <- .polar_pattern_dst(pattern, ring$fill_col)
+
+  # Radial alpha mask (black; only its alpha channel is used by dest.in).
+  alpha_mask <- grid::rectGrob(gp = grid::gpar(
+    fill = grid::radialGradient(
+      colours = ggplot2::alpha("black", c(ring$a_inner, ring$a_outer)),
+      cx1 = 0.5, cy1 = 0.5, r1 = ring$r_in,
+      cx2 = 0.5, cy2 = 0.5, r2 = ring$r_out
+    ),
+    col = NA
+  ))
+
+  comp <- grid::groupGrob(alpha_mask, op = "dest.in", dst = dst)
+  clipped <- grid::gTree(
+    children = grid::gList(comp),
+    vp = grid::viewport(clip = ring$poly_grob)
+  )
+  .polar_ring_with_outline(clipped, ring$poly_grob)
+}
+
+# Flat (uniform-alpha) pattern ring for the angular case: the fade can't be
+# expressed (no conic gradient), but the pattern is mm-space, so just clip it to
+# the wedge at a single alpha. Needs ONLY clipping paths -- no radial gradient,
+# no compositing -- so it renders on far more devices (svglite, RStudioGD, ...)
+# than the radial path.
+#' @noRd
+#' @keywords internal
+.polar_pattern_ring_flat <- function(pattern, ring) {
+  # The wedge clip must live on an OUTER viewport in panel coordinates -- a clip
+  # path set on the pattern's own mm-scaled viewport would resolve in the wrong
+  # coordinate system. So build the pattern's inner viewport with
+  # `clip = "inherit"` (it keeps the enclosing wedge clip instead of resetting
+  # it to its own rectangle), then wrap it in the wedge-clipping viewport.
+  dst <- .polar_pattern_dst(pattern, ring$fill_col, clip = "inherit")
+  fill_grob <- grid::gTree(
+    children = grid::gList(dst),
+    vp = grid::viewport(clip = ring$poly_grob),
+    gp = grid::gpar(alpha = ring$a_outer)  # a_inner == a_outer in the flat case
+  )
+  .polar_ring_with_outline(fill_grob, ring$poly_grob)
+}
+
+# Draw the wedge border on top of a clipped polar fill. The fill is clipped to
+# the wedge polygon, which also clips its own stroke to half-width; drawing the
+# polygon outline separately (unclipped, fill = NA) restores a crisp border.
+# A no-op when `colour` is NA (the default), so default-colour plots are
+# byte-identical to the outline-free rendering.
+#' @noRd
+#' @keywords internal
+.polar_ring_with_outline <- function(fill_grob, poly_grob) {
+  col <- poly_grob$gp$col
+  if (is.null(col) || all(is.na(col))) {
+    return(fill_grob)
+  }
+  outline <- poly_grob
+  outline$gp$fill <- NA
+  grid::gTree(children = grid::gList(fill_grob, outline))
+}
+
+# Polar renders require clipping paths (to shape the fill to the annular
+# segment) AND a radialGradient. Pattern fills additionally need Porter-Duff
+# "dest.in" compositing. Devices missing the required capabilities fall back to
+# flat semi-transparent annular segments.
+#
+# `pattern` + `rings` are non-NULL only when a pattern fill is requested; each
+# ring's grob is assembled here (not at build time) so hatch materialisation
+# sees the panel's physical size.
+#' @noRd
+#' @keywords internal
+.rect_fade_polar_grob <- function(gradient_glist, flat_glist,
+                                  pattern = NULL, rings = NULL,
+                                  pattern_radial = TRUE) {
   grid::gTree(
     gradient_glist = gradient_glist,
     flat_glist = flat_glist,
+    pattern = pattern,
+    rings = rings,
+    pattern_radial = pattern_radial,
     cl = "rect_fade_polar_grob"
   )
 }
@@ -199,17 +408,39 @@ makeContent.rect_fade_grob <- function(x) {
 #' @export
 makeContent.rect_fade_polar_grob <- function(x) {
   dev_name <- names(grDevices::dev.cur())
-  can_gradient <- !dev_name %in% c("pdf", "postscript") &&
-    tryCatch(
-      {
-        caps <- grDevices::dev.capabilities()
-        isTRUE(caps[["clippingPaths"]]) &&
-          "RadialGradient" %in% caps[["patterns"]]
-      },
-      error = \(e) FALSE
-    )
+  caps <- tryCatch(grDevices::dev.capabilities(), error = \(e) list())
+  base_ok <- !dev_name %in% c("pdf", "postscript") &&
+    isTRUE(caps[["clippingPaths"]]) &&
+    "RadialGradient" %in% caps[["patterns"]]
 
-  if (can_gradient) {
+  if (!is.null(x$pattern)) {
+    clip_ok <- !dev_name %in% c("pdf", "postscript") &&
+      isTRUE(caps[["clippingPaths"]])
+
+    if (isTRUE(x$pattern_radial)) {
+      # Radial fade: needs clip + radial gradient + dest.in compositing.
+      ok  <- base_ok && .has_compositing_op("dest.in", caps)
+      fun <- .polar_pattern_ring
+    } else {
+      # Angular case: uniform alpha, so only clipping is needed (the pattern is
+      # mm-space; the fade is dropped). Renders on far more devices.
+      ok  <- clip_ok
+      fun <- .polar_pattern_ring_flat
+    }
+
+    if (ok) {
+      grobs <- do.call(grid::gList, lapply(seq_along(x$rings), function(i) {
+        ring <- x$rings[[i]]
+        if (is.null(ring)) x$flat_glist[[i]] else fun(x$pattern, ring)
+      }))
+    } else {
+      .queue_rect_col_polar_no_clip_pattern("geom_rect_fade")
+      grobs <- x$flat_glist
+    }
+    return(grid::setChildren(x, grobs))
+  }
+
+  if (base_ok) {
     grobs <- x$gradient_glist
   } else {
     .queue_rect_col_polar_no_clip_pattern("geom_rect_fade")
@@ -234,13 +465,16 @@ makeContent.rect_fade_polar_grob <- function(x) {
   alpha_fade_to,
   fade_direction,
   lineend,
-  linejoin
+  linejoin,
+  pattern = NULL,
+  radial = TRUE
 ) {
   theta <- coord$theta %||% "x"
   n <- nrow(data)
 
   gradient_list <- vector("list", n)
   flat_list <- vector("list", n)
+  rings <- if (is.null(pattern)) NULL else vector("list", n)
 
   for (i in seq_len(n)) {
     a_start <- data$alpha[i]
@@ -253,7 +487,15 @@ makeContent.rect_fade_polar_grob <- function(x) {
     # means ymax (outer ring) is opaque and ymin (inner ring) fades.
     # Under theta = "y", x is the radial axis. fade_direction = "horizontal"
     # means xmin (inner ring) is opaque and xmax (outer ring) fades.
-    if (identical(theta, "x")) {
+    #
+    # `radial = FALSE` is the angular case: the fade would run around theta,
+    # which grid can't express (no conic gradient). We still draw a `pattern`
+    # here (it lives in mm space, independent of the fade), just at a uniform
+    # alpha -- equal inner/outer stops make the radial mask flat.
+    if (!radial) {
+      a_inner <- a_start
+      a_outer <- a_start
+    } else if (identical(theta, "x")) {
       a_inner <- alpha_fade_to
       a_outer <- a_start
     } else {
@@ -333,17 +575,30 @@ makeContent.rect_fade_polar_grob <- function(x) {
 
     clip_vp <- grid::viewport(clip = poly_grob)
 
-    gradient_list[[i]] <- grid::gTree(
-      children = grid::gList(gradient_rect),
-      vp = clip_vp,
-      name = paste0("rect_fade_polar_ring_", i)
+    gradient_list[[i]] <- .polar_ring_with_outline(
+      grid::gTree(
+        children = grid::gList(gradient_rect),
+        vp = clip_vp,
+        name = paste0("rect_fade_polar_ring_", i)
+      ),
+      poly_grob
     )
     flat_list[[i]] <- flat_grob
+
+    if (!is.null(pattern)) {
+      rings[[i]] <- list(
+        poly_grob = poly_grob, r_in = r_in, r_out = r_out,
+        a_inner = a_inner, a_outer = a_outer, fill_col = fill_col
+      )
+    }
   }
 
   .rect_fade_polar_grob(
     do.call(grid::gList, gradient_list),
-    do.call(grid::gList, flat_list)
+    do.call(grid::gList, flat_list),
+    pattern = pattern,
+    rings = rings,
+    pattern_radial = radial
   )
 }
 
@@ -360,6 +615,15 @@ makeContent.rect_fade_polar_grob <- function(x) {
   fade_dir   <- params$fade_direction %||% "vertical"
   pattern    <- params$pattern
 
+  # Cap the key's corner radius (see .draw_key_col_fade): a large bar radius on
+  # the tiny key cell would round it into a near-circle that cuts across the
+  # pattern. Keep the outline a minimal rounded-rect frame around the pattern.
+  key_radius <- if (as.numeric(grid::convertUnit(radius, "pt")) > 0) {
+    grid::unit(min(as.numeric(grid::convertUnit(radius, "pt")), 2.5), "pt")
+  } else {
+    radius
+  }
+
   if (identical(fade_dir, "horizontal")) {
     gx1 <- 0; gy1 <- 0.5; gx2 <- 1; gy2 <- 0.5
     # left (x=0) opaque, right (x=1) transparent
@@ -371,11 +635,17 @@ makeContent.rect_fade_polar_grob <- function(x) {
   }
 
   if (!is.null(pattern)) {
-    dst <- if (is.character(pattern)) {
-      # "stripe" preset: clipped diagonal hatch filling the key cell.
-      .stripe_hatch_grob(
+    dst <- if (inherits(pattern, "ggpointless_pattern")) {
+      # hatch() spec: clipped line family filling the key cell.
+      .hatch_grob(
         xc = 0.5, yc = 0.5, w = 1, h = 1,
-        colour = fill_colour, units = "npc"
+        colour     = pattern$colour %||% fill_colour,
+        angle      = pattern$angle,
+        crossed    = identical(pattern$style, "crossed"),
+        spacing_mm = as.numeric(grid::convertUnit(pattern$spacing, "mm")),
+        linewidth  = 0.5,
+        linetype   = 1L,
+        units = "npc"
       )
     } else if (grid::is.grob(pattern)) {
       .clip_pattern_grob(
@@ -385,7 +655,7 @@ makeContent.rect_fade_polar_grob <- function(x) {
     } else {
       recoloured <- .recolour_pattern(pattern, fill_colour)
       grid::roundrectGrob(
-        r = radius,
+        r = key_radius,
         gp = ggplot2::gg_par(fill = recoloured, col = NA)
       )
     }
@@ -405,19 +675,19 @@ makeContent.rect_fade_polar_grob <- function(x) {
       ggplot2::zeroGrob()
     } else {
       grid::roundrectGrob(
-        r = radius,
+        r = key_radius,
         gp = ggplot2::gg_par(col = data$colour, fill = NA)
       )
     }
     flat <- grid::roundrectGrob(
-      r = radius,
+      r = key_radius,
       gp = ggplot2::gg_par(
         fill = ggplot2::alpha(fill_colour, (a_start + a_end) / 2),
         col  = data$colour %||% NA
       )
     )
     return(.rect_fade_pattern_grob(
-      grid::gList(dst),
+      list(dst),
       grid::gList(alpha_ref),
       grid::gList(outline),
       grid::gList(flat)
@@ -500,29 +770,31 @@ GeomRectFade <- ggplot2::ggproto(
     params$radius <- .validate_radius(params$radius)
 
     pat <- params$pattern
-    if (!is.null(pat)) {
-      if (is.character(pat)) {
-        # Validate the preset name (kept as a string; the clipped-hatch
-        # grob is built per-rect in draw_panel). arg_match0 gives a helpful
-        # "did you mean" error.
-        params$pattern <- rlang::arg_match0(
-          pat,
-          values = .fade_pattern_presets,
-          arg_nm = "pattern"
-        )
-      } else if (
-        !inherits(pat, "GridTilingPattern") && !grid::is.grob(pat)
-      ) {
-        cli::cli_abort(
-          c(
-            "{.arg pattern} must be {.val stripe}, a {.cls GridTilingPattern} \\
-             from {.fn grid::pattern}, or a {.cls grob} to clip to each \\
-             rectangle.",
-            "x" = "Got {.obj_type_friendly pat}."
-          ),
-          class = "ggpointless_rect_fade_pattern_type"
-        )
-      }
+    # String shortcuts: `pattern = "crossed"` is sugar for
+    # `hatch(style = "crossed")`, mirroring `position = "dodge"` vs
+    # `position_dodge()`. Coerce before the type check below; an unknown string
+    # aborts inside `.hatch_from_string()` with a "did you mean" hint.
+    if (is.character(pat)) {
+      pat <- .hatch_from_string(pat)
+      params$pattern <- pat
+    }
+    if (
+      !is.null(pat) &&
+        !inherits(pat, "ggpointless_pattern") &&
+        !inherits(pat, "GridTilingPattern") &&
+        !grid::is.grob(pat)
+    ) {
+      presets <- .hatch_presets  # local: cli reads a leading-dot name as a span
+      cli::cli_abort(
+        c(
+          "{.arg pattern} must be a {.fn hatch} specification, a preset \\
+           string ({.or {.val {presets}}}), a {.cls grob} to clip to \\
+           each rectangle, or a {.cls GridTilingPattern} from \\
+           {.fn grid::pattern}.",
+          "x" = "Got {.obj_type_friendly {pat}}."
+        ),
+        class = "ggpointless_rect_fade_pattern_type"
+      )
     }
 
     params
@@ -556,7 +828,7 @@ GeomRectFade <- ggplot2::ggproto(
         return(ggplot2::zeroGrob())
       }
 
-      if (.is_uniform_alpha(data, alpha_fade_to)) {
+      if (.is_uniform_alpha(data, alpha_fade_to) && is.null(pattern)) {
         return(ggplot2::ggproto_parent(ggplot2::GeomRect, self)$draw_panel(
           data,
           panel_params,
@@ -574,13 +846,40 @@ GeomRectFade <- ggplot2::ggproto(
           alpha_fade_to = alpha_fade_to,
           fade_direction = fade_direction,
           lineend = lineend,
-          linejoin = linejoin
+          linejoin = linejoin,
+          pattern = pattern,
+          radial = TRUE
         ))
       }
 
       # Angular fade (theta-aligned gradient): grid has no conic gradient
-      # primitive, so we fall back to a flat geom_rect render and emit an
-      # informational message.
+      # primitive, so the *fade* cannot be expressed. A `pattern` fill, however,
+      # lives in mm space and is independent of the fade -- so still draw it,
+      # clipped to each wedge at a uniform alpha, rather than dropping it.
+      if (!is.null(pattern)) {
+        cli::cli_inform(
+          c(
+            "i" = "{.fn geom_rect_fade}: angular fade is not yet supported in \\
+                   {.pkg grid}; drawing the {.arg pattern} without a fade.",
+            "i" = "For a radial fade use {.code fade_direction = \"vertical\"} \\
+                   with {.code theta = \"x\"} or {.code fade_direction = \\
+                   \"horizontal\"} with {.code theta = \"y\"}."
+          )
+        )
+        return(.draw_panel_rect_fade_polar(
+          data,
+          panel_params,
+          coord,
+          alpha_fade_to = alpha_fade_to,
+          fade_direction = fade_direction,
+          lineend = lineend,
+          linejoin = linejoin,
+          pattern = pattern,
+          radial = FALSE
+        ))
+      }
+
+      # No pattern and no expressible fade -> plain geom_rect.
       cli::cli_inform(
         c(
           "i" = "{.fn geom_rect_fade}: angular fade is not yet supported in \\
@@ -603,7 +902,10 @@ GeomRectFade <- ggplot2::ggproto(
       )
     }
 
-    if (!coord$is_linear()) {
+    # `coord_transform()` keeps rectangles axis-aligned (separable per axis),
+    # so the gradient/pattern path handles it; only other non-linear coords
+    # fall back to the plain parent. See `geom_col_fade()` for the rationale.
+    if (!coord$is_linear() && !inherits(coord, "CoordTransform")) {
       .queue_rounded_corner_fallback("geom_rect_fade")
       return(
         ggplot2::ggproto_parent(ggplot2::GeomRect, self)$draw_panel(
@@ -672,12 +974,18 @@ GeomRectFade <- ggplot2::ggproto(
 
     # For the pattern path we need four lists; for the gradient path two.
     use_pattern  <- !is.null(pattern)
+    is_hatch     <- inherits(pattern, "ggpointless_pattern")
     gradient_list <- vector("list", n)
     flat_list     <- vector("list", n)
     if (use_pattern) {
       dst_list      <- vector("list", n)
       alpha_ref_list <- vector("list", n)
       outline_list  <- vector("list", n)
+    }
+    if (is_hatch) {
+      # Resolve hatch spacing (mm) and per-row colour once for the layer.
+      hatch_spacing_mm <- as.numeric(grid::convertUnit(pattern$spacing, "mm"))
+      hatch_cols <- .hatch_resolve_colour(coords, NULL)
     }
 
     for (i in seq_len(n)) {
@@ -741,15 +1049,19 @@ GeomRectFade <- ggplot2::ggproto(
         # alpha_ref: plain rectGrob carrying the same gradient as the
         # solid-fill path, but in black (only alpha channel is used by
         # dest.in).
-        if (is.character(pattern)) {
-          # "stripe" preset: clipped diagonal hatch in the fill colour.
-          dst_list[[i]] <- .stripe_hatch_grob(
+        if (is_hatch) {
+          # hatch() spec: clipped line family at a true visual angle.
+          dst_list[[i]] <- .hatch_grob(
             xc = (x_vis_lo + x_vis_hi) / 2,
             yc = (y_vis_lo + y_vis_hi) / 2,
             w = x_vis_hi - x_vis_lo,
             h = y_vis_hi - y_vis_lo,
-            colour = fill_col,
-            lwd = coords$linewidth[i],
+            colour     = hatch_cols[i],
+            angle      = pattern$angle,
+            crossed    = identical(pattern$style, "crossed"),
+            spacing_mm = hatch_spacing_mm,
+            linewidth  = 0.5,
+            linetype   = 1L,
             units = "native"
           )
         } else if (grid::is.grob(pattern)) {
@@ -776,9 +1088,14 @@ GeomRectFade <- ggplot2::ggproto(
               list())
           )
         }
-        alpha_ref_list[[i]] <- grid::rectGrob(
+        # The alpha mask must be a roundrect with the SAME radius as the
+        # outline: dest.in clips the (sharp) hatch to this mask's shape, so a
+        # sharp mask would let the pattern spill past rounded corners. Radius
+        # is clamped to each rect's displayable max in makeContent, matching
+        # the outline exactly.
+        alpha_ref_list[[i]] <- grid::roundrectGrob(
           x = x_pos, y = y_pos, width = w, height = h,
-          just = c("left", "top"),
+          just = c("left", "top"), r = radius,
           gp = grid::gpar(
             fill = grid::linearGradient(
               colours = c(
@@ -845,7 +1162,7 @@ GeomRectFade <- ggplot2::ggproto(
 
     if (use_pattern) {
       .rect_fade_pattern_grob(
-        do.call(grid::gList, dst_list),
+        dst_list,
         do.call(grid::gList, alpha_ref_list),
         do.call(grid::gList, outline_list),
         do.call(grid::gList, flat_list)
@@ -892,22 +1209,31 @@ GeomRectFade <- ggplot2::ggproto(
 #' @param pattern An optional textured fill, applied *underneath* the alpha
 #'   fade. One of:
 #'   \describe{
-#'     \item{`"stripe"`}{The built-in preset: continuous diagonal hatching
-#'       (see *Patterns* below).}
-#'     \item{a [grid::grob()]}{Drawn once and clipped to each rectangle. Best
-#'       for continuous custom hatching (e.g. wavy lines built in `"npc"`
-#'       units), which `grid::pattern()` tiling cannot render without breaking
-#'       lines into dashes. See the vignette for a worked "wave" example.}
+#'     \item{a preset string}{`"stripe"` (diagonal, the default), `"crossed"`
+#'       (diagonal crosshatch), `"vertical"`, `"horizontal"`, or `"grid"`
+#'       (vertical + horizontal). Each is shorthand for the matching [hatch()]
+#'       call -- for example `"crossed"` is `hatch(style = "crossed")` and
+#'       `"grid"` is `hatch(90, style = "crossed")` -- the same way
+#'       `position = "dodge"` stands in for [ggplot2::position_dodge()]. Reach
+#'       for [hatch()] directly to tune `angle` or `spacing`.}
+#'     \item{a [hatch()] specification}{Line hatching at any angle, optionally
+#'       crossed -- diagonal stripes, crosshatch, vertical stripes, grids. The
+#'       recommended way to add a textured fill.}
+#'     \item{a [grid::grob()]}{Drawn once and clipped to each rectangle. For
+#'       continuous custom hatching (e.g. wavy lines built in `"npc"` units),
+#'       which `grid::pattern()` tiling cannot render without breaking lines
+#'       into dashes. See the vignette for a worked "wave" example.}
 #'     \item{a [grid::pattern()] object}{A tiled pattern -- best for
 #'       self-contained motifs (dots, shapes). Tiling renders continuous
-#'       diagonal/wavy lines as dashes, so prefer a grob for those.}
+#'       diagonal/wavy lines as dashes, so prefer [hatch()] or a grob for those.}
 #'   }
-#'   In every case the texture's stroke colour (`gp$col`) is automatically
-#'   recoloured to match the `fill` aesthetic. The alpha fade is applied on top
-#'   via Porter-Duff `"dest.in"` compositing; devices without compositing
-#'   support fall back to a flat semi-transparent fill. Patterns are not
-#'   supported under polar coordinates. `NULL` (default) uses the plain
-#'   gradient fill.
+#'   All pattern types -- [hatch()] and user grobs -- are
+#'   recoloured to the `fill` aesthetic of each rectangle. The alpha
+#'   fade is applied on top via Porter-Duff `"dest.in"` compositing; devices
+#'   without compositing support fall back to a flat semi-transparent fill.
+#'   Patterns also work under polar coordinates (clipped to each annular
+#'   segment); see the *Polar coordinates* section. `NULL` (default) uses the
+#'   plain gradient fill.
 #' @param stat Use to override the default connection between
 #'   `geom_rect_fade()` and `stat_identity()`.
 #'
@@ -926,36 +1252,37 @@ GeomRectFade <- ggplot2::ggproto(
 #'
 #' Any other combination (for example `theta = "x"` with
 #' `fade_direction = "horizontal"`) would require an angular / conic gradient,
-#' which `grid` does not yet expose. Such plots fall back to plain
-#' [ggplot2::geom_rect()] rendering and emit a one-time warning.
-#' Rounded corners (`radius`) are ignored in polar coordinates since arcs do
-#' not carry corner geometry.
+#' which `grid` does not yet expose, so the *fade* is dropped (with a one-time
+#' message). A `pattern` fill still renders -- it lives in millimetre space,
+#' independent of the fade -- clipped to each annular segment at a uniform
+#' alpha. Without a pattern, such plots fall back to plain
+#' [ggplot2::geom_rect()]. Rounded corners (`radius`) are ignored in polar
+#' coordinates since arcs do not carry corner geometry.
 #'
 #' @section Patterns:
-#' One built-in preset is available: `pattern = "stripe"` draws continuous
-#' diagonal hatching, recoloured to the `fill` aesthetic and faded with the
-#' alpha gradient. The `"stripe"` name is borrowed, with thanks, from the
-#' \pkg{ggpattern} package by Trevor L. Davis
-#' (\url{https://trevorldavis.com/R/ggpattern/}); the implementation here is an
-#' independent \pkg{grid} one.
+#' [hatch()] builds line-hatch fills -- diagonal stripes (`hatch()`), crosshatch
+#' (`hatch(style = "crossed")`), vertical stripes (`hatch(90)`), grids
+#' (`hatch(0, style = "crossed")`) -- at a true visual angle, recoloured to the
+#' `fill` aesthetic and faded with the alpha gradient.
 #'
 #' Unlike `grid::pattern()` tiling -- which renders diagonal or wavy lines as
-#' disconnected dashes, because each tile is clipped at its own bounds -- the
-#' `"stripe"` preset draws real parallel lines clipped to the rectangle, so the
-#' diagonals stay continuous at a true visual angle.
+#' disconnected dashes, because each tile is clipped at its own bounds --
+#' [hatch()] draws real parallel lines clipped to the rectangle, so they stay
+#' continuous.
 #'
-#' For your own *continuous* hatching (e.g. wavy lines), build a [grid::grob()]
-#' in `"npc"` units and pass it as `pattern`: it is drawn once and clipped to
-#' each rectangle, preserving line continuity. For self-contained *motifs*
-#' (dots, small shapes) pass a [grid::pattern()] object, which tiles cleanly.
-#' In both cases the stroke colour is recoloured to the `fill` aesthetic. The
-#' article `vignette("ggpointless")` walks through building a wavy-line grob and
-#' injecting it. For a far richer set of patterns and controls, use
-#' \pkg{ggpattern} directly.
+#' For your own *continuous* hatching beyond straight lines (e.g. wavy lines),
+#' build a [grid::grob()] in `"npc"` units and pass it as `pattern`: it is drawn
+#' once and clipped to each rectangle, preserving line continuity. For
+#' self-contained *motifs* (dots, small shapes) pass a [grid::pattern()] object,
+#' which tiles cleanly; its stroke colour is recoloured to the `fill` aesthetic.
+#' The article `vignette("ggpointless")` walks through building a wavy-line grob
+#' and injecting it. For a far richer set of patterns and controls, use the
+#' \pkg{ggpattern} package by Trevor L. Davis
+#' (\url{https://trevorldavis.com/R/ggpattern/}).
 #'
-#' @seealso [ggplot2::geom_rect()] for plain rectangles,
-#'   [geom_col_fade()] for bar charts with per-bar gradient scaling and
-#'   orientation support. The \pkg{ggpattern} package
+#' @seealso [hatch()] for the line-hatch helper. [ggplot2::geom_rect()] for
+#'   plain rectangles, [geom_col_fade()] for bar charts with per-bar gradient
+#'   scaling and orientation support. The \pkg{ggpattern} package
 #'   (\url{https://trevorldavis.com/R/ggpattern/}) for comprehensive pattern
 #'   fills.
 #'
@@ -969,22 +1296,49 @@ GeomRectFade <- ggplot2::ggproto(
 #' @examples
 #' library(ggplot2)
 #'
-#' # With geom_rect_fade() you can draw arbitrary rectangles
-#' ggplot(head(economics, 25), aes(date, unemploy)) +
+#' # Highlight a time period with a fading rectangle
+#' df_rect <- data.frame(
+#'   xmin = as.Date("1968-03-01"),
+#'   xmax = as.Date("1969-07-01"),
+#'   ymin = -Inf,
+#'   ymax = 2800
+#' )
+#'
+#' p <- ggplot(head(economics, 25), aes(date, unemploy)) +
+#'   stat_fourier(geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2) +
+#'   geom_point(size = 3, alpha = 0.2) +
+#'   theme_minimal()
+#'
+#' p +
 #'   geom_rect_fade(
-#'     data = data.frame(
-#'       xmin = as.Date("1968-07-01"),
-#'       xmax = as.Date("1969-07-01"),
-#'       ymin = -Inf, ymax = 2800
-#'     ),
+#'     data = df_rect,
 #'     inherit.aes = FALSE,
 #'     alpha = 0,
 #'     alpha_fade_to = 0.3,
 #'     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
-#'   ) +
-#'   stat_fourier(geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2) +
-#'   geom_point(size = 3, alpha = 0.2) +
-#'   theme_minimal()
+#'   )
+#'
+#' # Fill with a fading pattern using the string shortcut
+#' p +
+#'   geom_rect_fade(
+#'     data = df_rect,
+#'     inherit.aes = FALSE,
+#'     alpha = 0,
+#'     alpha_fade_to = 0.3,
+#'     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+#'     pattern = "crossed"
+#'   )
+#'
+#' # Customize the pattern further by calling hatch() directly
+#' p +
+#'   geom_rect_fade(
+#'     data = df_rect,
+#'     inherit.aes = FALSE,
+#'     alpha = 0,
+#'     alpha_fade_to = 0.3,
+#'     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+#'     pattern = hatch(angle = 60, style = "parallel", spacing = unit(1, "mm"))
+#'   )
 #'
 geom_rect_fade <- make_constructor(
   GeomRectFade,
@@ -995,3 +1349,108 @@ geom_rect_fade <- make_constructor(
   radius = grid::unit(0, "pt"),
   pattern = NULL
 )
+
+
+#' Hatch pattern for `geom_rect_fade()`
+#'
+#' @description
+#' `hatch()` builds a line-hatch specification to pass to the `pattern` argument
+#' of [geom_rect_fade()]. The lines are drawn at a true visual angle, clipped to
+#' each rectangle, and faded along with the alpha gradient. A single helper
+#' covers the common CAD-style fills:
+#' \describe{
+#'   \item{diagonal stripe}{`hatch()` (the default, 45 degrees)}
+#'   \item{diagonal crosshatch}{`hatch(style = "crossed")`}
+#'   \item{vertical stripe}{`hatch(90)`}
+#'   \item{horizontal stripe}{`hatch(0)`}
+#'   \item{square grid}{`hatch(0, style = "crossed")`}
+#' }
+#'
+#' @details
+#' Line spacing is a physical distance (millimetres), so it stays constant when
+#' the plot is resized rather than scaling with the panel.
+#'
+#' Hatch line colour always follows the `fill` aesthetic -- a fixed colour
+#' independent of the fill would break the mapping. Line weight and dash
+#' pattern are fixed at sensible defaults (`linewidth = 0.5`, solid lines)
+#' and are not exposed as parameters for the same reason.
+#' The hatch transparency is owned by the fade (`alpha` / `alpha_fade_to` on
+#' the geom), so `hatch()` has no `alpha` argument.
+#'
+#' @param angle Line angle in degrees (default `45`).
+#' @param style `"parallel"` (default) draws a single family of parallel lines;
+#'   `"crossed"` overlays a second family at `angle + 90` (a crosshatch when
+#'   diagonal, a grid when axis-aligned).
+#' @param spacing Distance between adjacent lines, as a [grid::unit()]
+#'   (default `unit(2, "mm")`). A bare number is treated as millimetres.
+#'
+#' @return A `ggpointless_pattern` object to pass to the `pattern` argument of
+#'   [geom_rect_fade()].
+#' @seealso [geom_rect_fade()]
+#' @concept fading gradient
+#' @export
+#' @examples
+#' library(ggplot2)
+#'
+#' df <- data.frame(xmin = 1, xmax = 5, ymin = 0, ymax = 4)
+#' base <- ggplot(df) +
+#'   aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+#'
+#' # Diagonal stripe (default), faded toward the baseline
+#' base + geom_rect_fade(fill = "tomato", alpha = 0.9, pattern = hatch())
+#'
+#' # Crosshatch at a custom angle
+#' base + geom_rect_fade(
+#'   fill = "steelblue", pattern = hatch(30, style = "crossed")
+#' )
+#'
+#' # Square grid with wider spacing
+#' base + geom_rect_fade(
+#'   pattern = hatch(0, style = "crossed", spacing = unit(4, "mm"))
+#' )
+hatch <- function(angle = 45, style = c("parallel", "crossed"),
+                  spacing = grid::unit(2, "mm")) {
+  if (!is.numeric(angle) || length(angle) != 1L) {
+    cli::cli_abort("{.arg angle} must be a single number (degrees).")
+  }
+  style <- rlang::arg_match(style)
+  if (is.numeric(spacing)) {
+    spacing <- grid::unit(spacing, "mm")
+  }
+  if (!grid::is.unit(spacing)) {
+    cli::cli_abort(
+      "{.arg spacing} must be a number (millimetres) or a {.cls unit}."
+    )
+  }
+  structure(
+    list(
+      angle = angle, style = style,
+      spacing = spacing
+    ),
+    class = "ggpointless_pattern"
+  )
+}
+
+# Preset string vocabulary for `geom_rect_fade(pattern = ...)`. Each name is a
+# shorthand for the matching `hatch()` call -- the `position = "dodge"` vs
+# `position_dodge()` idiom. `hatch()` remains the full-control constructor for
+# tuning `angle` / `spacing`.
+#' @noRd
+#' @keywords internal
+.hatch_presets <- c("stripe", "crossed", "vertical", "horizontal", "grid")
+
+# Coerce a preset string to its `hatch()` specification. Unknown strings abort
+# via `arg_match0()` with a "did you mean" hint.
+#' @noRd
+#' @keywords internal
+.hatch_from_string <- function(x, arg = "pattern") {
+  preset <- rlang::arg_match0(x, .hatch_presets, arg_nm = arg)
+  switch(
+    preset,
+    stripe     = hatch(),                       # diagonal, 45 deg, parallel
+    crossed    = hatch(style = "crossed"),      # diagonal crosshatch
+    vertical   = hatch(90),                     # vertical stripe
+    horizontal = hatch(0),                      # horizontal stripe
+    grid       = hatch(90, style = "crossed")   # vertical + horizontal grid
+  )
+}

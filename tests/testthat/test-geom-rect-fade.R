@@ -287,18 +287,39 @@ test_that("alpha aes scales peak alpha proportionally", {
 # Non-linear coord fallback
 # -----------------------------------------------------------------------
 
-test_that("coord_transform (non-polar, non-linear) falls back to GeomRect", {
-  # Non-polar non-linear coords (e.g. coord_transform with a log transform)
-  # can't express a linear gradient through a transformed viewport, so we
-  # drop back to plain geom_rect — neither a rect_fade_grob nor a polar one.
+test_that("coord_transform keeps the fade (rects stay axis-aligned)", {
+  # `coord_transform()` is separable per axis, so rectangles stay axis-aligned
+  # -- only their edges move. The gradient path handles them (reading
+  # post-transform corners) rather than falling back to plain geom_rect, which
+  # would drop the fade.
   p <- ggplot(mapping = aes(x, y)) +
     geom_rect_fade(
       data = df_tile_single, aes(width = width, height = height)
     ) +
     coord_transform(x = "log10")
   grob <- suppressMessages(build_rect_grob(p))
-  expect_false(inherits(grob, "rect_fade_grob"))
-  expect_false(inherits(grob, "rect_fade_polar_grob"))
+  expect_s3_class(grob, "rect_fade_grob")
+})
+
+test_that("coord_transform keeps the pattern fill", {
+  # Regression: a `pattern` fill must survive coord_transform too -- the
+  # fallback used to drop both the fade and the hatch.
+  p <- ggplot(mapping = aes(x, y)) +
+    geom_rect_fade(
+      data = df_tile_single, aes(width = width, height = height),
+      pattern = hatch()
+    ) +
+    coord_transform(x = "log10")
+  b     <- ggplot_build(p)
+  ld    <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  grob  <- suppressMessages(GeomRectFade$draw_panel(
+    ld, pp, coord,
+    alpha_fade_to = 0, fade_direction = "vertical",
+    radius = grid::unit(0, "pt"), pattern = hatch()
+  ))
+  expect_s3_class(grob, "rect_fade_pattern_grob")
 })
 
 test_that("coord_polar default (theta='x', vertical) routes to polar grob", {
@@ -337,6 +358,82 @@ test_that("coord_polar theta='y' + horizontal routes to polar grob", {
   expect_s3_class(grob, "rect_fade_polar_grob")
 })
 
+# --- Polar + pattern fill -----------------------------------------------------
+# As in the col-fade tests, svglite (vdiffr's renderer) lacks "dest.in"
+# compositing, so an image snapshot would capture the flat fallback rather than
+# the hatch. Assert the grob structure under mocked device capabilities.
+
+build_rect_polar_pattern_grob <- function(p, pattern) {
+  b     <- ggplot_build(p)
+  ldata <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  gp    <- p$layers[[1]]$geom_params
+  GeomRectFade$draw_panel(
+    ldata, pp, coord,
+    alpha_fade_to  = gp$alpha_fade_to  %||% 0,
+    fade_direction = gp$fade_direction %||% "vertical",
+    radius         = gp$radius         %||% grid::unit(0, "pt"),
+    pattern        = pattern
+  )
+}
+
+test_that("polar rect_fade pattern composites hatch rings on a compositing device", {
+  p <- ggplot(mapping = aes(x, y)) +
+    geom_rect_fade(
+      data = df_tile_single, aes(width = width, height = height),
+      pattern = hatch()
+    ) +
+    coord_polar()
+  grob <- build_rect_polar_pattern_grob(p, hatch())
+  expect_s3_class(grob, "rect_fade_polar_grob")
+  expect_s3_class(grob$pattern, "ggpointless_pattern")
+
+  local_mocked_bindings(dev.cur = \(...) c(png = 2L), .package = "grDevices")
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = c("clear", "source", "over", "dest.in")
+    ),
+    .package = "grDevices"
+  )
+
+  res <- grid::makeContent(grob)
+  is_polygon <- vapply(res$children, inherits, logical(1), "polygon")
+  expect_false(any(is_polygon))
+  has_clip <- vapply(
+    res$children,
+    \(ch) !is.null(ch$vp) && !is.null(ch$vp$clip),
+    logical(1)
+  )
+  expect_true(all(has_clip))
+})
+
+test_that("polar rect_fade pattern falls back to flat without compositing", {
+  p <- ggplot(mapping = aes(x, y)) +
+    geom_rect_fade(
+      data = df_tile_single, aes(width = width, height = height),
+      pattern = hatch()
+    ) +
+    coord_polar()
+  grob <- build_rect_polar_pattern_grob(p, hatch())
+
+  local_mocked_bindings(dev.cur = \(...) c(png = 2L), .package = "grDevices")
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = character(0)
+    ),
+    .package = "grDevices"
+  )
+
+  res <- suppressMessages(grid::makeContent(grob))
+  is_polygon <- vapply(res$children, inherits, logical(1), "polygon")
+  expect_true(all(is_polygon))
+})
+
 test_that("coord_polar with angular combo informs and falls back to GeomRect", {
   # theta = "x" + fade_direction = "horizontal" would require a conic /
   # angular gradient, which grid does not support. Emit an informational
@@ -354,6 +451,32 @@ test_that("coord_polar with angular combo informs and falls back to GeomRect", {
   )
   expect_false(inherits(grob, "rect_fade_polar_grob"))
   expect_false(inherits(grob, "rect_fade_grob"))
+})
+
+test_that("coord_polar angular + pattern keeps the pattern (no fade)", {
+  # The angular fade can't be expressed in grid, but a pattern is mm-space and
+  # independent of the fade -- it must still render, clipped to each wedge at a
+  # uniform alpha, rather than falling back to a plain (pattern-less) geom_rect.
+  p <- ggplot(mapping = aes(x, y)) +
+    geom_rect_fade(
+      data = df_tile_single, aes(width = width, height = height),
+      fade_direction = "horizontal", pattern = hatch()
+    ) +
+    coord_polar()
+  b     <- ggplot_build(p)
+  ld    <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  expect_message(
+    grob <- GeomRectFade$draw_panel(
+      ld, pp, coord,
+      alpha_fade_to = 0, fade_direction = "horizontal",
+      radius = grid::unit(0, "pt"), pattern = hatch()
+    ),
+    "without a fade"
+  )
+  expect_s3_class(grob, "rect_fade_polar_grob")
+  expect_s3_class(grob$pattern, "ggpointless_pattern")
 })
 
 test_that("coord_polar radial: uniform alpha bypasses polar grob", {
@@ -748,12 +871,178 @@ build_rect_grob_pattern <- function(p, pattern) {
 p_pat <- ggplot(df_corners) +
   geom_rect_fade(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax))
 
-test_that('pattern = "stripe" produces a deferred rect_fade_pattern_grob', {
-  g <- build_rect_grob_pattern(p_pat, "stripe")
+test_that("pattern = hatch() produces a deferred rect_fade_pattern_grob", {
+  g <- build_rect_grob_pattern(p_pat, hatch())
   expect_s3_class(g, "rect_fade_pattern_grob")
   # one dst per rect, plus matching alpha_ref / outline / flat lists
   expect_length(g$dst_glist, nrow(df_corners))
   expect_length(g$alpha_ref_glist, nrow(df_corners))
+})
+
+test_that("hatch() validates its arguments and stores the spec", {
+  h <- hatch(angle = 30, style = "crossed", spacing = 3)
+  expect_s3_class(h, "ggpointless_pattern")
+  expect_equal(h$angle, 30)
+  expect_equal(h$style, "crossed")
+  expect_equal(as.numeric(grid::convertUnit(h$spacing, "mm")), 3)
+  expect_equal(hatch()$style, "parallel") # default
+  expect_error(hatch(angle = c(1, 2)), "single number")
+  expect_error(hatch(style = "diagonal")) # arg_match: not a valid option
+  expect_error(hatch(spacing = "x"), "unit")
+})
+
+test_that("pattern preset strings expand to the matching hatch() spec", {
+  # `position = "dodge"` idiom: each string is sugar for a hatch() call.
+  expect_equal(.hatch_from_string("stripe"),     hatch())
+  expect_equal(.hatch_from_string("crossed"),    hatch(style = "crossed"))
+  expect_equal(.hatch_from_string("vertical"),   hatch(90))
+  expect_equal(.hatch_from_string("horizontal"), hatch(0))
+  # "grid" is the fifth preset: crossed at 90 deg (vertical + horizontal).
+  expect_equal(.hatch_from_string("grid"),       hatch(90, style = "crossed"))
+})
+
+test_that("pattern = '<preset>' renders identically to the hatch() call", {
+  # End-to-end: the string is coerced in setup_params, so the drawn grob must
+  # match the explicit hatch() spec byte-for-byte (same crossed flag + angle).
+  g_str <- build_rect_grob_pattern(p_pat, "grid")
+  g_obj <- build_rect_grob_pattern(p_pat, hatch(90, style = "crossed"))
+  expect_equal(g_str$dst_glist[[1]], g_obj$dst_glist[[1]])
+})
+
+test_that("pattern coercion is visible in the built layer params", {
+  p <- ggplot(df_corners) +
+    geom_rect_fade(
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      pattern = "crossed"
+    )
+  b <- ggplot_build(p)
+  pat <- b$plot$layers[[1]]$computed_geom_params$pattern
+  expect_s3_class(pat, "ggpointless_pattern")
+  expect_equal(pat, hatch(style = "crossed"))
+})
+
+test_that("pattern = unknown string aborts with an arg_match hint", {
+  p <- ggplot(df_corners) +
+    geom_rect_fade(
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      pattern = "diagonal"  # not a preset; "stripe" is the diagonal one
+    )
+  expect_error(ggplot2::ggplot_build(p), "pattern")
+})
+
+test_that('style = "crossed" sets the crossed flag (two line families)', {
+  g1 <- build_rect_grob_pattern(p_pat, hatch(style = "parallel"))
+  g2 <- build_rect_grob_pattern(p_pat, hatch(style = "crossed"))
+  # dst is a lightweight `hatch_spec`; the segment families are materialised
+  # at draw time from the rect's physical size (see `.hatch_materialize()`).
+  expect_s3_class(g1$dst_glist[[1]], "hatch_spec")
+  expect_false(g1$dst_glist[[1]]$crossed)
+  expect_true(g2$dst_glist[[1]]$crossed)
+})
+
+test_that("hatch colour follows the fill aesthetic", {
+  # `hatch()` exposes no colour argument: the lines always track `fill`.
+  p_fill <- ggplot(df_corners) +
+    geom_rect_fade(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+                   fill = "tomato")
+  g <- build_rect_grob_pattern(p_fill, hatch())
+  expect_equal(
+    grDevices::col2rgb(g$dst_glist[[1]]$colour),
+    grDevices::col2rgb("tomato")
+  )
+})
+
+test_that("pattern alpha mask and outline share identical roundrect geometry", {
+  # The alpha mask clips the pattern to the rounded shape via dest.in, so it
+  # MUST be a roundrect matching the outline (same radius and dimensions). A
+  # sharp rectGrob mask would let the pattern spill past rounded corners, and
+  # an unclamped radius would degenerate into a lens on short rects -- the
+  # `cut = "Fair"` artifact. Equal geometry guarantees equal clamping, so the
+  # masked pattern and the drawn border always share one shape.
+  df <- data.frame(xmin = 0, xmax = 4, ymin = 0, ymax = 3)
+  p <- ggplot(df) +
+    geom_rect_fade(
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      fill = "steelblue", colour = "#333333",
+      radius = grid::unit(10, "mm"), pattern = hatch()
+    )
+  b     <- ggplot_build(p)
+  ld    <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  gp    <- p$layers[[1]]$geom_params
+  grob  <- GeomRectFade$draw_panel(
+    ld, pp, coord,
+    alpha_fade_to = 0, fade_direction = "vertical",
+    radius = gp$radius, pattern = hatch()
+  )
+  expect_s3_class(grob, "rect_fade_pattern_grob")
+  expect_gt(length(grob$alpha_ref_glist), 0L)
+  for (i in seq_along(grob$alpha_ref_glist)) {
+    mask <- grob$alpha_ref_glist[[i]]
+    out  <- grob$outline_glist[[i]]
+    expect_s3_class(mask, "roundrect")
+    expect_s3_class(out,  "roundrect")
+    expect_identical(as.numeric(mask$r),      as.numeric(out$r))
+    expect_identical(as.numeric(mask$width),  as.numeric(out$width))
+    expect_identical(as.numeric(mask$height), as.numeric(out$height))
+  }
+})
+
+# Walk a grob tree for a Porter-Duff compositing group (the dest.in result).
+.has_grid_group <- function(grob) {
+  if (inherits(grob, "GridGroup")) return(TRUE)
+  ch <- grob$children
+  if (is.null(ch) || length(ch) == 0L) return(FALSE)
+  any(vapply(ch, .has_grid_group, logical(1)))
+}
+
+test_that("pattern, sharp corners (radius 0): mask and outline are r = 0 roundrects", {
+  # With no rounding the mask must still match the outline -- both r = 0
+  # roundrects (equivalent to sharp rects), so the pattern fills the full
+  # rectangle and the border traces it exactly.
+  g <- build_rect_grob_pattern(p_pat, hatch())  # build helper uses radius = 0
+  expect_s3_class(g, "rect_fade_pattern_grob")
+  for (i in seq_along(g$alpha_ref_glist)) {
+    mask <- g$alpha_ref_glist[[i]]
+    out  <- g$outline_glist[[i]]
+    expect_s3_class(mask, "roundrect")
+    expect_equal(as.numeric(mask$r), 0)
+    if (!inherits(out, "zeroGrob")) {
+      expect_equal(as.numeric(out$r), 0)
+      expect_identical(as.numeric(mask$width), as.numeric(out$width))
+    }
+  }
+})
+
+test_that("pattern device tiers: compositing groups vs flat fallback", {
+  g <- build_rect_grob_pattern(p_pat, hatch())
+
+  # Compositing-capable device -> dest.in groups (the masked pattern).
+  local_mocked_bindings(dev.cur = \(...) c(png = 2L), .package = "grDevices")
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = c("clear", "source", "over", "dest.in")
+    ),
+    .package = "grDevices"
+  )
+  res_comp <- grid::makeContent(g)
+  expect_true(any(vapply(res_comp$children, .has_grid_group, logical(1))))
+
+  # Device without dest.in -> flat semi-transparent roundrects, no group.
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = character(0)
+    ),
+    .package = "grDevices"
+  )
+  res_flat <- suppressMessages(grid::makeContent(g))
+  expect_false(any(vapply(res_flat$children, .has_grid_group, logical(1))))
+  expect_true(all(vapply(res_flat$children, inherits, logical(1), "roundrect")))
 })
 
 test_that("a user grob pattern is clipped (dst is a gTree, not a roundrect)", {
@@ -775,24 +1064,17 @@ test_that("a user grid::pattern() is accepted (tiled dst)", {
   expect_s3_class(g, "rect_fade_pattern_grob")
 })
 
-test_that("an invalid pattern preset name aborts with a helpful error", {
-  p <- ggplot(df_corners) +
-    geom_rect_fade(
-      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      pattern = "zigzag"
-    )
-  expect_error(ggplot_build(p), "stripe")
-})
-
-test_that("an invalid pattern type aborts", {
-  p <- ggplot(df_corners) +
-    geom_rect_fade(
-      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      pattern = 42
-    )
+test_that("an invalid pattern TYPE aborts; valid preset strings do not", {
+  base <- ggplot(df_corners) +
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+  # A wrong type (here a number) still aborts with the type class.
   expect_error(
-    ggplot_build(p),
+    ggplot_build(base + geom_rect_fade(pattern = 42)),
     class = "ggpointless_rect_fade_pattern_type"
+  )
+  # Preset strings ARE accepted now (sugar for hatch()); no abort.
+  expect_no_error(
+    ggplot_build(base + geom_rect_fade(pattern = "stripe"))
   )
 })
 
@@ -806,7 +1088,8 @@ test_that("GoG: pattern fills render without error (all three modes)", {
   )
   base <- ggplot(df_corners) +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
-  expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = "stripe")))
+  expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = hatch())))
+  expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = hatch(style = "crossed"))))
   expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = wave)))
   expect_no_error(ggplotGrob(base + geom_rect_fade(pattern = dots)))
 })
@@ -831,7 +1114,7 @@ test_that("pattern recolours the user grob stroke to the fill aesthetic", {
   )
 })
 
-test_that('vdiffr snapshot: "stripe" pattern highlight (NYT-style)', {
+test_that("vdiffr snapshot: hatch() pattern highlight (NYT-style)", {
   df_econ <- head(economics, 25)
   p <- ggplot(df_econ, aes(date, unemploy)) +
     geom_rect_fade(
@@ -845,12 +1128,12 @@ test_that('vdiffr snapshot: "stripe" pattern highlight (NYT-style)', {
       alpha = 0.75,
       alpha_fade_to = 0,
       aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      pattern = "stripe"
+      pattern = hatch()
     ) +
     stat_fourier(
       geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2
     ) +
     geom_point(size = 3, alpha = 0.2) +
     theme_minimal()
-  vdiffr::expect_doppelganger("rect-fade-stripe-pattern", p)
+  vdiffr::expect_doppelganger("rect-fade-hatch-pattern", p)
 })

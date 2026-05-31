@@ -105,22 +105,31 @@ interpreted as points. Defaults to \code{unit(0, "pt")} (sharp corners).}
 \item{pattern}{An optional textured fill, applied \emph{underneath} the alpha
 fade. One of:
 \describe{
-\item{\code{"stripe"}}{The built-in preset: continuous diagonal hatching
-(see \emph{Patterns} below).}
-\item{a \code{\link[grid:grob]{grid::grob()}}}{Drawn once and clipped to each rectangle. Best
-for continuous custom hatching (e.g. wavy lines built in \code{"npc"}
-units), which \code{grid::pattern()} tiling cannot render without breaking
-lines into dashes. See the vignette for a worked "wave" example.}
+\item{a preset string}{\code{"stripe"} (diagonal, the default), \code{"crossed"}
+(diagonal crosshatch), \code{"vertical"}, \code{"horizontal"}, or \code{"grid"}
+(vertical + horizontal). Each is shorthand for the matching \code{\link[=hatch]{hatch()}}
+call -- for example \code{"crossed"} is \code{hatch(style = "crossed")} and
+\code{"grid"} is \code{hatch(90, style = "crossed")} -- the same way
+\code{position = "dodge"} stands in for \code{\link[ggplot2:position_dodge]{ggplot2::position_dodge()}}. Reach
+for \code{\link[=hatch]{hatch()}} directly to tune \code{angle} or \code{spacing}.}
+\item{a \code{\link[=hatch]{hatch()}} specification}{Line hatching at any angle, optionally
+crossed -- diagonal stripes, crosshatch, vertical stripes, grids. The
+recommended way to add a textured fill.}
+\item{a \code{\link[grid:grob]{grid::grob()}}}{Drawn once and clipped to each rectangle. For
+continuous custom hatching (e.g. wavy lines built in \code{"npc"} units),
+which \code{grid::pattern()} tiling cannot render without breaking lines
+into dashes. See the vignette for a worked "wave" example.}
 \item{a \code{\link[grid:pattern]{grid::pattern()}} object}{A tiled pattern -- best for
 self-contained motifs (dots, shapes). Tiling renders continuous
-diagonal/wavy lines as dashes, so prefer a grob for those.}
+diagonal/wavy lines as dashes, so prefer \code{\link[=hatch]{hatch()}} or a grob for those.}
 }
-In every case the texture's stroke colour (\code{gp$col}) is automatically
-recoloured to match the \code{fill} aesthetic. The alpha fade is applied on top
-via Porter-Duff \code{"dest.in"} compositing; devices without compositing
-support fall back to a flat semi-transparent fill. Patterns are not
-supported under polar coordinates. \code{NULL} (default) uses the plain
-gradient fill.}
+All pattern types -- \code{\link[=hatch]{hatch()}} and user grobs -- are
+recoloured to the \code{fill} aesthetic of each rectangle. The alpha
+fade is applied on top via Porter-Duff \code{"dest.in"} compositing; devices
+without compositing support fall back to a flat semi-transparent fill.
+Patterns also work under polar coordinates (clipped to each annular
+segment); see the \emph{Polar coordinates} section. \code{NULL} (default) uses the
+plain gradient fill.}
 
 \item{lineend}{Line end style (round, butt, square).}
 
@@ -167,34 +176,35 @@ inner/outer radius and fade radially.
 
 Any other combination (for example \code{theta = "x"} with
 \code{fade_direction = "horizontal"}) would require an angular / conic gradient,
-which \code{grid} does not yet expose. Such plots fall back to plain
-\code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}} rendering and emit a one-time warning.
-Rounded corners (\code{radius}) are ignored in polar coordinates since arcs do
-not carry corner geometry.
+which \code{grid} does not yet expose, so the \emph{fade} is dropped (with a one-time
+message). A \code{pattern} fill still renders -- it lives in millimetre space,
+independent of the fade -- clipped to each annular segment at a uniform
+alpha. Without a pattern, such plots fall back to plain
+\code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}}. Rounded corners (\code{radius}) are ignored in polar
+coordinates since arcs do not carry corner geometry.
 }
 
 \section{Patterns}{
 
-One built-in preset is available: \code{pattern = "stripe"} draws continuous
-diagonal hatching, recoloured to the \code{fill} aesthetic and faded with the
-alpha gradient. The \code{"stripe"} name is borrowed, with thanks, from the
-\pkg{ggpattern} package by Trevor L. Davis
-(\url{https://trevorldavis.com/R/ggpattern/}); the implementation here is an
-independent \pkg{grid} one.
+\code{\link[=hatch]{hatch()}} builds line-hatch fills -- diagonal stripes (\code{hatch()}), crosshatch
+(\code{hatch(style = "crossed")}), vertical stripes (\code{hatch(90)}), grids
+(\code{hatch(0, style = "crossed")}) -- at a true visual angle, recoloured to the
+\code{fill} aesthetic and faded with the alpha gradient.
 
 Unlike \code{grid::pattern()} tiling -- which renders diagonal or wavy lines as
-disconnected dashes, because each tile is clipped at its own bounds -- the
-\code{"stripe"} preset draws real parallel lines clipped to the rectangle, so the
-diagonals stay continuous at a true visual angle.
+disconnected dashes, because each tile is clipped at its own bounds --
+\code{\link[=hatch]{hatch()}} draws real parallel lines clipped to the rectangle, so they stay
+continuous.
 
-For your own \emph{continuous} hatching (e.g. wavy lines), build a \code{\link[grid:grob]{grid::grob()}}
-in \code{"npc"} units and pass it as \code{pattern}: it is drawn once and clipped to
-each rectangle, preserving line continuity. For self-contained \emph{motifs}
-(dots, small shapes) pass a \code{\link[grid:pattern]{grid::pattern()}} object, which tiles cleanly.
-In both cases the stroke colour is recoloured to the \code{fill} aesthetic. The
-article \code{vignette("ggpointless")} walks through building a wavy-line grob and
-injecting it. For a far richer set of patterns and controls, use
-\pkg{ggpattern} directly.
+For your own \emph{continuous} hatching beyond straight lines (e.g. wavy lines),
+build a \code{\link[grid:grob]{grid::grob()}} in \code{"npc"} units and pass it as \code{pattern}: it is drawn
+once and clipped to each rectangle, preserving line continuity. For
+self-contained \emph{motifs} (dots, small shapes) pass a \code{\link[grid:pattern]{grid::pattern()}} object,
+which tiles cleanly; its stroke colour is recoloured to the \code{fill} aesthetic.
+The article \code{vignette("ggpointless")} walks through building a wavy-line grob
+and injecting it. For a far richer set of patterns and controls, use the
+\pkg{ggpattern} package by Trevor L. Davis
+(\url{https://trevorldavis.com/R/ggpattern/}).
 }
 
 \section{Legend key under coord_flip}{
@@ -212,22 +222,49 @@ the coord). For a legend key that matches a horizontal layout, prefer
 \examples{
 library(ggplot2)
 
-# With geom_rect_fade() you can draw arbitrary rectangles
-ggplot(head(economics, 25), aes(date, unemploy)) +
+# Highlight a time period with a fading rectangle
+df_rect <- data.frame(
+  xmin = as.Date("1968-03-01"),
+  xmax = as.Date("1969-07-01"),
+  ymin = -Inf,
+  ymax = 2800
+)
+
+p <- ggplot(head(economics, 25), aes(date, unemploy)) +
+  stat_fourier(geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2) +
+  geom_point(size = 3, alpha = 0.2) +
+  theme_minimal()
+
+p +
   geom_rect_fade(
-    data = data.frame(
-      xmin = as.Date("1968-07-01"),
-      xmax = as.Date("1969-07-01"),
-      ymin = -Inf, ymax = 2800
-    ),
+    data = df_rect,
     inherit.aes = FALSE,
     alpha = 0,
     alpha_fade_to = 0.3,
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
-  ) +
-  stat_fourier(geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2) +
-  geom_point(size = 3, alpha = 0.2) +
-  theme_minimal()
+  )
+
+# Fill with a fading pattern using the string shortcut
+p +
+  geom_rect_fade(
+    data = df_rect,
+    inherit.aes = FALSE,
+    alpha = 0,
+    alpha_fade_to = 0.3,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    pattern = "crossed"
+  )
+
+# Customize the pattern further by calling hatch() directly
+p +
+  geom_rect_fade(
+    data = df_rect,
+    inherit.aes = FALSE,
+    alpha = 0,
+    alpha_fade_to = 0.3,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    pattern = hatch(angle = 60, style = "parallel", spacing = unit(1, "mm"))
+  )
 
 }
 \references{
@@ -237,9 +274,9 @@ Version 1.
 \url{https://www.stat.auckland.ac.nz/~paul/Reports/GraphicsEngine/vecpat/vecpat.html}
 }
 \seealso{
-\code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}} for plain rectangles,
-\code{\link[=geom_col_fade]{geom_col_fade()}} for bar charts with per-bar gradient scaling and
-orientation support. The \pkg{ggpattern} package
+\code{\link[=hatch]{hatch()}} for the line-hatch helper. \code{\link[ggplot2:geom_rect]{ggplot2::geom_rect()}} for
+plain rectangles, \code{\link[=geom_col_fade]{geom_col_fade()}} for bar charts with per-bar gradient
+scaling and orientation support. The \pkg{ggpattern} package
 (\url{https://trevorldavis.com/R/ggpattern/}) for comprehensive pattern
 fills.
 }
