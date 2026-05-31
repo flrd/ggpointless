@@ -12,3 +12,5 @@ tests/testthat/testthat-problems.rds
 /Rplots.pdf
 /figure/
 docs
+/*.Rcheck/
+/*.tar.gz

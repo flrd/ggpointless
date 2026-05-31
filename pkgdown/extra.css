@@ -1,3 +1,12 @@
+/* Pixel-font the "Stipple" section heading on the reference index page,
+   echoing the dot-grid aesthetic of the stipple geoms. */
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@400&display=swap');
+
+#stipple {
+  font-family: 'Bitcount Single', monospace;
+  letter-spacing: 0.05em;
+}
+
 /* Fade the "Doppelgänger" section heading on the reference index page,
    echoing the package's gradient-fade geoms. */
 #doppelg-nger {

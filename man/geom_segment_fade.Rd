@@ -28,12 +28,13 @@ geom_curve_fade(
   stat = "identity",
   position = "identity",
   ...,
-  alpha_fade_to = 0,
-  fade_direction = "start",
-  curve_count_cap = 200,
   curvature = 0.5,
   angle = 90,
   ncp = 5,
+  shape = 0.5,
+  alpha_fade_to = 0,
+  fade_direction = "start",
+  curve_count_cap = 200,
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -150,13 +151,6 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{curve_count_cap}{Soft cap on the number of curves \code{geom_curve_fade()} will
-composite per panel. One \code{groupGrob(op = "dest.in")} is built per curve,
-so render cost scales roughly linearly at ~30 ms / curve. Past the cap
-the layer falls back to plain \code{\link[ggplot2:geom_curve]{ggplot2::geom_curve()}} (no fade) and
-emits a warning. Default \code{200} (~6 s worst case). Pass \code{Inf} to disable.
-For bulk fading, use \code{\link[=geom_path_fade]{geom_path_fade()}} or \code{\link[=geom_segment_fade]{geom_segment_fade()}} instead.}
-
 \item{curvature}{A numeric value giving the amount of curvature.
     Negative values produce left-hand curves, positive values
     produce right-hand curves, and zero produces a straight line.}
@@ -169,6 +163,19 @@ For bulk fading, use \code{\link[=geom_path_fade]{geom_path_fade()}} or \code{\l
 
 \item{ncp}{The number of control points used to draw the curve.
     More control points creates a smoother curve.}
+
+\item{shape}{A numeric in \verb{[-1, 1]} controlling the curve's shape, passed to
+\code{\link[grid:curveGrob]{grid::curveGrob()}}. Applied by the fade rendering on all \code{ggplot2}
+versions; on the plain-\code{geom_curve()} fallback paths (non-linear coords,
+over the \code{curve_count_cap}, or uniform alpha) it requires
+\code{ggplot2} >= 4.1.0 and is otherwise ignored.}
+
+\item{curve_count_cap}{Soft cap on the number of curves \code{geom_curve_fade()} will
+composite per panel. One \code{groupGrob(op = "dest.in")} is built per curve,
+so render cost scales roughly linearly at ~30 ms / curve. Past the cap
+the layer falls back to plain \code{\link[ggplot2:geom_curve]{ggplot2::geom_curve()}} (no fade) and
+emits a warning. Default \code{200} (~6 s worst case). Pass \code{Inf} to disable.
+For bulk fading, use \code{\link[=geom_path_fade]{geom_path_fade()}} or \code{\link[=geom_segment_fade]{geom_segment_fade()}} instead.}
 }
 \value{
 A \code{\link[ggplot2:layer]{ggplot2::layer()}} object that can be added to a \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.

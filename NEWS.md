@@ -2,26 +2,28 @@
 
 ## New features
 
-* **New** `geom_stipple_panel()`, `geom_stipple_path()`, `geom_stipple_line()`,
-  `geom_stipple_step()`, and `geom_stipple_rect()` render lines, paths, steps,
-  and filled regions as a regular grid of dots (a "stippled" look) instead of a
-  solid stroke. `spacing` (`"fine"`/`"medium"`/`"coarse"`) sets the dot density
-  as a per-axis fraction of the panel, so density stays consistent across plots
-  and across axes with different scales; every `geom_stipple_*()` layer shares
-  the same lattice, so their dots coincide. The keep `radius` defaults to the
-  lattice's covering radius, the smallest value that traces the line without
-  gaps. `geom_stipple_line()` is orientation-aware (`orientation = "y"`),
-  `geom_stipple_step()` supports `direction`, and `NA` values break the line
-  like `geom_line()` / `geom_step()`.
-
-* `geom_rect_fade()` gains a `pattern` argument to fill rectangles with a
-  texture that fades along with the alpha gradient. Use the built-in
-  `pattern = "stripe"` for continuous diagonal hatching, pass a `grid::grob()`
-  to clip your own continuous hatching (e.g. wavy lines) to each rectangle, or
-  pass a `grid::pattern()` for tiled motifs such as dots. The texture's stroke
-  colour follows the `fill` aesthetic. Requires a graphics device with
+* `geom_rect_fade()`, `geom_col_fade()`, `geom_bar_fade()`, and
+  `geom_histogram_fade()` gain a `pattern` argument to fill each bar or
+  rectangle with a texture that fades along with the alpha gradient. The new
+  `hatch()` helper builds line hatching at any angle -- diagonal stripes
+  (`hatch()`), crosshatch (`hatch(style = "crossed")`), vertical stripes
+  (`hatch(90)`), grids (`hatch(0, style = "crossed")`) -- controlled by `angle`,
+  `style`, and `spacing`. For the common presets you can pass a string instead
+  of calling `hatch()`: `pattern = "stripe"`, `"crossed"`, `"vertical"`,
+  `"horizontal"`, or `"grid"` (the `position = "dodge"` idiom). Line colour
+  always follows the `fill` aesthetic so the mapping is never broken. You can also pass a `grid::grob()` to clip your own
+  continuous hatching (e.g. wavy lines) to each rectangle, or a
+  `grid::pattern()` for tiled motifs. Patterns are supported under polar
+  coordinates too (`coord_polar()` / `coord_radial()`), where they fade radially
+  and are clipped to each annular segment. Requires a graphics device with
   Porter-Duff compositing; falls back to a flat semi-transparent fill
   otherwise.
+
+* `geom_col_fade()`, `geom_bar_fade()`, `geom_histogram_fade()`, and
+  `geom_rect_fade()` now keep the alpha fade, `pattern` fill, and rounded
+  corners under `coord_transform()` (e.g. `coord_transform(y = "sqrt")`).
+  Because that coordinate system is separable per axis, the bars/rectangles
+  stay axis-aligned, so they no longer fall back to a plain, un-faded fill.
 
 # ggpointless 0.3.0
 

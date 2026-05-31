@@ -16,6 +16,7 @@ geom_histogram_fade(
   alpha_scope = "bar",
   orientation = NA,
   radius = grid::unit(0, "pt"),
+  pattern = NULL,
   lineend = "butt",
   linejoin = "mitre",
   na.rm = FALSE,

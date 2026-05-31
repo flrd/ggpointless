@@ -15,6 +15,7 @@ geom_col_fade(
   alpha_scope = "bar",
   orientation = NA,
   radius = grid::unit(0, "pt"),
+  pattern = NULL,
   lineend = "butt",
   linejoin = "mitre",
   na.rm = FALSE,
@@ -32,6 +33,7 @@ geom_bar_fade(
   alpha_scope = "bar",
   orientation = NA,
   radius = grid::unit(0, "pt"),
+  pattern = NULL,
   lineend = "butt",
   linejoin = "mitre",
   na.rm = FALSE,
@@ -241,7 +243,6 @@ ggplot(df, aes(y, x)) +
 
 # Multiple groups with different alpha scopes
 p <- ggplot(diamonds, aes(color, fill = cut)) +
-  scale_fill_viridis_d(guide = "none") +
   labs(x = NULL, y = NULL) +
   theme_minimal()
 
@@ -263,6 +264,20 @@ p + geom_bar_fade(alpha_scope = "bar", position = "dodge")
 p + geom_bar_fade(alpha_scope = "x", position = "dodge")
 p + geom_bar_fade(alpha_scope = "fill", position = "dodge")
 p + geom_bar_fade(alpha_scope = "global", position = "dodge")
+
+# bars can be filled with a pattern instead of a solid colour
+p + geom_bar_fade(
+position = "dodge",
+pattern = hatch(), # default
+colour = "#333333"
+)
+
+# hatch can be filled with a pattern instead of a solid colour
+p + geom_bar_fade(
+position = "dodge",
+pattern = hatch(angle = 90, style ="crossed", spacing = unit(1.25, "mm")),
+colour = "#333333"
+)
 
 # Polar coordinates are supported too, if you need it
 ggplot(diamonds, aes(x = factor(1), fill = cut)) +

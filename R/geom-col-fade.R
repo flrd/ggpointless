@@ -54,10 +54,13 @@ makeContent.bar_fade_grob <- function(x) {
 # Tier 2 -- flat mid-alpha polygons (pdf, postscript, ...).
 #' @noRd
 #' @keywords internal
-.bar_fade_polar_grob <- function(gradient_glist, flat_glist) {
+.bar_fade_polar_grob <- function(gradient_glist, flat_glist,
+                                 pattern = NULL, rings = NULL) {
   grid::gTree(
     gradient_glist = gradient_glist,
     flat_glist = flat_glist,
+    pattern = pattern,
+    rings = rings,
     cl = "bar_fade_polar_grob"
   )
 }
@@ -65,17 +68,27 @@ makeContent.bar_fade_grob <- function(x) {
 #' @export
 makeContent.bar_fade_polar_grob <- function(x) {
   dev_name <- names(grDevices::dev.cur())
-  can_gradient <- !dev_name %in% c("pdf", "postscript") &&
-    tryCatch(
-      {
-        caps <- grDevices::dev.capabilities()
-        isTRUE(caps[["clippingPaths"]]) &&
-          "RadialGradient" %in% caps[["patterns"]]
-      },
-      error = \(e) FALSE
-    )
+  caps <- tryCatch(grDevices::dev.capabilities(), error = \(e) list())
+  base_ok <- !dev_name %in% c("pdf", "postscript") &&
+    isTRUE(caps[["clippingPaths"]]) &&
+    "RadialGradient" %in% caps[["patterns"]]
 
-  if (can_gradient) {
+  if (!is.null(x$pattern)) {
+    # Pattern tier: needs clip + radial gradient + dest.in compositing
+    # (see `.polar_pattern_ring()` in geom-rect-fade.R).
+    if (base_ok && .has_compositing_op("dest.in", caps)) {
+      grobs <- do.call(grid::gList, lapply(seq_along(x$rings), function(i) {
+        ring <- x$rings[[i]]
+        if (is.null(ring)) x$flat_glist[[i]] else .polar_pattern_ring(x$pattern, ring)
+      }))
+    } else {
+      .queue_rect_col_polar_no_clip_pattern("geom_col_fade")
+      grobs <- x$flat_glist
+    }
+    return(grid::setChildren(x, grobs))
+  }
+
+  if (base_ok) {
     grobs <- x$gradient_glist
   } else {
     .queue_rect_col_polar_no_clip_pattern("geom_col_fade")
@@ -94,7 +107,8 @@ makeContent.bar_fade_polar_grob <- function(x) {
   alpha_fade_to,
   alpha_scope,
   lineend,
-  linejoin
+  linejoin,
+  pattern = NULL
 ) {
   n <- nrow(data)
 
@@ -129,6 +143,7 @@ makeContent.bar_fade_polar_grob <- function(x) {
 
   gradient_list <- vector("list", n)
   flat_list <- vector("list", n)
+  rings <- if (is.null(pattern)) NULL else vector("list", n)
 
   for (i in seq_len(n)) {
     a_start <- data$alpha[i]
@@ -221,17 +236,29 @@ makeContent.bar_fade_polar_grob <- function(x) {
     # stacked.
     clip_vp <- grid::viewport(clip = poly_grob)
 
-    gradient_list[[i]] <- grid::gTree(
-      children = grid::gList(gradient_rect),
-      vp = clip_vp,
-      name = paste0("bar_fade_polar_ring_", i)
+    gradient_list[[i]] <- .polar_ring_with_outline(
+      grid::gTree(
+        children = grid::gList(gradient_rect),
+        vp = clip_vp,
+        name = paste0("bar_fade_polar_ring_", i)
+      ),
+      poly_grob
     )
     flat_list[[i]] <- flat_grob
+
+    if (!is.null(pattern)) {
+      rings[[i]] <- list(
+        poly_grob = poly_grob, r_in = r_in, r_out = r_out,
+        a_inner = a_baseline, a_outer = a_peak, fill_col = fill_col
+      )
+    }
   }
 
   .bar_fade_polar_grob(
     do.call(grid::gList, gradient_list),
-    do.call(grid::gList, flat_list)
+    do.call(grid::gList, flat_list),
+    pattern = pattern,
+    rings = rings
   )
 }
 
@@ -247,35 +274,96 @@ makeContent.bar_fade_polar_grob <- function(x) {
   a_start <- data$alpha %||% 1
   a_end <- params$alpha_fade_to %||% 0
   flipped <- isTRUE(params$flipped_aes)
+  pattern <- params$pattern
+  radius <- params$radius %||% grid::unit(0, "pt")
 
+  # The key cell is tiny; mirroring a large bar `radius` would round it into a
+  # near-circle whose outline cuts across the pattern instead of framing it.
+  # When patterned, cap the key's corner to a minimal radius so the outline
+  # stays a rounded-rect border AROUND the pattern.
+  key_radius <- if (as.numeric(grid::convertUnit(radius, "pt")) > 0) {
+    grid::unit(min(as.numeric(grid::convertUnit(radius, "pt")), 2.5), "pt")
+  } else {
+    radius
+  }
+
+  # Gradient direction: faded end at bottom (vertical) or left (horizontal).
   if (flipped) {
-    # Horizontal bars: faded end at left, opaque end at right.
     x1 <- 0
     y1 <- 0.5
     x2 <- 1
     y2 <- 0.5
   } else {
-    # Vertical bars: faded end at bottom, opaque end at top.
     x1 <- 0.5
     y1 <- 0
     x2 <- 0.5
     y2 <- 1
   }
 
-  # Mirror the layer's actual `radius` so the legend key matches the rendered
-  # bars: default `unit(0, "pt")` -> flat key (matches geom_bar_fade /
-  # geom_histogram_fade defaults); user-supplied non-zero radius -> rounded
-  # key (matches geom_col_fade(radius = unit(5, "pt"))).
-  radius <- params$radius %||% grid::unit(0, "pt")
+  # When a pattern is set, composite it against a gradient alpha mask,
+  # mirroring .draw_key_rect_fade so the legend matches the rendered bars.
+  if (!is.null(pattern)) {
+    dst <- if (inherits(pattern, "ggpointless_pattern")) {
+      .hatch_grob(
+        xc = 0.5,
+        yc = 0.5,
+        w = 1,
+        h = 1,
+        colour = fill_colour,
+        angle = pattern$angle,
+        crossed = identical(pattern$style, "crossed"),
+        spacing_mm = as.numeric(grid::convertUnit(pattern$spacing, "mm")),
+        linewidth = 0.5,
+        linetype = 1L,
+        units = "npc"
+      )
+    } else if (grid::is.grob(pattern)) {
+      .clip_pattern_grob(pattern, 0.5, 0.5, 1, 1, fill_colour, units = "npc")
+    } else {
+      NULL
+    }
 
+    if (!is.null(dst)) {
+      alpha_ref <- grid::rectGrob(
+        gp = grid::gpar(
+          fill = grid::linearGradient(
+            colours = ggplot2::alpha("black", c(a_end, a_start)),
+            x1 = x1,
+            y1 = y1,
+            x2 = x2,
+            y2 = y2
+          ),
+          col = NA
+        )
+      )
+      outline <- grid::roundrectGrob(
+        r = key_radius,
+        gp = ggplot2::gg_par(col = data$colour %||% NA, fill = NA)
+      )
+      flat <- grid::roundrectGrob(
+        r = key_radius,
+        gp = ggplot2::gg_par(
+          fill = ggplot2::alpha(fill_colour, (a_start + a_end) / 2),
+          col = data$colour %||% NA
+        )
+      )
+      return(.rect_fade_pattern_grob(
+        list(dst),
+        grid::gList(alpha_ref),
+        grid::gList(outline),
+        grid::gList(flat)
+      ))
+    }
+  }
+
+  # No pattern: plain gradient fill (original behaviour).
+  # Mirror the layer's actual `radius` so the legend key matches the rendered
+  # bars: default `unit(0, "pt")` -> flat key; non-zero -> rounded key.
   grid::roundrectGrob(
     r = radius,
     gp = ggplot2::gg_par(
       fill = grid::linearGradient(
-        colours = c(
-          ggplot2::alpha(fill_colour, a_end),
-          ggplot2::alpha(fill_colour, a_start)
-        ),
+        colours = ggplot2::alpha(fill_colour, c(a_end, a_start)),
         x1 = x1,
         y1 = y1,
         x2 = x2,
@@ -298,7 +386,8 @@ GeomColFade <- ggplot2::ggproto(
     ggplot2::GeomBar$extra_params,
     "alpha_fade_to",
     "alpha_scope",
-    "radius"
+    "radius",
+    "pattern"
   ),
 
   draw_key = .draw_key_col_fade,
@@ -408,7 +497,8 @@ GeomColFade <- ggplot2::ggproto(
     linejoin = "mitre",
     alpha_fade_to = 0,
     radius = NULL,
-    alpha_scope = "bar"
+    alpha_scope = "bar",
+    pattern = NULL
   ) {
     .check_panel_range(panel_params, "geom_col_fade")
     radius <- .validate_radius(radius)
@@ -418,7 +508,14 @@ GeomColFade <- ggplot2::ggproto(
     is_polar <- inherits(coord, "CoordPolar") ||
       inherits(coord, "CoordRadial")
 
-    if (!coord$is_linear() && !is_polar) {
+    # `coord_transform()` is non-linear but *separable* per axis, so bars stay
+    # axis-aligned rectangles -- only their edges move. The gradient/pattern
+    # path handles them (it reads post-transform `coord$transform()` corners),
+    # so don't fall back to the plain parent (which would drop the fade AND the
+    # pattern). Only truly non-rectangular non-linear coords fall back here.
+    is_separable <- inherits(coord, "CoordTransform")
+
+    if (!coord$is_linear() && !is_polar && !is_separable) {
       .queue_rounded_corner_fallback("geom_col_fade")
       return(
         ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_panel(
@@ -443,7 +540,8 @@ GeomColFade <- ggplot2::ggproto(
         alpha_fade_to = alpha_fade_to,
         alpha_scope = alpha_scope,
         lineend = lineend,
-        linejoin = linejoin
+        linejoin = linejoin,
+        pattern = pattern
       ))
     }
 
@@ -456,7 +554,8 @@ GeomColFade <- ggplot2::ggproto(
     # `r`, so the user's `radius` is preserved.
     if (
       .is_uniform_alpha(data, alpha_fade_to) &&
-        identical(as.numeric(radius), 0)
+        identical(as.numeric(radius), 0) &&
+        is.null(pattern)
     ) {
       return(ggplot2::ggproto_parent(ggplot2::GeomBar, self)$draw_panel(
         data,
@@ -519,8 +618,24 @@ GeomColFade <- ggplot2::ggproto(
     coords <- coord$transform(data, panel_params)
     n <- nrow(coords)
 
+    use_pattern <- !is.null(pattern)
+    is_hatch <- inherits(pattern, "ggpointless_pattern")
+
     gradient_list <- vector("list", n)
     flat_list <- vector("list", n)
+    if (use_pattern) {
+      dst_list <- vector("list", n)
+      alpha_ref_list <- vector("list", n)
+      outline_list <- vector("list", n)
+    }
+    if (is_hatch) {
+      hatch_cols <- .hatch_resolve_colour(coords, NULL)
+    }
+    if (is_hatch) {
+      hatch_spacing_mm <- as.numeric(
+        grid::convertUnit(pattern$spacing, "mm")
+      )
+    }
 
     for (i in seq_len(n)) {
       a_start <- coords$alpha[i]
@@ -552,13 +667,11 @@ GeomColFade <- ggplot2::ggproto(
       # the rendered bar.
       if (flipped_visual) {
         if (is_neg[i]) {
-          # Negative horizontal: baseline at right, peak at left
           gx1 <- 1
           gy1 <- 0.5
           gx2 <- 0
           gy2 <- 0.5
         } else {
-          # Positive horizontal: baseline at left, peak at right
           gx1 <- 0
           gy1 <- 0.5
           gx2 <- 1
@@ -566,13 +679,11 @@ GeomColFade <- ggplot2::ggproto(
         }
       } else {
         if (is_neg[i]) {
-          # Negative vertical: baseline at top, peak at bottom
           gx1 <- 0.5
           gy1 <- 1
           gx2 <- 0.5
           gy2 <- 0
         } else {
-          # Positive vertical: baseline at bottom, peak at top
           gx1 <- 0.5
           gy1 <- 0
           gx2 <- 0.5
@@ -580,26 +691,95 @@ GeomColFade <- ggplot2::ggproto(
         }
       }
 
+      mid_alpha <- (a_peak + a_baseline) / 2
+      flat_fill <- ggplot2::alpha(fill_col, mid_alpha)
+
+      x_vis_lo <- min(coords$xmin[i], coords$xmax[i])
+      x_vis_hi <- max(coords$xmin[i], coords$xmax[i])
+      y_vis_lo <- min(coords$ymin[i], coords$ymax[i])
+      y_vis_hi <- max(coords$ymin[i], coords$ymax[i])
+
+      x_pos <- grid::unit(x_vis_lo, "native")
+      y_pos <- grid::unit(y_vis_hi, "native")
+      w <- grid::unit(x_vis_hi - x_vis_lo, "native")
+      h <- grid::unit(y_vis_hi - y_vis_lo, "native")
+
+      rr_linejoin <- .roundrect_linejoin(radius, linejoin)
+      common_gp <- list(
+        lwd = coords$linewidth[i],
+        lty = coords$linetype[i],
+        linejoin = rr_linejoin,
+        lineend = lineend
+      )
+
+      if (use_pattern) {
+        dst_list[[i]] <- if (is_hatch) {
+          .hatch_grob(
+            xc = (x_vis_lo + x_vis_hi) / 2,
+            yc = (y_vis_lo + y_vis_hi) / 2,
+            w = x_vis_hi - x_vis_lo,
+            h = y_vis_hi - y_vis_lo,
+            colour = hatch_cols[i],
+            angle = pattern$angle,
+            crossed = identical(pattern$style, "crossed"),
+            spacing_mm = hatch_spacing_mm,
+            linewidth = 0.5,
+            linetype = 1L,
+            units = "native"
+          )
+        } else {
+          .clip_pattern_grob(
+            pattern,
+            xc = (x_vis_lo + x_vis_hi) / 2,
+            yc = (y_vis_lo + y_vis_hi) / 2,
+            w = x_vis_hi - x_vis_lo,
+            h = y_vis_hi - y_vis_lo,
+            colour = fill_col,
+            units = "native"
+          )
+        }
+
+        alpha_ref_list[[i]] <- grid::roundrectGrob(
+          x = x_pos,
+          y = y_pos,
+          width = w,
+          height = h,
+          just = c("left", "top"),
+          r = radius,
+          gp = grid::gpar(
+            fill = grid::linearGradient(
+              colours = ggplot2::alpha("black", c(a_baseline, a_peak)),
+              x1 = gx1,
+              y1 = gy1,
+              x2 = gx2,
+              y2 = gy2
+            ),
+            col = NA
+          )
+        )
+
+        outline_list[[i]] <- grid::roundrectGrob(
+          x = x_pos,
+          y = y_pos,
+          width = w,
+          height = h,
+          just = c("left", "top"),
+          r = radius,
+          gp = do.call(
+            ggplot2::gg_par,
+            c(list(col = coords$colour[i], fill = NA), common_gp)
+          )
+        )
+      }
+
       grad <- grid::linearGradient(
-        colours = c(
-          ggplot2::alpha(fill_col, a_baseline),
-          ggplot2::alpha(fill_col, a_peak)
-        ),
+        colours = ggplot2::alpha(fill_col, c(a_baseline, a_peak)),
         x1 = gx1,
         y1 = gy1,
         x2 = gx2,
         y2 = gy2
       )
 
-      mid_alpha <- (a_peak + a_baseline) / 2
-      flat_fill <- ggplot2::alpha(fill_col, mid_alpha)
-
-      x_pos <- grid::unit(coords$xmin[i], "native")
-      y_pos <- grid::unit(coords$ymax[i], "native")
-      w <- grid::unit(coords$xmax[i] - coords$xmin[i], "native")
-      h <- grid::unit(coords$ymax[i] - coords$ymin[i], "native")
-
-      rr_linejoin <- .roundrect_linejoin(radius, linejoin)
       gradient_list[[i]] <- grid::roundrectGrob(
         x = x_pos,
         y = y_pos,
@@ -607,13 +787,9 @@ GeomColFade <- ggplot2::ggproto(
         height = h,
         just = c("left", "top"),
         r = radius,
-        gp = ggplot2::gg_par(
-          col = coords$colour[i],
-          fill = grad,
-          lwd = coords$linewidth[i],
-          lty = coords$linetype[i],
-          linejoin = rr_linejoin,
-          lineend = lineend
+        gp = do.call(
+          ggplot2::gg_par,
+          c(list(col = coords$colour[i], fill = grad), common_gp)
         )
       )
 
@@ -624,15 +800,20 @@ GeomColFade <- ggplot2::ggproto(
         height = h,
         just = c("left", "top"),
         r = radius,
-        gp = ggplot2::gg_par(
-          col = coords$colour[i],
-          fill = flat_fill,
-          lwd = coords$linewidth[i],
-          lty = coords$linetype[i],
-          linejoin = rr_linejoin,
-          lineend = lineend
+        gp = do.call(
+          ggplot2::gg_par,
+          c(list(col = coords$colour[i], fill = flat_fill), common_gp)
         )
       )
+    }
+
+    if (use_pattern) {
+      return(.rect_fade_pattern_grob(
+        dst_list,
+        do.call(grid::gList, alpha_ref_list),
+        do.call(grid::gList, outline_list),
+        do.call(grid::gList, flat_list)
+      ))
     }
 
     .bar_fade_grob(
@@ -743,7 +924,8 @@ geom_col_fade <- make_constructor(
   alpha_fade_to = 0,
   alpha_scope = "bar",
   orientation = NA,
-  radius = grid::unit(0, "pt")
+  radius = grid::unit(0, "pt"),
+  pattern = NULL
 )
 
 #' @rdname geom_col_fade
@@ -752,7 +934,6 @@ geom_col_fade <- make_constructor(
 #'
 #' # Multiple groups with different alpha scopes
 #' p <- ggplot(diamonds, aes(color, fill = cut)) +
-#'   scale_fill_viridis_d(guide = "none") +
 #'   labs(x = NULL, y = NULL) +
 #'   theme_minimal()
 #'
@@ -775,6 +956,20 @@ geom_col_fade <- make_constructor(
 #' p + geom_bar_fade(alpha_scope = "fill", position = "dodge")
 #' p + geom_bar_fade(alpha_scope = "global", position = "dodge")
 #'
+#' # bars can be filled with a pattern instead of a solid colour
+#' p + geom_bar_fade(
+#' position = "dodge",
+#' pattern = hatch(), # default
+#' colour = "#333333"
+#' )
+#'
+#' # hatch can be filled with a pattern instead of a solid colour
+#' p + geom_bar_fade(
+#' position = "dodge",
+#' pattern = hatch(angle = 90, style ="crossed", spacing = unit(1.25, "mm")),
+#' colour = "#333333"
+#' )
+#'
 #' # Polar coordinates are supported too, if you need it
 #' ggplot(diamonds, aes(x = factor(1), fill = cut)) +
 #'   geom_bar_fade(width = 1) +
@@ -788,5 +983,6 @@ geom_bar_fade <- make_constructor(
   alpha_fade_to = 0,
   alpha_scope = "bar",
   orientation = NA,
-  radius = grid::unit(0, "pt")
+  radius = grid::unit(0, "pt"),
+  pattern = NULL
 )

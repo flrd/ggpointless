@@ -1025,6 +1025,208 @@ test_that("bar_fade with coord_radial theta = 'x' renders annular fade", {
   vdiffr::expect_doppelganger("bar-fade-radial-theta-x-stacked", p)
 })
 
+# --- Polar + pattern fill -----------------------------------------------------
+# A vdiffr image snapshot cannot guard this: svglite (vdiffr's renderer)
+# supports clipping paths and radial gradients but NOT Porter-Duff "dest.in"
+# compositing, so it would silently capture the flat fallback (a solid
+# mid-alpha pie) rather than the hatch. We assert the grob structure instead,
+# mocking the device capabilities for each tier.
+
+build_polar_pattern_grob <- function(p, pattern) {
+  b     <- ggplot_build(p)
+  ld    <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  gp    <- p$layers[[1]]$geom_params
+  GeomColFade$draw_panel(
+    ld, pp, coord,
+    alpha_fade_to = gp$alpha_fade_to %||% 0,
+    radius        = gp$radius %||% grid::unit(0, "pt"),
+    alpha_scope   = "bar",
+    pattern       = pattern
+  )
+}
+
+test_that("polar bar_fade carries pattern + one ring spec per wedge", {
+  df <- data.frame(g = c("a", "b", "c"))
+  p  <- ggplot(df, aes(x = factor(1), fill = g)) +
+    geom_bar_fade(width = 1, pattern = hatch()) +
+    coord_polar(theta = "y")
+
+  grob <- build_polar_pattern_grob(p, hatch())
+  expect_s3_class(grob, "bar_fade_polar_grob")
+  expect_s3_class(grob$pattern, "ggpointless_pattern")
+  expect_length(grob$rings, 3L)
+})
+
+test_that("polar pattern composites hatch rings on a compositing device", {
+  df <- data.frame(g = c("a", "b", "c"))
+  p  <- ggplot(df, aes(x = factor(1), fill = g)) +
+    geom_bar_fade(width = 1, pattern = hatch()) +
+    coord_polar(theta = "y")
+  grob <- build_polar_pattern_grob(p, hatch())
+
+  local_mocked_bindings(dev.cur = \(...) c(png = 2L), .package = "grDevices")
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = c("clear", "source", "over", "dest.in")
+    ),
+    .package = "grDevices"
+  )
+
+  res <- grid::makeContent(grob)
+  # Each wedge is a clipped gTree wrapping a compositing group, not a solid
+  # polygon -- the hatch lines fade radially inside the wedge shape.
+  is_polygon <- vapply(res$children, inherits, logical(1), "polygon")
+  expect_false(any(is_polygon))
+  has_clip <- vapply(
+    res$children,
+    \(ch) !is.null(ch$vp) && !is.null(ch$vp$clip),
+    logical(1)
+  )
+  expect_true(all(has_clip))
+})
+
+test_that("polar pattern falls back to flat without dest.in compositing", {
+  df <- data.frame(g = c("a", "b", "c"))
+  p  <- ggplot(df, aes(x = factor(1), fill = g)) +
+    geom_bar_fade(width = 1, pattern = hatch()) +
+    coord_polar(theta = "y")
+  grob <- build_polar_pattern_grob(p, hatch())
+
+  local_mocked_bindings(dev.cur = \(...) c(png = 2L), .package = "grDevices")
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = character(0)
+    ),
+    .package = "grDevices"
+  )
+
+  res <- suppressMessages(grid::makeContent(grob))
+  is_polygon <- vapply(res$children, inherits, logical(1), "polygon")
+  expect_true(all(is_polygon))
+})
+
+test_that("pattern alpha mask and outline share identical roundrect geometry", {
+  # Cartesian counterpart of the rect-fade test: the per-bar alpha mask must be
+  # a roundrect matching the outline so the masked pattern follows the same
+  # rounded shape as the border (regression guard for the short-bar artifact).
+  df <- data.frame(x = c("a", "b"), y = c(3, 1), f = c("a", "b"))
+  p <- ggplot(df, aes(x, y, fill = f)) +
+    geom_col_fade(colour = "#333333", radius = grid::unit(10, "mm"),
+                  pattern = hatch())
+  b     <- ggplot_build(p)
+  ld    <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  gp    <- p$layers[[1]]$geom_params
+  grob  <- GeomColFade$draw_panel(
+    ld, pp, coord,
+    alpha_fade_to = 0, radius = gp$radius, alpha_scope = "bar",
+    pattern = hatch()
+  )
+  expect_s3_class(grob, "rect_fade_pattern_grob")
+  expect_gt(length(grob$alpha_ref_glist), 0L)
+  for (i in seq_along(grob$alpha_ref_glist)) {
+    mask <- grob$alpha_ref_glist[[i]]
+    out  <- grob$outline_glist[[i]]
+    expect_s3_class(mask, "roundrect")
+    expect_s3_class(out,  "roundrect")
+    expect_identical(as.numeric(mask$r),      as.numeric(out$r))
+    expect_identical(as.numeric(mask$width),  as.numeric(out$width))
+    expect_identical(as.numeric(mask$height), as.numeric(out$height))
+  }
+})
+
+# Build a Cartesian pattern grob from any *_fade layer (count/bin/identity).
+build_bar_pattern_grob <- function(p, pattern, radius = grid::unit(0, "pt")) {
+  b     <- ggplot_build(p)
+  ld    <- b$data[[1]]
+  pp    <- b$layout$panel_params[[1]]
+  coord <- b$layout$coord
+  p$layers[[1]]$geom$draw_panel(
+    ld, pp, coord,
+    alpha_fade_to = 0, radius = radius, alpha_scope = "bar", pattern = pattern
+  )
+}
+
+.col_has_grid_group <- function(grob) {
+  if (inherits(grob, "GridGroup")) return(TRUE)
+  ch <- grob$children
+  if (is.null(ch) || length(ch) == 0L) return(FALSE)
+  any(vapply(ch, .col_has_grid_group, logical(1)))
+}
+
+test_that("geom_bar_fade (stat = count) + pattern: mask matches outline (sharp)", {
+  p <- ggplot(mpg, aes(class)) +
+    geom_bar_fade(colour = "#333333", pattern = hatch())
+  grob <- build_bar_pattern_grob(p, hatch())
+  expect_s3_class(grob, "rect_fade_pattern_grob")
+  expect_gt(length(grob$alpha_ref_glist), 0L)
+  for (i in seq_along(grob$alpha_ref_glist)) {
+    mask <- grob$alpha_ref_glist[[i]]
+    out  <- grob$outline_glist[[i]]
+    expect_s3_class(mask, "roundrect")
+    expect_equal(as.numeric(mask$r), 0)
+    if (!inherits(out, "zeroGrob")) {
+      expect_identical(as.numeric(mask$width),  as.numeric(out$width))
+      expect_identical(as.numeric(mask$height), as.numeric(out$height))
+    }
+  }
+})
+
+test_that("geom_histogram_fade (stat = bin) + pattern: mask matches outline (rounded)", {
+  p <- ggplot(mpg, aes(hwy)) +
+    geom_histogram_fade(bins = 8, colour = "#333333",
+                        radius = grid::unit(8, "mm"), pattern = hatch(style = "crossed"))
+  grob <- build_bar_pattern_grob(p, hatch(style = "crossed"),
+                                 radius = grid::unit(8, "mm"))
+  expect_s3_class(grob, "rect_fade_pattern_grob")
+  expect_gt(length(grob$alpha_ref_glist), 0L)
+  for (i in seq_along(grob$alpha_ref_glist)) {
+    mask <- grob$alpha_ref_glist[[i]]
+    out  <- grob$outline_glist[[i]]
+    expect_s3_class(mask, "roundrect")
+    expect_s3_class(out,  "roundrect")
+    expect_identical(as.numeric(mask$r),      as.numeric(out$r))
+    expect_identical(as.numeric(mask$width),  as.numeric(out$width))
+    expect_identical(as.numeric(mask$height), as.numeric(out$height))
+  }
+})
+
+test_that("col_fade pattern device tiers: compositing groups vs flat fallback", {
+  p <- ggplot(mpg, aes(class)) + geom_bar_fade(pattern = hatch())
+  grob <- build_bar_pattern_grob(p, hatch())
+
+  local_mocked_bindings(dev.cur = \(...) c(png = 2L), .package = "grDevices")
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = c("clear", "source", "over", "dest.in")
+    ),
+    .package = "grDevices"
+  )
+  res_comp <- grid::makeContent(grob)
+  expect_true(any(vapply(res_comp$children, .col_has_grid_group, logical(1))))
+
+  local_mocked_bindings(
+    dev.capabilities = \(...) list(
+      clippingPaths = TRUE,
+      patterns      = c("LinearGradient", "RadialGradient"),
+      compositing   = character(0)
+    ),
+    .package = "grDevices"
+  )
+  res_flat <- suppressMessages(grid::makeContent(grob))
+  expect_false(any(vapply(res_flat$children, .col_has_grid_group, logical(1))))
+})
+
+
 # coord_polar examples adapted from ?coord_polar, using *_fade counterparts
 # --------------------------------------------------------------------------
 

@@ -163,5 +163,6 @@ geom_histogram_fade <- make_constructor(
   alpha_fade_to = 0,
   alpha_scope = "bar",
   orientation = NA,
-  radius = grid::unit(0, "pt")
+  radius = grid::unit(0, "pt"),
+  pattern = NULL
 )

@@ -132,7 +132,7 @@ ggplot(df_catenary, aes(x, y)) +
 ### Chaikin's corner cutting algorithm
 
 ```{r geom-chaikin, warning=FALSE, fig.alt="Four polygon shapes drawn with sharp dashed outlines and overlaid with smoothed Chaikin corner-cut curves."}
-lst <- list(
+lst_chaikin <- list(
   data = list(
     whale = data.frame(x = c(.5, 4, 4, 3.5, 2), y = c(.5, 1, 1.5, .5, 3)),
     closed_square = data.frame(x = c(0, 0, 1, 1), y = c(2, 3, 3, 2)),
@@ -144,12 +144,12 @@ lst <- list(
 )
 
 ggplot(mapping = aes(x, y)) +
-  lapply(lst$data, \(i) {
+  lapply(lst_chaikin$data, \(i) {
     geom_polygon(data = i, fill = NA, linetype = "12", colour = "#333333")
   }) +
   Map(f = \(data, colour, mode) {
     geom_chaikin(data = data, colour = colour, mode = mode)
-  }, data = lst$data, colour = lst$colour, mode = lst$mode) +
+  }, data = lst_chaikin$data, colour = lst_chaikin$colour, mode = lst_chaikin$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
 ```
@@ -158,12 +158,12 @@ ggplot(mapping = aes(x, y)) +
 
 ```{r geom-fourier, warning=FALSE, fig.alt="Noisy point cloud with a single Fourier-series fit overlaid; the curve follows the upward drift while smoothing the cyclic component."}
 x_d <- seq(0, 4 * pi, length.out = 15)
-df_d <- data.frame(
+df_fourier <- data.frame(
   x = x_d,
   y = sin(x_d) + x_d * 0.4 + rnorm(15, sd = 0.2)
 )
 
-p <- ggplot(df_d, aes(x, y)) +
+p <- ggplot(df_fourier, aes(x, y)) +
   geom_point(alpha = 0.35)
 p + geom_fourier()
 ```
@@ -178,7 +178,8 @@ p +
     aes(colour = "detrend = \"lm\""),
     n_harmonics = 3,
     detrend = "lm"
-  )
+  ) +
+  scale_y_continuous(breaks = c(0, 2, 4))
 ```
 
 
@@ -232,11 +233,11 @@ ggplot(df_lexis, aes(x = x, xend = xend, colour = key)) +
 ### Emphasise some observations
 
 ```{r geom-pointless, fig.alt="Yearly sunspot data from 1977 to 1986 as a step chart."}
-sunspot_df <- data.frame(
+df_sunspots <- data.frame(
   year = time(datasets::sunspot.year),
   sunspots = unclass(datasets::sunspot.year)
 )
-ggplot(tail(sunspot_df, 12), aes(year, sunspots)) + 
+ggplot(tail(df_sunspots, 12), aes(year, sunspots)) +
   geom_step(colour = cols[4]) +
   geom_pointless(location = c("first", "last"), size = 3, colour = cols[4])
 ```
@@ -248,12 +249,12 @@ ggplot(tail(sunspot_df, 12), aes(year, sunspots)) +
 
 ```{r geom-area-fade, warning=FALSE, fig.alt="Area chart of a 60-step random walk, fill fading from opaque at the line to transparent at the y=0 baseline."}
 set.seed(42)
-df_fade <- data.frame(
+df_area <- data.frame(
   x = seq_len(60),
   y = cumsum(rnorm(60, sd = 0.35))
 )
 
-p <- ggplot(df_fade, aes(x, y))
+p <- ggplot(df_area, aes(x, y))
 p + geom_area_fade()
 ```
 
@@ -329,27 +330,27 @@ ggplot(anscombe_long, aes(x, y)) +
 b <- ggplot(mtcars, aes(wt, mpg)) +
   geom_point()
 
-df <- data.frame(x1 = 2.62, x2 = 3.57, y1 = 21.0, y2 = 15.0)
+df_segment <- data.frame(x1 = 2.62, x2 = 3.57, y1 = 21.0, y2 = 15.0)
 b +
   geom_curve_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2, colour = "curve"),
     arrow = arrow(),
-    data = df
+    data = df_segment
   ) +
   geom_segment_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2, colour = "segment"),
-    data = df
+    data = df_segment
   )
 ```
 
 ```{r geom-path-fade, warning=FALSE, fig.alt="A stylised fish (ichthys) outline drawn as a single path with the line fading to transparent at both the start and the end."}
 theta <- seq(1.3, -1.3, length.out = 101)
-ichthys <- data.frame(
+df_ichthys <- data.frame(
   x = theta^2,
   y = 0.5 * theta * (theta^2 - 1)
 )
 
-ggplot(ichthys, aes(x, y)) + 
+ggplot(df_ichthys, aes(x, y)) +
   geom_path_fade(
     linewidth = 1.5,
     fade_direction = c("start", "end"),
@@ -416,7 +417,8 @@ ggplot(head(economics, 25), aes(date, unemploy)) +
     inherit.aes = FALSE,
     alpha = 0,
     alpha_fade_to = 0.3,
-    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    pattern = hatch(style = "parallel")
   ) +
   geom_step_fade(alpha_fade_to = 0.1)
 ```
@@ -442,12 +444,13 @@ ggplot(faithful, aes(eruptions)) +
   geom_histogram_fade(
     alpha = 0.8,
     alpha_fade_to = 0.1,
-    alpha_scope = "global"
+    alpha_scope = "global",
+    pattern = hatch(style = "crossed", angle = 90, spacing = unit(1.5, "mm"))
     ) +
   geom_step(
     stat = "bin",
     direction = "mid",
-    colour = cols[1]
+    colour = "steelblue" # cols[1]
     )
 ```
 
@@ -483,7 +486,7 @@ ggplot(faithful, aes(eruptions)) +
 
 ```{r geom-unit-bar, warning=FALSE, fig.height=5, fig.alt="Horizontal isotype bar chart counting diamonds per cut; each cell represents one hundred observation."}
 cs <- 100
-ggplot(diamonds, aes(y = cut, fill = colour)) +
+ggplot(diamonds, aes(y = cut, fill = color)) +
   geom_unit_bar(
     cell_size = cs,
     radius = unit(1, "pt"),

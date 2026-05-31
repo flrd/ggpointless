@@ -70,6 +70,31 @@ makeContent.curve_fade_grob <- function(x) {
 }
 
 
+# `shape` became a `GeomCurve` draw parameter in ggplot2 4.1.0 (PR #6523).
+# Until 4.1.0 is the floor in DESCRIPTION, forward it to the parent
+# `geom_curve()` fallback renderer only when the installed ggplot2 supports it;
+# older versions use their own fixed shape. The fade path itself draws via
+# `grid::curveGrob(shape = ...)`, which has always honoured `shape`, so the
+# guard only affects the three parent-delegation fallbacks.
+# `test-curve-fade-shape-guard.R` fails once ggplot2 >= 4.1.0 reaches CRAN,
+# prompting removal of this guard and a bump to `Depends: ggplot2 (>= 4.1.0)`.
+#' @noRd
+#' @keywords internal
+.geom_curve_parent_draw <- function(data, panel_params, coord, curvature, angle,
+                                    ncp, shape, arrow, arrow.fill, lineend,
+                                    na.rm) {
+  args <- list(
+    data, panel_params, coord,
+    curvature = curvature, angle = angle, ncp = ncp,
+    arrow = arrow, arrow.fill = arrow.fill, lineend = lineend, na.rm = na.rm
+  )
+  if (utils::packageVersion("ggplot2") >= "4.1.0") {
+    args$shape <- shape
+  }
+  do.call(ggplot2::GeomCurve$draw_panel, args)
+}
+
+
 #' @rdname ggpointless-ggproto
 #' @format NULL
 #' @usage NULL
@@ -89,7 +114,8 @@ GeomCurveFade <- ggplot2::ggproto(
     ggplot2::GeomCurve$extra_params,
     "alpha_fade_to",
     "fade_direction",
-    "curve_count_cap"
+    "curve_count_cap",
+    "shape"
   ),
 
   setup_params = \(self, data, params) {
@@ -104,6 +130,7 @@ GeomCurveFade <- ggplot2::ggproto(
     curvature = 0.5,
     angle = 90,
     ncp = 5,
+    shape = 0.5,
     arrow = NULL,
     arrow.fill = NULL,
     lineend = "butt",
@@ -144,11 +171,9 @@ GeomCurveFade <- ggplot2::ggproto(
           "i" = "Falling back to {.fn ggplot2::geom_curve} rendering (no fade)."
         )
       )
-      return(ggplot2::GeomCurve$draw_panel(
-        data, panel_params, coord,
-        curvature = curvature, angle = angle, ncp = ncp,
-        arrow = arrow, arrow.fill = arrow.fill,
-        lineend = lineend, na.rm = na.rm
+      return(.geom_curve_parent_draw(
+        data, panel_params, coord, curvature, angle, ncp, shape,
+        arrow, arrow.fill, lineend, na.rm
       ))
     }
 
@@ -180,20 +205,16 @@ GeomCurveFade <- ggplot2::ggproto(
         .frequency = "regularly",
         .frequency_id = "geom_curve_fade_curve_count_cap"
       )
-      return(ggplot2::GeomCurve$draw_panel(
-        data, panel_params, coord,
-        curvature = curvature, angle = angle, ncp = ncp,
-        arrow = arrow, arrow.fill = arrow.fill,
-        lineend = lineend, na.rm = na.rm
+      return(.geom_curve_parent_draw(
+        data, panel_params, coord, curvature, angle, ncp, shape,
+        arrow, arrow.fill, lineend, na.rm
       ))
     }
 
     if (.is_uniform_alpha(data, alpha_fade_to)) {
-      return(ggplot2::GeomCurve$draw_panel(
-        data, panel_params, coord,
-        curvature = curvature, angle = angle, ncp = ncp,
-        arrow = arrow, arrow.fill = arrow.fill,
-        lineend = lineend, na.rm = na.rm
+      return(.geom_curve_parent_draw(
+        data, panel_params, coord, curvature, angle, ncp, shape,
+        arrow, arrow.fill, lineend, na.rm
       ))
     }
 
@@ -252,7 +273,8 @@ GeomCurveFade <- ggplot2::ggproto(
         curvature = curvature,
         angle = angle,
         ncp = ncp,
-        square = FALSE,
+        shape = shape,
+        square = ncp == 1 && angle == 90,
         squareShape = 1,
         inflect = FALSE,
         open = TRUE,
@@ -293,7 +315,8 @@ GeomCurveFade <- ggplot2::ggproto(
         curvature = curvature,
         angle = angle,
         ncp = ncp,
-        square = FALSE,
+        shape = shape,
+        square = ncp == 1 && angle == 90,
         squareShape = 1,
         inflect = FALSE,
         open = TRUE,
@@ -319,6 +342,11 @@ GeomCurveFade <- ggplot2::ggproto(
 
 #' @rdname geom_segment_fade
 #' @inheritParams ggplot2::geom_curve
+#' @param shape A numeric in `[-1, 1]` controlling the curve's shape, passed to
+#'   [grid::curveGrob()]. Applied by the fade rendering on all `ggplot2`
+#'   versions; on the plain-`geom_curve()` fallback paths (non-linear coords,
+#'   over the `curve_count_cap`, or uniform alpha) it requires
+#'   `ggplot2` >= 4.1.0 and is otherwise ignored.
 #' @param curve_count_cap Soft cap on the number of curves `geom_curve_fade()` will
 #'   composite per panel. One `groupGrob(op = "dest.in")` is built per curve,
 #'   so render cost scales roughly linearly at ~30 ms / curve. Past the cap
@@ -333,6 +361,10 @@ geom_curve_fade <- make_constructor(
   GeomCurveFade,
   stat = "identity",
   position = "identity",
+  curvature = 0.5,
+  angle = 90,
+  ncp = 5,
+  shape = 0.5,
   alpha_fade_to = 0,
   fade_direction = "start",
   curve_count_cap = 200
