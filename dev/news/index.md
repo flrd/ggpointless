@@ -2,7 +2,45 @@
 
 ## ggpointless (development version)
 
+### New features
+
+- **New**
+  [`geom_stipple_panel()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_panel.md),
+  [`geom_stipple_path()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md),
+  [`geom_stipple_line()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md),
+  [`geom_stipple_step()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md),
+  and
+  [`geom_stipple_rect()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_rect.md)
+  render lines, paths, steps, and filled regions as a regular grid of
+  dots (a “stippled” look) instead of a solid stroke. `spacing`
+  (`"fine"`/`"medium"`/`"coarse"`) sets the dot density as a per-axis
+  fraction of the panel, so density stays consistent across plots and
+  across axes with different scales; every `geom_stipple_*()` layer
+  shares the same lattice, so their dots coincide. The keep `radius`
+  defaults to the lattice’s covering radius, the smallest value that
+  traces the line without gaps.
+  [`geom_stipple_line()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
+  is orientation-aware (`orientation = "y"`),
+  [`geom_stipple_step()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
+  supports `direction`, and `NA` values break the line like
+  [`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
+  /
+  [`geom_step()`](https://ggplot2.tidyverse.org/reference/geom_path.html).
+
+- [`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
+  gains a `pattern` argument to fill rectangles with a texture that
+  fades along with the alpha gradient. Use the built-in
+  `pattern = "stripe"` for continuous diagonal hatching, pass a
+  [`grid::grob()`](https://rdrr.io/r/grid/grid.grob.html) to clip your
+  own continuous hatching (e.g. wavy lines) to each rectangle, or pass a
+  [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) for tiled
+  motifs such as dots. The texture’s stroke colour follows the `fill`
+  aesthetic. Requires a graphics device with Porter-Duff compositing;
+  falls back to a flat semi-transparent fill otherwise.
+
 ## ggpointless 0.3.0
+
+CRAN release: 2026-05-21
 
 ### New features
 

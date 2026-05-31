@@ -51,7 +51,7 @@ freely between two fixed supports. It follows this equation:
 [`geom_catenary()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
 draws a hanging-chain catenary curve between successive points;
 [`geom_arch()`](https://flrd.github.io/ggpointless/dev/reference/geom_catenary.md)
-draws a cetenary arch, i.e. the inverted curve.
+draws a catenary arch, i.e. the inverted curve.
 
 ### geom_arch
 
@@ -340,8 +340,8 @@ on top of the bars.](ggpointless_files/figure-html/gridline-basic-1.png)
 ### Picking axes
 
 Use `grids = "x"`, `"y"`, or `c("x", "y")` to choose which axis to draw,
-and `minor = TRUE` to draw minor gridlines too. Positions come from the
-trained scale — no manual breaks needed.
+and `lines = c('major', 'minor')` to draw minor (grid-)lines too.
+Positions come from the trained scale — no manual breaks needed.
 
 ``` r
 
@@ -356,7 +356,8 @@ major and minor vertical gridlines drawn on
 top.](ggpointless_files/figure-html/gridline-axes-1.png)
 
 But you can of course add breaks whenever you want and
-`geom_ridgeline()` picks these values up automatically.
+[`geom_gridline()`](https://flrd.github.io/ggpointless/dev/reference/geom_gridline.md)
+picks these values up automatically.
 
 ``` r
 
@@ -1264,6 +1265,113 @@ ggplot(df, aes(x, y)) +
 curve and a soft rectangular highlight after x = 10, marked by a fading
 vertical border line.](ggpointless_files/figure-html/rect-fade-1.png)
 
+### Pattern fills
+
+Instead of a solid fade,
+[`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
+can fill each rectangle with a texture that fades along with the alpha
+gradient. The built-in preset `pattern = "stripe"` draws continuous
+diagonal hatching, recoloured to the `fill` aesthetic:
+
+``` r
+
+df <- data.frame(xmin = 1, xmax = 9, ymin = 0, ymax = 6)
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[1], alpha = 0.9, alpha_fade_to = 0,
+    pattern = "stripe"
+  ) +
+  theme_minimal()
+```
+
+![A rectangle filled with diagonal stripe hatching that fades from
+opaque at the top to transparent at the
+bottom.](ggpointless_files/figure-html/rect-fade-stripe-1.png)
+
+The `"stripe"` name is borrowed, with thanks, from the
+[`ggpattern`](https://trevorldavis.com/R/ggpattern/) package by Trevor
+L. Davis; for a far richer set of patterns use `ggpattern` directly.
+
+#### Build your own pattern
+
+`pattern` also accepts a `grid` grob, which is drawn once and
+**clipped** to each rectangle. This is the reliable way to get
+*continuous* custom hatching:
+[`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) tiling clips
+every tile at its own bounds, so diagonal or wavy lines come out as
+disconnected dashes. Drawing a single grob and clipping it keeps the
+lines continuous.
+
+The key is to build the grob in `"npc"` units, so it spans the rectangle
+(`x` and `y` run from 0 to 1 across width and height). Here is a
+wavy-line “pattern”: a stack of sine curves stepped up the height,
+overshooting the `[0, 1]` range so clipping trims them cleanly. Leave
+the stroke colour unset —
+[`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
+recolours it to the `fill` aesthetic for you.
+
+``` r
+
+wave_hatch <- function(spacing = 0.14, frequency = 6, amplitude = 0.04,
+                       linewidth = 1.5) {
+  t <- seq(0, 1, length.out = 250)
+  y0 <- seq(-0.2, 1.2, by = spacing) # overshoot; clipping trims the ends
+  lines <- lapply(y0, function(y) {
+    grid::linesGrob(
+      x = grid::unit(t, "npc"),
+      y = grid::unit(y + amplitude * sin(2 * pi * frequency * t), "npc"),
+      gp = grid::gpar(lwd = linewidth)
+    )
+  })
+  grid::gTree(children = do.call(grid::gList, lines))
+}
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[3], alpha = 0.9, alpha_fade_to = 0,
+    pattern = wave_hatch()
+  ) +
+  theme_minimal()
+```
+
+![A rectangle filled with continuous wavy horizontal lines that fade
+from opaque at the top to transparent at the
+bottom.](ggpointless_files/figure-html/rect-fade-wave-1.png)
+
+For self-contained *motifs* (dots, small shapes) rather than continuous
+lines, a tiled [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html)
+works well and is simpler — tiling only breaks down for lines that need
+to cross tile boundaries:
+
+``` r
+
+dots <- grid::pattern(
+  grid::circleGrob(r = grid::unit(1, "mm"), gp = grid::gpar(fill = "black")),
+  width = grid::unit(5, "mm"), height = grid::unit(5, "mm"), extend = "repeat"
+)
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[2], alpha = 0.9, alpha_fade_to = 0,
+    pattern = dots
+  ) +
+  theme_minimal()
+```
+
+![A rectangle filled with a regular grid of dots that fades from opaque
+at the top to transparent at the
+bottom.](ggpointless_files/figure-html/rect-fade-dots-1.png)
+
+Pattern fills require a graphics device with Porter-Duff compositing
+(for example
+[`ragg::agg_png()`](https://ragg.r-lib.org/reference/agg_png.html) or
+[`grDevices::svg()`](https://rdrr.io/r/grDevices/cairo.html)); on
+devices without it the geom falls back to a flat semi-transparent fill.
+
 ## geom_col_fade
 
 [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
@@ -1324,9 +1432,9 @@ ggplot(df, aes(x, y, fill = grp)) +
 ![Dodged faded column chart of made up data for demonstration
 only.](ggpointless_files/figure-html/col-fade-dodge-1.png)
 
-`"global"` — the tallest bar in the whole layer (`y = 3` in panel `c`)
-is the only one at full opacity. Every other bar fades in proportion to
-its own height divided by 3, *across panels*:
+`"global"` — the tallest bar in the whole layer (`y = 4`) is the only
+one at full opacity. Every other bar fades in proportion to its own
+height:
 
 ``` r
 
@@ -1420,7 +1528,7 @@ ggplot(iris, aes(Sepal.Width, fill = Species)) +
   labs(x = "Sepal Width", y = "Count", fill = NULL)
 ```
 
-![Stacked faded histogram of diamond carats coloured by cut, where
+![Stacked faded histogram of sepal width coloured by species, where
 taller bars are also more opaque so bar height is reflected both in size
 and in
 transparency.](ggpointless_files/figure-html/histogram-fade-diamonds-1.png)

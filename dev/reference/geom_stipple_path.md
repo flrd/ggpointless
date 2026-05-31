@@ -1,34 +1,66 @@
-# Lexis diagrams
+# Stipple a path, line, or step function with dots
 
-This geom can be used to plot 45 deg lifelines for a cohort. Lexis
-diagrams are named after Wilhelm Lexis and used by demographers for more
-than a century.
+Instead of drawing a continuous stroke, these geoms render a regular
+grid of dots and display only those within `radius` of the path. At fine
+`dot_spacing` the result closely resembles
+[`ggplot2::geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
+/
+[`ggplot2::geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
+/
+[`ggplot2::geom_step()`](https://ggplot2.tidyverse.org/reference/geom_path.html);
+as `dot_spacing` increases the discrete, stippled character becomes
+visible. Dot density is constant in physical units – the grid reflows
+automatically when the viewer is resized.
+
+`geom_stipple_line()` orders observations along the independent axis
+before connecting them (like
+[`ggplot2::geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)).
+
+`geom_stipple_step()` approximates a stair-step path (like
+[`ggplot2::geom_step()`](https://ggplot2.tidyverse.org/reference/geom_path.html));
+`direction` controls the step shape.
 
 ## Usage
 
 ``` r
-geom_lexis(
+geom_stipple_path(
   mapping = NULL,
   data = NULL,
-  stat = "lexis",
+  stat = "identity",
   position = "identity",
   ...,
-  point_show = TRUE,
-  point_colour = NULL,
-  gap_filler = TRUE,
-  lineend = "round",
-  linejoin = "round",
+  dot_spacing = "medium",
+  radius = NULL,
+  type = "hex",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
 )
 
-stat_lexis(
+geom_stipple_line(
   mapping = NULL,
   data = NULL,
-  geom = "lexis",
+  stat = "identity",
   position = "identity",
   ...,
+  dot_spacing = "medium",
+  radius = NULL,
+  type = "hex",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
+)
+
+geom_stipple_step(
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  ...,
+  dot_spacing = "medium",
+  radius = NULL,
+  type = "hex",
+  direction = "hv",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -141,28 +173,27 @@ stat_lexis(
     glyphs](https://ggplot2.tidyverse.org/reference/draw_key.html), to
     change the display of the layer in the legend.
 
-- point_show:
+- dot_spacing:
 
-  logical. Should a point be shown at the end of each segment? `TRUE` by
-  default.
+  `"fine"`, `"medium"` (default), or `"coarse"` – physical spacing
+  between dot centres: 2, 4, or 8 mm. A
+  [`grid::unit()`](https://rdrr.io/r/grid/unit.html) object sets an
+  explicit size in any unit; a bare numeric is treated as mm.
 
-- point_colour:
+- radius:
 
-  colour of the endpoint point. If `NULL` (default), the group colour is
-  used.
+  Maximum distance from the path for a dot to be rendered. Defaults to
+  the grid's *covering radius* – `dot_spacing / sqrt(3)` for
+  `type = "hex"`, `dot_spacing / sqrt(2)` for `type = "square"` – the
+  smallest value that leaves no gaps while highlighting as few dots as
+  possible. A [`grid::unit()`](https://rdrr.io/r/grid/unit.html) object
+  sets an explicit distance in any unit; a bare numeric is treated
+  as mm. Larger values thicken the trace; smaller values thin it but may
+  introduce gaps.
 
-- gap_filler:
+- type:
 
-  logical. Should horizontal gap-filler segments be drawn? `TRUE` by
-  default.
-
-- lineend:
-
-  line end style (round, butt, square)
-
-- linejoin:
-
-  line join style (round, mitre, bevel)
+  `"hex"` (default) or `"square"` – grid arrangement.
 
 - na.rm:
 
@@ -186,116 +217,91 @@ stat_lexis(
   plot specification, e.g.
   [`annotation_borders()`](https://ggplot2.tidyverse.org/reference/annotation_borders.html).
 
-- geom:
+- direction:
 
-  The geometric object to use to display the data for this layer. When
-  using a `stat_*()` function to construct a layer, the `geom` argument
-  can be used to override the default coupling between stats and geoms.
-  The `geom` argument accepts the following:
-
-  - A `Geom` ggproto subclass, for example `GeomPoint`.
-
-  - A string naming the geom. To give the geom as a string, strip the
-    function name of the `geom_` prefix. For example, to use
-    [`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html),
-    give the geom as `"point"`.
-
-  - For more information and other ways to specify the geom, see the
-    [layer
-    geom](https://ggplot2.tidyverse.org/reference/layer_geoms.html)
-    documentation.
+  `"hv"` (horizontal then vertical, default), `"vh"` (vertical then
+  horizontal), or `"mid"` (step half-way between adjacent x values).
+  `geom_stipple_step()` only.
 
 ## Value
 
 A
-[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
-object that can be added to a
-[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
 
 ## Details
 
-This geom draws 45 deg lines from the start to the end of a 'lifetime'.
-It is a combination of a segment, and a point. `stat_lexis()` calculates
-`y` and `yend` for you, so the only required aesthetics are `x` and
-`xend`. Besides `y` and `yend` coordinates this geom creates one
-additional variable called `type` in the layer data. You might want to
-map to an aesthetic with
-[`ggplot2::after_stat()`](https://ggplot2.tidyverse.org/reference/aes_eval.html),
-see *Examples* and `vignette("ggpointless")` for more details.
+`geom_stipple_path()` respects the order of rows in the data (like
+[`geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html));
+`geom_stipple_line()` orders observations along the independent axis
+first (like
+[`geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html));
+`geom_stipple_step()` approximates the stair-step path (like
+[`geom_step()`](https://ggplot2.tidyverse.org/reference/geom_path.html)).
+`NA` values break the line, exactly as in the originals. See the
+*Orientation* section.
 
-Rows in your data with either missing `x` or `xend` values will be
-removed because your segments must start and end somewhere.
+## Grid geometry
 
-## Aesthetics
+`dot_spacing` is a physical distance in mm, so dot density stays
+consistent across plots and across axes with very different scales (e.g.
+a date axis against `log10`). Two arrangements are available via `type`:
 
-`geom_lexis()` understands the following aesthetics. Required aesthetics
-are displayed in bold and defaults are displayed for optional
-aesthetics:
+- `"hex"` (default):
 
-|  |  |  |
-|----|----|----|
-| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
-| • | **[`xend`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
-| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
-| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
-| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | `stroke` | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
+  60 degree staggered centres – hexagonal close-packing.
 
-Learn more about setting these aesthetics in
-[`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
+- `"square"`:
+
+  Aligned rows and columns.
+
+Every `geom_stipple_*()` layer in a plot resolves the same physical
+spacing against the same panel, so their lattices coincide exactly.
+
+## Orientation
+
+`geom_stipple_line()` is orientation-aware: by default the independent
+axis is `x`, but this can be switched by setting `orientation = "y"`.
+See the *Orientation* section of
+[`ggplot2::geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
+for more detail.
+
+## See also
+
+[`ggplot2::geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html),
+[`ggplot2::geom_line()`](https://ggplot2.tidyverse.org/reference/geom_path.html),
+[`ggplot2::geom_step()`](https://ggplot2.tidyverse.org/reference/geom_path.html),
+[`geom_stipple_panel()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_panel.md),
+[`geom_stipple_rect()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_rect.md)
 
 ## Examples
 
 ``` r
 library(ggplot2)
-df1 <- data.frame(
-  key = c("A", "B", "B", "C", "D", "E"),
-  start = c(0, 1, 6, 5, 6, 9),
-  end = c(5, 4, 10, 9, 8, 11)
+
+ggplot(economics, aes(date, unemploy)) +
+  geom_stipple_line(dot_spacing = "coarse")
+
+
+# Hex vs square grid
+df <- data.frame(
+  x = seq(0, 2 * pi, length.out = 100),
+  y = sin(seq(0, 2 * pi, length.out = 100))
 )
-p <- ggplot(df1, aes(x = start, xend = end, colour = key))
-p +
-  geom_lexis()
-
-p +
-  geom_lexis(gap_filler = FALSE)
-
-p +
-  geom_lexis(aes(linetype = after_stat(type)),
-    point_show = FALSE
+ggplot(df, aes(x, y)) +
+  geom_stipple_path(type = "hex", colour = "steelblue") +
+  geom_stipple_path(
+    type = "square", colour = "tomato",
+    position = position_nudge(y = -0.4)
   )
 
 
-# Change point appearance
-p + geom_lexis(
-  point_colour = "black",
-  size = 3,
-  shape = 21,
-  fill = "white",
-  stroke = 1
-)
+# A series that runs vertically: orientation = "y"
+ggplot(economics, aes(unemploy, date)) +
+  geom_stipple_line(dot_spacing = "coarse", orientation = "y")
 
 
-# Missing values will be removed
-df2 <- data.frame(
-  key = c("A", "B", "B", "C", "D"),
-  start = c(0, 1, 7, 5, 6),
-  end = c(5, 4, 13, 9, NA)
-)
-ggplot(df2, aes(x = start, xend = end, colour = key)) +
-  geom_lexis()
-#> Warning: Removed 1 row containing non-finite outside the scale range (`stat_lexis()`).
-
-
-# Ideally, `x` values should be increasing, unlike
-# in the next example
-df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
-ggplot(df3, aes(x = x, xend = xend)) +
-  geom_lexis()
-
+# Stair-step stipple
+recent <- economics[economics$date > as.Date("2013-01-01"), ]
+ggplot(recent, aes(date, unemploy)) +
+  geom_stipple_step(dot_spacing = "coarse")
 ```

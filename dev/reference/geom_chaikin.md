@@ -1,7 +1,6 @@
 # Apply Chaikin's corner cutting algorithm to smooth a path
 
-Chaikin's corner-cutting algorithm can be used to smooth sharp corners
-of a path.
+Use Chaikin's corner-cutting algorithm smooth sharp corners of a path.
 
 ## Usage
 
@@ -135,7 +134,7 @@ stat_chaikin(
 
 - iterations:
 
-  Integer. Number of iterations to apply between `1` and `10`. When
+  Integer. Number of iterations to apply between `0` and `10`. When
   `iterations = 0` the original data is unchanged so essentially this is
   the same as calling
   [`ggplot2::geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html);
@@ -222,11 +221,11 @@ The recursion formula starts from two vertices A and B, which represent
 a single corner of your path. From this, the algorithm derives two new
 points: one at the specified ratio when going from point A to point B,
 and one when going from B to A in the opposite direction. By default, a
-ratio of 0.25 results in two points: the first at 25% of point A and the
-other at 75% of point A (or 25% of point B). Those new points form a
-smoother path. Then the algorithm applies the same rule to each pair of
-new points. The rule is applied iterations times. The maximum number of
-iterations is 10, default is 5.
+ratio of 0.25 results in two points: the first at 25% of the way from
+point A to point B and the other at 75% of the way from A to B. Those
+new points form a smoother path. Then the algorithm applies the same
+rule to each pair of new points. The rule is applied iterations times.
+The maximum number of iterations is 10, default is 5.
 
 ## References
 

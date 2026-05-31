@@ -18,6 +18,7 @@ geom_rect_fade(
   alpha_fade_to = 0,
   fade_direction = "vertical",
   radius = grid::unit(0, "pt"),
+  pattern = NULL,
   lineend = "butt",
   linejoin = "mitre",
   na.rm = FALSE,
@@ -145,6 +146,37 @@ geom_rect_fade(
   `unit(4, "pt")`); a bare number is interpreted as points. Defaults to
   `unit(0, "pt")` (sharp corners).
 
+- pattern:
+
+  An optional textured fill, applied *underneath* the alpha fade. One
+  of:
+
+  `"stripe"`
+
+  :   The built-in preset: continuous diagonal hatching (see *Patterns*
+      below).
+
+  a [`grid::grob()`](https://rdrr.io/r/grid/grid.grob.html)
+
+  :   Drawn once and clipped to each rectangle. Best for continuous
+      custom hatching (e.g. wavy lines built in `"npc"` units), which
+      [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) tiling
+      cannot render without breaking lines into dashes. See the vignette
+      for a worked "wave" example.
+
+  a [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) object
+
+  :   A tiled pattern – best for self-contained motifs (dots, shapes).
+      Tiling renders continuous diagonal/wavy lines as dashes, so prefer
+      a grob for those.
+
+  In every case the texture's stroke colour (`gp$col`) is automatically
+  recoloured to match the `fill` aesthetic. The alpha fade is applied on
+  top via Porter-Duff `"dest.in"` compositing; devices without
+  compositing support fall back to a flat semi-transparent fill.
+  Patterns are not supported under polar coordinates. `NULL` (default)
+  uses the plain gradient fill.
+
 - lineend:
 
   Line end style (round, butt, square).
@@ -206,6 +238,32 @@ plain
 rendering and emit a one-time warning. Rounded corners (`radius`) are
 ignored in polar coordinates since arcs do not carry corner geometry.
 
+## Patterns
+
+One built-in preset is available: `pattern = "stripe"` draws continuous
+diagonal hatching, recoloured to the `fill` aesthetic and faded with the
+alpha gradient. The `"stripe"` name is borrowed, with thanks, from the
+ggpattern package by Trevor L. Davis
+(<https://trevorldavis.com/R/ggpattern/>); the implementation here is an
+independent grid one.
+
+Unlike [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) tiling
+– which renders diagonal or wavy lines as disconnected dashes, because
+each tile is clipped at its own bounds – the `"stripe"` preset draws
+real parallel lines clipped to the rectangle, so the diagonals stay
+continuous at a true visual angle.
+
+For your own *continuous* hatching (e.g. wavy lines), build a
+[`grid::grob()`](https://rdrr.io/r/grid/grid.grob.html) in `"npc"` units
+and pass it as `pattern`: it is drawn once and clipped to each
+rectangle, preserving line continuity. For self-contained *motifs*
+(dots, small shapes) pass a
+[`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) object, which
+tiles cleanly. In both cases the stroke colour is recoloured to the
+`fill` aesthetic. The article `vignette("ggpointless")` walks through
+building a wavy-line grob and injecting it. For a far richer set of
+patterns and controls, use ggpattern directly.
+
 ## Legend key under coord_flip
 
 The legend key glyph always shows the canonical (data-axis) fade
@@ -231,6 +289,8 @@ Version 1.
 for plain rectangles,
 [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
 for bar charts with per-bar gradient scaling and orientation support.
+The ggpattern package (<https://trevorldavis.com/R/ggpattern/>) for
+comprehensive pattern fills.
 
 ## Aesthetics
 

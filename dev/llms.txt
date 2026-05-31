@@ -796,6 +796,19 @@ alpha gradients.
 - [`geom_unit_histogram()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_histogram.md)
   : Unit Chart Histograms
 
+## Stipple
+
+Render lines, paths, steps, and regions as a grid of dots.
+
+- [`geom_stipple_panel()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_panel.md)
+  : Fill the panel with a stipple dot grid
+- [`geom_stipple_path()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
+  [`geom_stipple_line()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
+  [`geom_stipple_step()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
+  : Stipple a path, line, or step function with dots
+- [`geom_stipple_rect()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_rect.md)
+  : Fill a rectangle with a stipple dot grid
+
 ## Labeller
 
 - [`label_cells()`](https://flrd.github.io/ggpointless/dev/reference/label_cells.md)

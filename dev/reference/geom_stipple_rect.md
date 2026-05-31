@@ -1,34 +1,24 @@
-# Lexis diagrams
+# Fill a rectangle with a stipple dot grid
 
-This geom can be used to plot 45 deg lifelines for a cohort. Lexis
-diagrams are named after Wilhelm Lexis and used by demographers for more
-than a century.
+Renders a dot grid inside each rectangle defined by
+`xmin`/`xmax`/`ymin`/ `ymax` (like
+[`ggplot2::geom_rect()`](https://ggplot2.tidyverse.org/reference/geom_tile.html)),
+sharing the same panel-anchored lattice as the other `geom_stipple_*()`
+layers. Dot density is constant in physical units – the grid reflows
+automatically when the viewer is resized.
 
 ## Usage
 
 ``` r
-geom_lexis(
+geom_stipple_rect(
   mapping = NULL,
   data = NULL,
-  stat = "lexis",
+  stat = "identity",
   position = "identity",
   ...,
-  point_show = TRUE,
-  point_colour = NULL,
-  gap_filler = TRUE,
-  lineend = "round",
-  linejoin = "round",
-  na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE
-)
-
-stat_lexis(
-  mapping = NULL,
-  data = NULL,
-  geom = "lexis",
-  position = "identity",
-  ...,
+  dot_spacing = "medium",
+  type = "hex",
+  boundary = "inside",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -141,28 +131,21 @@ stat_lexis(
     glyphs](https://ggplot2.tidyverse.org/reference/draw_key.html), to
     change the display of the layer in the legend.
 
-- point_show:
+- dot_spacing:
 
-  logical. Should a point be shown at the end of each segment? `TRUE` by
-  default.
+  `"fine"`, `"medium"` (default), or `"coarse"` – physical spacing
+  between dot centres: 2, 4, or 8 mm. A
+  [`grid::unit()`](https://rdrr.io/r/grid/unit.html) object sets an
+  explicit size in any unit; a bare numeric is treated as mm.
 
-- point_colour:
+- type:
 
-  colour of the endpoint point. If `NULL` (default), the group colour is
-  used.
+  `"hex"` (default) or `"square"` – grid arrangement.
 
-- gap_filler:
+- boundary:
 
-  logical. Should horizontal gap-filler segments be drawn? `TRUE` by
-  default.
-
-- lineend:
-
-  line end style (round, butt, square)
-
-- linejoin:
-
-  line join style (round, mitre, bevel)
+  `"inside"` (default, strict interior) or `"on"` (include dots lying
+  exactly on the boundary).
 
 - na.rm:
 
@@ -186,116 +169,23 @@ stat_lexis(
   plot specification, e.g.
   [`annotation_borders()`](https://ggplot2.tidyverse.org/reference/annotation_borders.html).
 
-- geom:
-
-  The geometric object to use to display the data for this layer. When
-  using a `stat_*()` function to construct a layer, the `geom` argument
-  can be used to override the default coupling between stats and geoms.
-  The `geom` argument accepts the following:
-
-  - A `Geom` ggproto subclass, for example `GeomPoint`.
-
-  - A string naming the geom. To give the geom as a string, strip the
-    function name of the `geom_` prefix. For example, to use
-    [`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html),
-    give the geom as `"point"`.
-
-  - For more information and other ways to specify the geom, see the
-    [layer
-    geom](https://ggplot2.tidyverse.org/reference/layer_geoms.html)
-    documentation.
-
 ## Value
 
 A
-[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html)
-object that can be added to a
-[`ggplot2::ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
+[`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
 
-## Details
+## See also
 
-This geom draws 45 deg lines from the start to the end of a 'lifetime'.
-It is a combination of a segment, and a point. `stat_lexis()` calculates
-`y` and `yend` for you, so the only required aesthetics are `x` and
-`xend`. Besides `y` and `yend` coordinates this geom creates one
-additional variable called `type` in the layer data. You might want to
-map to an aesthetic with
-[`ggplot2::after_stat()`](https://ggplot2.tidyverse.org/reference/aes_eval.html),
-see *Examples* and `vignette("ggpointless")` for more details.
-
-Rows in your data with either missing `x` or `xend` values will be
-removed because your segments must start and end somewhere.
-
-## Aesthetics
-
-`geom_lexis()` understands the following aesthetics. Required aesthetics
-are displayed in bold and defaults are displayed for optional
-aesthetics:
-
-|  |  |  |
-|----|----|----|
-| • | **[`x`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
-| • | **[`xend`](https://ggplot2.tidyverse.org/reference/aes_position.html)** |  |
-| • | [`alpha`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → `NA` |
-| • | [`colour`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`fill`](https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`group`](https://ggplot2.tidyverse.org/reference/aes_group_order.html) | → inferred |
-| • | [`linetype`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`linewidth`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`shape`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | [`size`](https://ggplot2.tidyverse.org/reference/aes_linetype_size_shape.html) | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-| • | `stroke` | → via [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html) |
-
-Learn more about setting these aesthetics in
-[`vignette("ggplot2-specs")`](https://ggplot2.tidyverse.org/articles/ggplot2-specs.html).
+[`ggplot2::geom_rect()`](https://ggplot2.tidyverse.org/reference/geom_tile.html),
+[`geom_stipple_panel()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_panel.md),
+[`geom_stipple_path()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
 
 ## Examples
 
 ``` r
 library(ggplot2)
-df1 <- data.frame(
-  key = c("A", "B", "B", "C", "D", "E"),
-  start = c(0, 1, 6, 5, 6, 9),
-  end = c(5, 4, 10, 9, 8, 11)
-)
-p <- ggplot(df1, aes(x = start, xend = end, colour = key))
-p +
-  geom_lexis()
 
-p +
-  geom_lexis(gap_filler = FALSE)
-
-p +
-  geom_lexis(aes(linetype = after_stat(type)),
-    point_show = FALSE
-  )
-
-
-# Change point appearance
-p + geom_lexis(
-  point_colour = "black",
-  size = 3,
-  shape = 21,
-  fill = "white",
-  stroke = 1
-)
-
-
-# Missing values will be removed
-df2 <- data.frame(
-  key = c("A", "B", "B", "C", "D"),
-  start = c(0, 1, 7, 5, 6),
-  end = c(5, 4, 13, 9, NA)
-)
-ggplot(df2, aes(x = start, xend = end, colour = key)) +
-  geom_lexis()
-#> Warning: Removed 1 row containing non-finite outside the scale range (`stat_lexis()`).
-
-
-# Ideally, `x` values should be increasing, unlike
-# in the next example
-df3 <- data.frame(x = Sys.Date() - 0:2, xend = Sys.Date() + 1:3)
-ggplot(df3, aes(x = x, xend = xend)) +
-  geom_lexis()
-
+df <- data.frame(xmin = 1, xmax = 5, ymin = 1, ymax = 4)
+ggplot(df) +
+  geom_stipple_rect(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax))
 ```
