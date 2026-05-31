@@ -33,49 +33,52 @@ alpha gradients.
   [`geom_hline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_abline_fade.md)
   [`geom_vline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_abline_fade.md)
   : Reference Lines with a Fading Gradient
+
 - [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
   [`geom_density_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
   [`geom_freqpoly_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
   : Areas, Densities, and Frequency Polygons with Fading Gradient
+
 - [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
   [`geom_bar_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
   : Bar Charts with Fading Gradient and Rounded Corners
+
 - [`geom_segment_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_segment_fade.md)
   [`geom_curve_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_segment_fade.md)
   : Line Segments with a Fading Gradient
+
 - [`geom_path_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
   [`geom_line_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
   [`geom_step_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
   : Paths and Lines with a Fading Gradient
+
 - [`geom_histogram_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_histogram_fade.md)
   : Histograms with Fading Gradient
+
 - [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
   : Points that Glow
+
 - [`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
   : Rectangles with a Fading Gradient and Rounded Corners
+
+- [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+  :
+
+  Hatch pattern for
+  [`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
+
 - [`geom_ridgeline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   [`geom_ridgeline_density_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   [`geom_ridgeline_freqpoly_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   [`geom_ridgeline_histogram_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   : Ridgeline Plots with Fading Gradient
+
 - [`geom_unit_bar()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_bar.md)
   [`geom_unit_col()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_bar.md)
   : Unit Bar Charts
+
 - [`geom_unit_histogram()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_histogram.md)
   : Unit Chart Histograms
-
-## Stipple
-
-Render lines, paths, steps, and regions as a grid of dots.
-
-- [`geom_stipple_panel()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_panel.md)
-  : Fill the panel with a stipple dot grid
-- [`geom_stipple_path()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
-  [`geom_stipple_line()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
-  [`geom_stipple_step()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
-  : Stipple a path, line, or step function with dots
-- [`geom_stipple_rect()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_rect.md)
-  : Fill a rectangle with a stipple dot grid
 
 ## Labeller
 

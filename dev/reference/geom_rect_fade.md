@@ -151,15 +151,30 @@ geom_rect_fade(
   An optional textured fill, applied *underneath* the alpha fade. One
   of:
 
-  `"stripe"`
+  a preset string
 
-  :   The built-in preset: continuous diagonal hatching (see *Patterns*
-      below).
+  :   `"stripe"` (diagonal, the default), `"crossed"` (diagonal
+      crosshatch), `"vertical"`, `"horizontal"`, or `"grid"` (vertical +
+      horizontal). Each is shorthand for the matching
+      [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+      call – for example `"crossed"` is `hatch(style = "crossed")` and
+      `"grid"` is `hatch(90, style = "crossed")` – the same way
+      `position = "dodge"` stands in for
+      [`ggplot2::position_dodge()`](https://ggplot2.tidyverse.org/reference/position_dodge.html).
+      Reach for
+      [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+      directly to tune `angle` or `spacing`.
+
+  a [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md) specification
+
+  :   Line hatching at any angle, optionally crossed – diagonal stripes,
+      crosshatch, vertical stripes, grids. The recommended way to add a
+      textured fill.
 
   a [`grid::grob()`](https://rdrr.io/r/grid/grid.grob.html)
 
-  :   Drawn once and clipped to each rectangle. Best for continuous
-      custom hatching (e.g. wavy lines built in `"npc"` units), which
+  :   Drawn once and clipped to each rectangle. For continuous custom
+      hatching (e.g. wavy lines built in `"npc"` units), which
       [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) tiling
       cannot render without breaking lines into dashes. See the vignette
       for a worked "wave" example.
@@ -168,14 +183,17 @@ geom_rect_fade(
 
   :   A tiled pattern – best for self-contained motifs (dots, shapes).
       Tiling renders continuous diagonal/wavy lines as dashes, so prefer
-      a grob for those.
+      [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+      or a grob for those.
 
-  In every case the texture's stroke colour (`gp$col`) is automatically
-  recoloured to match the `fill` aesthetic. The alpha fade is applied on
-  top via Porter-Duff `"dest.in"` compositing; devices without
-  compositing support fall back to a flat semi-transparent fill.
-  Patterns are not supported under polar coordinates. `NULL` (default)
-  uses the plain gradient fill.
+  All pattern types –
+  [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+  and user grobs – are recoloured to the `fill` aesthetic of each
+  rectangle. The alpha fade is applied on top via Porter-Duff
+  `"dest.in"` compositing; devices without compositing support fall back
+  to a flat semi-transparent fill. Patterns also work under polar
+  coordinates (clipped to each annular segment); see the *Polar
+  coordinates* section. `NULL` (default) uses the plain gradient fill.
 
 - lineend:
 
@@ -232,37 +250,42 @@ when the fade direction aligns with the radial axis:
 
 Any other combination (for example `theta = "x"` with
 `fade_direction = "horizontal"`) would require an angular / conic
-gradient, which `grid` does not yet expose. Such plots fall back to
+gradient, which `grid` does not yet expose, so the *fade* is dropped
+(with a one-time message). A `pattern` fill still renders – it lives in
+millimetre space, independent of the fade – clipped to each annular
+segment at a uniform alpha. Without a pattern, such plots fall back to
 plain
-[`ggplot2::geom_rect()`](https://ggplot2.tidyverse.org/reference/geom_tile.html)
-rendering and emit a one-time warning. Rounded corners (`radius`) are
-ignored in polar coordinates since arcs do not carry corner geometry.
+[`ggplot2::geom_rect()`](https://ggplot2.tidyverse.org/reference/geom_tile.html).
+Rounded corners (`radius`) are ignored in polar coordinates since arcs
+do not carry corner geometry.
 
 ## Patterns
 
-One built-in preset is available: `pattern = "stripe"` draws continuous
-diagonal hatching, recoloured to the `fill` aesthetic and faded with the
-alpha gradient. The `"stripe"` name is borrowed, with thanks, from the
-ggpattern package by Trevor L. Davis
-(<https://trevorldavis.com/R/ggpattern/>); the implementation here is an
-independent grid one.
+[`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+builds line-hatch fills – diagonal stripes
+([`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)),
+crosshatch (`hatch(style = "crossed")`), vertical stripes (`hatch(90)`),
+grids (`hatch(0, style = "crossed")`) – at a true visual angle,
+recoloured to the `fill` aesthetic and faded with the alpha gradient.
 
 Unlike [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) tiling
 – which renders diagonal or wavy lines as disconnected dashes, because
-each tile is clipped at its own bounds – the `"stripe"` preset draws
-real parallel lines clipped to the rectangle, so the diagonals stay
-continuous at a true visual angle.
+each tile is clipped at its own bounds –
+[`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+draws real parallel lines clipped to the rectangle, so they stay
+continuous.
 
-For your own *continuous* hatching (e.g. wavy lines), build a
-[`grid::grob()`](https://rdrr.io/r/grid/grid.grob.html) in `"npc"` units
-and pass it as `pattern`: it is drawn once and clipped to each
-rectangle, preserving line continuity. For self-contained *motifs*
-(dots, small shapes) pass a
+For your own *continuous* hatching beyond straight lines (e.g. wavy
+lines), build a [`grid::grob()`](https://rdrr.io/r/grid/grid.grob.html)
+in `"npc"` units and pass it as `pattern`: it is drawn once and clipped
+to each rectangle, preserving line continuity. For self-contained
+*motifs* (dots, small shapes) pass a
 [`grid::pattern()`](https://rdrr.io/r/grid/patterns.html) object, which
-tiles cleanly. In both cases the stroke colour is recoloured to the
-`fill` aesthetic. The article `vignette("ggpointless")` walks through
-building a wavy-line grob and injecting it. For a far richer set of
-patterns and controls, use ggpattern directly.
+tiles cleanly; its stroke colour is recoloured to the `fill` aesthetic.
+The article `vignette("ggpointless")` walks through building a wavy-line
+grob and injecting it. For a far richer set of patterns and controls,
+use the ggpattern package by Trevor L. Davis
+(<https://trevorldavis.com/R/ggpattern/>).
 
 ## Legend key under coord_flip
 
@@ -285,6 +308,8 @@ Version 1.
 
 ## See also
 
+[`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+for the line-hatch helper.
 [`ggplot2::geom_rect()`](https://ggplot2.tidyverse.org/reference/geom_tile.html)
 for plain rectangles,
 [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
@@ -317,21 +342,50 @@ Learn more about setting these aesthetics in
 ``` r
 library(ggplot2)
 
-# With geom_rect_fade() you can draw arbitrary rectangles
-ggplot(head(economics, 25), aes(date, unemploy)) +
+# Highlight a time period with a fading rectangle
+df_rect <- data.frame(
+  xmin = as.Date("1968-03-01"),
+  xmax = as.Date("1969-07-01"),
+  ymin = -Inf,
+  ymax = 2800
+)
+
+p <- ggplot(head(economics, 25), aes(date, unemploy)) +
+  stat_fourier(geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2) +
+  geom_point(size = 3, alpha = 0.2) +
+  theme_minimal()
+
+p +
   geom_rect_fade(
-    data = data.frame(
-      xmin = as.Date("1968-07-01"),
-      xmax = as.Date("1969-07-01"),
-      ymin = -Inf, ymax = 2800
-    ),
+    data = df_rect,
     inherit.aes = FALSE,
     alpha = 0,
     alpha_fade_to = 0.3,
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
-  ) +
-  stat_fourier(geom = "line_fade", fade_direction = "start", alpha_fade_to = 0.2) +
-  geom_point(size = 3, alpha = 0.2) +
-  theme_minimal()
+  )
+
+
+# Fill with a fading pattern using the string shortcut
+p +
+  geom_rect_fade(
+    data = df_rect,
+    inherit.aes = FALSE,
+    alpha = 0,
+    alpha_fade_to = 0.3,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    pattern = "crossed"
+  )
+
+
+# Customize the pattern further by calling hatch() directly
+p +
+  geom_rect_fade(
+    data = df_rect,
+    inherit.aes = FALSE,
+    alpha = 0,
+    alpha_fade_to = 0.3,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    pattern = hatch(angle = 60, style = "parallel", spacing = unit(1, "mm"))
+  )
 
 ```

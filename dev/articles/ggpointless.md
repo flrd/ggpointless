@@ -398,52 +398,110 @@ gridlines overlaid.](ggpointless_files/figure-html/gridline-polar-1.png)
 
 ## geom_lexis
 
+A **Lexis diagram** displays lifelines — the duration of individual
+subjects from start to end — as 45° lines.
+
 [`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-draws a 45° lifeline for each observation from its start to its end. The
-required aesthetics are `x` and `xend`; `y` and `yend` are calculated by
+draws a lifeline for each observation from its `x` (start) to its `xend`
+(end). The `y` and `yend` aesthetics are calculated by
 [`stat_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
 and represent the cumulative duration.
 
+### US Presidential Terms
+
+Here is a lifeline diagram showing the terms of US presidents from
+Eisenhower to Trump II, with data augmented from ggplot2’s
+`presidential` dataset:
+
 ``` r
 
-df_l <- data.frame(
+# Augment presidential data with Biden and Trump II
+presidential_update <- data.frame(
+  name = c("Biden", "Trump"),
+  start = as.Date(c("2021-01-20", "2025-01-20")),
+  end = c(as.Date("2025-01-20"), Sys.Date()),
+  party = c("Democratic", "Republican")
+)
+
+df_lexis <- rbind(ggplot2::presidential, presidential_update)
+
+# Combine names with first names for readability
+first_names <- c(
+  Eisenhower = "Dwight",
+  Kennedy = "John",
+  Johnson = "Lyndon",
+  Nixon = "Richard",
+  Ford = "Gerald",
+  Carter = "Jimmy",
+  Reagan = "Ronald",
+  Bush = "George H. W.",
+  Clinton = "Bill",
+  Bush = "George W.",
+  Obama = "Barack",
+  Trump = "Donald",
+  Biden = "Joe",
+  Trump = "Donald"
+)
+
+df_lexis$name <- paste(first_names, df_lexis$name)
+
+p <- ggplot(df_lexis, aes(x = start, xend = end, group = name, colour = party)) +
+  scale_colour_manual(
+    values = c("Democratic" = "#0044c9", "Republican" = "#DE0100")
+  ) +
+  scale_linetype_identity() +
+  scale_y_continuous(
+    breaks = c(2, 4, 6, 8) * 365.25,
+    labels = \(d) floor(d / 365.25)
+  ) +
+  labs(
+    title = "Terms of US Presidents: Eisenhower to Trump II",
+    caption = sprintf("As of %s.", Sys.Date()),
+    x = NULL,
+    y = "Years in office"
+  ) +
+  coord_fixed()
+
+p + geom_lexis(aes(linetype = after_stat(type)))
+```
+
+![Lexis diagram showing US presidential terms from Eisenhower to Trump
+II as 45-degree lifelines, each coloured by party affiliation
+(Democratic blue, Republican
+red).](ggpointless_files/figure-html/lexis-presidential-1.png)
+
+When there is a gap between two terms of the same president (as is the
+case with Trump’s two non-consecutive terms), a horizontal dotted
+segment bridges the gap. Set `gap_filler = FALSE` to hide these
+gap-fillers and show only the lifelines themselves.
+
+``` r
+
+df_lexis_subset <- subset(df_lexis, grepl("Trump|Biden|Obama", name))
+
+p + geom_lexis(aes(linetype = after_stat(type)), gap_filler = FALSE)
+```
+
+![The same presidential Lexis diagram without gap-filling segments,
+showing Trump's two separate terms as two disconnected
+lifelines.](ggpointless_files/figure-html/lexis-gap-1.png)
+
+### Styling with after_stat(type)
+
+The computed variable `type` takes the value `"solid"` for 45° lifelines
+and `"dotted"` for horizontal gap-fillers. Map it to `linetype` to make
+the distinction explicit. You can also style the endpoint dot
+independently of the lifeline colour with `point_colour`:
+
+``` r
+
+df_demo <- data.frame(
   key  = c("A", "B", "B", "C", "D"),
   x    = c(0, 1, 6, 5, 6),
   xend = c(5, 4, 10, 8, 10)
 )
 
-p <- ggplot(df_l, aes(x = x, xend = xend, colour = key)) +
-  coord_equal()
-
-p + geom_lexis()
-```
-
-![Lexis diagram with four cohorts drawn as 45-degree lifelines, with
-horizontal dotted segments bridging gaps within the same
-cohort.](ggpointless_files/figure-html/lexis-basic-1.png)
-
-When there is a gap between two events of the same cohort, a horizontal
-dotted segment bridges the gap. Set `gap_filler = FALSE` to hide it.
-
-``` r
-
-p + geom_lexis(gap_filler = FALSE)
-```
-
-![The same Lexis diagram without gap-filling segments, so cohort B's two
-episodes appear as two disconnected diagonal
-lines.](ggpointless_files/figure-html/lexis-gap-1.png)
-
-### Using after_stat(type) and custom point styling
-
-The computed variable `type` takes the value `"solid"` for 45° lifelines
-and `"dotted"` for horizontal gap-fillers. Map it to `linetype` to make
-the distinction explicit, and use `point_colour` to style the endpoint
-dot independently of the lifeline colour.
-
-``` r
-
-p +
+ggplot(df_demo, aes(x = x, xend = xend, group = key, colour = key)) +
   stat_lexis(
     aes(linetype = after_stat(type)),
     point_colour = "#333333",
@@ -452,45 +510,13 @@ p +
     size         = 2.5,
     stroke       = 0.8
   ) +
-  scale_linetype_identity()
+  scale_linetype_identity() +
+  coord_equal()
 ```
 
 ![Lexis diagram styled with solid 45-degree lifelines, dotted horizontal
 gap-fillers, and white-filled circular endpoint markers with a dark
 outline.](ggpointless_files/figure-html/lexis-type-1.png)
-
-### Date and POSIXct classes
-
-[`geom_lexis()`](https://flrd.github.io/ggpointless/dev/reference/geom_lexis.md)
-works with Date and POSIXct objects as well as numerics. The y-axis
-shows duration in the native unit of the scale (days for Date, seconds
-for POSIXct).
-
-``` r
-
-df_dates <- data.frame(
-  key   = c("A", "B"),
-  start = c(2019, 2021),
-  end   = c(2022, 2022)
-)
-df_dates[, c("start", "end")] <- lapply(
-  df_dates[, c("start", "end")],
-  \(i) as.Date(paste0(i, "-01-01"))
-)
-
-ggplot(df_dates, aes(x = start, xend = end, group = key)) +
-  geom_lexis() +
-  scale_y_continuous(
-    breaks = 0:3 * 365.25,
-    labels = \(i) paste0(floor(i / 365.25), " yr")
-  ) +
-  coord_fixed() +
-  labs(y = "Duration")
-```
-
-![Lexis diagram with calendar dates on the x-axis and duration in years
-on the y-axis, showing two cohorts as 45-degree
-lifelines.](ggpointless_files/figure-html/lexis-dates-1.png)
 
 ## geom_pointless
 
@@ -1270,8 +1296,10 @@ vertical border line.](ggpointless_files/figure-html/rect-fade-1.png)
 Instead of a solid fade,
 [`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
 can fill each rectangle with a texture that fades along with the alpha
-gradient. The built-in preset `pattern = "stripe"` draws continuous
-diagonal hatching, recoloured to the `fill` aesthetic:
+gradient. The
+[`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+helper builds line hatching at any angle, recoloured to the `fill`
+aesthetic:
 
 ``` r
 
@@ -1281,16 +1309,66 @@ ggplot(df) +
   geom_rect_fade(
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
     fill = cols[1], alpha = 0.9, alpha_fade_to = 0,
-    pattern = "stripe"
+    pattern = hatch()
   ) +
   theme_minimal()
 ```
 
 ![A rectangle filled with diagonal stripe hatching that fades from
 opaque at the top to transparent at the
-bottom.](ggpointless_files/figure-html/rect-fade-stripe-1.png)
+bottom.](ggpointless_files/figure-html/rect-fade-hatch-1.png)
 
-The `"stripe"` name is borrowed, with thanks, from the
+[`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+covers the common CAD-style fills from one helper: `hatch(angle)`
+rotates the lines, and `style = "crossed"` overlays a second family for
+a crosshatch or grid. So `hatch(style = "crossed")` is a diagonal
+crosshatch, `hatch(90)` a vertical stripe, and
+`hatch(0, style = "crossed")` a square grid. `colour`, `linewidth`,
+`linetype`, and `spacing` (a physical distance, default `unit(2, "mm")`)
+are all optional:
+
+``` r
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[3], alpha = 0.9, alpha_fade_to = 0,
+    pattern = hatch(angle = 30, style = "crossed", spacing = unit(3, "mm"))
+  ) +
+  theme_minimal()
+```
+
+![A rectangle filled with a steel-blue crosshatch at 30 degrees, fading
+toward the
+baseline.](ggpointless_files/figure-html/rect-fade-hatch-variants-1.png)
+
+For the five common presets you can skip the constructor and pass a
+string — `pattern = "crossed"` is shorthand for
+`pattern = hatch(style = "crossed")`, the same way `position = "dodge"`
+stands in for
+[`position_dodge()`](https://ggplot2.tidyverse.org/reference/position_dodge.html).
+The vocabulary is `"stripe"` (the diagonal default), `"crossed"`,
+`"vertical"`, `"horizontal"`, and `"grid"` (vertical + horizontal).
+Reach for
+[`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+itself when you want to tune `angle` or `spacing`.
+
+``` r
+
+ggplot(df) +
+  geom_rect_fade(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = cols[4], alpha = 0.9, alpha_fade_to = 0,
+    pattern = "grid"
+  ) +
+  theme_minimal()
+```
+
+![A rectangle filled with a grid of vertical and horizontal lines that
+fades toward the
+baseline.](ggpointless_files/figure-html/rect-fade-hatch-string-1.png)
+
+The hatch vocabulary is borrowed, with thanks, from the
 [`ggpattern`](https://trevorldavis.com/R/ggpattern/) package by Trevor
 L. Davis; for a far richer set of patterns use `ggpattern` directly.
 
@@ -1659,14 +1737,16 @@ p +
   coord_equal(ratio = 1 / 2) +
   aes(fill = factor(vs)) +
   scale_y_sqrt()
-#> ! `radius` of 3 pt exceeds the largest displayable corner radius for the
-#>   rendered shape.
-#> ℹ Maximum displayable radius is 2.92 pt; falling back to that.
 ```
 
 ![Dodged outlined unit bar chart drawn on a square-root y-scale, so
 cells higher up the bars become progressively
 shorter.](ggpointless_files/figure-html/unit-bar-sqrt-1.png)
+
+    #> ! `radius` of 3 points exceeds the largest displayable corner radius for one or
+    #>   more rendered shapes, which is 1.99 points.
+    #> ℹ Falling back to each shape's maximum displayable radius.
+    #> This message is displayed once every 8 hours.
 
 When counts are pre-computed, switch to
 [`geom_unit_col()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_bar.md)

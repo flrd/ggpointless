@@ -44,9 +44,9 @@ like alpha gradients but no statistical transformation:
   /
   [`geom_vline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_abline_fade.md)
 - [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
-- [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
+- [`geom_bar_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
   /
-  [`geom_bar_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
+  [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
 - [`geom_density_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
 - [`geom_freqpoly_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
 - [`geom_histogram_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_histogram_fade.md)
@@ -170,17 +170,17 @@ lst <- list(
     open_triangle = data.frame(x = c(3, 3, 5), y = c(2, 3, 3)),
     closed_triangle = data.frame(x = c(3.5, 5, 5), y = c(0, 0, 1.5))
   ),
-  color = cols,
+  colour = cols,
   mode = c("closed", "closed", "open", "closed")
 )
 
 ggplot(mapping = aes(x, y)) +
   lapply(lst$data, \(i) {
-    geom_polygon(data = i, fill = NA, linetype = "12", color = "#333333")
+    geom_polygon(data = i, fill = NA, linetype = "12", colour = "#333333")
   }) +
-  Map(f = \(data, color, mode) {
-    geom_chaikin(data = data, color = color, mode = mode)
-  }, data = lst$data, color = lst$color, mode = lst$mode) +
+  Map(f = \(data, colour, mode) {
+    geom_chaikin(data = data, colour = colour, mode = mode)
+  }, data = lst$data, colour = lst$colour, mode = lst$mode) +
   geom_point(data = data.frame(x = 1.5, y = 1.5)) +
   coord_equal()
 ```
@@ -194,12 +194,12 @@ curves.](reference/figures/README-geom-chaikin-1.png)
 ``` r
 
 x_d <- seq(0, 4 * pi, length.out = 15)
-df_d <- data.frame(
+df_fourier <- data.frame(
   x = x_d,
   y = sin(x_d) + x_d * 0.4 + rnorm(15, sd = 0.2)
 )
 
-p <- ggplot(df_d, aes(x, y)) +
+p <- ggplot(df_fourier, aes(x, y)) +
   geom_point(alpha = 0.35)
 p + geom_fourier()
 ```
@@ -285,7 +285,7 @@ df_lexis <- data.frame(
   xend = c(5, 4, 10, 8, 10)
 )
 
-ggplot(df_lexis, aes(x = x, xend = xend, color = key)) +
+ggplot(df_lexis, aes(x = x, xend = xend, colour = key)) +
   geom_lexis(aes(linetype = after_stat(type)), size = 2) +
   coord_equal() +
   scale_x_continuous(breaks = c(df_lexis$x, df_lexis$xend)) +
@@ -301,11 +301,11 @@ cohort.](reference/figures/README-geom-lexis-1.png)
 
 ``` r
 
-sunspot_df <- data.frame(
+df_sunspots <- data.frame(
   year = time(datasets::sunspot.year),
   sunspots = unclass(datasets::sunspot.year)
 )
-ggplot(tail(sunspot_df, 12), aes(year, sunspots)) + 
+ggplot(tail(df_sunspots, 12), aes(year, sunspots)) +
   geom_step(colour = cols[4]) +
   geom_pointless(location = c("first", "last"), size = 3, colour = cols[4])
 ```
@@ -320,12 +320,12 @@ chart.](reference/figures/README-geom-pointless-1.png)
 ``` r
 
 set.seed(42)
-df_fade <- data.frame(
+df_area <- data.frame(
   x = seq_len(60),
   y = cumsum(rnorm(60, sd = 0.35))
 )
 
-p <- ggplot(df_fade, aes(x, y))
+p <- ggplot(df_area, aes(x, y))
 p + geom_area_fade()
 ```
 
@@ -442,16 +442,16 @@ glow.](reference/figures/README-geom-point-glow-1.png)
 b <- ggplot(mtcars, aes(wt, mpg)) +
   geom_point()
 
-df <- data.frame(x1 = 2.62, x2 = 3.57, y1 = 21.0, y2 = 15.0)
+df_segment <- data.frame(x1 = 2.62, x2 = 3.57, y1 = 21.0, y2 = 15.0)
 b +
   geom_curve_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2, colour = "curve"),
     arrow = arrow(),
-    data = df
+    data = df_segment
   ) +
   geom_segment_fade(
     aes(x = x1, y = y1, xend = x2, yend = y2, colour = "segment"),
-    data = df
+    data = df_segment
   )
 ```
 
@@ -462,12 +462,12 @@ geom.](reference/figures/README-geom-segment-fade-1.png)
 ``` r
 
 theta <- seq(1.3, -1.3, length.out = 101)
-ichthys <- data.frame(
+df_ichthys <- data.frame(
   x = theta^2,
   y = 0.5 * theta * (theta^2 - 1)
 )
 
-ggplot(ichthys, aes(x, y)) + 
+ggplot(df_ichthys, aes(x, y)) +
   geom_path_fade(
     linewidth = 1.5,
     fade_direction = c("start", "end"),
@@ -611,7 +611,8 @@ ggplot(faithful, aes(eruptions)) +
 ![Histogram of Old Faithful eruption durations (30 bins) with each bar
 filled by an alpha gradient; gradient strength is shared across bars
 (global scope).](reference/figures/README-geom-histogram-fade-1.png)
-\### Unit bar charts and histograms
+
+### Unit bar charts and histograms
 
 ``` r
 
@@ -660,14 +661,18 @@ ggplot(diamonds, aes(y = cut, fill = color)) +
     caption = sprintf("One cell equals %d observations.", cs)) +
   coord_equal(ratio = 7 * cs) +
   theme_minimal()
-#> ! `radius` of 1 pt exceeds the largest displayable corner radius for the
-#>   rendered shape.
-#> ℹ Maximum displayable radius is 0.52 pt; falling back to that.
 ```
 
 ![Horizontal isotype bar chart counting diamonds per cut; each cell
 represents one hundred
 observation.](reference/figures/README-geom-unit-bar-1.png)
+
+``` R
+#> ! `radius` of 1 points exceeds the largest displayable corner radius for one or
+#>   more rendered shapes, which is 0.01 points.
+#> ℹ Falling back to each shape's maximum displayable radius.
+#> This message is displayed once every 8 hours.
+```
 
 The `geom_unit_*` family was inspired by the work of
 [pudding.cool](https://pudding.cool/2017/09/this-american-life/).
@@ -765,49 +770,52 @@ alpha gradients.
   [`geom_hline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_abline_fade.md)
   [`geom_vline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_abline_fade.md)
   : Reference Lines with a Fading Gradient
+
 - [`geom_area_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
   [`geom_density_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
   [`geom_freqpoly_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_area_fade.md)
   : Areas, Densities, and Frequency Polygons with Fading Gradient
+
 - [`geom_col_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
   [`geom_bar_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_col_fade.md)
   : Bar Charts with Fading Gradient and Rounded Corners
+
 - [`geom_segment_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_segment_fade.md)
   [`geom_curve_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_segment_fade.md)
   : Line Segments with a Fading Gradient
+
 - [`geom_path_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
   [`geom_line_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
   [`geom_step_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
   : Paths and Lines with a Fading Gradient
+
 - [`geom_histogram_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_histogram_fade.md)
   : Histograms with Fading Gradient
+
 - [`geom_point_glow()`](https://flrd.github.io/ggpointless/dev/reference/geom_point_glow.md)
   : Points that Glow
+
 - [`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
   : Rectangles with a Fading Gradient and Rounded Corners
+
+- [`hatch()`](https://flrd.github.io/ggpointless/dev/reference/hatch.md)
+  :
+
+  Hatch pattern for
+  [`geom_rect_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_rect_fade.md)
+
 - [`geom_ridgeline_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   [`geom_ridgeline_density_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   [`geom_ridgeline_freqpoly_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   [`geom_ridgeline_histogram_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_ridgeline_fade.md)
   : Ridgeline Plots with Fading Gradient
+
 - [`geom_unit_bar()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_bar.md)
   [`geom_unit_col()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_bar.md)
   : Unit Bar Charts
+
 - [`geom_unit_histogram()`](https://flrd.github.io/ggpointless/dev/reference/geom_unit_histogram.md)
   : Unit Chart Histograms
-
-## Stipple
-
-Render lines, paths, steps, and regions as a grid of dots.
-
-- [`geom_stipple_panel()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_panel.md)
-  : Fill the panel with a stipple dot grid
-- [`geom_stipple_path()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
-  [`geom_stipple_line()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
-  [`geom_stipple_step()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_path.md)
-  : Stipple a path, line, or step function with dots
-- [`geom_stipple_rect()`](https://flrd.github.io/ggpointless/dev/reference/geom_stipple_rect.md)
-  : Fill a rectangle with a stipple dot grid
 
 ## Labeller
 

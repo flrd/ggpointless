@@ -34,12 +34,13 @@ geom_curve_fade(
   stat = "identity",
   position = "identity",
   ...,
-  alpha_fade_to = 0,
-  fade_direction = "start",
-  curve_count_cap = 200,
   curvature = 0.5,
   angle = 90,
   ncp = 5,
+  shape = 0.5,
+  alpha_fade_to = 0,
+  fade_direction = "start",
+  curve_count_cap = 200,
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -206,18 +207,6 @@ geom_curve_fade(
   plot specification, e.g.
   [`annotation_borders()`](https://ggplot2.tidyverse.org/reference/annotation_borders.html).
 
-- curve_count_cap:
-
-  Soft cap on the number of curves `geom_curve_fade()` will composite
-  per panel. One `groupGrob(op = "dest.in")` is built per curve, so
-  render cost scales roughly linearly at ~30 ms / curve. Past the cap
-  the layer falls back to plain
-  [`ggplot2::geom_curve()`](https://ggplot2.tidyverse.org/reference/geom_segment.html)
-  (no fade) and emits a warning. Default `200` (~6 s worst case). Pass
-  `Inf` to disable. For bulk fading, use
-  [`geom_path_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
-  or `geom_segment_fade()` instead.
-
 - curvature:
 
   A numeric value giving the amount of curvature. Negative values
@@ -235,6 +224,28 @@ geom_curve_fade(
 
   The number of control points used to draw the curve. More control
   points creates a smoother curve.
+
+- shape:
+
+  A numeric in `[-1, 1]` controlling the curve's shape, passed to
+  [`grid::curveGrob()`](https://rdrr.io/r/grid/grid.curve.html). Applied
+  by the fade rendering on all `ggplot2` versions; on the
+  plain-[`geom_curve()`](https://ggplot2.tidyverse.org/reference/geom_segment.html)
+  fallback paths (non-linear coords, over the `curve_count_cap`, or
+  uniform alpha) it requires `ggplot2` \>= 4.1.0 and is otherwise
+  ignored.
+
+- curve_count_cap:
+
+  Soft cap on the number of curves `geom_curve_fade()` will composite
+  per panel. One `groupGrob(op = "dest.in")` is built per curve, so
+  render cost scales roughly linearly at ~30 ms / curve. Past the cap
+  the layer falls back to plain
+  [`ggplot2::geom_curve()`](https://ggplot2.tidyverse.org/reference/geom_segment.html)
+  (no fade) and emits a warning. Default `200` (~6 s worst case). Pass
+  `Inf` to disable. For bulk fading, use
+  [`geom_path_fade()`](https://flrd.github.io/ggpointless/dev/reference/geom_path_fade.md)
+  or `geom_segment_fade()` instead.
 
 ## Value
 
